@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Giganticdata</title>
+    <style>
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: #003366;
+            background-image: 
+                radial-gradient(circle at top right, rgba(255, 140, 0, 0.1), transparent),
+                radial-gradient(circle at bottom left, rgba(0, 82, 204, 0.2), transparent);
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+
+        .auth-container {
+            background: #ffffff; padding: 40px 30px; width: 100%;
+            max-width: 420px; border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+
+        .logo-section { text-align: center; margin-bottom: 30px; }
+        .logo-icon {
+            width: 70px; height: 70px;
+            background: linear-gradient(135deg, #ff8c00 0%, #ff4500 100%);
+            border-radius: 18px; display: flex; align-items: center;
+            justify-content: center; font-size: 35px; margin: 0 auto 15px;
+            box-shadow: 0 8px 20px rgba(255, 69, 0, 0.3);
+        }
+
+        .logo-text { font-size: 28px; font-weight: 800; color: #003366; letter-spacing: 1px; }
+        .logo-tagline { font-size: 12px; color: #ff8c00; font-weight: 600; text-transform: uppercase; }
+
+        h2 { text-align: center; color: #1e293b; font-size: 24px; margin-bottom: 8px; }
+        .subtitle { text-align: center; color: #64748b; font-size: 14px; margin-bottom: 30px; }
+
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; color: #003366; font-size: 13px; font-weight: 700; }
+
+        .input-wrapper { position: relative; }
+        .input-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); opacity: 0.6; }
+
+        input {
+            width: 100%; padding: 14px 15px 14px 45px;
+            border: 2px solid #e2e8f0; border-radius: 12px;
+            font-size: 15px; transition: all 0.3s ease;
+            color: #1e293b; background: #f8fafc;
+        }
+
+        input:focus { outline: none; border-color: #ff8c00; background: #fff; }
+
+        button {
+            width: 100%; padding: 16px; margin-top: 10px; border: none;
+            border-radius: 12px; background: linear-gradient(135deg, #ff8c00 0%, #ff4500 100%);
+            color: #ffffff; font-size: 16px; font-weight: 700; cursor: pointer;
+            box-shadow: 0 6px 15px rgba(255, 69, 0, 0.3);
+        }
+
+        button:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+        .divider { display: flex; align-items: center; margin: 25px 0; color: #cbd5e1; font-size: 12px; font-weight: 700; }
+        .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: #e2e8f0; }
+        .divider::before { margin-right: 15px; } .divider::after { margin-left: 15px; }
+
+        .signup-link {
+            display: inline-block; width: 100%; padding: 14px; border: 2px solid #0052cc;
+            border-radius: 12px; color: #0052cc; text-decoration: none;
+            font-weight: 700; text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="auth-container">
+    <div class="logo-section">
+        <div class="logo-icon">📱</div>
+        <div class="logo-text">Giganticdata</div>
+        <div class="logo-tagline">Reliable Data Services</div>
+    </div>
+
+    <h2>Welcome Back</h2>
+    <p class="subtitle">Log in to manage your data bundles</p>
+    
+    <div id="loginForm">
+        <div class="form-group">
+            <label>Email Address</label>
+            <div class="input-wrapper">
+                <span class="input-icon">📧</span>
+                <input type="email" id="email" placeholder="name@example.com" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Password</label>
+            <div class="input-wrapper">
+                <span class="input-icon">🔒</span>
+                <input type="password" id="password" placeholder="••••••••" required>
+            </div>
+        </div>
+
+        <button id="loginBtn">Log In</button>
+    </div>
+    
+    <div class="links" style="text-align: center; margin-top: 20px;">
+        <a href="forgot_password.html" style="text-decoration: none; color: #0052cc; font-size: 14px; font-weight: 600;">Forgot password?</a>
+        <div class="divider">OR</div>
+        <a href="register.html" class="signup-link">Create New Account</a>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+
+    // Same config used across your project
+    const firebaseConfig = {
+        apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
+        authDomain: "gigantic-data.firebaseapp.com",
+        databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
+        projectId: "gigantic-data",
+        storageBucket: "gigantic-data.firebasestorage.app",
+        messagingSenderId: "727845403550",
+        appId: "1:727845403550:web:e3c3a40ce615aaaca9748f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    const loginBtn = document.getElementById('loginBtn');
+
+    loginBtn.addEventListener('click', async () => {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        if(!email || !password) {
+            alert("Please fill in all fields");
+            return;
+        }
+
+        loginBtn.disabled = true;
+        loginBtn.innerText = "Authenticating...";
+
+        try {
+            // 1. Sign in with Firebase Auth
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            // 2. Fetch User Status (Agent or Normal) from Realtime Database
+            const userRef = ref(db, 'users/' + user.uid);
+            const snapshot = await get(userRef);
+
+            if (snapshot.exists()) {
+                const userData = snapshot.val();
+                console.log("Login successful. User type:", userData.status);
+                
+                // Redirect to Dashboard
+                window.location.href = "dashboard.html";
+            } else {
+                alert("User record not found in database.");
+                loginBtn.disabled = false;
+                loginBtn.innerText = "Log In";
+            }
+
+        } catch (error) {
+            console.error(error);
+            alert("Login Failed: " + error.message);
+            loginBtn.disabled = false;
+            loginBtn.innerText = "Log In";
+        }
+    });
+</script>
+
+</body>
+</html>

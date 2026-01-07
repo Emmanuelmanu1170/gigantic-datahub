@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms & Conditions — GiganticDataHub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --deep-blue: #003366;
+            --orange-gradient: linear-gradient(135deg, #ff8c00 0%, #ff4500 100%);
+            --light-bg: #f4f7fe;
+            --text-main: #1e293b;
+            --text-gray: #64748b;
+            --danger: #ef4444;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding-bottom: 40px;
+        }
+
+        .header {
+            background-color: var(--deep-blue);
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 { font-size: 18px; margin: 0; letter-spacing: 1px; }
+        .back-btn { color: white; text-decoration: none; font-size: 20px; }
+
+        .container { padding: 20px; max-width: 700px; margin: 0 auto; }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .warning-box {
+            background: #fef2f2;
+            border-left: 5px solid var(--danger);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #991b1b;
+        }
+
+        h2 {
+            font-size: 16px;
+            color: var(--deep-blue);
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 8px;
+            margin-top: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        ul { padding-left: 20px; margin: 10px 0; }
+        li { margin-bottom: 8px; font-size: 14px; color: var(--text-main); }
+        
+        .work-time {
+            background: var(--orange-gradient);
+            color: white;
+            padding: 15px;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .work-time b { display: block; font-size: 18px; }
+
+        .important { color: var(--danger); font-weight: 700; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <a href="dashboard.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+        <h1>TERMS & CONDITIONS</h1>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <div class="warning-box">
+                <i class="fas fa-exclamation-triangle"></i> 
+                <b>ATTENTION:</b> Data sent to unsupported SIM types will be "burned." It will not be delivered, reversed, or refunded.
+            </div>
+
+            <h2><i class="fas fa-ban"></i> Unsupported MTN SIMs</h2>
+            <p style="font-size: 13px; color: var(--text-gray);">Orders for the following will result in total loss of funds:</p>
+            <ul>
+                <li>Agent, Merchant, or EVD SIMs</li>
+                <li>Turbonet & Broadband SIMs</li>
+                <li>Blacklisted or Roaming SIMs</li>
+                <li><b>Debted SIM cards</b> (Those with borrowed credit/data)</li>
+                <li>Wrong numbers or different networks</li>
+            </ul>
+
+            <h2><i class="fas fa-clock"></i> Delivery & Working Hours</h2>
+            <ul>
+                <li>Data delivery is <b>not instant</b>; it may take 2 hours or more.</li>
+                <li>Orders with issues must be resolved <b>the same day</b>.</li>
+                <li>Notify Admin <b>immediately</b> to cancel if you notice an error.</li>
+            </ul>
+
+            <div class="work-time">
+                <i class="fas fa-business-time"></i>
+                <small>Official Working Hours</small>
+                <b>7:00 AM — 8:00 PM</b>
+            </div>
+
+            <h2><i class="fas fa-shield-alt"></i> Platform Rules</h2>
+            <ul>
+                <li><b>No Social Media Ads:</b> Only share with friends/family. Public ads result in account deletion.</li>
+                <li><b>No Reversal Requests:</b> Calling telcos for reversals will lead to an immediate permanent ban.</li>
+                <li><b>No Group Luring:</b> Do not use Agent packages to lure members into external groups.</li>
+                <li><b>Number Formatting:</b> <span class="important">DO NOT SPACE NUMBERS</span> or add "+233". Use local format (e.g., 024xxxxxxx). Errors lead to money loss.</li>
+            </ul>
+
+            <h2><i class="fas fa-user-slash"></i> Account Inactivity</h2>
+            <ul>
+                <li>Accounts inactive for <b>30 days or more</b> will be automatically wiped by the system.</li>
+                <li>Agent subscription fees are <b>non-refundable</b> once activated.</li>
+                <li>We reserve the right to deactivate accounts for any violation of these terms.</li>
+            </ul>
+        </div>
+
+        <p style="text-align: center; font-size: 12px; color: var(--text-gray);">
+            By using GiganticDataHub, you agree to these terms in full.
+        </p>
+    </div>
+
+</body>
+</html>

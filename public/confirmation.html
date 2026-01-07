@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Order - Gigantic Data Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #6a5af9; --deep: #0a2a66; --bg: #f4f7ff; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:"Poppins", sans-serif; }
+        body { background: var(--bg); color: var(--deep); }
+        header { background: var(--deep); color: #fff; padding: 15px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+        .container { padding: 20px; display: flex; justify-content: center; margin-top: 20px; }
+        .card { background: #fff; width: 100%; max-width: 400px; border-radius: 20px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        .summary-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+        .summary-item span:last-child { font-weight: 700; color: var(--deep); }
+        .price-focus { background: #f8faff; border: 2px dashed var(--primary); border-radius: 15px; padding: 20px; text-align: center; margin: 20px 0; }
+        .price-focus h2 { font-size: 2rem; color: #ff4500; }
+        .pay-btn { background: linear-gradient(135deg, var(--primary), #a855f7); color: #fff; border: none; width: 100%; padding: 18px; border-radius: 15px; font-weight: 700; font-size: 1.1rem; cursor: pointer; width: 100%; }
+        .pay-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+<header>
+    <a href="order.html" style="color:white"><i class="fas fa-arrow-left"></i></a>
+    <span style="font-weight:700">Confirm Purchase</span>
+    <div style="width:20px"></div>
+</header>
+
+<div class="container">
+    <div class="card" id="renderArea">
+        <p style="text-align:center; padding:20px;">Loading wallet...</p>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+    import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
+        authDomain: "gigantic-data.firebaseapp.com",
+        databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
+        projectId: "gigantic-data",
+        storageBucket: "gigantic-data.firebasestorage.app",
+        messagingSenderId: "727845403550",
+        appId: "1:727845403550:web:e3c3a40ce615aaaca9748f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    onAuthStateChanged(auth, (user) => {
+        if (!user) { window.location.href = "login.html"; return; }
+
+        const order = JSON.parse(localStorage.getItem('pendingOrder'));
+        if (!order) {
+            document.getElementById('renderArea').innerHTML = "No order data found.";
+            return;
+        }
+
+        // 1. Fetch live balance from 'users/uid'
+        onValue(ref(db, `users/${user.uid}`), (snapshot) => {
+            const userData = snapshot.val() || {};
+            const wallet = parseFloat(userData.wallet || 0);
+            const cost = parseFloat(order.amount);
+
+            document.getElementById('renderArea').innerHTML = `
+                <div class="summary-item"><span>Network</span><span>${order.network}</span></div>
+                <div class="summary-item"><span>Plan</span><span>${order.plan}</span></div>
+                <div class="summary-item"><span>Recipient</span><span>${order.recipient}</span></div>
+                <div class="summary-item"><span>Current Balance</span><span>GH₵ ${wallet.toFixed(2)}</span></div>
+                <div class="price-focus">
+                    <label style="font-size:0.7rem; font-weight:bold; color:var(--primary)">TOTAL PAYABLE</label>
+                    <h2>GH₵ ${cost.toFixed(2)}</h2>
+                </div>
+                <button class="pay-btn" id="payBtn">AUTHORIZE PAYMENT</button>
+            `;
+
+            document.getElementById('payBtn').onclick = () => {
+                if (wallet < cost) {
+                    alert("Insufficient Wallet Balance!");
+                    return;
+                }
+
+                const orderId = "ORD-" + Math.floor(Math.random() * 900000 + 100000);
+                const newBalance = parseFloat((wallet - cost).toFixed(2));
+
+                // 2. Prepare Atomic Updates following your specific Rule Paths
+                const updates = {};
+                
+                // Deduct from wallet
+                updates[`users/${user.uid}/wallet`] = newBalance;
+
+                // Create record in 'orders' (Rule allows writing if uid matches)
+                updates[`orders/${orderId}`] = {
+                    orderId: orderId,
+                    uid: user.uid,
+                    network: order.network,
+                    plan: order.plan,
+                    recipient: order.recipient,
+                    amount: cost,
+                    email: user.email,
+                    status: "Pending",
+                    timestamp: Date.now()
+                };
+
+                // Create record in 'user_orders' (Underscore used to match your rules)
+                updates[`user_orders/${user.uid}/${orderId}`] = {
+                    orderId: orderId,
+                    network: order.network,
+                    plan: order.plan,
+                    recipient: order.recipient,
+                    amount: cost,
+                    status: "Pending",
+                    timestamp: Date.now()
+                };
+
+                // Execute update
+                update(ref(db), updates)
+                    .then(() => {
+                        localStorage.removeItem('pendingOrder');
+                        alert("✅ Payment Successful!");
+                        window.location.replace("order_history.html");
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        alert("Transaction Failed. Ensure rules match code paths.");
+                    });
+            };
+        });
+    });
+</script>
+</body>
+</html>
