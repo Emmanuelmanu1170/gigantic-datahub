@@ -105,12 +105,21 @@
             box-shadow: 0 6px 20px rgba(255,255,255,0.3);
         }
 
-        /* Hero Section */
+        /* Hero Section - Using your eagle icon as the background logo */
         .hero {
             padding: 120px 20px 80px;
             text-align: center;
-            background: radial-gradient(circle at top right, rgba(240, 101, 41, 0.15), transparent),
-                        radial-gradient(circle at bottom left, rgba(192, 36, 37, 0.1), transparent);
+            position: relative;
+            background-image: linear-gradient(rgba(10, 14, 39, 0.85), rgba(10, 14, 39, 0.95)), url('favicon.jpg');
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
         .hero-badge {
@@ -182,6 +191,8 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 20px;
             padding: 0 20px;
+            position: relative;
+            z-index: 2;
         }
 
         .feature-box {
@@ -399,8 +410,7 @@
     font-size: 32px;
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
     z-index: 9999;
-    display: flex;
-    align-items: center;
+    display: flex; align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
 }
@@ -413,7 +423,7 @@
 </style>
 
     <footer class="footer">
-        <p>&copy; 2025 GIGANTICDATAHUB. All rights reserved.</p>
+        <p>&copy; 2026 GIGANTICDATAHUB. All rights reserved.</p>
         <div style="margin-top: 15px;">
             <a href="terms.html">Terms</a> | 
             <a href="https://wa.me/233548055308">Contact Support</a>
