@@ -1,11 +1,429 @@
 <!DOCTYPE html>
-<html>
-<head>
+<html lang="en"><head>
 <link rel="icon" type="image/jpeg" href="favicon.jpg">
-  <meta http-equiv="refresh" content="0; url=https://giganticdatahub.com/">
-  <link rel="canonical" href="https://giganticdatahub.com/" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<meta name="description" content="Gigantic Data Hub is Ghana #1 portal for cheap data bundles. Get 1GB and more starting at 13 Cedis. Fast, reliable, and secure data for MTN, Telecel, and AT networks.">
+<meta name="keywords" content="data, mtn data, ghana data, cheap data, gigantic data hub, buy data ghana, 13 cedi data, bundle, airtime, topup, telecel ghana, at ghana, data portal, sika, earn money ghana, data reselling">
+<meta name="keywords" content="data, cheap data, MTN data Ghana, Telecel data, AT data, buy data online, 13 cedi data, affordable bundles, datahub ghana, gigantic data, smm panel ghana, airtime to cash, topup ghana">
+<meta name="google-site-verification" content="_edgMzKAjTVtc7jToPQyryzlhgx3eRYz9W8Mi5bzFik" />
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GIGANTICDATAHUB - Ghana's Cheapest Data Bundles And reselling platform</title>
+    
+    <meta name="title" content="Giganticdatahub - Ghana's Cheapest Data Bundles">
+    <meta name="description" content="Buy affordable data for MTN, Telecel, and AirtelTigo. Fast delivery in 10 mins.">
+    
+    <style>
+        :root {
+            --primary-bg: #0a0e27;
+            --accent-gradient: linear-gradient(135deg, #f06529 0%, #c02425 100%);
+            --card-bg: #ffffff;
+            --text-main: #ffffff;
+            --text-dark: #1a1a1a;
+            --nav-bg: rgba(10, 14, 39, 0.95);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding-bottom: 0;
+            overflow-x: hidden;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: var(--nav-bg);
+            padding: 20px 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-decoration: none;
+            color: white;
+        }
+
+        .logo-bolt {
+            color: #f06529;
+            font-size: 28px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            font-weight: 600;
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+
+        .btn-login {
+            color: white;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .btn-login:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .btn-register {
+            background: white;
+            color: var(--primary-bg) !important;
+            box-shadow: 0 4px 15px rgba(255,255,255,0.2);
+        }
+
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255,255,255,0.3);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 120px 20px 80px;
+            text-align: center;
+            background: radial-gradient(circle at top right, rgba(240, 101, 41, 0.15), transparent),
+                        radial-gradient(circle at bottom left, rgba(192, 36, 37, 0.1), transparent);
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 20px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 13px;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .hero h1 {
+            font-size: 58px;
+            font-weight: 800;
+            max-width: 850px;
+            margin: 0 auto 20px;
+            line-height: 1.1;
+        }
+
+        .hero p {
+            font-size: 18px;
+            color: rgba(255,255,255,0.7);
+            max-width: 650px;
+            margin: 0 auto 40px;
+        }
+
+        .hero-btns {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .cta-main {
+            background: var(--accent-gradient);
+            color: white;
+            padding: 18px 45px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 18px;
+            box-shadow: 0 10px 25px rgba(240, 101, 41, 0.3);
+            transition: 0.3s transform;
+        }
+
+        .cta-secondary {
+            background: transparent;
+            color: white;
+            padding: 18px 45px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 700;
+            border: 1px solid rgba(255,255,255,0.3);
+            transition: 0.3s;
+        }
+
+        .cta-secondary:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        /* Features Floating Cards */
+        .features-container {
+            max-width: 1000px;
+            margin: -50px auto 100px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            padding: 0 20px;
+        }
+
+        .feature-box {
+            background: var(--card-bg);
+            color: var(--text-dark);
+            padding: 40px 30px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+
+        /* Network Section */
+        .networks {
+            background: #f8f9fc;
+            padding: 100px 20px;
+            color: var(--text-dark);
+            border-radius: 40px 40px 0 0;
+        }
+
+        .section-header {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto 60px;
+        }
+
+        .section-header h2 { font-size: 42px; font-weight: 800; margin-bottom: 10px; }
+
+        .networks-grid {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .network-card {
+            background: white;
+            padding: 40px;
+            border-radius: 25px;
+            border: 1px solid #eee;
+            transition: 0.3s;
+        }
+
+        .network-card:hover { transform: translateY(-5px); border-color: #f06529; }
+
+        .network-top { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+
+        .network-circle {
+            width: 55px; height: 55px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; color: white; font-size: 14px;
+        }
+
+        .mtn-color { background: #FFCC00; color: #000; }
+        .tel-color { background: #E60000; }
+        .air-color { background: #0052CC; }
+
+        .price-chip {
+            background: #0a0e27;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        /* Bottom CTA */
+        .bottom-cta {
+            background: var(--primary-bg);
+            padding: 120px 20px;
+            text-align: center;
+        }
+
+        .bottom-cta-box {
+            max-width: 800px;
+            margin: 0 auto;
+            background: linear-gradient(rgba(255,255,255,0.03), rgba(255,255,255,0.03));
+            padding: 80px 40px;
+            border-radius: 40px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .footer {
+            padding: 60px 20px;
+            text-align: center;
+            font-size: 14px;
+            color: rgba(255,255,255,0.4);
+            background: var(--primary-bg);
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .footer a { color: #f06529; text-decoration: none; margin: 0 10px; }
+
+        @media (max-width: 768px) {
+            .navbar { padding: 15px 20px; }
+            .hero h1 { font-size: 38px; }
+            .features-container { grid-template-columns: 1fr; margin-top: 30px; }
+            .nav-links { gap: 10px; }
+            .nav-links a { padding: 8px 15px; font-size: 12px; }
+        }
+    </style>
 </head>
 <body>
-  <p>Redirecting to <a href="https://giganticdatahub.com/">Gigantic Data Hub</a>...</p>
-</body>
-</html>
+<h1 style="display:none;">Buy Cheap Data Bundles in Ghana - 13 Cedis Gigantic Data Hub</h1>
+
+    <nav class="navbar">
+        <a href="index.html" class="logo">
+            <span class="logo-bolt">⚡</span> GIGANTIC<br>DATAHUB
+        </a>
+        <div class="nav-links">
+            <a href="login.html" class="btn-login">LOGIN</a>
+            <a href="register.html" class="btn-register">GET STARTED</a>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="hero-badge">🚀 GHANA'S #1 DATA PLATFORM</div>
+        <h1>Cheapest Data Bundles For Your Smartphone</h1>
+        <p>Save up to 40% on MTN, Telecel, and AirtelTigo data. Automated delivery in less than 10 minutes.</p>
+        <div class="hero-btns">
+            <a href="register.html" class="cta-main">Create Free Account →</a>
+            <a href="#how-it-works" class="cta-secondary">How It Works</a>
+        </div>
+    </header>
+
+    <section class="features-container">
+        <div class="feature-box">
+            <span style="font-size: 40px; display: block; margin-bottom: 10px;">💰</span>
+            <h3 style="font-weight: 800;">Best Prices</h3>
+            <p style="font-size: 14px; color: #666; margin-top: 5px;">Save more on every GB</p>
+        </div>
+        <div class="feature-box">
+            <span style="font-size: 40px; display: block; margin-bottom: 10px;">⚡</span>
+            <h3 style="font-weight: 800;">Fast Delivery</h3>
+            <p style="font-size: 14px; color: #666; margin-top: 5px;">Delivery in under 10 mins</p>
+        </div>
+        <div class="feature-box">
+            <span style="font-size: 40px; display: block; margin-bottom: 10px;">🔒</span>
+            <h3 style="font-weight: 800;">100% Secure</h3>
+            <p style="font-size: 14px; color: #666; margin-top: 5px;">Safe MoMo payments</p>
+        </div>
+    </section>
+
+    <section id="how-it-works" class="networks">
+        <div class="section-header">
+            <h2>Supported Networks</h2>
+            <p>One platform for all your internet needs in Ghana.</p>
+        </div>
+        
+        <div class="networks-grid">
+            <div class="network-card">
+                <div class="network-top">
+                    <div class="network-circle mtn-color">MTN</div>
+                    <h3 style="font-weight: 800;">MTN Ghana</h3>
+                </div>
+                <p style="color: #666; margin-bottom: 25px; font-size: 15px;">Reliable 4G data for all MTN users.</p>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 14px; font-weight: 600;">From</span>
+                    <span class="price-chip">GHS 4.4</span>
+                </div>
+            </div>
+
+            <div class="network-card">
+                <div class="network-top">
+                    <div class="network-circle tel-color">TEL</div>
+                    <h3 style="font-weight: 800;">Telecel</h3>
+                </div>
+                <p style="color: #666; margin-bottom: 25px; font-size: 15px;">Enjoy fast internet on Telecel network.</p>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 14px; font-weight: 600;">From</span>
+                    <span class="price-chip">GHS 21.00</span>
+                </div>
+            </div>
+
+            <div class="network-card">
+                <div class="network-top">
+                    <div class="network-circle air-color">AIR</div>
+                    <h3 style="font-weight: 800;">AirtelTigo</h3>
+                </div>
+                <p style="color: #666; margin-bottom: 25px; font-size: 15px;">Most affordable plans for heavy users.</p>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 14px; font-weight: 600;">From</span>
+                    <span class="price-chip">GHS 4.50</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="bottom-cta">
+        <div class="bottom-cta-box">
+            <h2 style="font-size: 38px; margin-bottom: 15px; font-weight: 800;">Ready to join 10,000+ users?</h2>
+            <p style="margin-bottom: 40px; opacity: 0.7; font-size: 18px;">Start buying data at wholesale prices right now.</p>
+            <a href="register.html" class="btn-register" style="padding: 18px 50px; text-decoration: none; border-radius: 40px; font-weight: 800; display: inline-block;">Get Started Now →</a>
+        </div>
+    </section>
+
+<a href="https://wa.me/233549055308?text=Hello%20Admin%20I%20need%20help"
+   class="whatsapp-float"
+   target="_blank"
+   aria-label="Chat with us on WhatsApp">
+   <i class="fab fa-whatsapp"></i>
+</a>
+
+<style>
+.whatsapp-float {
+    position: fixed;
+    width: 60px;
+    height: 60px;
+    bottom: 25px;
+    right: 25px;
+    background-color: #25D366;
+    color: #fff;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 32px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.whatsapp-float:hover {
+    background-color: #1ebe5d;
+    transform: scale(1.1);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+</style>
+
+    <footer class="footer">
+        <p>&copy; 2025 GIGANTICDATAHUB. All rights reserved.</p>
+        <div style="margin-top: 15px;">
+            <a href="terms.html">Terms</a> | 
+            <a href="https://wa.me/233548055308">Contact Support</a>
+        </div>
+    </footer>
+
+    <a href="admin_login.html" 
+       style="position: fixed; bottom: 0; right: 0; width: 50px; height: 50px; z-index: 9999; background: transparent; cursor: default; -webkit-tap-highlight-color: transparent;"
+       title="Admin Entrance">
+    </a>
+
+
+</body></html>
