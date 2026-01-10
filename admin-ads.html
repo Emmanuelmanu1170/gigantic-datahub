@@ -1,156 +1,270 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Admin Ads Manager — Gigantic Boost</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <title>Ads Manager - GiganticData</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #3b82f6;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+        }
 
-  <style>
-    :root {
-      --bg: #f8fafc;
-      --card: #ffffff;
-      --text: #1e293b;
-      --accent: #facc15;
-      --danger: #ef4444;
-      --success: #10b981;
-      --border: #e2e8f0;
-    }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        
+        /* FORM STYLING */
+        .ad-form { 
+            background: white; padding: 25px; border-radius: 15px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 30px;
+            border: 2px solid transparent; transition: border 0.3s;
+        }
+        .ad-form.edit-mode { border-color: var(--accent); }
+        .ad-form h2 { margin-top: 0; font-size: 18px; color: var(--primary); }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; font-size: 12px; font-weight: 700; color: #64748b; margin-bottom: 5px; }
+        input, textarea, select { 
+            width: 100%; padding: 12px; border: 1px solid #e2e8f0; 
+            border-radius: 10px; box-sizing: border-box; outline: none;
+        }
 
-    body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
-    .container { max-width: 900px; margin: 0 auto; }
+        .btn-save { 
+            background: var(--primary); color: white; border: none; 
+            padding: 15px; width: 100%; border-radius: 10px; 
+            font-weight: 700; cursor: pointer; 
+        }
+        .btn-cancel {
+            background: #e2e8f0; color: var(--primary); border: none;
+            padding: 10px; width: 100%; border-radius: 10px; margin-top: 10px;
+            font-weight: 600; cursor: pointer; display: none;
+        }
 
-    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-    .btn-back { text-decoration: none; color: var(--text); font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        /* ADS LIST STYLING */
+        .ad-card {
+            background: white; padding: 15px; border-radius: 12px;
+            margin-bottom: 15px; display: flex; align-items: center; gap: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02); border: 1px solid #eef2f6;
+        }
+        .ad-icon-preview {
+            width: 50px; height: 50px; background: #f1f5f9; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--accent);
+        }
+        .ad-info { flex: 1; }
+        .ad-info h4 { margin: 0; font-size: 14px; }
+        .ad-info p { margin: 4px 0; font-size: 11px; color: #64748b; }
+        .stats-pill {
+            background: #dcfce7; color: #166534; padding: 4px 8px; 
+            border-radius: 6px; font-size: 10px; font-weight: 800;
+        }
 
-    /* Form Styling */
-    .ad-form { background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 40px; }
-    .ad-form h2 { margin-top: 0; font-size: 1.2rem; }
-    .form-group { margin-bottom: 15px; }
-    label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: #64748b; }
-    input, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 0.9rem; }
-    .btn-submit { background: var(--text); color: #fff; border: none; padding: 12px 25px; border-radius: 10px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 10px; }
-    .btn-submit:hover { opacity: 0.9; }
+        .actions { display: flex; gap: 8px; }
+        .btn-action { border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+        .btn-del { color: var(--danger); background: #fee2e2; }
+        .btn-toggle { color: var(--accent); background: #dbeafe; }
+        .btn-edit { color: #1e293b; background: #f1f5f9; }
 
-    /* Ads List Styling */
-    .ads-list { display: grid; gap: 15px; }
-    .ad-item { 
-      background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid var(--border);
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .ad-info h4 { margin: 0; color: var(--text); }
-    .ad-info p { margin: 5px 0 0; font-size: 0.85rem; color: #64748b; }
-    .btn-delete { background: #fee2e2; color: var(--danger); border: none; width: 40px; height: 40px; border-radius: 10px; cursor: pointer; }
-    .btn-delete:hover { background: var(--danger); color: #fff; }
-
-    .status-badge { font-size: 0.7rem; padding: 4px 8px; border-radius: 5px; background: #fef9c3; color: #a16207; font-weight: 700; margin-left: 10px; }
-  </style>
+        #loadingOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; display: flex; justify-content: center; align-items: center; z-index: 100;
+        }
+    </style>
 </head>
 <body>
 
-  <div class="container">
-    <header>
-      <a href="admin-dashboard.html" class="btn-back"><i class="fas fa-arrow-left"></i> Back to Admin</a>
-      <h1>Manage Ads</h1>
-    </header>
+    <div id="loadingOverlay">
+        <div style="text-align:center;">
+            <i class="fas fa-circle-notch fa-spin fa-2x" style="color: var(--accent);"></i>
+            <p>Authenticating Admin...</p>
+        </div>
+    </div>
 
-    <section class="ad-form">
-      <h2><i class="fas fa-plus-circle"></i> Push New Announcement</h2>
-      <div class="form-group">
-        <label>Ad Title (Bold Heading)</label>
-        <input type="text" id="adTitle" placeholder="e.g. Weekend Special Bonus!">
-      </div>
-      <div class="form-group">
-        <label>Ad Message (Short & Catchy)</label>
-        <textarea id="adMessage" rows="2" placeholder="e.g. Get 20% extra on all deposits via MTN MoMo today only..."></textarea>
-      </div>
-      <button class="btn-submit" id="saveAdBtn">Post to User Dashboard</button>
-    </section>
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1>Ads Management</h1>
+            <a href="admin.html" style="text-decoration: none; font-size: 13px; color: var(--accent); font-weight: 700;">Back to Dashboard</a>
+        </div>
 
-    <section>
-      <h2 style="font-size: 1.1rem; margin-bottom: 20px;">Active Ads Pool</h2>
-      <div class="ads-list" id="adsContainer">
-        <p style="text-align: center; color: #94a3b8;">Loading active ads...</p>
-      </div>
-    </section>
-  </div>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getDatabase, ref, push, onValue, remove, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyCGoDeUIKI_aWPV-Ys6Swlw9YQNcVhn5dY",
-      authDomain: "kwabenamedia.firebaseapp.com",
-      databaseURL: "https://kwabenamedia-default-rtdb.firebaseio.com",
-      projectId: "kwabenamedia",
-      storageBucket: "kwabenamedia.appspot.com",
-      messagingSenderId: "508812066118",
-      appId: "1:508812066118:web:5bf0b2f7f7844d05b3b947"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const adsRef = ref(db, 'admin/ads_list');
-
-    // Save New Ad
-    document.getElementById('saveAdBtn').onclick = async () => {
-      const title = document.getElementById('adTitle').value;
-      const message = document.getElementById('adMessage').value;
-
-      if (!title || !message) {
-        alert("Please fill in both fields");
-        return;
-      }
-
-      try {
-        await push(adsRef, {
-          t: title,
-          m: message,
-          timestamp: Date.now()
-        });
-        document.getElementById('adTitle').value = '';
-        document.getElementById('adMessage').value = '';
-        alert("Ad published successfully!");
-      } catch (e) {
-        alert("Error: " + e.message);
-      }
-    };
-
-    // Listen for Ads
-    onValue(adsRef, (snapshot) => {
-      const container = document.getElementById('adsContainer');
-      container.innerHTML = '';
-
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        Object.keys(data).forEach(key => {
-          const ad = data[key];
-          const div = document.createElement('div');
-          div.className = 'ad-item';
-          div.innerHTML = `
-            <div class="ad-info">
-              <h4>${ad.t} <span class="status-badge">LIVE</span></h4>
-              <p>${ad.m}</p>
+        <div class="ad-form" id="adForm">
+            <h2 id="formTitle">Create New Sponsored Ad</h2>
+            <input type="hidden" id="editAdId">
+            <div class="input-group">
+                <label>AD TITLE</label>
+                <input type="text" id="adTitle" placeholder="e.g. Join Affiliate Mastery">
             </div>
-            <button class="btn-delete" onclick="deleteAd('${key}')">
-              <i class="fas fa-trash"></i>
-            </button>
-          `;
-          container.appendChild(div);
-        });
-      } else {
-        container.innerHTML = '<p style="text-align: center; color: #94a3b8;">No active ads. Add one above.</p>';
-      }
-    });
+            <div class="input-group">
+                <label>DESCRIPTION</label>
+                <textarea id="adDesc" rows="2" placeholder="Briefly describe the offer..."></textarea>
+            </div>
+            <div class="input-group">
+                <label>TARGET LINK (URL)</label>
+                <input type="text" id="adLink" placeholder="https://wa.me/...">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="input-group">
+                    <label>ICON CLASS (FontAwesome)</label>
+                    <input type="text" id="adIcon" placeholder="fa-rocket">
+                </div>
+                <div class="input-group">
+                    <label>STATUS</label>
+                    <select id="adStatus">
+                        <option value="true">Active</option>
+                        <option value="false">Hidden</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn-save" id="submitBtn" onclick="saveAd()">UPLOAD AD CAMPAIGN</button>
+            <button class="btn-cancel" id="cancelBtn" onclick="resetForm()">Cancel Editing</button>
+        </div>
 
-    // Delete Function (Exposed to Window for the onclick attribute)
-    window.deleteAd = (key) => {
-      if (confirm("Remove this ad from rotation?")) {
-        remove(ref(db, `admin/ads_list/${key}`));
-      }
-    };
-  </script>
+        <h3 style="font-size: 14px; color: #64748b;">LIVE CAMPAIGNS</h3>
+        <div id="adsContainer"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+        import { getDatabase, ref, onValue, push, set, remove, update } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
+            authDomain: "gigantic-data.firebaseapp.com",
+            databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
+            projectId: "gigantic-data",
+            storageBucket: "gigantic-data.firebasestorage.app",
+            messagingSenderId: "727845403550",
+            appId: "1:727845403550:web:e3c3a40ce615aaaca9748f"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        const ADMIN_EMAIL = 'alenacloft0@gmail.com';
+
+        onAuthStateChanged(auth, (user) => {
+            if (user && user.email === ADMIN_EMAIL) {
+                document.getElementById('loadingOverlay').style.display = 'none';
+                loadAds();
+            } else {
+                window.location.href = "dashboard.html";
+            }
+        });
+
+        function loadAds() {
+            onValue(ref(db, 'adsList'), (snapshot) => {
+                const data = snapshot.val() || {};
+                const container = document.getElementById('adsContainer');
+                container.innerHTML = "";
+
+                Object.keys(data).forEach(id => {
+                    const ad = data[id];
+                    const card = document.createElement('div');
+                    card.className = "ad-card";
+                    card.innerHTML = `
+                        <div class="ad-icon-preview">
+                            <i class="fas ${ad.icon || 'fa-star'}"></i>
+                        </div>
+                        <div class="ad-info">
+                            <h4>${ad.title}</h4>
+                            <p>${ad.description}</p>
+                            <div style="display:flex; gap:10px; align-items:center;">
+                                <span class="stats-pill">${ad.clicks || 0} CLICKS</span>
+                                <span style="font-size:10px; color:${ad.active !== false ? '#22c55e' : '#ef4444'}">
+                                    ● ${ad.active !== false ? 'Active' : 'Hidden'}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="actions">
+                            <button class="btn-action btn-edit" onclick='prepareEdit("${id}", ${JSON.stringify(ad).replace(/'/g, "&apos;")})'>
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-action btn-toggle" onclick="toggleAd('${id}', ${ad.active !== false})">
+                                <i class="fas ${ad.active !== false ? 'fa-eye-slash' : 'fa-eye'}"></i>
+                            </button>
+                            <button class="btn-action btn-del" onclick="deleteAd('${id}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            });
+        }
+
+        window.prepareEdit = function(id, data) {
+            document.getElementById('editAdId').value = id;
+            document.getElementById('adTitle').value = data.title;
+            document.getElementById('adDesc').value = data.description;
+            document.getElementById('adLink').value = data.link;
+            document.getElementById('adIcon').value = data.icon;
+            document.getElementById('adStatus').value = data.active !== false ? "true" : "false";
+            
+            document.getElementById('formTitle').innerText = "Edit Ad Campaign";
+            document.getElementById('submitBtn').innerText = "UPDATE AD CAMPAIGN";
+            document.getElementById('submitBtn').style.background = "#3b82f6";
+            document.getElementById('adForm').classList.add('edit-mode');
+            document.getElementById('cancelBtn').style.display = "block";
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.resetForm = function() {
+            document.getElementById('editAdId').value = "";
+            document.getElementById('adTitle').value = "";
+            document.getElementById('adDesc').value = "";
+            document.getElementById('adLink').value = "";
+            document.getElementById('adIcon').value = "";
+            document.getElementById('formTitle').innerText = "Create New Sponsored Ad";
+            document.getElementById('submitBtn').innerText = "UPLOAD AD CAMPAIGN";
+            document.getElementById('submitBtn').style.background = "#0f172a";
+            document.getElementById('adForm').classList.remove('edit-mode');
+            document.getElementById('cancelBtn').style.display = "none";
+        };
+
+        window.saveAd = function() {
+            const editId = document.getElementById('editAdId').value;
+            const title = document.getElementById('adTitle').value;
+            const desc = document.getElementById('adDesc').value;
+            const link = document.getElementById('adLink').value;
+            const icon = document.getElementById('adIcon').value;
+            const active = document.getElementById('adStatus').value === "true";
+
+            if(!title || !link) return alert("Title and Link are required!");
+
+            const adData = {
+                title,
+                description: desc,
+                link,
+                icon,
+                active,
+                timestamp: Date.now()
+            };
+
+            if (editId) {
+                update(ref(db, `adsList/${editId}`), adData).then(() => {
+                    alert("Ad Updated!");
+                    resetForm();
+                });
+            } else {
+                adData.clicks = 0;
+                const newAdRef = push(ref(db, 'adsList'));
+                set(newAdRef, adData).then(() => {
+                    alert("Ad Published!");
+                    resetForm();
+                });
+            }
+        };
+
+        window.deleteAd = function(id) {
+            if(confirm("Delete this campaign?")) remove(ref(db, `adsList/${id}`));
+        };
+
+        window.toggleAd = function(id, currentStatus) {
+            update(ref(db, `adsList/${id}`), { active: !currentStatus });
+        };
+    </script>
 </body>
 </html>
