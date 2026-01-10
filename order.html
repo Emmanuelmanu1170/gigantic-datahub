@@ -12,40 +12,60 @@
             --bg-gray: #fcfdfe;
             --border-color: #eef2f6;
             --text-main: #1e293b;
+            --text-muted: #94a3b8;
+            --active-blue: #3b82f6;
             --success-green: #16a34a;
             --light-green: #f0fdf4;
+            --warning-amber: #f59e0b;
         }
 
         * { box-sizing: border-box; font-family: -apple-system, sans-serif; }
         body { background-color: var(--bg-gray); margin: 0; display: flex; justify-content: center; color: var(--text-main); }
         .container { width: 100%; max-width: 480px; padding: 16px; min-height: 100vh; }
 
-        header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
         .back-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-main); text-decoration: none;}
+        .btn-terms { font-size: 0.7rem; color: var(--primary-purple); text-decoration: none; font-weight: 600; }
 
         .balance-card {
             background: linear-gradient(135deg, var(--primary-purple) 0%, var(--secondary-purple) 100%);
-            color: white; padding: 20px; border-radius: 20px; margin-bottom: 15px;
+            color: white; padding: 24px; border-radius: 20px; margin-bottom: 15px;
             box-shadow: 0 10px 20px rgba(106, 90, 249, 0.2);
         }
-        .balance-card h2 { margin: 5px 0 0; font-size: 1.6rem; font-weight: 800; }
+        .balance-card p { margin: 0; font-size: 0.75rem; opacity: 0.8; }
+        .balance-card h2 { margin: 8px 0 0; font-size: 1.75rem; font-weight: 800; }
         .user-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; background: rgba(255,255,255,0.2); font-size: 0.65rem; font-weight: 700; margin-top: 10px; }
 
+        .agent-promo {
+            background: #fffbeb; border: 1px dashed var(--warning-amber); padding: 12px;
+            border-radius: 12px; margin-bottom: 15px; display: none; align-items: center; gap: 10px;
+        }
+
+        .mode-selector {
+            display: flex; background: #fff; border: 1px solid var(--border-color);
+            padding: 5px; border-radius: 12px; margin-bottom: 20px;
+        }
+        .mode-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; background: transparent; transition: 0.3s; font-size: 0.85rem; }
+        .mode-btn.active { background: var(--primary-purple); color: white; }
+
         .step { background: white; border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; margin-bottom: 16px; transition: 0.3s; }
-        
-        /* Fixed Selection Issue: Active step must force visibility and clicks */
-        .active-step { border: 2px solid var(--primary-purple) !important; opacity: 1 !important; pointer-events: auto !important; filter: none !important; }
+        .active-step { border: 2px solid var(--primary-purple) !important; opacity: 1 !important; pointer-events: auto !important; }
         .disabled { opacity: 0.5; pointer-events: none; filter: grayscale(1); }
 
+        .step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+        .step-number { background: #f1f5f9; color: var(--active-blue); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; }
+        .step-title h3 { margin: 0; font-size: 0.85rem; }
+
         .network-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .network-option { border: 1px solid var(--border-color); border-radius: 12px; padding: 12px 5px; text-align: center; cursor: pointer; transition: 0.2s; }
-        .network-option.selected { border: 2px solid var(--primary-purple); background: #f5f3ff; transform: scale(1.02); }
-        
+        .network-option { border: 1px solid var(--border-color); border-radius: 12px; padding: 12px 5px; text-align: center; cursor: pointer; }
+        .network-option.selected { border: 2px solid var(--primary-purple); background: #f5f3ff; }
         .logo-box { width: 35px; height: 35px; margin: 0 auto 8px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 900; color: white; }
+        
         .mtn { background: #ffcc00; color: #000; } .airtel { background: #ed1c24; } .telecel { background: #e60000; }
 
-        select, input { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border-color); background: #f8fafc; outline: none; font-size: 0.9rem; margin-top: 10px; }
-
+        select, input, textarea { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border-color); background: #f8fafc; outline: none; font-size: 0.9rem; margin-top: 10px; }
+        textarea { height: 100px; resize: none; font-family: monospace; }
+        
         .validation-card {
             background-color: var(--light-green); border: 1px solid #dcfce7;
             border-radius: 12px; padding: 12px; margin-top: 15px;
@@ -63,20 +83,35 @@
 
     <div class="container">
         <header>
-        <a href="terms.html" class="btn-terms">Terms & Conditions</a>
-
-
             <a href="dashboard.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
             <h1 style="font-size: 1rem;">Buy Data Bundle</h1>
+            <a href="terms.html" class="btn-terms">T&Cs</a>
         </header>
 
         <div class="balance-card">
-            <p style="font-size: 0.7rem; opacity: 0.8;">Wallet Balance</p>
+            <p>Wallet Balance</p>
             <h2 id="walletBalance">GH₵ 0.00</h2>
             <div class="user-badge" id="userTypeBadge">USER</div>
         </div>
 
+        <div class="agent-promo" id="agentPromo">
+            <i class="fas fa-bolt" style="color: var(--warning-amber)"></i>
+            <div style="flex: 1">
+                <p style="margin:0; font-size: 0.75rem; font-weight: 700;">Lower prices available!</p>
+                <a href="agent-request.html" style="font-size: 0.65rem; color: var(--primary-purple); font-weight: 800;">ACTIVATE AGENT STATUS</a>
+            </div>
+        </div>
+
+        <div class="mode-selector">
+            <button class="mode-btn active" id="btnSingle" onclick="setPurchaseMode('single')">Single</button>
+            <button class="mode-btn" id="btnBulk" onclick="setPurchaseMode('bulk')">Bulk</button>
+        </div>
+
         <div class="step active-step" id="step1">
+            <div class="step-header">
+                <div class="step-number">1</div>
+                <div class="step-title"><h3>Select Network</h3></div>
+            </div>
             <div class="network-grid">
                 <div class="network-option" onclick="selectNetwork(this, 'mtn')"><div class="logo-box mtn">MTN</div><p style="font-size:11px">MTN</p></div>
                 <div class="network-option" onclick="selectNetwork(this, 'airteltigo')"><div class="logo-box airtel">AT</div><p style="font-size:11px">AirtelTigo</p></div>
@@ -85,138 +120,164 @@
         </div>
 
         <div class="step disabled" id="step2">
+            <div class="step-header">
+                <div class="step-number">2</div>
+                <div class="step-title"><h3>Choose Data Plan</h3></div>
+            </div>
             <select id="dataPlan" onchange="unlockStep3()">
-                <option value="" selected disabled>-- Choose Plan --</option>
+                <option value="" selected disabled>-- Select Network First --</option>
             </select>
         </div>
 
         <div class="step disabled" id="step3">
-            <input type="tel" id="phoneNumber" placeholder="Enter recipient number" maxlength="10">
+            <div class="step-header">
+                <div class="step-number">3</div>
+                <div class="step-title"><h3>Recipient Details</h3></div>
+            </div>
             
-            <div class="validation-card" id="validationBox">
-                <i class="fas fa-check-circle"></i>
-                <div class="validation-text">
-                    <b style="color: #166534; font-size: 0.85rem; display: block;">Phone number format valid</b>
-                    <p style="color: #15803d; font-size: 0.75rem; margin: 0;">Account: <span class="acc-name" id="displayAccName">Verifying...</span></p>
-                    <p style="color: #15803d; font-size: 0.75rem; margin: 0;">Recipient validated successfully</p>
+            <div id="singleInput">
+                <input type="tel" id="phoneNumber" placeholder="024XXXXXXX" maxlength="10">
+                <div class="validation-card" id="validationBox">
+                    <i class="fas fa-check-circle"></i>
+                    <div class="validation-text">
+                        <b style="font-size: 0.85rem; display: block;">Recipient Verified</b>
+                        <p style="font-size: 0.75rem; margin: 0;">Name: <span class="acc-name" id="displayAccName">Verifying...</span></p>
+                    </div>
                 </div>
+            </div>
+
+            <div id="bulkInput" style="display: none;">
+                <textarea id="bulkNumbers" placeholder="024XXXXXXX, 055XXXXXXX"></textarea>
+                <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 5px;">Separate numbers with commas (,)</p>
             </div>
 
             <button class="confirm-btn" onclick="processToConfirmation()">Proceed to Confirm</button>
         </div>
     </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-    const firebaseConfig = { apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4", authDomain: "gigantic-data.firebaseapp.com", databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com", projectId: "gigantic-data", storageBucket: "gigantic-data.firebasestorage.app", messagingSenderId: "727845403550", appId: "1:727845403550:web:e3c3a40ce615aaaca9748f" };
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
+        const firebaseConfig = { apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4", authDomain: "gigantic-data.firebaseapp.com", databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com", projectId: "gigantic-data", storageBucket: "gigantic-data.firebasestorage.app", messagingSenderId: "727845403550", appId: "1:727845403550:web:e3c3a40ce615aaaca9748f" };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
 
-    let isAgent = false;
-    window.selectedNet = "";
-    
-    // Hidden Key Logic
-    const _0x4f22 = ["YmZkMjhmYmJlM2NhNDU1YmExNTQ1NWViZWQ3MTM4YjI0MDA5ZDEzNA==", "YmVhcmVyIA=="];
-    const getK = () => atob(_0x4f22[1]) + atob("c2tfbGl2ZV8=") + atob(_0x4f22[0]);
+        let isAgent = false;
+        let purchaseMode = 'single';
+        let currentBalance = 0;
+        let userReferrer = null;
+        window.selectedNet = "";
 
-    const agentPlans = {
-        mtn:[{plan:"1GB",price:"4.4"},{plan:"2GB",price:"8.8"},{plan:"3GB",price:"13.2"},{plan:"4GB",price:"17.6"},{plan:"5GB",price:"21.5"},{plan:"6GB",price:"26.5"},{plan:"8GB",price:"36.38"},{plan:"10GB",price:"42"},{plan:"15GB",price:"62"},{plan:"20GB",price:"82"},{plan:"25GB",price:"103"},{plan:"30GB",price:"123"},{plan:"40GB",price:"160"},{plan:"50GB",price:"199"},{plan:"100GB",price:"380"}],
-        airteltigo:[{plan:"1GB",price:"4.3"},{plan:"2GB",price:"8.56"},{plan:"3GB",price:"12.84"},{plan:"4GB",price:"17.12"},{plan:"5GB",price:"21.4"},{plan:"6GB",price:"25.6"},{plan:"7GB",price:"29.96"},{plan:"8GB",price:"35"},{plan:"10GB",price:"44"},{plan:"15GB",price:"65"},{plan:"20GB",price:"76"},{plan:"30GB",price:"87"},{plan:"40GB",price:"100"},{plan:"50GB",price:"115"},{plan:"60GB",price:"150"},{plan:"80GB",price:"183"},{plan:"100GB",price:"200"}],
-        telecel:[{plan:"10GB",price:"45"},{plan:"15GB",price:"62"},{plan:"20GB",price:"84"},{plan:"25GB",price:"105"},{plan:"30GB",price:"120"},{plan:"40GB",price:"158"},{plan:"50GB",price:"196"},{plan:"100GB",price:"384"}]
-    };
+        const getK = () => atob("YmVhcmVyIA==") + atob("c2tfbGl2ZV8=") + atob("YmZkMjhmYmJlM2NhNDU1YmExNTQ1NWViZWQ3MTM4YjI0MDA5ZDEzNA==");
 
-    const normalPlans = {
-        mtn:[{plan:"1GB",price:"4.5"},{plan:"2GB",price:"9"},{plan:"3GB",price:"13.5"},{plan:"4GB",price:"17.52"},{plan:"5GB",price:"21.9"},{plan:"6GB",price:"26.2"},{plan:"8GB",price:"35.8"},{plan:"10GB",price:"45"},{plan:"15GB",price:"66.5"},{plan:"20GB",price:"78"},{plan:"30GB",price:"90"},{plan:"40GB",price:"104"},{plan:"50GB",price:"120"},{plan:"100GB",price:"210"}],
-        airteltigo:[{plan:"1GB",price:"4.4"},{plan:"2GB",price:"8.6"},{plan:"3GB",price:"13"},{plan:"4GB",price:"18.1"},{plan:"5GB",price:"22.8"},{plan:"6GB",price:"26.9"},{plan:"7GB",price:"31.1"},{plan:"8GB",price:"35.4"},{plan:"10GB",price:"44.5"},{plan:"15GB",price:"67.9"},{plan:"20GB",price:"78.8"},{plan:"30GB",price:"89.7"},{plan:"40GB",price:"106"},{plan:"50GB",price:"121.5"},{plan:"60GB",price:"173"},{plan:"80GB",price:"194.5"},{plan:"100GB",price:"215.5"}],
-        telecel:[{plan:"10GB",price:"46.7"},{plan:"15GB",price:"63.3"},{plan:"20GB",price:"85.1"},{plan:"25GB",price:"106.5"},{plan:"30GB",price:"121.5"},{plan:"40GB",price:"159.5"},{plan:"50GB",price:"198.4"},{plan:"100GB",price:"386.7"}]
-    };
+        const agentPlans = {
+            mtn:[{plan:"1GB",price:"4.4"},{plan:"2GB",price:"8.8"},{plan:"3GB",price:"13.2"},{plan:"4GB",price:"17.6"},{plan:"5GB",price:"21.5"},{plan:"6GB",price:"26.5"},{plan:"8GB",price:"36.38"},{plan:"10GB",price:"42"},{plan:"15GB",price:"62"},{plan:"20GB",price:"82"},{plan:"25GB",price:"103"},{plan:"30GB",price:"123"},{plan:"40GB",price:"160"},{plan:"50GB",price:"199"},{plan:"100GB",price:"380"}],
+            airteltigo:[{plan:"1GB",price:"4.3"},{plan:"2GB",price:"8.56"},{plan:"3GB",price:"12.84"},{plan:"4GB",price:"17.12"},{plan:"5GB",price:"21.4"},{plan:"6GB",price:"25.6"},{plan:"7GB",price:"29.96"},{plan:"8GB",price:"35"},{plan:"10GB",price:"44"},{plan:"15GB",price:"65"},{plan:"20GB",price:"76"},{plan:"30GB",price:"87"},{plan:"40GB",price:"100"},{plan:"50GB",price:"115"},{plan:"60GB",price:"150"},{plan:"80GB",price:"183"},{plan:"100GB",price:"200"}],
+            telecel:[{plan:"10GB",price:"45"},{plan:"15GB",price:"62"},{plan:"20GB",price:"84"},{plan:"25GB",price:"105"},{plan:"30GB",price:"120"},{plan:"40GB",price:"158"},{plan:"50GB",price:"196"},{plan:"100GB",price:"384"}]
+        };
 
-    onAuthStateChanged(auth, user => {
-        if (user) {
-            onValue(ref(db, 'users/' + user.uid), (snapshot) => {
-                const data = snapshot.val() || {};
-                isAgent = data.status === "Agent";
-                document.getElementById('walletBalance').innerText = `GH₵ ${Number(data.wallet || 0).toFixed(2)}`;
-                document.getElementById('userTypeBadge').innerText = isAgent ? "AGENT" : "NORMAL USER";
-            });
-        }
-    });
+        const normalPlans = {
+            mtn:[{plan:"1GB",price:"4.5"},{plan:"2GB",price:"9"},{plan:"3GB",price:"13.5"},{plan:"4GB",price:"17.52"},{plan:"5GB",price:"21.9"},{plan:"6GB",price:"26.2"},{plan:"8GB",price:"35.8"},{plan:"10GB",price:"45"},{plan:"15GB",price:"66.5"},{plan:"20GB",price:"78"},{plan:"30GB",price:"90"},{plan:"40GB",price:"104"},{plan:"50GB",price:"120"},{plan:"100GB",price:"210"}],
+            airteltigo:[{plan:"1GB",price:"4.4"},{plan:"2GB",price:"8.6"},{plan:"3GB",price:"13"},{plan:"4GB",price:"18.1"},{plan:"5GB",price:"22.8"},{plan:"6GB",price:"26.9"},{plan:"7GB",price:"31.1"},{plan:"8GB",price:"35.4"},{plan:"10GB",price:"44.5"},{plan:"15GB",price:"67.9"},{plan:"20GB",price:"78.8"},{plan:"30GB",price:"89.7"},{plan:"40GB",price:"106"},{plan:"50GB",price:"121.5"},{plan:"60GB",price:"173"},{plan:"80GB",price:"194.5"},{plan:"100GB",price:"215.5"}],
+            telecel:[{plan:"10GB",price:"46.7"},{plan:"15GB",price:"63.3"},{plan:"20GB",price:"85.1"},{plan:"25GB",price:"106.5"},{plan:"30GB",price:"121.5"},{plan:"40GB",price:"159.5"},{plan:"50GB",price:"198.4"},{plan:"100GB",price:"386.7"}]
+        };
 
-    // FUNCTIONS EXPOSED TO WINDOW FOR ONCLICK ACCESS
-    window.selectNetwork = (el, net) => {
-        window.selectedNet = net;
-        document.querySelectorAll('.network-option').forEach(o => o.classList.remove('selected'));
-        el.classList.add('selected');
-        
-        const step2 = document.getElementById('step2');
-        step2.classList.remove('disabled');
-        step2.classList.add('active-step');
-        
-        const s = document.getElementById('dataPlan');
-        s.innerHTML = '<option value="" selected disabled>-- Choose Plan --</option>';
-        
-        const currentList = isAgent ? agentPlans[net] : normalPlans[net];
-        currentList.forEach(item => {
-            s.innerHTML += `<option value="${item.price}">${item.plan} - GH₵ ${item.price}</option>`;
-        });
-    };
-
-    window.unlockStep3 = () => {
-        const step3 = document.getElementById('step3');
-        step3.classList.remove('disabled');
-        step3.classList.add('active-step');
-    };
-
-    document.getElementById('phoneNumber').addEventListener('input', async function(e) {
-        const num = e.target.value;
-        const box = document.getElementById('validationBox');
-        const nameSpan = document.getElementById('displayAccName');
-
-        if (num.length === 10) {
-            box.style.display = "flex";
-            nameSpan.innerText = "Searching registration...";
-            nameSpan.classList.add('loading-dots');
-
-            const bankMapping = { 'mtn': 'MTN', 'airteltigo': 'ATL', 'telecel': 'VOD' };
-            const bankCode = bankMapping[window.selectedNet];
-
-            try {
-                const response = await fetch(`https://api.paystack.co/bank/resolve?account_number=${num}&bank_code=${bankCode}`, {
-                    method: 'GET',
-                    headers: { 'Authorization': getK(), 'Content-Type': 'application/json' }
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                onValue(ref(db, 'users/' + user.uid), (snapshot) => {
+                    const data = snapshot.val() || {};
+                    isAgent = data.status === "Agent";
+                    currentBalance = Number(data.wallet || 0);
+                    userReferrer = data.referredBy || null;
+                    document.getElementById('walletBalance').innerText = `GH₵ ${currentBalance.toFixed(2)}`;
+                    document.getElementById('userTypeBadge').innerText = isAgent ? "AGENT" : "NORMAL USER";
+                    if(!isAgent && currentBalance > 50) document.getElementById('agentPromo').style.display = "flex";
                 });
-                const result = await response.json();
-                nameSpan.classList.remove('loading-dots');
-                if (result.status) {
-                    nameSpan.innerText = result.data.account_name;
-                    nameSpan.style.color = "#064e3b";
-                } else {
-                    nameSpan.innerText = "NUMBER NOT REGISTERED";
-                    nameSpan.style.color = "#ef4444";
-                }
-            } catch (err) {
-                nameSpan.classList.remove('loading-dots');
-                nameSpan.innerText = "VALIDATED RECIPIENT"; 
-                nameSpan.style.color = "#16a34a";
-            }
-        } else {
-            box.style.display = "none";
-        }
-    });
+            } else { window.location.href = "login.html"; }
+        });
 
-    window.processToConfirmation = () => {
-        const num = document.getElementById('phoneNumber').value;
-        const plan = document.getElementById('dataPlan').value;
-        if(num.length === 10 && plan) {
-            alert(`Plan Selected: GH₵ ${plan}\nNumber: ${num}`);
-        } else {
-            alert("Please complete selection");
-        }
-    };
-</script>
+        window.setPurchaseMode = (mode) => {
+            purchaseMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(mode === 'single' ? 'btnSingle' : 'btnBulk').classList.add('active');
+            document.getElementById('singleInput').style.display = mode === 'single' ? 'block' : 'none';
+            document.getElementById('bulkInput').style.display = mode === 'bulk' ? 'block' : 'none';
+        };
+
+        window.selectNetwork = (el, net) => {
+            window.selectedNet = net;
+            document.querySelectorAll('.network-option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+            const select = document.getElementById('dataPlan');
+            select.innerHTML = '<option value="" selected disabled>-- Choose Plan --</option>';
+            const plans = isAgent ? agentPlans[net] : normalPlans[net];
+            plans.forEach(p => { select.innerHTML += `<option value="${p.price}" data-plan="${p.plan}">${p.plan} - GH₵ ${p.price}</option>`; });
+            document.getElementById('step2').classList.remove('disabled');
+            document.getElementById('step2').classList.add('active-step');
+        };
+
+        window.unlockStep3 = () => {
+            document.getElementById('step3').classList.remove('disabled');
+            document.getElementById('step3').classList.add('active-step');
+        };
+
+        document.getElementById('phoneNumber').addEventListener('input', async function(e) {
+            const num = e.target.value;
+            const box = document.getElementById('validationBox');
+            const nameSpan = document.getElementById('displayAccName');
+            if (num.length === 10) {
+                box.style.display = "flex";
+                nameSpan.innerText = "Searching...";
+                nameSpan.classList.add('loading-dots');
+                const bankMapping = { 'mtn': 'MTN', 'airteltigo': 'ATL', 'telecel': 'VOD' };
+                try {
+                    const response = await fetch(`https://api.paystack.co/bank/resolve?account_number=${num}&bank_code=${bankMapping[window.selectedNet]}`, {
+                        headers: { 'Authorization': getK() }
+                    });
+                    const result = await response.json();
+                    nameSpan.classList.remove('loading-dots');
+                    nameSpan.innerText = result.status ? result.data.account_name : "RECIPIENT VALID";
+                } catch (err) { nameSpan.innerText = "RECIPIENT VALID"; }
+            } else { box.style.display = "none"; }
+        });
+
+        window.processToConfirmation = () => {
+            const planSelect = document.getElementById('dataPlan');
+            if (!planSelect.value) { alert("Please select a plan"); return; }
+            let recipients = [];
+            if (purchaseMode === 'single') {
+                const num = document.getElementById('phoneNumber').value.trim();
+                if (num.length < 10) { alert("Invalid Number"); return; }
+                recipients.push(num);
+            } else {
+                recipients = document.getElementById('bulkNumbers').value.split(',').map(n => n.trim()).filter(n => n.length >= 10);
+                if (recipients.length === 0) { alert("Enter valid numbers"); return; }
+            }
+
+            const unitPrice = parseFloat(planSelect.value);
+            const totalAmount = unitPrice * recipients.length;
+
+            if (currentBalance < totalAmount) { alert("Insufficient Funds!"); return; }
+
+            const order = {
+                network: window.selectedNet.toUpperCase(),
+                plan: planSelect.options[planSelect.selectedIndex].getAttribute('data-plan'),
+                unitPrice: unitPrice,
+                amount: totalAmount,
+                recipients: recipients,
+                recipient: recipients.join(', '),
+                count: recipients.length,
+                mode: purchaseMode,
+                referrer: userReferrer,
+                commissionRate: 0.02
+            };
+
+            localStorage.setItem('pendingOrder', JSON.stringify(order));
+            window.location.href = "confirmation.html";
+        };
+    </script>
 </body>
 </html>
