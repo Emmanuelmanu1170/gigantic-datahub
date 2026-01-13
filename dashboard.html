@@ -97,6 +97,13 @@
         .btn-orange { background: var(--orange-gradient); color: white; }
         .btn-white { background: white; color: var(--deep-blue); }
         .btn-blue { background: var(--deep-blue); color: white; }
+        
+        /* Disabled state for the transfer button */
+        .btn-disabled {
+            background: #cbd5e1 !important;
+            color: #64748b !important;
+            cursor: not-allowed !important;
+        }
 
         /* SPONSORED AD STYLING */
         #sponsoredSlot, #sponsoredSlotTop {
@@ -210,9 +217,10 @@
         <div class="ref-card">
             <div class="wallet-label" style="color: #ff8c00;">Referral Rewards</div>
             <div class="balance" id="refBalance" style="color: var(--deep-blue); margin-bottom: 10px;">GH₵ 0.00</div>
-            <button onclick="withdrawReferral()" class="btn btn-blue" style="width: 100%;">
+            <button id="withdrawBtn" onclick="withdrawReferral()" class="btn btn-blue btn-disabled" style="width: 100%;">
                 <i class="fas fa-exchange-alt"></i> Transfer to Main Wallet
             </button>
+            <p id="minWithdrawMsg" style="font-size: 9px; color: #ef4444; margin-top: 8px; text-align: center; font-weight: bold;">Minimum transfer: GH₵ 25.00</p>
         </div>
     </div>
 
@@ -328,6 +336,19 @@
                     document.getElementById('walletBalance').innerText = `GH₵ ${Number(currentWallet).toFixed(2)}`;
                     document.getElementById('refBalance').innerText = `GH₵ ${Number(currentRefBalance).toFixed(2)}`;
                     
+                    // --- Transfer logic check ---
+                    const withdrawBtn = document.getElementById('withdrawBtn');
+                    const minMsg = document.getElementById('minWithdrawMsg');
+
+                    if (currentRefBalance >= 25) {
+                        withdrawBtn.classList.remove('btn-disabled');
+                        minMsg.style.display = 'none';
+                    } else {
+                        withdrawBtn.classList.add('btn-disabled');
+                        minMsg.style.display = 'block';
+                    }
+                    // ----------------------------
+
                     const liveDomain = "https://giganticdatahub.shop"; 
                     const myRefLink = liveDomain + "/register.html?ref=" + user.uid;
                     document.getElementById('referralLink').value = myRefLink;
@@ -406,8 +427,8 @@
         }
 
         window.withdrawReferral = async function() {
-            if (currentRefBalance <= 0) {
-                alert("No referral rewards available to transfer.");
+            if (currentRefBalance < 25) {
+                alert("Minimum transfer amount is GH₵ 25.00.");
                 return;
             }
             if (confirm(`Move GH₵ ${currentRefBalance.toFixed(2)} to your main wallet?`)) {
