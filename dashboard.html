@@ -20,8 +20,46 @@
             margin: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--light-bg);
-            padding-bottom: 100px;
+            padding-bottom: 120px;
             color: var(--text-main);
+        }
+
+        /* --- APP DOWNLOAD UI --- */
+        .app-top-bar {
+            background: #001f3f;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .app-link-box {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .play-store-icon { color: #3DDC84; font-size: 20px; }
+        .app-link-text { color: white; font-size: 12px; font-weight: 600; }
+
+        .app-promo-card {
+            background: white;
+            margin: 20px 15px;
+            padding: 15px;
+            border-radius: 15px;
+            border: 2px dashed #ff8c00;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-decoration: none;
+            color: var(--deep-blue);
         }
 
         /* HEADER */
@@ -46,43 +84,19 @@
             gap: 8px;
         }
 
-        .header-icons {
-            display: flex; gap: 20px; font-size: 18px;
-        }
-
+        .header-icons { display: flex; gap: 20px; font-size: 18px; }
         .header-icons a { color: white; text-decoration: none; }
-
-        .user-greeting {
-            padding: 20px 20px 10px;
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--deep-blue);
-        }
+        .user-greeting { padding: 20px 20px 10px; font-size: 14px; font-weight: 700; color: var(--deep-blue); }
 
         /* WALLET CARDS */
-        .wallet-container {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 15px;
-            padding: 0 15px;
-        }
-
+        .wallet-container { display: grid; grid-template-columns: 1fr; gap: 15px; padding: 0 15px; }
         .wallet-card {
             background: linear-gradient(135deg, var(--deep-blue) 0%, var(--primary-blue) 100%);
-            border-radius: 20px;
-            padding: 20px;
-            color: white;
+            border-radius: 20px; padding: 20px; color: white;
             box-shadow: 0 10px 20px rgba(0, 51, 102, 0.15);
         }
 
-        .ref-card {
-            background: white;
-            border: 2px solid #e2e8f0;
-            border-radius: 20px;
-            padding: 20px;
-            color: var(--deep-blue);
-        }
-
+        .ref-card { background: white; border: 2px solid #e2e8f0; border-radius: 20px; padding: 20px; color: var(--deep-blue); }
         .wallet-label { font-size: 10px; font-weight: 700; opacity: 0.8; letter-spacing: 1px; text-transform: uppercase; }
         .balance { font-size: 28px; font-weight: 800; margin: 5px 0 15px; }
         
@@ -97,85 +111,52 @@
         .btn-orange { background: var(--orange-gradient); color: white; }
         .btn-white { background: white; color: var(--deep-blue); }
         .btn-blue { background: var(--deep-blue); color: white; }
-        
-        /* Disabled state for the transfer button */
-        .btn-disabled {
-            background: #cbd5e1 !important;
-            color: #64748b !important;
-            cursor: not-allowed !important;
-        }
+        .btn-disabled { background: #cbd5e1 !important; color: #64748b !important; cursor: not-allowed !important; }
 
-        /* SPONSORED AD STYLING */
+        /* ADS */
         #sponsoredSlot, #sponsoredSlotTop {
             margin: 15px 15px; padding: 18px; background: #ffffff; 
             border: 2px solid #eef2f6; border-radius: 18px; 
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            transition: all 0.3s ease-in-out;
         }
 
-        /* REFERRAL HUB */
-        .referral-box {
-            background: white; margin: 20px 15px; padding: 20px;
-            border-radius: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
+        .referral-box { background: white; margin: 20px 15px; padding: 20px; border-radius: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .referral-box h3 { margin: 0 0 10px; font-size: 15px; color: var(--deep-blue); }
         .referral-box p { font-size: 11px; color: var(--text-gray); margin-bottom: 15px; }
         
-        .link-container {
-            display: flex; background: #f8fafc; border: 1px solid #e2e8f0;
-            padding: 8px; border-radius: 10px; align-items: center; gap: 10px;
-        }
-        .link-container input {
-            border: none; background: transparent; font-size: 12px;
-            flex: 1; color: var(--primary-blue); font-weight: 600; outline: none;
-        }
-        .copy-btn {
-            background: var(--deep-blue); color: white; border: none;
-            padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700;
-        }
+        .link-container { display: flex; background: #f8fafc; border: 1px solid #e2e8f0; padding: 8px; border-radius: 10px; align-items: center; gap: 10px; }
+        .link-container input { border: none; background: transparent; font-size: 12px; flex: 1; color: var(--primary-blue); font-weight: 600; outline: none; }
+        .copy-btn { background: var(--deep-blue); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; }
 
-        /* BOOST CARD */
-        .boost-card {
-            background: var(--orange-gradient); margin: 20px 15px; padding: 18px;
-            border-radius: 15px; color: white; display: flex;
-            align-items: center; justify-content: space-between;
-            text-decoration: none; box-shadow: 0 5px 15px rgba(255, 140, 0, 0.2);
-        }
+        .boost-card { background: var(--orange-gradient); margin: 20px 15px; padding: 18px; border-radius: 15px; color: white; display: flex; align-items: center; justify-content: space-between; text-decoration: none; }
 
         .section-title { padding: 10px 20px; font-size: 16px; font-weight: 800; color: var(--deep-blue); }
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 15px; }
-        
-        .grid-item {
-            background: white; padding: 22px; border-radius: 18px;
-            text-align: center; text-decoration: none; color: inherit;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid #edf2f7;
-        }
-        
+        .grid-item { background: white; padding: 22px; border-radius: 18px; text-align: center; text-decoration: none; color: inherit; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid #edf2f7; }
         .grid-item i { font-size: 26px; color: #ff8c00; margin-bottom: 12px; display: block;}
         .grid-item b { font-size: 14px; display: block; }
         .grid-item span { font-size: 11px; color: var(--text-gray); display: block; margin-top: 5px; }
 
-        .wide-btn {
-            margin: 10px 15px; padding: 15px; border-radius: 15px;
-            display: flex; align-items: center; justify-content: center;
-            gap: 10px; font-weight: 700; text-decoration: none; font-size: 14px; border: none; width: calc(100% - 30px);
-        }
+        .wide-btn { margin: 10px 15px; padding: 15px; border-radius: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 700; text-decoration: none; font-size: 14px; border: none; width: calc(100% - 30px); }
         .whatsapp-btn { background: #25D366; color: white; }
-        .agent-btn { background: #003366; color: white; cursor: pointer; }
+        .agent-btn { background: #003366; color: white; }
         .affiliate-btn { background: #6366f1; color: white; }
         .support-btn { background: #e2e8f0; color: #003366; }
 
-        .bottom-nav {
-            position: fixed; bottom: 0; width: 100%; background: white;
-            display: flex; justify-content: space-around; padding: 12px 0;
-            border-top: 1px solid #edf2f7; z-index: 1000;
-        }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #edf2f7; z-index: 1000; }
         .nav-item { text-align: center; color: var(--text-gray); text-decoration: none; font-size: 11px; font-weight: 600; }
         .nav-item i { font-size: 20px; margin-bottom: 4px; display: block; }
         .nav-item.active { color: #ff8c00; }
     </style>
 </head>
 <body>
+
+    <div class="app-top-bar">
+        <a href="https://files.appsgeyser.com/Gigantic%20Data%20Hub_19462747.apk" class="app-link-box" target="_blank">
+            <i class="fab fa-google-play play-store-icon"></i>
+            <span class="app-link-text">Download Our Official App Here</span>
+        </a>
+    </div>
 
     <div class="header">
         <div class="header-logo"><i class="fas fa-bolt"></i> GIGANTICDATAHUB</div>
@@ -256,18 +237,6 @@
         </div>
     </div>
 
-    <a href="https://selar.com/59d62z1t95" target="_blank" class="wide-btn affiliate-btn">
-        <i class="fas fa-money-bill-trend-up"></i> JOIN AFFILIATE MARKETING
-    </a>
-
-    <a href="https://Giganticboost.shop" target="_blank" class="boost-card">
-        <div>
-            <b style="font-size: 14px;">GIGANTICBOOST.SHOP</b><br>
-            <span style="font-size: 11px; opacity: 0.9;">Grow all social media platforms fast!</span>
-        </div>
-        <i class="fas fa-external-link-alt"></i>
-    </a>
-
     <div class="section-title">Services</div>
 
     <div class="grid">
@@ -283,12 +252,21 @@
         </a>
     </div>
 
-    <a href="https://chat.whatsapp.com/DyyaJcgZKBMHnO2nRScmZ2" target="_blank" class="wide-btn whatsapp-btn">
-        <i class="fab fa-whatsapp"></i> JOIN WHATSAPP COMMUNITY
+    <a href="https://files.appsgeyser.com/Gigantic%20Data%20Hub_19462747.apk" class="app-promo-card" target="_blank">
+        <i class="fab fa-google-play" style="font-size: 30px; color: #3DDC84;"></i>
+        <div>
+            <strong style="font-size: 14px;">Faster Experience on App</strong><br>
+            <span style="font-size: 11px;">Install the official APK for instant delivery.</span>
+        </div>
+        <i class="fas fa-download" style="margin-left: auto; color: #ff8c00;"></i>
     </a>
 
-    <a href="mailto:support@giganticdatahub.shop" class="wide-btn support-btn">
-        <i class="fas fa-headset"></i> CONTACT SUPPORT
+    <a href="https://selar.com/59d62z1t95" target="_blank" class="wide-btn affiliate-btn">
+        <i class="fas fa-money-bill-trend-up"></i> JOIN AFFILIATE MARKETING
+    </a>
+
+    <a href="https://chat.whatsapp.com/DyyaJcgZKBMHnO2nRScmZ2" target="_blank" class="wide-btn whatsapp-btn">
+        <i class="fab fa-whatsapp"></i> JOIN WHATSAPP COMMUNITY
     </a>
 
     <nav class="bottom-nav">
@@ -320,7 +298,6 @@
         let currentUser = null;
         let currentWallet = 0;
         let currentRefBalance = 0;
-
         let adsArray = [];
         let currentAdIndex = 0;
 
@@ -336,7 +313,6 @@
                     document.getElementById('walletBalance').innerText = `GH₵ ${Number(currentWallet).toFixed(2)}`;
                     document.getElementById('refBalance').innerText = `GH₵ ${Number(currentRefBalance).toFixed(2)}`;
                     
-                    // --- Transfer logic check ---
                     const withdrawBtn = document.getElementById('withdrawBtn');
                     const minMsg = document.getElementById('minWithdrawMsg');
 
@@ -347,7 +323,6 @@
                         withdrawBtn.classList.add('btn-disabled');
                         minMsg.style.display = 'block';
                     }
-                    // ----------------------------
 
                     const liveDomain = "https://giganticdatahub.shop"; 
                     const myRefLink = liveDomain + "/register.html?ref=" + user.uid;
@@ -360,27 +335,14 @@
                     }
                 });
 
-                const adsListRef = ref(db, 'adsList');
-                onValue(adsListRef, (snapshot) => {
+                // AD LOGIC
+                onValue(ref(db, 'adsList'), (snapshot) => {
                     const data = snapshot.val();
                     if (data) {
-                        adsArray = Object.keys(data).map(key => ({
-                            id: key,
-                            ...data[key]
-                        })).filter(ad => ad.active !== false);
-
-                        if (adsArray.length > 0) {
-                            startAdRotation();
-                        } else {
-                            document.getElementById('sponsoredSlot').style.display = 'none';
-                            document.getElementById('sponsoredSlotTop').style.display = 'none';
-                        }
-                    } else {
-                        document.getElementById('sponsoredSlot').style.display = 'none';
-                        document.getElementById('sponsoredSlotTop').style.display = 'none';
+                        adsArray = Object.keys(data).map(key => ({ id: key, ...data[key] })).filter(ad => ad.active !== false);
+                        if (adsArray.length > 0) startAdRotation();
                     }
                 });
-
             } else {
                 window.location.href = "login.html";
             }
@@ -388,101 +350,61 @@
 
         function startAdRotation() {
             displayAd(); 
-            if (adsArray.length > 1) {
-                setInterval(() => {
-                    currentAdIndex = (currentAdIndex + 1) % adsArray.length;
-                    displayAd();
-                }, 10000); 
-            }
+            if (adsArray.length > 1) setInterval(() => { currentAdIndex = (currentAdIndex + 1) % adsArray.length; displayAd(); }, 10000); 
         }
 
         function displayAd() {
             const ad1 = adsArray[currentAdIndex];
-            let nextIndex = (currentAdIndex + 1) % adsArray.length;
-            const ad2 = adsArray[nextIndex];
+            const ad2 = adsArray[(currentAdIndex + 1) % adsArray.length];
             
-            const middleSlot = document.getElementById('sponsoredSlot');
-            const topSlot = document.getElementById('sponsoredSlotTop');
-            
-            topSlot.style.display = 'block';
-            middleSlot.style.display = 'block';
+            document.getElementById('sponsoredSlotTop').style.display = 'block';
+            document.getElementById('sponsoredSlot').style.display = 'block';
 
             document.getElementById('adTitleTop').innerText = ad1.title;
             document.getElementById('adDescTop').innerText = ad1.description;
             document.getElementById('adLinkTop').href = ad1.link;
             document.getElementById('clickCountTop').innerText = `${ad1.clicks || 0} clicks`;
-            if(ad1.icon) document.getElementById('adIconTop').innerHTML = `<i class="fas ${ad1.icon}"></i>`;
-            document.getElementById('adLinkTop').onclick = () => trackClick(ad1.id);
+            document.getElementById('adLinkTop').onclick = () => update(ref(db, `adsList/${ad1.id}`), { clicks: increment(1) });
 
             document.getElementById('adTitle').innerText = ad2.title;
             document.getElementById('adDesc').innerText = ad2.description;
             document.getElementById('adLink').href = ad2.link;
             document.getElementById('clickCount').innerText = `${ad2.clicks || 0} clicks`;
-            if(ad2.icon) document.getElementById('adIcon').innerHTML = `<i class="fas ${ad2.icon}"></i>`;
-            document.getElementById('adLink').onclick = () => trackClick(ad2.id);
-        }
-
-        function trackClick(adId) {
-            update(ref(db, `adsList/${adId}`), { clicks: increment(1) });
+            document.getElementById('adLink').onclick = () => update(ref(db, `adsList/${ad2.id}`), { clicks: increment(1) });
         }
 
         window.withdrawReferral = async function() {
-            if (currentRefBalance < 25) {
-                alert("Minimum transfer amount is GH₵ 25.00.");
-                return;
-            }
-            if (confirm(`Move GH₵ ${currentRefBalance.toFixed(2)} to your main wallet?`)) {
+            if (currentRefBalance < 25) return;
+            if (confirm(`Move GH₵ ${currentRefBalance.toFixed(2)} to wallet?`)) {
                 try {
-                    const newWalletBal = Number(currentWallet) + Number(currentRefBalance);
                     await update(ref(db, 'users/' + currentUser.uid), {
-                        wallet: newWalletBal,
+                        wallet: Number(currentWallet) + Number(currentRefBalance),
                         referralBonus: 0
                     });
-                    alert("GH₵ transferred successfully!");
-                } catch (e) {
-                    alert("Transfer Error: " + e.message);
-                }
+                    alert("Transferred!");
+                } catch (e) { alert(e.message); }
             }
         };
 
         window.copyRefLink = function() {
             const copyText = document.getElementById("referralLink");
             copyText.select();
-            copyText.setSelectionRange(0, 99999);
             navigator.clipboard.writeText(copyText.value);
-            alert("Referral link copied!");
+            alert("Copied!");
         };
 
         window.upgradeToAgent = async function() {
-            if (currentWallet < 40) {
-                alert("Insufficient Balance.");
-                return;
-            }
-            if (confirm("Spend GH₵ 40.00 to become an Agent?")) {
+            if (currentWallet < 40) { alert("Insufficient Balance."); return; }
+            if (confirm("Pay GH₵ 40.00 for Agent Status?")) {
                 try {
-                    const newBalance = currentWallet - 40;
-                    await update(ref(db, 'users/' + currentUser.uid), {
-                        wallet: newBalance,
-                        status: 'Agent'
-                    });
-                    const upgradeLogRef = push(ref(db, 'admin/agent_upgrades'));
-                    await set(upgradeLogRef, {
-                        userId: currentUser.uid,
-                        email: currentUser.email,
-                        amount: 40,
-                        timestamp: Date.now()
-                    });
-                    alert("Account upgraded!");
+                    await update(ref(db, 'users/' + currentUser.uid), { wallet: currentWallet - 40, status: 'Agent' });
+                    alert("Upgraded!");
                     window.location.reload();
-                } catch (e) {
-                    alert("Upgrade failed: " + e.message);
-                }
+                } catch (e) { alert(e.message); }
             }
         };
 
-        window.logoutUser = function() {
-            signOut(auth).then(() => window.location.href = "login.html");
-        };
+        window.logoutUser = function() { signOut(auth).then(() => window.location.href = "login.html"); };
     </script>
 </body>
 </html>
