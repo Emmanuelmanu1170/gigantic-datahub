@@ -5,14 +5,10 @@
 
 <meta name="description" content="Gigantic Data Hub is Ghana #1 portal for cheap data bundles. Get 1GB and more starting at 13 Cedis. Fast, reliable, and secure data for MTN, Telecel, and AT networks.">
 <meta name="keywords" content="data, mtn data, ghana data, cheap data, gigantic data hub, buy data ghana, 13 cedi data, bundle, airtime, topup, telecel ghana, at ghana, data portal, sika, earn money ghana, data reselling">
-<meta name="keywords" content="data, cheap data, MTN data Ghana, Telecel data, AT data, buy data online, 13 cedi data, affordable bundles, datahub ghana, gigantic data, smm panel ghana, airtime to cash, topup ghana">
 <meta name="google-site-verification" content="_edgMzKAjTVtc7jToPQyryzlhgx3eRYz9W8Mi5bzFik" />
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GIGANTICDATAHUB - Ghana's Cheapest Data Bundles And reselling platform</title>
-    
-    <meta name="title" content="Giganticdatahub - Ghana's Cheapest Data Bundles">
-    <meta name="description" content="Buy affordable data for MTN, Telecel, and AirtelTigo. Fast delivery in 10 mins.">
     
     <style>
         :root {
@@ -40,6 +36,57 @@
             overflow-x: hidden;
         }
 
+        /* --- APP DOWNLOAD BAR --- */
+        .app-download-bar {
+            background: #1a1f3c;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .app-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 10px 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-decoration: none;
+            transition: 0.3s;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .app-box:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .play-icon {
+            font-size: 24px;
+            color: #3DDC84; /* Android Green */
+        }
+
+        .app-text-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app-text-info span {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .app-text-info strong {
+            font-size: 14px;
+            color: white;
+        }
+
         /* Navbar */
         .navbar {
             background: var(--nav-bg);
@@ -65,16 +112,9 @@
             color: white;
         }
 
-        .logo-bolt {
-            color: #f06529;
-            font-size: 28px;
-        }
+        .logo-bolt { color: #f06529; font-size: 28px; }
 
-        .nav-links {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
+        .nav-links { display: flex; gap: 15px; align-items: center; }
 
         .nav-links a {
             text-decoration: none;
@@ -85,14 +125,8 @@
             transition: 0.3s;
         }
 
-        .btn-login {
-            color: white;
-            background: rgba(255,255,255,0.1);
-        }
-
-        .btn-login:hover {
-            background: rgba(255,255,255,0.2);
-        }
+        .btn-login { color: white; background: rgba(255,255,255,0.1); }
+        .btn-login:hover { background: rgba(255,255,255,0.2); }
 
         .btn-register {
             background: white;
@@ -105,7 +139,7 @@
             box-shadow: 0 6px 20px rgba(255,255,255,0.3);
         }
 
-        /* Hero Section - Using your eagle icon as the background logo */
+        /* Hero Section */
         .hero {
             padding: 120px 20px 80px;
             text-align: center;
@@ -134,27 +168,10 @@
             letter-spacing: 1px;
         }
 
-        .hero h1 {
-            font-size: 58px;
-            font-weight: 800;
-            max-width: 850px;
-            margin: 0 auto 20px;
-            line-height: 1.1;
-        }
+        .hero h1 { font-size: 58px; font-weight: 800; max-width: 850px; margin: 0 auto 20px; line-height: 1.1; }
+        .hero p { font-size: 18px; color: rgba(255,255,255,0.7); max-width: 650px; margin: 0 auto 40px; }
 
-        .hero p {
-            font-size: 18px;
-            color: rgba(255,255,255,0.7);
-            max-width: 650px;
-            margin: 0 auto 40px;
-        }
-
-        .hero-btns {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
+        .hero-btns { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
 
         .cta-main {
             background: var(--accent-gradient);
@@ -179,11 +196,7 @@
             transition: 0.3s;
         }
 
-        .cta-secondary:hover {
-            background: rgba(255,255,255,0.05);
-        }
-
-        /* Features Floating Cards */
+        /* Features */
         .features-container {
             max-width: 1000px;
             margin: -50px auto 100px;
@@ -205,98 +218,44 @@
         }
 
         /* Network Section */
-        .networks {
-            background: #f8f9fc;
-            padding: 100px 20px;
-            color: var(--text-dark);
-            border-radius: 40px 40px 0 0;
-        }
-
-        .section-header {
-            text-align: center;
-            max-width: 800px;
-            margin: 0 auto 60px;
-        }
-
-        .section-header h2 { font-size: 42px; font-weight: 800; margin-bottom: 10px; }
-
-        .networks-grid {
-            max-width: 1000px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 25px;
-        }
-
-        .network-card {
-            background: white;
-            padding: 40px;
-            border-radius: 25px;
-            border: 1px solid #eee;
-            transition: 0.3s;
-        }
-
-        .network-card:hover { transform: translateY(-5px); border-color: #f06529; }
-
+        .networks { background: #f8f9fc; padding: 100px 20px; color: var(--text-dark); border-radius: 40px 40px 0 0; }
+        .section-header { text-align: center; max-width: 800px; margin: 0 auto 60px; }
+        .networks-grid { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; }
+        .network-card { background: white; padding: 40px; border-radius: 25px; border: 1px solid #eee; transition: 0.3s; }
         .network-top { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
-
-        .network-circle {
-            width: 55px; height: 55px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 800; color: white; font-size: 14px;
-        }
-
+        .network-circle { width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; color: white; font-size: 14px; }
         .mtn-color { background: #FFCC00; color: #000; }
         .tel-color { background: #E60000; }
         .air-color { background: #0052CC; }
+        .price-chip { background: #0a0e27; color: white; padding: 6px 14px; border-radius: 20px; font-size: 14px; font-weight: 700; }
 
-        .price-chip {
-            background: #0a0e27;
-            color: white;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 700;
-        }
+        .bottom-cta { background: var(--primary-bg); padding: 120px 20px; text-align: center; }
+        .bottom-cta-box { max-width: 800px; margin: 0 auto; background: rgba(255,255,255,0.03); padding: 80px 40px; border-radius: 40px; border: 1px solid rgba(255,255,255,0.08); }
 
-        /* Bottom CTA */
-        .bottom-cta {
-            background: var(--primary-bg);
-            padding: 120px 20px;
-            text-align: center;
-        }
-
-        .bottom-cta-box {
-            max-width: 800px;
-            margin: 0 auto;
-            background: linear-gradient(rgba(255,255,255,0.03), rgba(255,255,255,0.03));
-            padding: 80px 40px;
-            border-radius: 40px;
-            border: 1px solid rgba(255,255,255,0.08);
-        }
-
-        .footer {
-            padding: 60px 20px;
-            text-align: center;
-            font-size: 14px;
-            color: rgba(255,255,255,0.4);
-            background: var(--primary-bg);
-            border-top: 1px solid rgba(255,255,255,0.05);
-        }
-
+        .footer { padding: 60px 20px; text-align: center; font-size: 14px; color: rgba(255,255,255,0.4); background: var(--primary-bg); border-top: 1px solid rgba(255,255,255,0.05); }
         .footer a { color: #f06529; text-decoration: none; margin: 0 10px; }
+
+        .whatsapp-float { position: fixed; width: 60px; height: 60px; bottom: 25px; right: 25px; background-color: #25D366; color: #fff; border-radius: 50%; text-align: center; font-size: 32px; box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3); z-index: 9999; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
 
         @media (max-width: 768px) {
             .navbar { padding: 15px 20px; }
             .hero h1 { font-size: 38px; }
             .features-container { grid-template-columns: 1fr; margin-top: 30px; }
-            .nav-links { gap: 10px; }
-            .nav-links a { padding: 8px 15px; font-size: 12px; }
+            .app-box { padding: 8px 15px; }
         }
     </style>
 </head>
 <body>
-<h1 style="display:none;">Buy Cheap Data Bundles in Ghana - 13 Cedis Gigantic Data Hub</h1>
+
+    <div class="app-download-bar">
+        <a href="https://appsgeyser.io/19462747/Gigantic%20Data%20Hub" class="app-box" target="_blank">
+            <i class="fab fa-google-play play-icon"></i>
+            <div class="app-text-info">
+                <span>GET IT ON</span>
+                <strong>Download Our Official App Here</strong>
+            </div>
+        </a>
+    </div>
 
     <nav class="navbar">
         <a href="index.html" class="logo">
@@ -389,38 +348,7 @@
         </div>
     </section>
 
-<a href="https://wa.me/233549055308?text=Hello%20Admin%20I%20need%20help"
-   class="whatsapp-float"
-   target="_blank"
-   aria-label="Chat with us on WhatsApp">
-   <i class="fab fa-whatsapp"></i>
-</a>
-
-<style>
-.whatsapp-float {
-    position: fixed;
-    width: 60px;
-    height: 60px;
-    bottom: 25px;
-    right: 25px;
-    background-color: #25D366;
-    color: #fff;
-    border-radius: 50%;
-    text-align: center;
-    font-size: 32px;
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
-    z-index: 9999;
-    display: flex; align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-}
-
-.whatsapp-float:hover {
-    background-color: #1ebe5d;
-    transform: scale(1.1);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-}
-</style>
+    <a href="https://wa.me/233549055308?text=Hello%20Admin%20I%20need%20help" class="whatsapp-float" target="_blank"><i class="fab fa-whatsapp"></i></a>
 
     <footer class="footer">
         <p>&copy; 2026 GIGANTICDATAHUB. All rights reserved.</p>
@@ -430,10 +358,6 @@
         </div>
     </footer>
 
-    <a href="admin_login.html" 
-       style="position: fixed; bottom: 0; right: 0; width: 50px; height: 50px; z-index: 9999; background: transparent; cursor: default; -webkit-tap-highlight-color: transparent;"
-       title="Admin Entrance">
-    </a>
-
+    <a href="admin_login.html" style="position: fixed; bottom: 0; right: 0; width: 50px; height: 50px; z-index: 9999; background: transparent;"></a>
 
 </body></html>
