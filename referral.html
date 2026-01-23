@@ -79,7 +79,6 @@
         .stat-box b { font-size: 14px; color: var(--text-dark); display: block;}
         .stat-box span { font-size: 9px; color: #888; text-transform: uppercase; margin-top: 3px; display: block;}
 
-        /* NEW WITHDRAW BUTTON STYLE */
         .action-area { padding: 0 15px; margin-bottom: 20px; }
         .withdraw-btn {
             background: var(--orange);
@@ -207,15 +206,14 @@
                     document.getElementById('refCount').innerText = refs;
                     document.getElementById('withdrawable').innerText = `₵${Number(data.referralBonus || 0).toFixed(2)}`;
                     
-                    // Logic: Each referral = ₵1.00. Total earned is referral count * 1
                     document.getElementById('allTimeTotal').innerText = `₵${Number(refs * 1).toFixed(2)}`;
                     
-                    const liveDomain = "https://giganticdatahub.shop"; 
+                    // Fixed: Using .com domain
+                    const liveDomain = "https://giganticdatahub.com"; 
                     document.getElementById('referralLink').innerText = `${liveDomain}/register.html?ref=${user.uid}`;
                 });
 
-                // 2. Fetch Top Referrers (Leaders)
-                // We order by 'referralCount'
+                // 2. Fetch Top Referrers
                 const leadersQuery = query(ref(db, 'users'), orderByChild('referralCount'), limitToLast(15));
                 onValue(leadersQuery, (snapshot) => {
                     const leaderboardList = document.getElementById('leaderboardList');
@@ -232,7 +230,6 @@
                         }
                     });
 
-                    // Sort descending (Highest first)
                     users.sort((a, b) => b.count - a.count);
 
                     if (users.length === 0) {
