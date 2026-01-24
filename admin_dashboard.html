@@ -101,7 +101,26 @@ header h1 { font-size:1.2rem; font-weight:700; letter-spacing:0.5px; }
       <button onclick="location.href='wallet.html'"><i class="fas fa-wallet"></i> Wallet</button>
       <a href="admin_withdraw.html" style="text-decoration: none;">
         <button class="btn-withdraw">
-            <i class="fas fa-university"></i> Manage Withdrawals
+            <i class="fas fa-university"></i>
+<a href="admin_users.html" class="wide-btn admin-manage-btn">
+    <i class="fas fa-user-shield"></i> MANAGE USER PASSWORDS
+</a>
+
+<style>
+.admin-manage-btn {
+    background: #1e293b; /* Dark Professional Slate */
+    color: white;
+    border: 2px solid #334155;
+    transition: 0.3s;
+}
+.admin-manage-btn:hover {
+    background: #0f172a;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+</style>
+
+ Manage Withdrawals
         </button>
       </a>
     </div>
