@@ -102,9 +102,33 @@ header h1 { font-size:1.2rem; font-weight:700; letter-spacing:0.5px; }
       <a href="admin_withdraw.html" style="text-decoration: none;">
         <button class="btn-withdraw">
             <i class="fas fa-university"></i>
-<a href="admin_users.html" class="wide-btn admin-manage-btn">
-    <i class="fas fa-user-shield"></i> 
- Manage Withdrawals
+<a href="admin_withdraw.html" class="wide-btn withdraw-admin-btn">
+    <i class="fas fa-money-bill-transfer"></i> Manage Withdrawals
+</a>
+
+<style>
+    .withdraw-admin-btn {
+        background: #475569; /* Slate Gray */
+        color: white;
+        margin: 10px 15px;
+        padding: 15px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        font-weight: 700;
+        text-decoration: none;
+        font-size: 14px;
+        border: none;
+        width: calc(100% - 30px);
+        transition: 0.3s;
+    }
+    .withdraw-admin-btn:hover {
+        background: #1e293b;
+    }
+</style>
+
         </button>
 
 <br>
