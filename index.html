@@ -3,21 +3,24 @@
 <link rel="icon" type="image/jpeg" href="favicon.jpg">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-<meta name="description" content="Gigantic Data Hub is Ghana #1 portal for cheap data bundles. Get 1GB and more starting at 4.4 Cedis. Fast, reliable, and secure data for MTN, Telecel, and AT networks, we also offer you with referal program that helps you make free money .">
-<meta name="keywords" content="data, mtn data, ghana data, cheap data, gigantic data hub, buy data ghana, 4.4 cedis data, bundle, airtime, topup, telecel ghana, at ghana, data portal, sika, earn money ghana, data reselling">
+<meta name="description" content="Gigantic Data Hub is Ghana #1 portal for cheap data bundles. Starting at 4.4 Cedis for MTN, Telecel, and AT networks.">
+<meta name="keywords" content="data, mtn data, ghana data, cheap data, gigantic data hub, buy data ghana, 4.4 cedis data, data reselling">
 <meta name="google-site-verification" content="_edgMzKAjTVtc7jToPQyryzlhgx3eRYz9W8Mi5bzFik" />
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GIGANTICDATAHUB - Ghana's Cheapest Data Bundles And reselling platform</title>
+    <title>GIGANTICDATAHUB - Ghana's Premier Data Portal</title>
     
     <style>
         :root {
-            --primary-bg: #0a0e27;
+            --primary-bg: #050816; /* Deeper, more professional navy */
+            --secondary-bg: #0a0e27;
+            --accent-orange: #f06529;
+            --accent-red: #c02425;
             --accent-gradient: linear-gradient(135deg, #f06529 0%, #c02425 100%);
-            --card-bg: #ffffff;
+            --card-glass: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.08);
             --text-main: #ffffff;
-            --text-dark: #1a1a1a;
-            --nav-bg: rgba(10, 14, 39, 0.95);
+            --text-muted: #94a3b8;
         }
 
         * {
@@ -28,220 +31,223 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            font-family: 'Inter', -apple-system, system-ui, sans-serif;
             background-color: var(--primary-bg);
             color: var(--text-main);
             line-height: 1.6;
-            padding-bottom: 0;
             overflow-x: hidden;
         }
 
         /* --- APP DOWNLOAD BAR --- */
         .app-download-bar {
-            background: #1a1f3c;
-            padding: 12px 20px;
+            background: #111827;
+            padding: 10px 20px;
             display: flex;
             justify-content: center;
             align-items: center;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid var(--card-border);
         }
 
         .app-box {
             background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            padding: 10px 25px;
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 8px 20px;
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
             text-decoration: none;
-            transition: 0.3s;
-            max-width: 500px;
-            width: 100%;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .app-box:hover {
             background: rgba(255, 255, 255, 0.1);
-            transform: translateY(-2px);
+            transform: scale(1.02);
         }
 
-        .play-icon {
-            font-size: 24px;
-            color: #3DDC84; /* Android Green */
-        }
+        .play-icon { font-size: 20px; color: #3DDC84; }
 
-        .app-text-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .app-text-info span {
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: rgba(255,255,255,0.6);
-        }
-
-        .app-text-info strong {
-            font-size: 14px;
-            color: white;
-        }
+        .app-text-info span { font-size: 9px; text-transform: uppercase; color: var(--text-muted); display: block; }
+        .app-text-info strong { font-size: 13px; color: white; }
 
         /* Navbar */
         .navbar {
-            background: var(--nav-bg);
-            padding: 20px 60px;
+            background: rgba(5, 8, 22, 0.8);
+            padding: 15px 5%;
             display: flex;
             justify-content: space-between;
             align-items: center;
             position: sticky;
             top: 0;
             z-index: 1000;
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--card-border);
         }
 
         .logo {
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 24px;
+            gap: 8px;
+            font-size: 20px;
             font-weight: 800;
-            letter-spacing: 1px;
             text-decoration: none;
             color: white;
+            letter-spacing: -0.5px;
         }
 
-        .logo-bolt { color: #f06529; font-size: 28px; }
+        .logo-bolt { color: var(--accent-orange); }
 
-        .nav-links { display: flex; gap: 15px; align-items: center; }
+        .nav-links { display: flex; gap: 12px; }
 
-        .nav-links a {
+        .btn-nav {
             text-decoration: none;
-            font-weight: 600;
-            padding: 10px 25px;
-            border-radius: 30px;
-            font-size: 14px;
+            font-weight: 700;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 13px;
             transition: 0.3s;
         }
 
-        .btn-login { color: white; background: rgba(255,255,255,0.1); }
-        .btn-login:hover { background: rgba(255,255,255,0.2); }
-
-        .btn-register {
-            background: white;
-            color: var(--primary-bg) !important;
-            box-shadow: 0 4px 15px rgba(255,255,255,0.2);
-        }
-
-        .btn-register:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255,255,255,0.3);
-        }
+        .btn-login { color: white; background: transparent; border: 1px solid var(--card-border); }
+        .btn-register { background: white; color: var(--primary-bg) !important; }
 
         /* Hero Section */
         .hero {
-            padding: 120px 20px 80px;
+            padding: 100px 5% 60px;
             text-align: center;
-            position: relative;
-            background-image: linear-gradient(rgba(10, 14, 39, 0.85), rgba(10, 14, 39, 0.95)), url('favicon.jpg');
-            background-size: cover;
-            background-position: center center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-            min-height: 500px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            background: radial-gradient(circle at top, #1e293b 0%, #050816 70%);
         }
 
-        .hero-badge {
-            display: inline-block;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 8px 20px;
-            border-radius: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            font-size: 13px;
-            margin-bottom: 30px;
-            text-transform: uppercase;
+        .greeting-area {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--accent-orange);
+            margin-bottom: 10px;
             letter-spacing: 1px;
+            text-transform: uppercase;
         }
 
-        .hero h1 { font-size: 58px; font-weight: 800; max-width: 850px; margin: 0 auto 20px; line-height: 1.1; }
-        .hero p { font-size: 18px; color: rgba(255,255,255,0.7); max-width: 650px; margin: 0 auto 40px; }
+        .hero h1 {
+            font-size: clamp(32px, 5vw, 64px);
+            font-weight: 900;
+            max-width: 900px;
+            margin: 0 auto 20px;
+            line-height: 1.1;
+            letter-spacing: -1px;
+        }
 
-        .hero-btns { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+        .hero p {
+            font-size: 18px;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto 35px;
+        }
+
+        .hero-btns { display: flex; gap: 15px; justify-content: center; }
 
         .cta-main {
             background: var(--accent-gradient);
             color: white;
-            padding: 18px 45px;
-            border-radius: 40px;
+            padding: 16px 35px;
+            border-radius: 12px;
             text-decoration: none;
             font-weight: 700;
-            font-size: 18px;
-            box-shadow: 0 10px 25px rgba(240, 101, 41, 0.3);
-            transition: 0.3s transform;
-        }
-
-        .cta-secondary {
-            background: transparent;
-            color: white;
-            padding: 18px 45px;
-            border-radius: 40px;
-            text-decoration: none;
-            font-weight: 700;
-            border: 1px solid rgba(255,255,255,0.3);
+            font-size: 16px;
+            box-shadow: 0 10px 20px rgba(240, 101, 41, 0.2);
             transition: 0.3s;
         }
 
+        .cta-main:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(240, 101, 41, 0.4); }
+
         /* Features */
         .features-container {
-            max-width: 1000px;
-            margin: -50px auto 100px;
+            max-width: 1100px;
+            margin: 40px auto;
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 20px;
             padding: 0 20px;
-            position: relative;
-            z-index: 2;
         }
 
         .feature-box {
-            background: var(--card-bg);
-            color: var(--text-dark);
-            padding: 40px 30px;
+            background: var(--card-glass);
+            border: 1px solid var(--card-border);
+            padding: 35px 25px;
             border-radius: 20px;
             text-align: center;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            transition: 0.3s;
         }
 
-        /* Network Section */
-        .networks { background: #f8f9fc; padding: 100px 20px; color: var(--text-dark); border-radius: 40px 40px 0 0; }
-        .section-header { text-align: center; max-width: 800px; margin: 0 auto 60px; }
-        .networks-grid { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; }
-        .network-card { background: white; padding: 40px; border-radius: 25px; border: 1px solid #eee; transition: 0.3s; }
-        .network-top { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
-        .network-circle { width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; color: white; font-size: 14px; }
+        .feature-box:hover { border-color: var(--accent-orange); background: rgba(255,255,255,0.05); }
+
+        .feature-box i { font-size: 32px; color: var(--accent-orange); margin-bottom: 15px; }
+
+        /* Networks */
+        .networks { padding: 80px 5%; background: #070a1d; }
+        .section-header { text-align: center; margin-bottom: 50px; }
+        .section-header h2 { font-size: 36px; font-weight: 800; margin-bottom: 10px; }
+
+        .networks-grid {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .network-card {
+            background: var(--primary-bg);
+            padding: 30px;
+            border-radius: 24px;
+            border: 1px solid var(--card-border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .network-top { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+        .network-circle {
+            width: 50px; height: 50px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 12px; color: white;
+        }
+
         .mtn-color { background: #FFCC00; color: #000; }
         .tel-color { background: #E60000; }
         .air-color { background: #0052CC; }
-        .price-chip { background: #0a0e27; color: white; padding: 6px 14px; border-radius: 20px; font-size: 14px; font-weight: 700; }
 
-        .bottom-cta { background: var(--primary-bg); padding: 120px 20px; text-align: center; }
-        .bottom-cta-box { max-width: 800px; margin: 0 auto; background: rgba(255,255,255,0.03); padding: 80px 40px; border-radius: 40px; border: 1px solid rgba(255,255,255,0.08); }
+        .price-chip {
+            background: var(--accent-gradient);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+        }
 
-        .footer { padding: 60px 20px; text-align: center; font-size: 14px; color: rgba(255,255,255,0.4); background: var(--primary-bg); border-top: 1px solid rgba(255,255,255,0.05); }
-        .footer a { color: #f06529; text-decoration: none; margin: 0 10px; }
+        /* Floating WhatsApp */
+        .whatsapp-float {
+            position: fixed; width: 60px; height: 60px; bottom: 30px; right: 30px;
+            background-color: #25D366; color: #fff; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 30px; z-index: 9999; text-decoration: none;
+            box-shadow: 0 10px 25px rgba(37, 211, 102, 0.3);
+            transition: 0.3s;
+        }
+        .whatsapp-float:hover { transform: scale(1.1); }
 
-        .whatsapp-float { position: fixed; width: 60px; height: 60px; bottom: 25px; right: 25px; background-color: #25D366; color: #fff; border-radius: 50%; text-align: center; font-size: 32px; box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3); z-index: 9999; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        .footer {
+            padding: 60px 5%;
+            text-align: center;
+            border-top: 1px solid var(--card-border);
+            color: var(--text-muted);
+            font-size: 14px;
+        }
 
         @media (max-width: 768px) {
             .navbar { padding: 15px 20px; }
             .hero h1 { font-size: 38px; }
-            .features-container { grid-template-columns: 1fr; margin-top: 30px; }
-            .app-box { padding: 8px 15px; }
+            .hero-btns { flex-direction: column; }
+            .nav-links { gap: 8px; }
         }
     </style>
 </head>
@@ -251,8 +257,8 @@
         <a href="https://files.appsgeyser.com/Gigantic%20Data%20Hub_19462747.apk" class="app-box" target="_blank">
             <i class="fab fa-google-play play-icon"></i>
             <div class="app-text-info">
-                <span>GET IT ON</span>
-                <strong>Download Our Official App Here</strong>
+                <span>ANDROID EXPERIENCE</span>
+                <strong>Get Official App</strong>
             </div>
         </a>
     </div>
@@ -262,54 +268,54 @@
             <span class="logo-bolt">⚡</span> GIGANTIC<br>DATAHUB
         </a>
         <div class="nav-links">
-            <a href="login.html" class="btn-login">LOGIN</a>
-            <a href="register.html" class="btn-register">GET STARTED</a>
+            <a href="login.html" class="btn-nav btn-login">LOGIN</a>
+            <a href="register.html" class="btn-nav btn-register">REGISTER</a>
         </div>
     </nav>
 
     <header class="hero">
-        <div class="hero-badge">🚀 GHANA'S #1 DATA PLATFORM</div>
-        <h1>Cheapest Data Bundles For Your Smartphone</h1>
-        <p>Save up to 40% on MTN, Telecel, and AirtelTigo data. Automated delivery in less than 10 minutes.</p>
+        <div class="greeting-area" id="greetingText">Hello, Welcome!</div>
+        
+        <h1>Premium Data, <br><span style="color: var(--accent-orange)">Gigantic</span> Savings.</h1>
+        <p>Join thousands of Ghanaians getting high-speed MTN, Telecel, and AT data at wholesale prices. Instant delivery, 24/7.</p>
+        
         <div class="hero-btns">
-            <a href="register.html" class="cta-main">Create Free Account →</a>
-            <a href="#how-it-works" class="cta-secondary">How It Works</a>
+            <a href="register.html" class="cta-main">Start Saving Now</a>
         </div>
     </header>
 
     <section class="features-container">
         <div class="feature-box">
-            <span style="font-size: 40px; display: block; margin-bottom: 10px;">💰</span>
-            <h3 style="font-weight: 800;">Best Prices</h3>
-            <p style="font-size: 14px; color: #666; margin-top: 5px;">Save more on every GB</p>
+            <i class="fas fa-bolt"></i>
+            <h3>Instant Topup</h3>
+            <p style="color: var(--text-muted); font-size: 14px; margin-top: 10px;">Automated delivery system ensures your data arrives in seconds.</p>
         </div>
         <div class="feature-box">
-            <span style="font-size: 40px; display: block; margin-bottom: 10px;">⚡</span>
-            <h3 style="font-weight: 800;">Fast Delivery</h3>
-            <p style="font-size: 14px; color: #666; margin-top: 5px;">Delivery in under 10 mins</p>
+            <i class="fas fa-shield-halved"></i>
+            <h3>Secure Payment</h3>
+            <p style="color: var(--text-muted); font-size: 14px; margin-top: 10px;">Industry-standard encryption for all your MoMo transactions.</p>
         </div>
         <div class="feature-box">
-            <span style="font-size: 40px; display: block; margin-bottom: 10px;">🔒</span>
-            <h3 style="font-weight: 800;">100% Secure</h3>
-            <p style="font-size: 14px; color: #666; margin-top: 5px;">Safe MoMo payments</p>
+            <i class="fas fa-coins"></i>
+            <h3>Earn Commissions</h3>
+            <p style="color: var(--text-muted); font-size: 14px; margin-top: 10px;">Refer friends and earn GHS 1.00 on every signup.</p>
         </div>
     </section>
 
     <section id="how-it-works" class="networks">
         <div class="section-header">
-            <h2>Supported Networks</h2>
-            <p>One platform for all your internet needs in Ghana.</p>
+            <h2>Our Pricing</h2>
+            <p style="color: var(--text-muted)">The most competitive rates on the market.</p>
         </div>
         
         <div class="networks-grid">
             <div class="network-card">
                 <div class="network-top">
                     <div class="network-circle mtn-color">MTN</div>
-                    <h3 style="font-weight: 800;">MTN Ghana</h3>
+                    <h3>MTN Ghana</h3>
                 </div>
-                <p style="color: #666; margin-bottom: 25px; font-size: 15px;">Reliable 4G data for all MTN users.</p>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-size: 14px; font-weight: 600;">From</span>
+                    <span style="color: var(--text-muted); font-size: 14px;">Starting at</span>
                     <span class="price-chip">GHS 4.4</span>
                 </div>
             </div>
@@ -317,47 +323,54 @@
             <div class="network-card">
                 <div class="network-top">
                     <div class="network-circle tel-color">TEL</div>
-                    <h3 style="font-weight: 800;">Telecel</h3>
+                    <h3>Telecel</h3>
                 </div>
-                <p style="color: #666; margin-bottom: 25px; font-size: 15px;">Enjoy fast internet on Telecel network.</p>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-size: 14px; font-weight: 600;">From</span>
-                    <span class="price-chip">GHS 21.00</span>
+                    <span style="color: var(--text-muted); font-size: 14px;">Starting at</span>
+                    <span class="price-chip">GHS 21.0</span>
                 </div>
             </div>
 
             <div class="network-card">
                 <div class="network-top">
-                    <div class="network-circle air-color">AIR</div>
-                    <h3 style="font-weight: 800;">AirtelTigo</h3>
+                    <div class="network-circle air-color">AT</div>
+                    <h3>AT Ghana</h3>
                 </div>
-                <p style="color: #666; margin-bottom: 25px; font-size: 15px;">Most affordable plans for heavy users.</p>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-size: 14px; font-weight: 600;">From</span>
-                    <span class="price-chip">GHS 4.50</span>
+                    <span style="color: var(--text-muted); font-size: 14px;">Starting at</span>
+                    <span class="price-chip">GHS 4.5</span>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="bottom-cta">
-        <div class="bottom-cta-box">
-            <h2 style="font-size: 38px; margin-bottom: 15px; font-weight: 800;">Ready to join 10,000+ users?</h2>
-            <p style="margin-bottom: 40px; opacity: 0.7; font-size: 18px;">Start buying data at wholesale prices right now.</p>
-            <a href="register.html" class="btn-register" style="padding: 18px 50px; text-decoration: none; border-radius: 40px; font-weight: 800; display: inline-block;">Get Started Now →</a>
-        </div>
-    </section>
-
-    <a href="https://wa.me/233549055308?text=Hello%20Admin%20I%20need%20help" class="whatsapp-float" target="_blank"><i class="fab fa-whatsapp"></i></a>
+    <a href="https://wa.me/233549055308" class="whatsapp-float" target="_blank">
+        <i class="fab fa-whatsapp"></i>
+    </a>
 
     <footer class="footer">
         <p>&copy; 2026 GIGANTICDATAHUB. All rights reserved.</p>
         <div style="margin-top: 15px;">
-            <a href="terms.html">Terms</a> | 
-            <a href="https://wa.me/233548055308">Contact Support</a>
+            <a href="terms.html" style="color: var(--text-muted); text-decoration: none;">Terms of Service</a>
         </div>
     </footer>
 
-    <a href="admin_login.html" style="position: fixed; bottom: 0; right: 0; width: 50px; height: 50px; z-index: 9999; background: transparent;"></a>
+    <script>
+        function setGreeting() {
+            const hour = new Date().getHours();
+            const greetingElement = document.getElementById('greetingText');
+            let greeting = "";
+
+            if (hour < 12) {
+                greeting = "Good Morning ☀️ Ready to stay connected?";
+            } else if (hour < 17) {
+                greeting = "Good Afternoon ☕ Have a productive day!";
+            } else {
+                greeting = "Good Evening 🌙 Time to browse and relax.";
+            }
+            greetingElement.innerText = greeting;
+        }
+        setGreeting();
+    </script>
 
 </body></html>
