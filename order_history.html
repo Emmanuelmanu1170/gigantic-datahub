@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><script>
-    // Theme Persistence Script
-    (function() {
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        document.documentElement.setAttribute('data-theme', savedTheme);
-    })();
-</script>
-
+<head>
+    <script>
+        // Theme Persistence Script
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,6 +22,15 @@
             --text-gray: #64748b;
             --accent-orange: #f06529;
             --success-green: #22c55e;
+            --card-white: #ffffff;
+        }
+
+        [data-theme="dark"] {
+            --bg-light: #02040a;
+            --card-white: #0d1117;
+            --text-main: #f0f6fc;
+            --text-gray: #8b949e;
+            --deep-blue: #010409;
         }
 
         body {
@@ -48,6 +57,27 @@
         .header a { color: white; text-decoration: none; font-size: 18px; }
         .header h1 { font-size: 16px; margin: 0; font-weight: 700; }
 
+        /* DOWNLOAD BUTTON AREA */
+        .download-banner {
+            background: var(--accent-orange);
+            padding: 12px;
+            text-align: center;
+        }
+
+        .download-btn {
+            background: white;
+            color: var(--accent-orange);
+            text-decoration: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
         .container { padding: 15px; max-width: 500px; margin: 0 auto; }
 
         /* STATS SECTION */
@@ -59,7 +89,7 @@
         }
 
         .stat-box {
-            background: white;
+            background: var(--card-white);
             padding: 15px 10px;
             border-radius: 16px;
             text-align: center;
@@ -67,18 +97,18 @@
         }
 
         .stat-box small { display: block; font-size: 10px; color: var(--text-gray); font-weight: 800; margin-bottom: 5px; text-transform: uppercase; }
-        .stat-box b { font-size: 14px; color: var(--deep-blue); }
+        .stat-box b { font-size: 14px; color: var(--primary-blue); }
         .stat-box.highlight b { color: var(--accent-orange); }
 
         /* RECEIPT STYLE CARDS */
         .order-card {
-            background: white;
+            background: var(--card-white);
             border-radius: 20px;
             margin-bottom: 20px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             position: relative;
             padding: 20px;
-            border: 1px solid #eee;
+            border: 1px solid rgba(0,0,0,0.05);
         }
 
         .order-header {
@@ -127,6 +157,7 @@
             align-items: center;
         }
 
+        .paid-label { font-size: 11px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; }
         .amount-paid { font-size: 18px; font-weight: 900; color: var(--primary-blue); }
 
         .status-pill {
@@ -152,6 +183,12 @@
         <h1>My Order History</h1>
     </div>
 
+    <div class="download-banner">
+        <a href="https://files.appsgeyser.com/Gigantic%20Data%20Hub_19462747.apk" class="download-btn">
+            <i class="fab fa-google-play"></i> DOWNLOAD OFFICIAL APP
+        </a>
+    </div>
+
     <div class="container">
         <div class="stats-grid">
             <div class="stat-box">
@@ -159,7 +196,7 @@
                 <b id="totalOrders">0</b>
             </div>
             <div class="stat-box">
-                <small>Life Spent</small>
+                <small>Total Spent</small>
                 <b id="totalSales">₵0.00</b>
             </div>
             <div class="stat-box highlight">
@@ -197,7 +234,7 @@
 
         onAuthStateChanged(auth, user => {
             if (user) {
-                const loggedInEmail = user.email; // Capture current user email
+                const loggedInEmail = user.email;
                 const orderRef = ref(db, `user_orders/${user.uid}`);
                 
                 onValue(orderRef, (snapshot) => {
@@ -210,22 +247,21 @@
                     }
 
                     let html = "";
-                    let totalOrders = 0;
-                    let totalSpent = 0;
-                    let spentToday = 0;
+                    let totalOrdersCount = 0;
+                    let totalSpentSum = 0;
+                    let spentTodaySum = 0;
                     const startOfToday = new Date().setHours(0,0,0,0);
 
-                    // Sort orders by timestamp descending
                     const entries = Object.entries(data).sort((a,b) => b[1].timestamp - a[1].timestamp);
-                    totalOrders = entries.length;
+                    totalOrdersCount = entries.length;
 
                     entries.forEach(([id, order]) => {
                         const amount = parseFloat(order.amount || 0);
                         const ts = order.timestamp || Date.now();
                         const dateObj = new Date(ts);
                         
-                        totalSpent += amount;
-                        if (ts >= startOfToday) spentToday += amount;
+                        totalSpentSum += amount;
+                        if (ts >= startOfToday) spentTodaySum += amount;
 
                         const network = (order.network || 'MTN').toUpperCase();
                         let netClass = 'mtn-bg';
@@ -250,16 +286,19 @@
                                     <div class="detail-row"><span>Log Email</span><b style="font-size:11px; color:var(--primary-blue);">${loggedInEmail}</b></div>
                                 </div>
                                 <div class="order-footer">
-                                    <div class="amount-paid">₵${amount.toFixed(2)}</div>
+                                    <div>
+                                        <div class="paid-label">Amount Paid</div>
+                                        <div class="amount-paid">₵${amount.toFixed(2)}</div>
+                                    </div>
                                     <span class="status-pill ${statusClass}">${status}</span>
                                 </div>
                             </div>
                         `;
                     });
 
-                    document.getElementById('totalOrders').innerText = totalOrders;
-                    document.getElementById('totalSales').innerText = `₵${totalSpent.toFixed(2)}`;
-                    document.getElementById('spentToday').innerText = `₵${spentToday.toFixed(2)}`;
+                    document.getElementById('totalOrders').innerText = totalOrdersCount;
+                    document.getElementById('totalSales').innerText = `₵${totalSpentSum.toFixed(2)}`;
+                    document.getElementById('spentToday').innerText = `₵${spentTodaySum.toFixed(2)}`;
                     container.innerHTML = html;
                 });
             } else {
