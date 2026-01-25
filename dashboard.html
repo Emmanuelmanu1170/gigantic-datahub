@@ -22,7 +22,7 @@
         }
 
         [data-theme="dark"] {
-            /* Dark Mode Palette - Much Deeper */
+            /* Dark Mode Palette */
             --bg-body: #02040a;
             --bg-card: #0d1117;
             --text-main: #f0f6fc;
@@ -115,6 +115,41 @@
         .btn-orange { background: var(--orange-gradient); color: white; }
         .btn-white { background: white; color: #003366; }
 
+        /* NEW BOOST SERVICE BUTTON */
+        .boost-service-btn {
+            margin: 20px 18px;
+            padding: 18px;
+            background: var(--bg-card);
+            border: 2px solid var(--accent-orange);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            text-decoration: none;
+            color: var(--text-main);
+            position: relative;
+            animation: pulse-border 2s infinite;
+        }
+
+        .new-badge {
+            position: absolute;
+            top: -10px;
+            right: 15px;
+            background: var(--accent-orange);
+            color: white;
+            font-size: 10px;
+            font-weight: 900;
+            padding: 2px 10px;
+            border-radius: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0 rgba(240, 101, 41, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(240, 101, 41, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(240, 101, 41, 0); }
+        }
+
         /* ADS SYSTEM */
         .ad-slot {
             margin: 20px 18px; padding: 18px; 
@@ -146,8 +181,15 @@
         .nav-item.active { color: var(--accent-orange); }
 
     </style>
+    <script>
+        // Apply theme immediately before body renders to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
 </head>
-<body data-theme="light">
+<body>
 
     <div class="app-top-bar">
         <a href="https://files.appsgeyser.com/Gigantic%20Data%20Hub_19462747.apk" class="app-link-box">
@@ -169,10 +211,22 @@
         <div class="sweet-words" id="sweetWords">Your reliable partner for affordable data.</div>
     </div>
 
+    <a href="https://giganticdatahub.boost" class="boost-service-btn">
+        <span class="new-badge">NEW</span>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div style="font-size: 24px; color: #1DA1F2;"><i class="fas fa-rocket"></i></div>
+            <div>
+                <b style="font-size: 15px;">Gigantic Social Boost</b>
+                <p style="font-size: 11px; color: var(--text-gray); margin: 2px 0;">Grow your TikTok, IG, & YouTube fast!</p>
+            </div>
+        </div>
+        <i class="fas fa-chevron-right" style="color: var(--accent-orange);"></i>
+    </a>
+
     <div class="ad-slot" id="sponsoredSlotTop" style="display:none;">
         <span class="ad-badge">PROMOTED</span>
         <a id="adLinkTop" href="#" target="_blank" style="text-decoration:none; display:flex; align-items:center; gap:15px; margin-top:10px;">
-            <div id="adIconTop" style="font-size:24px; color:var(--accent-orange);"><i class="fas fa-bolt"></i></div>
+            <div id="adIconTop" style="font-size:24px; color:var(--accent-orange);"><i class="fas fa-bullhorn"></i></div>
             <div>
                 <b id="adTitleTop" style="color:var(--text-main); font-size:14px;">...</b>
                 <p id="adDescTop" style="color:var(--text-gray); font-size:11px; margin:2px 0;">...</p>
@@ -240,18 +294,21 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // Theme Toggle
+        // Theme Toggle Logic
         window.toggleTheme = function() {
-            const body = document.body;
+            const doc = document.documentElement;
             const btn = document.getElementById('themeBtn');
-            if (body.getAttribute('data-theme') === 'light') {
-                body.setAttribute('data-theme', 'dark');
-                btn.className = 'fas fa-sun theme-toggle';
-            } else {
-                body.setAttribute('data-theme', 'light');
-                btn.className = 'fas fa-moon theme-toggle';
-            }
+            const currentTheme = doc.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            doc.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            btn.className = newTheme === 'light' ? 'fas fa-moon theme-toggle' : 'fas fa-sun theme-toggle';
         }
+
+        // Initialize button icon on load
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.getElementById('themeBtn').className = savedTheme === 'light' ? 'fas fa-moon theme-toggle' : 'fas fa-sun theme-toggle';
 
         function updateGreeting(name) {
             const hour = new Date().getHours();
