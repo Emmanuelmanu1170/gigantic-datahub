@@ -206,11 +206,11 @@ const statusFilter = document.getElementById("statusFilter");
 let allOrders = [];
 
 onAuthStateChanged(auth, user => {
-  // Check if admin is logged in
+  // Check if admin is logged in with specific email
   if(user && user.email === "alenacloft0@gmail.com"){
     listenAllOrders();
   } else {
-    // Redirect if not admin or not logged in
+    // Redirect if not admin
     window.location.href = "login.html";
   }
 });
@@ -221,12 +221,12 @@ function listenAllOrders(){
     const data = snapshot.val() || {};
     allOrders = [];
 
-    // Loop through each UID to get all nested orders
+    // Loop through each user node
     Object.entries(data).forEach(([uid, userOrders])=>{
       Object.entries(userOrders).forEach(([orderId, order])=>{
             let displayStatus = order.status || "Pending";
             
-            // Normalize status strings for the badge logic
+            // Fix status formatting for CSS class compatibility
             if(displayStatus.toLowerCase() === "in progress") displayStatus = "In-Progress";
 
             allOrders.push({
@@ -234,7 +234,8 @@ function listenAllOrders(){
                 plan: order.plan || "N/A",
                 amount: order.amount || 0,
                 recipient: order.recipient || "N/A",
-                email: order.userEmail || order.email || "No Email", // Ensure email shows correctly
+                // Prioritize userEmail from order data to identify customer
+                email: order.userEmail || order.email || "No Email", 
                 status: displayStatus,
                 timestamp: order.timestamp || Date.now(),
                 id: orderId,
@@ -251,28 +252,27 @@ function renderTable(){
   const statusVal = statusFilter.value;
   const searchText = searchInput.value.toLowerCase();
 
-  // Filter by Status
+  // Filter Status
   if(statusVal !== "all") {
       entries = entries.filter(o => o.status === statusVal);
   }
 
-  // Filter by Search Query
+  // Search Logic
   if(searchText) {
     entries = entries.filter(o => 
         o.email.toLowerCase().includes(searchText) || 
         o.recipient.toLowerCase().includes(searchText) ||
-        o.id.toLowerCase().includes(searchText) ||
-        o.network.toLowerCase().includes(searchText)
+        o.id.toLowerCase().includes(searchText)
     );
   }
 
-  // Sort by newest first
+  // Sort: Newest First
   entries.sort((a,b)=> b.timestamp - a.timestamp);
   
   tbody.innerHTML = "";
 
   if(entries.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px; color:#64748b;">No matching orders found.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px; color:#64748b;">No orders found.</td></tr>`;
       return;
   }
 
@@ -281,7 +281,7 @@ function renderTable(){
     const dateStr = dateObj.toLocaleDateString();
     const timeStr = dateObj.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
     
-    // Convert status to valid CSS class (e.g. In-Progress)
+    // Class names cannot have spaces
     const statusClass = order.status.replace(" ", "-");
 
     const tr = document.createElement("tr");
@@ -290,7 +290,7 @@ function renderTable(){
       <td class="order-meta"><b>${order.network}</b> <span>${order.plan}</span></td>
       <td style="font-weight:700;">₵${parseFloat(order.amount).toFixed(2)}</td>
       <td>${order.recipient}</td>
-      <td style="font-size:12px; font-weight:600; color:var(--deep-blue);">${order.email}</td>
+      <td style="font-size:12px; font-weight:700; color:var(--deep-blue);">${order.email}</td>
       <td><span class="status-badge status-${statusClass}">${order.status}</span></td>
       <td style="text-align:right">
         <div style="display:flex; gap:5px; justify-content:flex-end;">
@@ -311,21 +311,19 @@ function renderTable(){
   });
 }
 
-// Global update function for the Admin
 window.updateOrderStatus = function(orderId, newStatus, uid){
     const updates = {};
-    // Updates the specific user's order record
+    // Updates both user-specific and potential global order nodes
     updates[`user_orders/${uid}/${orderId}/status`] = newStatus;
-    // Updates the global orders node if you have one
     updates[`orders/${orderId}/status`] = newStatus;
 
     update(ref(db), updates)
-    .then(() => alert(`Order ${orderId.slice(-6)} set to ${newStatus}`))
-    .catch((err) => alert("Error updating: " + err.message));
+    .then(() => alert(`Order Updated to ${newStatus}`))
+    .catch((err) => alert("Failed to update: " + err.message));
 };
 
 window.deleteOrderRecord = function(orderId, uid){
-  if(confirm("Permanently delete this order record? This cannot be undone.")){
+  if(confirm("Confirm deletion of this order record?")){
     const updates = {};
     updates[`user_orders/${uid}/${orderId}`] = null;
     updates[`orders/${orderId}`] = null;
@@ -333,7 +331,6 @@ window.deleteOrderRecord = function(orderId, uid){
   }
 };
 
-// Search and Filter Listeners
 searchInput.addEventListener("input", renderTable);
 statusFilter.addEventListener("change", renderTable);
 </script>
