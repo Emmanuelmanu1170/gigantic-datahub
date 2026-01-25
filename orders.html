@@ -173,7 +173,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr><td colspan="7" style="text-align:center; padding:50px;">Fetching all orders...</td></tr>
+                    <tr><td colspan="7" style="text-align:center; padding:50px;">Syncing Order Database...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -183,7 +183,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+import { getDatabase, ref, onValue, update, get } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
@@ -204,38 +204,50 @@ const searchInput = document.getElementById("searchInput");
 const statusFilter = document.getElementById("statusFilter");
 
 let allOrders = [];
+let userEmailMap = {}; // Local cache for UID -> Email mapping
 
 onAuthStateChanged(auth, user => {
-  // Check if admin is logged in with specific email
   if(user && user.email === "alenacloft0@gmail.com"){
-    listenAllOrders();
+    loadUsersAndOrders();
   } else {
-    // Redirect if not admin
     window.location.href = "login.html";
   }
 });
 
+// Step 1: Map UIDs to Emails to ensure customer identification is accurate
+async function loadUsersAndOrders() {
+    const usersRef = ref(db, "users");
+    onValue(usersRef, (snapshot) => {
+        const usersData = snapshot.val() || {};
+        userEmailMap = {};
+        Object.entries(usersData).forEach(([uid, info]) => {
+            userEmailMap[uid] = info.email || "No Email";
+        });
+        listenAllOrders();
+    });
+}
+
+// Step 2: Listen to orders and apply email logic
 function listenAllOrders(){
   const ordersRef = ref(db, "user_orders");
   onValue(ordersRef, snapshot => {
     const data = snapshot.val() || {};
     allOrders = [];
 
-    // Loop through each user node
     Object.entries(data).forEach(([uid, userOrders])=>{
       Object.entries(userOrders).forEach(([orderId, order])=>{
             let displayStatus = order.status || "Pending";
-            
-            // Fix status formatting for CSS class compatibility
             if(displayStatus.toLowerCase() === "in progress") displayStatus = "In-Progress";
+
+            // Email Logic: 1. Check order data, 2. Check user map, 3. Fallback
+            const customerEmail = order.userEmail || order.email || userEmailMap[uid] || "Guest/Unknown";
 
             allOrders.push({
                 network: order.network || "N/A",
                 plan: order.plan || "N/A",
                 amount: order.amount || 0,
                 recipient: order.recipient || "N/A",
-                // Prioritize userEmail from order data to identify customer
-                email: order.userEmail || order.email || "No Email", 
+                email: customerEmail, 
                 status: displayStatus,
                 timestamp: order.timestamp || Date.now(),
                 id: orderId,
@@ -252,12 +264,8 @@ function renderTable(){
   const statusVal = statusFilter.value;
   const searchText = searchInput.value.toLowerCase();
 
-  // Filter Status
-  if(statusVal !== "all") {
-      entries = entries.filter(o => o.status === statusVal);
-  }
+  if(statusVal !== "all") entries = entries.filter(o => o.status === statusVal);
 
-  // Search Logic
   if(searchText) {
     entries = entries.filter(o => 
         o.email.toLowerCase().includes(searchText) || 
@@ -266,13 +274,11 @@ function renderTable(){
     );
   }
 
-  // Sort: Newest First
   entries.sort((a,b)=> b.timestamp - a.timestamp);
-  
   tbody.innerHTML = "";
 
   if(entries.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px; color:#64748b;">No orders found.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px;">No matching records found.</td></tr>`;
       return;
   }
 
@@ -280,8 +286,6 @@ function renderTable(){
     const dateObj = new Date(order.timestamp);
     const dateStr = dateObj.toLocaleDateString();
     const timeStr = dateObj.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-    
-    // Class names cannot have spaces
     const statusClass = order.status.replace(" ", "-");
 
     const tr = document.createElement("tr");
@@ -313,17 +317,16 @@ function renderTable(){
 
 window.updateOrderStatus = function(orderId, newStatus, uid){
     const updates = {};
-    // Updates both user-specific and potential global order nodes
     updates[`user_orders/${uid}/${orderId}/status`] = newStatus;
-    updates[`orders/${orderId}/status`] = newStatus;
+    updates[`orders/${orderId}/status`] = newStatus; // Updates global tracker if used
 
     update(ref(db), updates)
-    .then(() => alert(`Order Updated to ${newStatus}`))
-    .catch((err) => alert("Failed to update: " + err.message));
+    .then(() => console.log("Success"))
+    .catch((err) => alert("Update Error: " + err.message));
 };
 
 window.deleteOrderRecord = function(orderId, uid){
-  if(confirm("Confirm deletion of this order record?")){
+  if(confirm("Permanently delete this order record?")){
     const updates = {};
     updates[`user_orders/${uid}/${orderId}`] = null;
     updates[`orders/${orderId}`] = null;
