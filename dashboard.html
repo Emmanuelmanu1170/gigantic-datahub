@@ -2,23 +2,26 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>giganticdatahub Dashboard</title>
+    <title>GiganticDataHub Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --deep-blue: #003366;
+            /* Deeper, more professional color palette */
+            --deep-navy: #050816;
+            --surface-blue: #0a0e27;
             --primary-blue: #0052cc;
             --white: #ffffff;
             --light-bg: #f4f7fe;
             --text-main: #1e293b;
             --text-gray: #64748b;
-            --orange-gradient: linear-gradient(135deg, #ff8c00 0%, #ff4500 100%);
+            --orange-gradient: linear-gradient(135deg, #f06529 0%, #c02425 100%);
+            --glass-white: rgba(255, 255, 255, 0.95);
         }
 
         body {
             margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: 'Inter', -apple-system, system-ui, sans-serif;
             background-color: var(--light-bg);
             padding-bottom: 120px;
             color: var(--text-main);
@@ -26,127 +29,170 @@
 
         /* --- APP DOWNLOAD UI --- */
         .app-top-bar {
-            background: #001f3f;
-            padding: 10px 15px;
+            background: var(--deep-navy);
+            padding: 12px 15px;
             display: flex;
             justify-content: center;
             align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
 
         .app-link-box {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 8px 18px;
             display: flex;
             align-items: center;
             gap: 12px;
             text-decoration: none;
             width: 100%;
             max-width: 400px;
+            transition: 0.3s;
         }
 
-        .play-store-icon { color: #3DDC84; font-size: 20px; }
-        .app-link-text { color: white; font-size: 12px; font-weight: 600; }
-
-        .app-promo-card {
-            background: white;
-            margin: 20px 15px;
-            padding: 15px;
-            border-radius: 15px;
-            border: 2px dashed #ff8c00;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            text-decoration: none;
-            color: var(--deep-blue);
-        }
+        .app-link-box:hover { background: rgba(255, 255, 255, 0.12); }
+        .play-store-icon { color: #3DDC84; font-size: 22px; }
+        .app-link-text { color: white; font-size: 13px; font-weight: 600; letter-spacing: 0.3px; }
 
         /* HEADER */
         .header {
-            background-color: var(--deep-blue);
+            background-color: var(--surface-blue);
             color: white;
-            padding: 20px;
+            padding: 22px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             position: sticky;
             top: 0;
-            z-index: 100;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
         .header-logo {
-            font-weight: 800;
-            font-size: 18px;
-            letter-spacing: 1px;
+            font-weight: 900;
+            font-size: 20px;
+            letter-spacing: -0.5px;
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        .header-icons { display: flex; gap: 20px; font-size: 18px; }
-        .header-icons a { color: white; text-decoration: none; }
-        .user-greeting { padding: 20px 20px 10px; font-size: 14px; font-weight: 700; color: var(--deep-blue); }
+        .header-icons { display: flex; gap: 20px; font-size: 19px; }
+        .header-icons a { color: white; opacity: 0.9; transition: 0.3s; }
+        .header-icons a:hover { opacity: 1; transform: scale(1.1); }
+
+        /* GREETING SECTION */
+        .greeting-container {
+            padding: 25px 20px 15px;
+            background: linear-gradient(180deg, var(--surface-blue) 0%, var(--light-bg) 100%);
+            margin-bottom: -10px;
+        }
+
+        .user-greeting {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--white);
+            margin-bottom: 4px;
+        }
+
+        .sweet-words {
+            font-size: 13px;
+            color: rgba(255,255,255,0.7);
+            font-weight: 500;
+        }
 
         /* WALLET CARDS */
-        .wallet-container { display: grid; grid-template-columns: 1fr; gap: 15px; padding: 0 15px; }
-        .wallet-card {
-            background: linear-gradient(135deg, var(--deep-blue) 0%, var(--primary-blue) 100%);
-            border-radius: 20px; padding: 20px; color: white;
-            box-shadow: 0 10px 20px rgba(0, 51, 102, 0.15);
+        .wallet-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 18px;
+            padding: 0 18px;
+            position: relative;
+            z-index: 2;
         }
 
-        .ref-card { background: white; border: 2px solid #e2e8f0; border-radius: 20px; padding: 20px; color: var(--deep-blue); }
-        .wallet-label { font-size: 10px; font-weight: 700; opacity: 0.8; letter-spacing: 1px; text-transform: uppercase; }
-        .balance { font-size: 28px; font-weight: 800; margin: 5px 0 15px; }
+        .wallet-card {
+            background: linear-gradient(135deg, #003366 0%, #0052cc 100%);
+            border-radius: 24px;
+            padding: 25px;
+            color: white;
+            box-shadow: 0 12px 24px rgba(0, 51, 102, 0.2);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .ref-card {
+            background: var(--white);
+            border: 1px solid #e2e8f0;
+            border-radius: 24px;
+            padding: 25px;
+            color: var(--surface-blue);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.02);
+        }
+
+        .wallet-label { font-size: 11px; font-weight: 700; opacity: 0.8; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 8px; }
+        .balance { font-size: 32px; font-weight: 900; margin: 0 0 20px; letter-spacing: -0.5px; }
         
-        .wallet-btns { display: flex; gap: 10px; }
+        .wallet-btns { display: flex; gap: 12px; }
         .btn {
-            flex: 1; padding: 10px; border-radius: 10px; border: none;
-            font-size: 12px; font-weight: 700; display: flex;
-            align-items: center; justify-content: center; gap: 6px;
+            flex: 1; padding: 14px; border-radius: 14px; border: none;
+            font-size: 13px; font-weight: 700; display: flex;
+            align-items: center; justify-content: center; gap: 8px;
             cursor: pointer; text-decoration: none;
+            transition: 0.3s;
         }
         
-        .btn-orange { background: var(--orange-gradient); color: white; }
-        .btn-white { background: white; color: var(--deep-blue); }
-        .btn-blue { background: var(--deep-blue); color: white; }
-        .btn-disabled { background: #cbd5e1 !important; color: #64748b !important; cursor: not-allowed !important; }
+        .btn-orange { background: var(--orange-gradient); color: white; box-shadow: 0 6px 12px rgba(240, 101, 41, 0.2); }
+        .btn-white { background: var(--white); color: var(--surface-blue); }
+        .btn-blue { background: var(--surface-blue); color: white; }
+        .btn-disabled { background: #cbd5e1 !important; color: #64748b !important; cursor: not-allowed !important; box-shadow: none !important; }
 
         /* ADS */
         #sponsoredSlot, #sponsoredSlotTop {
-            margin: 15px 15px; padding: 18px; background: #ffffff; 
-            border: 2px solid #eef2f6; border-radius: 18px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin: 20px 18px; padding: 20px; background: var(--white); 
+            border: 1px solid #eef2f6; border-radius: 20px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
         }
 
-        .referral-box { background: white; margin: 20px 15px; padding: 20px; border-radius: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .referral-box h3 { margin: 0 0 10px; font-size: 15px; color: var(--deep-blue); }
-        .referral-box p { font-size: 11px; color: var(--text-gray); margin-bottom: 15px; }
+        /* SERVICES GRID */
+        .section-title { padding: 25px 20px 10px; font-size: 17px; font-weight: 800; color: var(--surface-blue); display: flex; align-items: center; gap: 8px; }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; padding: 18px; }
         
-        .link-container { display: flex; background: #f8fafc; border: 1px solid #e2e8f0; padding: 8px; border-radius: 10px; align-items: center; gap: 10px; }
-        .link-container input { border: none; background: transparent; font-size: 12px; flex: 1; color: var(--primary-blue); font-weight: 600; outline: none; }
-        .copy-btn { background: var(--deep-blue); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+        .grid-item {
+            background: var(--white); padding: 25px 15px; border-radius: 20px;
+            text-align: center; text-decoration: none; color: inherit;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #f1f5f9;
+            transition: 0.3s;
+        }
+        .grid-item:active { transform: scale(0.95); }
+        .grid-item i { font-size: 28px; color: #f06529; margin-bottom: 12px; display: block;}
+        .grid-item b { font-size: 15px; display: block; margin-bottom: 4px; }
+        .grid-item span { font-size: 11px; color: var(--text-gray); }
 
-        .boost-card { background: var(--orange-gradient); margin: 20px 15px; padding: 18px; border-radius: 15px; color: white; display: flex; align-items: center; justify-content: space-between; text-decoration: none; }
+        /* REFERRAL BOX */
+        .referral-box { background: var(--white); margin: 20px 18px; padding: 22px; border-radius: 22px; border: 1px solid #f1f5f9; }
+        .referral-box h3 { margin: 0 0 6px; font-size: 16px; color: var(--surface-blue); }
+        .referral-box p { font-size: 12px; color: var(--text-gray); margin-bottom: 18px; }
+        
+        .link-container { display: flex; background: #f8fafc; border: 1px solid #e2e8f0; padding: 8px; border-radius: 12px; align-items: center; gap: 10px; }
+        .link-container input { border: none; background: transparent; font-size: 12px; flex: 1; color: var(--primary-blue); font-weight: 700; outline: none; }
+        .copy-btn { background: var(--surface-blue); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; }
 
-        .section-title { padding: 10px 20px; font-size: 16px; font-weight: 800; color: var(--deep-blue); }
-        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 15px; }
-        .grid-item { background: white; padding: 22px; border-radius: 18px; text-align: center; text-decoration: none; color: inherit; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid #edf2f7; }
-        .grid-item i { font-size: 26px; color: #ff8c00; margin-bottom: 12px; display: block;}
-        .grid-item b { font-size: 14px; display: block; }
-        .grid-item span { font-size: 11px; color: var(--text-gray); display: block; margin-top: 5px; }
+        .app-promo-card {
+            background: var(--white); margin: 20px 18px; padding: 18px;
+            border-radius: 20px; border: 2px dashed #f06529; display: flex;
+            align-items: center; gap: 15px; text-decoration: none; color: var(--surface-blue);
+        }
 
-        .wide-btn { margin: 10px 15px; padding: 15px; border-radius: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 700; text-decoration: none; font-size: 14px; border: none; width: calc(100% - 30px); }
-        .whatsapp-btn { background: #25D366; color: white; }
-        .agent-btn { background: #003366; color: white; }
+        .wide-btn { margin: 12px 18px; padding: 16px; border-radius: 18px; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 700; text-decoration: none; font-size: 14px; border: none; width: calc(100% - 36px); transition: 0.3s; }
+        .whatsapp-btn { background: #25D366; color: white; box-shadow: 0 6px 15px rgba(37, 211, 102, 0.2); }
+        .agent-btn { background: var(--surface-blue); color: white; }
         .affiliate-btn { background: #6366f1; color: white; }
-        .support-btn { background: #e2e8f0; color: #003366; }
 
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #edf2f7; z-index: 1000; }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: var(--glass-white); backdrop-filter: blur(10px); display: flex; justify-content: space-around; padding: 14px 0; border-top: 1px solid #edf2f7; z-index: 1000; }
         .nav-item { text-align: center; color: var(--text-gray); text-decoration: none; font-size: 11px; font-weight: 600; }
-        .nav-item i { font-size: 20px; margin-bottom: 4px; display: block; }
-        .nav-item.active { color: #ff8c00; }
+        .nav-item i { font-size: 22px; margin-bottom: 5px; display: block; }
+        .nav-item.active { color: #f06529; }
     </style>
 </head>
 <body>
@@ -154,7 +200,7 @@
     <div class="app-top-bar">
         <a href="https://files.appsgeyser.com/Gigantic%20Data%20Hub_19462747.apk" class="app-link-box" target="_blank">
             <i class="fab fa-google-play play-store-icon"></i>
-            <span class="app-link-text">Download Our Official App Here</span>
+            <span class="app-link-text">Download Official App (v2.0)</span>
         </a>
     </div>
 
@@ -166,23 +212,9 @@
         </div>
     </div>
 
-    <div class="user-greeting" id="userName">Welcome back, User 👋</div>
-
-    <div id="sponsoredSlotTop" style="display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <span style="font-size: 10px; background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 4px; font-weight: bold;">FEATURED AD</span>
-            <span id="clickCountTop" style="font-size: 10px; color: #94a3b8;"></span>
-        </div>
-        <a id="adLinkTop" href="#" target="_blank" style="text-decoration: none; display: flex; align-items: center; gap: 15px;">
-            <div id="adIconTop" style="width: 50px; height: 50px; background: #f59e0b; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px;">
-                <i class="fas fa-bolt"></i>
-            </div>
-            <div style="flex: 1;">
-                <h4 id="adTitleTop" style="margin: 0; font-size: 14px; color: #1e293b; font-weight: 700;">...</h4>
-                <p id="adDescTop" style="margin: 4px 0 0; font-size: 12px; color: #64748b; line-height: 1.4;">...</p>
-            </div>
-            <i class="fas fa-chevron-right" style="color: #cbd5e1;"></i>
-        </a>
+    <div class="greeting-container">
+        <div class="user-greeting" id="userGreeting">Loading...</div>
+        <div class="sweet-words" id="sweetWords">Glad to have you back with us!</div>
     </div>
 
     <div class="wallet-container">
@@ -190,90 +222,73 @@
             <div class="wallet-label">Main Wallet Balance</div>
             <div class="balance" id="walletBalance">GH₵ 0.00</div>
             <div class="wallet-btns">
-                <a href="topup.html" class="btn btn-white"><i class="fas fa-wallet"></i> Top Up</a>
+                <a href="topup.html" class="btn btn-white"><i class="fas fa-plus"></i> Top Up</a>
                 <a href="order.html" class="btn btn-orange"><i class="fas fa-wifi"></i> Buy Data</a>
             </div>
         </div>
 
         <div class="ref-card">
-            <div class="wallet-label" style="color: #ff8c00;">Referral Rewards</div>
-            <div class="balance" id="refBalance" style="color: var(--deep-blue); margin-bottom: 10px;">GH₵ 0.00</div>
+            <div class="wallet-label" style="color: #f06529;">Referral Earnings</div>
+            <div class="balance" id="refBalance" style="color: var(--surface-blue); margin-bottom: 12px;">GH₵ 0.00</div>
             <button id="withdrawBtn" onclick="withdrawReferral()" class="btn btn-blue btn-disabled" style="width: 100%;">
                 <i class="fas fa-exchange-alt"></i> Transfer to Main Wallet
             </button>
-            <p id="minWithdrawMsg" style="font-size: 9px; color: #ef4444; margin-top: 8px; text-align: center; font-weight: bold;">Minimum transfer: GH₵ 25.00</p>
+            <p id="minWithdrawMsg" style="font-size: 10px; color: #ef4444; margin-top: 10px; text-align: center; font-weight: 600;">Minimum transfer: GH₵ 25.00</p>
         </div>
     </div>
 
     <div id="agentArea">
         <button onclick="upgradeToAgent()" class="wide-btn agent-btn">
-            <i class="fas fa-user-tie"></i> BECOME AN AGENT (GH₵ 40.00)
+            <i class="fas fa-crown"></i> BECOME AN AGENT (GH₵ 40.00)
         </button>
     </div>
 
-    <div id="sponsoredSlot" style="display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <span style="font-size: 10px; background: #f1f5f9; color: #64748b; padding: 2px 8px; border-radius: 4px; font-weight: bold;">SPONSORED</span>
-            <span id="clickCount" style="font-size: 10px; color: #94a3b8;"></span>
-        </div>
-        <a id="adLink" href="#" target="_blank" style="text-decoration: none; display: flex; align-items: center; gap: 15px;">
-            <div id="adIcon" style="width: 50px; height: 50px; background: #6a5af9; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px;">
-                <i class="fas fa-star"></i>
-            </div>
-            <div style="flex: 1;">
-                <h4 id="adTitle" style="margin: 0; font-size: 14px; color: #1e293b; font-weight: 700;">...</h4>
-                <p id="adDesc" style="margin: 4px 0 0; font-size: 12px; color: #64748b; line-height: 1.4;">...</p>
-            </div>
-            <i class="fas fa-chevron-right" style="color: #cbd5e1;"></i>
+    <div class="section-title"><i class="fas fa-shapes" style="color:#f06529"></i> Quick Services</div>
+
+    <div class="grid">
+        <a href="order.html" class="grid-item">
+            <i class="fas fa-mobile-alt"></i>
+            <b>Buy Data</b>
+            <span>MTN, AT, Telecel</span>
+        </a>
+        <a href="transaction.html" class="grid-item">
+            <i class="fas fa-history"></i>
+            <b>History</b>
+            <span>Order Logs</span>
         </a>
     </div>
 
     <div class="referral-box">
-        <h3>Invite Friends & Earn GH₵ 1.00</h3>
-        <p>Get GH₵ 1.00 instantly added to your rewards whenever someone joins using your link!</p>
+        <h3>Share & Earn GHS 1.00</h3>
+        <p>Invite your friends to the hub and get credited instantly for every new member!</p>
         <div class="link-container">
             <input type="text" id="referralLink" readonly value="Generating link...">
             <button class="copy-btn" onclick="copyRefLink()">Copy</button>
         </div>
     </div>
 
-    <div class="section-title">Services</div>
-
-    <div class="grid">
-        <a href="order.html" class="grid-item">
-            <i class="fas fa-mobile-screen-button"></i>
-            <b>Buy Data</b>
-            <span>MTN & Others</span>
-        </a>
-        <a href="transaction.html" class="grid-item">
-            <i class="fas fa-clock-rotate-left"></i>
-            <b>History</b>
-            <span>Transactions</span>
-        </a>
-    </div>
-
     <a href="https://files.appsgeyser.com/Gigantic%20Data%20Hub_19462747.apk" class="app-promo-card" target="_blank">
-        <i class="fab fa-google-play" style="font-size: 30px; color: #3DDC84;"></i>
+        <i class="fab fa-google-play" style="font-size: 32px; color: #3DDC84;"></i>
         <div>
-            <strong style="font-size: 14px;">Faster Experience on App</strong><br>
-            <span style="font-size: 11px;">Install the official APK for instant delivery.</span>
+            <strong style="font-size: 15px;">Experience the App</strong><br>
+            <span style="font-size: 12px; color: var(--text-gray);">Faster, smoother, and data-efficient.</span>
         </div>
-        <i class="fas fa-download" style="margin-left: auto; color: #ff8c00;"></i>
+        <i class="fas fa-arrow-right" style="margin-left: auto; color: #f06529;"></i>
     </a>
 
     <a href="https://selar.com/59d62z1t95" target="_blank" class="wide-btn affiliate-btn">
-        <i class="fas fa-money-bill-trend-up"></i> JOIN AFFILIATE MARKETING
+        <i class="fas fa-rocket"></i> JOIN AFFILIATE MARKETING
     </a>
 
     <a href="https://chat.whatsapp.com/DyyaJcgZKBMHnO2nRScmZ2" target="_blank" class="wide-btn whatsapp-btn">
-        <i class="fab fa-whatsapp"></i> JOIN WHATSAPP COMMUNITY
+        <i class="fab fa-whatsapp"></i> JOIN COMMUNITY
     </a>
 
     <nav class="bottom-nav">
-        <a href="dashboard.html" class="nav-item active"><i class="fas fa-house"></i>Home</a>
-        <a href="order_history.html" class="nav-item"><i class="fas fa-list-ul"></i>Orders</a>
+        <a href="dashboard.html" class="nav-item active"><i class="fas fa-home"></i>Home</a>
+        <a href="order_history.html" class="nav-item"><i class="fas fa-receipt"></i>Orders</a>
         <a href="referral.html" class="nav-item"><i class="fas fa-users"></i>Referral</a>
-        <a href="profile.html" class="nav-item"><i class="fas fa-user-gear"></i>Profile</a>
+        <a href="profile.html" class="nav-item"><i class="fas fa-user-circle"></i>Profile</a>
     </nav>
 
     <script type="module">
@@ -295,11 +310,30 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
+        function updateGreeting(name) {
+            const hour = new Date().getHours();
+            const gText = document.getElementById('userGreeting');
+            const sWords = document.getElementById('sweetWords');
+            let greeting = "";
+            let message = "";
+
+            if (hour < 12) {
+                greeting = `Good Morning, ${name} ☀️`;
+                message = "Let's make today productive and connected!";
+            } else if (hour < 17) {
+                greeting = `Good Afternoon, ${name} 🌤️`;
+                message = "Hope your day is going smoothly so far!";
+            } else {
+                greeting = `Good Evening, ${name} 🌙`;
+                message = "Time to relax and enjoy some fast data!";
+            }
+            gText.innerText = greeting;
+            sWords.innerText = message;
+        }
+
         let currentUser = null;
         let currentWallet = 0;
         let currentRefBalance = 0;
-        let adsArray = [];
-        let currentAdIndex = 0;
 
         onAuthStateChanged(auth, user => {
             if (user) {
@@ -309,7 +343,9 @@
                     currentWallet = data.wallet || 0;
                     currentRefBalance = data.referralBonus || 0;
                     
-                    document.getElementById('userName').innerText = `Welcome back, ${data.fullName || 'User'} 👋`;
+                    const firstName = data.fullName ? data.fullName.split(' ')[0] : 'Member';
+                    updateGreeting(firstName);
+
                     document.getElementById('walletBalance').innerText = `GH₵ ${Number(currentWallet).toFixed(2)}`;
                     document.getElementById('refBalance').innerText = `GH₵ ${Number(currentRefBalance).toFixed(2)}`;
                     
@@ -334,44 +370,10 @@
                         document.getElementById('agentArea').style.display = 'block';
                     }
                 });
-
-                // AD LOGIC
-                onValue(ref(db, 'adsList'), (snapshot) => {
-                    const data = snapshot.val();
-                    if (data) {
-                        adsArray = Object.keys(data).map(key => ({ id: key, ...data[key] })).filter(ad => ad.active !== false);
-                        if (adsArray.length > 0) startAdRotation();
-                    }
-                });
             } else {
                 window.location.href = "login.html";
             }
         });
-
-        function startAdRotation() {
-            displayAd(); 
-            if (adsArray.length > 1) setInterval(() => { currentAdIndex = (currentAdIndex + 1) % adsArray.length; displayAd(); }, 10000); 
-        }
-
-        function displayAd() {
-            const ad1 = adsArray[currentAdIndex];
-            const ad2 = adsArray[(currentAdIndex + 1) % adsArray.length];
-            
-            document.getElementById('sponsoredSlotTop').style.display = 'block';
-            document.getElementById('sponsoredSlot').style.display = 'block';
-
-            document.getElementById('adTitleTop').innerText = ad1.title;
-            document.getElementById('adDescTop').innerText = ad1.description;
-            document.getElementById('adLinkTop').href = ad1.link;
-            document.getElementById('clickCountTop').innerText = `${ad1.clicks || 0} clicks`;
-            document.getElementById('adLinkTop').onclick = () => update(ref(db, `adsList/${ad1.id}`), { clicks: increment(1) });
-
-            document.getElementById('adTitle').innerText = ad2.title;
-            document.getElementById('adDesc').innerText = ad2.description;
-            document.getElementById('adLink').href = ad2.link;
-            document.getElementById('clickCount').innerText = `${ad2.clicks || 0} clicks`;
-            document.getElementById('adLink').onclick = () => update(ref(db, `adsList/${ad2.id}`), { clicks: increment(1) });
-        }
 
         window.withdrawReferral = async function() {
             if (currentRefBalance < 25) return;
@@ -381,7 +383,7 @@
                         wallet: Number(currentWallet) + Number(currentRefBalance),
                         referralBonus: 0
                     });
-                    alert("Transferred!");
+                    alert("Transferred successfully! Enjoy your data.");
                 } catch (e) { alert(e.message); }
             }
         };
@@ -390,15 +392,15 @@
             const copyText = document.getElementById("referralLink");
             copyText.select();
             navigator.clipboard.writeText(copyText.value);
-            alert("Copied!");
+            alert("Referral link copied to clipboard!");
         };
 
         window.upgradeToAgent = async function() {
             if (currentWallet < 40) { alert("Insufficient Balance."); return; }
-            if (confirm("Pay GH₵ 40.00 for Agent Status?")) {
+            if (confirm("Spend GH₵ 40.00 to unlock Agent Status and lifetime discounts?")) {
                 try {
                     await update(ref(db, 'users/' + currentUser.uid), { wallet: currentWallet - 40, status: 'Agent' });
-                    alert("Upgraded!");
+                    alert("Congratulations! You are now an official Agent.");
                     window.location.reload();
                 } catch (e) { alert(e.message); }
             }
