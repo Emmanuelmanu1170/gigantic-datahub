@@ -13,6 +13,7 @@
             --text-main: #1e293b;
             --text-gray: #64748b;
             --accent-orange: #f06529;
+            --success-green: #22c55e;
         }
 
         body {
@@ -34,7 +35,6 @@
             position: sticky;
             top: 0;
             z-index: 100;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
         .header a { color: white; text-decoration: none; font-size: 18px; }
@@ -47,120 +47,123 @@
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         .stat-box {
             background: white;
-            padding: 12px 8px;
-            border-radius: 12px;
+            padding: 15px 10px;
+            border-radius: 16px;
             text-align: center;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
-            border: 1px solid #edf2f7;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
         }
 
-        .stat-box small {
-            display: block;
-            font-size: 10px;
-            color: var(--text-gray);
-            text-transform: uppercase;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
+        .stat-box small { display: block; font-size: 10px; color: var(--text-gray); font-weight: 800; margin-bottom: 5px; text-transform: uppercase; }
+        .stat-box b { font-size: 14px; color: var(--deep-blue); }
+        .stat-box.highlight b { color: var(--accent-orange); }
 
-        .stat-box b {
-            font-size: 13px;
-            color: var(--deep-blue);
-            display: block;
-        }
-
-        .stat-box.highlight b {
-            color: var(--accent-orange);
-        }
-
-        /* ORDER CARDS */
+        /* RECEIPT STYLE CARDS */
         .order-card {
             background: white;
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            border: 1px solid #edf2f7;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             position: relative;
-            overflow: hidden;
+            padding: 20px;
+            border: 1px solid #eee;
         }
 
-        .order-id-label {
-            font-size: 10px;
-            background: #f1f5f9;
-            color: var(--text-gray);
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-family: monospace;
-            display: inline-block;
-            margin-bottom: 10px;
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1.5px dashed #e2e8f0;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
         }
 
-        .order-main {
+        .network-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 14px;
+            color: white;
+        }
+
+        .mtn-bg { background: #FFCC00; color: #000; }
+        .tel-bg { background: #E60000; }
+        .air-bg { background: #0052CC; }
+
+        .order-id { font-family: monospace; font-size: 11px; color: var(--text-gray); }
+
+        .order-details {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .detail-row { display: flex; justify-content: space-between; align-items: center; }
+        .detail-row span { font-size: 12px; color: var(--text-gray); }
+        .detail-row b { font-size: 13px; color: var(--text-main); }
+
+        .order-footer {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1.5px dashed #e2e8f0;
+            display: flex;
             justify-content: space-between;
+            align-items: center;
         }
 
-        .order-info { flex: 1; }
-        .order-info b { display: block; font-size: 15px; color: var(--deep-blue); }
-        .order-info span { font-size: 12px; color: var(--text-gray); display: block; margin-top: 2px; }
+        .amount-paid { font-size: 18px; font-weight: 900; color: var(--primary-blue); }
 
-        .order-right { text-align: right; }
-        .order-amount { display: block; font-size: 16px; font-weight: 800; color: var(--text-main); }
-        
-        .status {
+        .status-pill {
             font-size: 10px;
-            font-weight: 700;
-            padding: 2px 8px;
-            border-radius: 4px;
+            font-weight: 800;
+            padding: 4px 12px;
+            border-radius: 30px;
             text-transform: uppercase;
-            display: inline-block;
-            margin-top: 5px;
         }
-        .status-completed { background: #e6fffa; color: #047857; }
-        .status-pending { background: #fffbeb; color: #b45309; }
-        .status-failed { background: #fef2f2; color: #991b1b; }
 
-        .empty-state {
-            text-align: center;
-            margin-top: 50px;
-            color: var(--text-gray);
-        }
+        .status-completed { background: #ecfdf5; color: #047857; }
+        .status-pending { background: #fffbeb; color: #b45309; }
+        .status-failed { background: #fef2f2; color: #b91c1c; }
+        .status-in-progress { background: #eff6ff; color: #1e40af; }
+
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-gray); }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <a href="dashboard.html"><i class="fas fa-arrow-left"></i></a>
-        <h1>Order History</h1>
+        <a href="dashboard.html"><i class="fas fa-chevron-left"></i></a>
+        <h1>My Order History</h1>
     </div>
 
     <div class="container">
         <div class="stats-grid">
             <div class="stat-box">
-                <small>Orders</small>
+                <small>Purchases</small>
                 <b id="totalOrders">0</b>
             </div>
             <div class="stat-box">
-                <small>Total Sales</small>
+                <small>Life Spent</small>
                 <b id="totalSales">₵0.00</b>
             </div>
             <div class="stat-box highlight">
-                <small>Spent Today</small>
+                <small>Today</small>
                 <b id="spentToday">₵0.00</b>
             </div>
         </div>
 
         <div id="orderList">
             <div class="empty-state">
-                <i class="fas fa-circle-notch fa-spin"></i>
-                <p>Loading transactions...</p>
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Syncing transactions...</p>
             </div>
         </div>
     </div>
@@ -186,73 +189,69 @@
 
         onAuthStateChanged(auth, user => {
             if (user) {
+                const loggedInEmail = user.email; // Capture current user email
                 const orderRef = ref(db, `user_orders/${user.uid}`);
+                
                 onValue(orderRef, (snapshot) => {
                     const container = document.getElementById('orderList');
                     const data = snapshot.val();
 
                     if (!data) {
-                        container.innerHTML = `
-                            <div class="empty-state">
-                                <i class="fas fa-receipt" style="font-size:40px; opacity:0.2;"></i>
-                                <p>No transactions found</p>
-                            </div>`;
+                        container.innerHTML = `<div class="empty-state"><i class="fas fa-receipt fa-3x" style="opacity:0.2;"></i><p>No transactions yet</p></div>`;
                         return;
                     }
 
                     let html = "";
-                    let totalSalesCount = 0;
-                    let totalSpentAmount = 0;
-                    let spentTodayAmount = 0;
+                    let totalOrders = 0;
+                    let totalSpent = 0;
+                    let spentToday = 0;
+                    const startOfToday = new Date().setHours(0,0,0,0);
 
-                    // 24 hours ago timestamp
-                    const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
+                    // Sort orders by timestamp descending
+                    const entries = Object.entries(data).sort((a,b) => b[1].timestamp - a[1].timestamp);
+                    totalOrders = entries.length;
 
-                    const entries = Object.entries(data);
-                    totalSalesCount = entries.length;
-
-                    // Calculate stats and generate HTML
-                    const sortedEntries = entries.reverse();
-
-                    sortedEntries.forEach(([id, order]) => {
-                        const amount = Number(order.amount || 0);
-                        const timestamp = order.timestamp || 0;
+                    entries.forEach(([id, order]) => {
+                        const amount = parseFloat(order.amount || 0);
+                        const ts = order.timestamp || Date.now();
+                        const dateObj = new Date(ts);
                         
-                        // Add to lifetime sales
-                        totalSpentAmount += amount;
+                        totalSpent += amount;
+                        if (ts >= startOfToday) spentToday += amount;
 
-                        // Add to "Spent Today" if within last 24hrs
-                        if (timestamp >= oneDayAgo) {
-                            spentTodayAmount += amount;
-                        }
+                        const network = (order.network || 'MTN').toUpperCase();
+                        let netClass = 'mtn-bg';
+                        if(network.includes('TELECEL')) netClass = 'tel-bg';
+                        if(network.includes('AT') || network.includes('AIRTEL')) netClass = 'air-bg';
 
-                        const date = timestamp ? new Date(timestamp).toLocaleString() : 'Recent';
                         const status = order.status || 'Pending';
-                        const statusClass = `status-${status.toLowerCase()}`;
+                        const statusClass = `status-${status.toLowerCase().replace(" ", "-")}`;
 
                         html += `
                             <div class="order-card">
-                                <div class="order-id-label">ID: ${id}</div>
-                                <div class="order-main">
-                                    <div class="order-info">
-                                        <b>${order.network || 'Data'} ${order.plan || ''}</b>
-                                        <span>Recipient: ${order.recipient || 'N/A'}</span>
-                                        <span style="font-size:10px; opacity:0.7;">${date}</span>
+                                <div class="order-header">
+                                    <div class="network-icon ${netClass}">${network.substring(0,3)}</div>
+                                    <div style="text-align:right">
+                                        <div class="order-id">#${id.slice(-8)}</div>
+                                        <div style="font-size:10px; color:#94a3b8;">${dateObj.toLocaleString()}</div>
                                     </div>
-                                    <div class="order-right">
-                                        <span class="order-amount">₵${amount.toFixed(2)}</span>
-                                        <span class="status ${statusClass}">${status}</span>
-                                    </div>
+                                </div>
+                                <div class="order-details">
+                                    <div class="detail-row"><span>Data Bundle</span><b>${order.plan || 'N/A'}</b></div>
+                                    <div class="detail-row"><span>Recipient</span><b>${order.recipient || 'N/A'}</b></div>
+                                    <div class="detail-row"><span>Log Email</span><b style="font-size:11px; color:var(--primary-blue);">${loggedInEmail}</b></div>
+                                </div>
+                                <div class="order-footer">
+                                    <div class="amount-paid">₵${amount.toFixed(2)}</div>
+                                    <span class="status-pill ${statusClass}">${status}</span>
                                 </div>
                             </div>
                         `;
                     });
 
-                    // Update UI Stats
-                    document.getElementById('totalOrders').innerText = totalSalesCount;
-                    document.getElementById('totalSales').innerText = `₵${totalSpentAmount.toFixed(2)}`;
-                    document.getElementById('spentToday').innerText = `₵${spentTodayAmount.toFixed(2)}`;
-                    
+                    document.getElementById('totalOrders').innerText = totalOrders;
+                    document.getElementById('totalSales').innerText = `₵${totalSpent.toFixed(2)}`;
+                    document.getElementById('spentToday').innerText = `₵${spentToday.toFixed(2)}`;
                     container.innerHTML = html;
                 });
             } else {
