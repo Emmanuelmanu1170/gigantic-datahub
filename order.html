@@ -7,9 +7,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
+            /* Light Mode */
             --primary-purple: #6a5af9;
             --secondary-purple: #a855f7;
             --bg-gray: #fcfdfe;
+            --card-bg: #ffffff;
             --border-color: #eef2f6;
             --text-main: #1e293b;
             --text-muted: #94a3b8;
@@ -17,15 +19,27 @@
             --success-green: #16a34a;
             --light-green: #f0fdf4;
             --warning-amber: #f59e0b;
+            --input-bg: #f8fafc;
         }
 
-        * { box-sizing: border-box; font-family: -apple-system, sans-serif; }
+        [data-theme="dark"] {
+            /* Dark Mode */
+            --bg-gray: #02040a;
+            --card-bg: #0d1117;
+            --border-color: #30363d;
+            --text-main: #f0f6fc;
+            --text-muted: #8b949e;
+            --input-bg: #161b22;
+            --light-green: #064e3b20;
+        }
+
+        * { box-sizing: border-box; font-family: -apple-system, sans-serif; transition: background 0.3s, border-color 0.3s, color 0.1s; }
         body { background-color: var(--bg-gray); margin: 0; display: flex; justify-content: center; color: var(--text-main); }
         .container { width: 100%; max-width: 480px; padding: 16px; min-height: 100vh; }
 
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
         .back-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-main); text-decoration: none;}
-        .btn-terms { font-size: 0.7rem; color: var(--primary-purple); text-decoration: none; font-weight: 600; }
+        .theme-toggle { font-size: 1.1rem; color: var(--warning-amber); cursor: pointer; }
 
         .balance-card {
             background: linear-gradient(135deg, var(--primary-purple) 0%, var(--secondary-purple) 100%);
@@ -40,30 +54,32 @@
             background: #fffbeb; border: 1px dashed var(--warning-amber); padding: 12px;
             border-radius: 12px; margin-bottom: 15px; display: none; align-items: center; gap: 10px;
         }
+        [data-theme="dark"] .agent-promo { background: #451a0320; }
 
         .mode-selector {
-            display: flex; background: #fff; border: 1px solid var(--border-color);
+            display: flex; background: var(--card-bg); border: 1px solid var(--border-color);
             padding: 5px; border-radius: 12px; margin-bottom: 20px;
         }
-        .mode-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; background: transparent; transition: 0.3s; font-size: 0.85rem; }
+        .mode-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; background: transparent; transition: 0.3s; font-size: 0.85rem; color: var(--text-main); }
         .mode-btn.active { background: var(--primary-purple); color: white; }
 
-        .step { background: white; border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; margin-bottom: 16px; transition: 0.3s; }
+        .step { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; margin-bottom: 16px; }
         .active-step { border: 2px solid var(--primary-purple) !important; opacity: 1 !important; pointer-events: auto !important; }
         .disabled { opacity: 0.5; pointer-events: none; filter: grayscale(1); }
 
         .step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
         .step-number { background: #f1f5f9; color: var(--active-blue); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; }
+        [data-theme="dark"] .step-number { background: #1f2937; }
         .step-title h3 { margin: 0; font-size: 0.85rem; }
 
         .network-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         .network-option { border: 1px solid var(--border-color); border-radius: 12px; padding: 12px 5px; text-align: center; cursor: pointer; }
-        .network-option.selected { border: 2px solid var(--primary-purple); background: #f5f3ff; }
+        .network-option.selected { border: 2px solid var(--primary-purple); background: #f5f3ff10; }
         .logo-box { width: 35px; height: 35px; margin: 0 auto 8px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 900; color: white; }
         
         .mtn { background: #ffcc00; color: #000; } .airtel { background: #ed1c24; } .telecel { background: #e60000; }
 
-        select, input, textarea { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border-color); background: #f8fafc; outline: none; font-size: 0.9rem; margin-top: 10px; }
+        select, input, textarea { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--input-bg); outline: none; font-size: 0.9rem; margin-top: 10px; color: var(--text-main); }
         textarea { height: 100px; resize: none; font-family: monospace; }
         
         .validation-card {
@@ -72,7 +88,7 @@
             display: none; align-items: flex-start; gap: 12px;
         }
         .validation-card i { color: var(--success-green); font-size: 1.1rem; margin-top: 2px; }
-        .acc-name { font-weight: 800; text-transform: uppercase; color: #064e3b; }
+        .acc-name { font-weight: 800; text-transform: uppercase; color: var(--success-green); }
 
         .confirm-btn { width: 100%; padding: 16px; background: var(--primary-purple); color: white; border: none; border-radius: 14px; font-weight: 700; margin-top: 20px; cursor: pointer; }
         .loading-dots:after { content: ' .'; animation: dots 1s steps(5, end) infinite;}
@@ -85,7 +101,7 @@
         <header>
             <a href="dashboard.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
             <h1 style="font-size: 1rem;">Buy Data Bundle</h1>
-            <a href="terms.html" class="btn-terms">T&Cs</a>
+            <i class="fas fa-moon theme-toggle" id="themeIcon" onclick="toggleTheme()"></i>
         </header>
 
         <div class="balance-card">
@@ -97,7 +113,7 @@
         <div class="agent-promo" id="agentPromo">
             <i class="fas fa-bolt" style="color: var(--warning-amber)"></i>
             <div style="flex: 1">
-                <p style="margin:0; font-size: 0.75rem; font-weight: 700;">Lower prices available!</p>
+                <p style="margin:0; font-size: 0.75rem; font-weight: 700; color: var(--text-main);">Lower prices available!</p>
                 <a href="agent-request.html" style="font-size: 0.65rem; color: var(--primary-purple); font-weight: 800;">ACTIVATE AGENT STATUS</a>
             </div>
         </div>
@@ -171,16 +187,29 @@
         let userReferrer = null;
         window.selectedNet = "";
 
+        // Theme Logic
+        window.toggleTheme = () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            const target = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', target);
+            localStorage.setItem('theme', target);
+            document.getElementById('themeIcon').className = target === 'dark' ? 'fas fa-sun theme-toggle' : 'fas fa-moon theme-toggle';
+        };
+
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        document.getElementById('themeIcon').className = savedTheme === 'dark' ? 'fas fa-sun theme-toggle' : 'fas fa-moon theme-toggle';
+
         const getK = () => atob("YmVhcmVyIA==") + atob("c2tfbGl2ZV8=") + atob("YmZkMjhmYmJlM2NhNDU1YmExNTQ1NWViZWQ3MTM4YjI0MDA5ZDEzNA==");
 
         const agentPlans = {
-            mtn:[{plan:"1GB",price:"4.4"},{plan:"2GB",price:"8.8"},{plan:"3GB",price:"13.2"},{plan:"4GB",price:"17.6"},{plan:"5GB",price:"22"},{plan:"6GB",price:"26.5"},{plan:"8GB",price:"36.38"},{plan:"10GB",price:"42. 2"},{plan:"15GB",price:"62"},{plan:"20GB",price:"82"},{plan:"25GB",price:"103"},{plan:"30GB",price:"123"},{plan:"40GB",price:"160"},{plan:"50GB",price:"199"},{plan:"100GB",price:"380"}],
+            mtn:[{plan:"1GB",price:"4.4"},{plan:"2GB",price:"8.8"},{plan:"3GB",price:"13.2"},{plan:"4GB",price:"17.6"},{plan:"5GB",price:"22"},{plan:"6GB",price:"26.5"},{plan:"8GB",price:"36.38"},{plan:"10GB",price:"42.2"},{plan:"15GB",price:"62"},{plan:"20GB",price:"82"},{plan:"25GB",price:"103"},{plan:"30GB",price:"123"},{plan:"40GB",price:"160"},{plan:"50GB",price:"199"},{plan:"100GB",price:"380"}],
             airteltigo:[{plan:"1GB",price:"4.3"},{plan:"2GB",price:"8.56"},{plan:"3GB",price:"12.84"},{plan:"4GB",price:"17.12"},{plan:"5GB",price:"21.4"},{plan:"6GB",price:"25.6"},{plan:"7GB",price:"29.96"},{plan:"8GB",price:"35"},{plan:"10GB",price:"44"},{plan:"15GB",price:"65"},{plan:"20GB",price:"76"},{plan:"30GB",price:"87"},{plan:"40GB",price:"100"},{plan:"50GB",price:"115"},{plan:"60GB",price:"150"},{plan:"80GB",price:"183"},{plan:"100GB",price:"200"}],
             telecel:[{plan:"10GB",price:"45"},{plan:"15GB",price:"62"},{plan:"20GB",price:"84"},{plan:"25GB",price:"105"},{plan:"30GB",price:"120"},{plan:"40GB",price:"158"},{plan:"50GB",price:"196"},{plan:"100GB",price:"384"}]
         };
 
         const normalPlans = {
-            mtn:[{plan:"1GB",price:"4.6"},{plan:"2GB",price:"9. 2"},{plan:"3GB",price:"13.8"},{plan:"4GB",price:"18"},{plan:"5GB",price:"22.2"},{plan:"6GB",price:"26.6"},{plan:"8GB",price:"36"},{plan:"10GB",price:"45.4"},{plan:"15GB",price:"66.8"},{plan:"20GB",price:"82. 2"},{plan:"30GB",price:"125"},{plan:"40GB",price:"199"},{plan:"50GB",price:"210"},{plan:"100GB",price:"420"}],
+            mtn:[{plan:"1GB",price:"4.6"},{plan:"2GB",price:"9.2"},{plan:"3GB",price:"13.8"},{plan:"4GB",price:"18"},{plan:"5GB",price:"22.2"},{plan:"6GB",price:"26.6"},{plan:"8GB",price:"36"},{plan:"10GB",price:"45.4"},{plan:"15GB",price:"66.8"},{plan:"20GB",price:"82.2"},{plan:"30GB",price:"125"},{plan:"40GB",price:"199"},{plan:"50GB",price:"210"},{plan:"100GB",price:"420"}],
             airteltigo:[{plan:"1GB",price:"4.4"},{plan:"2GB",price:"8.6"},{plan:"3GB",price:"13"},{plan:"4GB",price:"18.1"},{plan:"5GB",price:"22.8"},{plan:"6GB",price:"26.9"},{plan:"7GB",price:"31.1"},{plan:"8GB",price:"35.4"},{plan:"10GB",price:"44.5"},{plan:"15GB",price:"67.9"},{plan:"20GB",price:"78.8"},{plan:"30GB",price:"89.7"},{plan:"40GB",price:"106"},{plan:"50GB",price:"121.5"},{plan:"60GB",price:"173"},{plan:"80GB",price:"194.5"},{plan:"100GB",price:"215.5"}],
             telecel:[{plan:"10GB",price:"46.7"},{plan:"15GB",price:"63.3"},{plan:"20GB",price:"85.1"},{plan:"25GB",price:"106.5"},{plan:"30GB",price:"121.5"},{plan:"40GB",price:"159.5"},{plan:"50GB",price:"198.4"},{plan:"100GB",price:"386.7"}]
         };
