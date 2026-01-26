@@ -104,8 +104,9 @@
             box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
 
-        .balance { font-size: 32px; font-weight: 900; margin: 10px 0 20px; }
-        .wallet-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; }
+        .balance { font-size: 32px; font-weight: 900; margin: 10px 0 20px; display: flex; align-items: center; gap: 12px; }
+        .wallet-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; display: flex; align-items: center; justify-content: space-between; }
+        .toggle-balance { cursor: pointer; font-size: 16px; opacity: 0.8; }
 
         .btn {
             flex: 1; padding: 14px; border-radius: 14px; border: none;
@@ -236,7 +237,10 @@
 
     <div class="wallet-container">
         <div class="wallet-card">
-            <div class="wallet-label">Main Balance</div>
+            <div class="wallet-label">
+                <span>Main Balance</span>
+                <i class="fas fa-eye toggle-balance" id="toggleBalance" onclick="toggleBalanceVisibility()"></i>
+            </div>
             <div class="balance" id="walletBalance">GH₵ 0.00</div>
             <div style="display:flex; gap:10px;">
                 <a href="topup.html" class="btn btn-white"><i class="fas fa-plus"></i> Top Up</a>
@@ -294,6 +298,9 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
+        let rawBalance = 0;
+        let isBalanceHidden = localStorage.getItem('balanceHidden') === 'true';
+
         // Theme Toggle Logic
         window.toggleTheme = function() {
             const doc = document.documentElement;
@@ -304,6 +311,26 @@
             doc.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
             btn.className = newTheme === 'light' ? 'fas fa-moon theme-toggle' : 'fas fa-sun theme-toggle';
+        }
+
+        // Balance Masking Logic
+        window.toggleBalanceVisibility = function() {
+            isBalanceHidden = !isBalanceHidden;
+            localStorage.setItem('balanceHidden', isBalanceHidden);
+            renderBalance();
+        }
+
+        function renderBalance() {
+            const balanceEl = document.getElementById('walletBalance');
+            const iconEl = document.getElementById('toggleBalance');
+            
+            if (isBalanceHidden) {
+                balanceEl.innerText = "GH₵ ****";
+                iconEl.className = "fas fa-eye-slash toggle-balance";
+            } else {
+                balanceEl.innerText = `GH₵ ${Number(rawBalance).toFixed(2)}`;
+                iconEl.className = "fas fa-eye toggle-balance";
+            }
         }
 
         // Initialize button icon on load
@@ -323,7 +350,8 @@
             if (user) {
                 onValue(ref(db, 'users/' + user.uid), (snapshot) => {
                     const data = snapshot.val() || {};
-                    document.getElementById('walletBalance').innerText = `GH₵ ${Number(data.wallet || 0).toFixed(2)}`;
+                    rawBalance = data.wallet || 0;
+                    renderBalance();
                     updateGreeting(data.fullName ? data.fullName.split(' ')[0] : 'Member');
                 });
 
