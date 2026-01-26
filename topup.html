@@ -134,7 +134,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-        import { getDatabase, ref, onValue, push, set, runTransaction, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+        import { getDatabase, ref, onValue, push, set, runTransaction, get } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
@@ -159,7 +159,9 @@
                 userEmail = user.email;
                 onValue(ref(db, `users/${user.uid}`), snap => {
                     const d = snap.val() || {};
-                    document.getElementById('currBal').innerText = `GH₵ ${Number(d.wallet || 0).toFixed(2)}`;
+                    // Check for both 'wallet' and 'balance' to match rules
+                    const balance = d.wallet !== undefined ? d.wallet : (d.balance || 0);
+                    document.getElementById('currBal').innerText = `GH₵ ${Number(balance).toFixed(2)}`;
                 });
             } else {
                 window.location.href = "login.html";
@@ -202,32 +204,34 @@
         }
 
         async function processCredit(amt, fee, reference) {
-            const walletRef = ref(db, `users/${userId}/wallet`);
-            const topupRef = ref(db, `topupNotes/${userId}`);
-
-            // First check if this reference was already used
-            const globalRef = ref(db, 'allSuccessfulPayments/' + reference);
-            const check = await get(globalRef);
+            const globalPaymentRef = ref(db, `allSuccessfulPayments/${reference}`);
             
-            if (check.exists()) {
-                return alert("This payment has already been credited to a wallet.");
-            }
-
             try {
-                await runTransaction(walletRef, (currentValue) => {
-                    return (currentValue || 0) + amt;
-                });
+                // Check if reference used
+                const check = await get(globalPaymentRef);
+                if (check.exists()) {
+                    return alert("This payment has already been claimed.");
+                }
 
-                // Mark as used globally
-                await set(globalRef, {
+                // First, claim the reference (Write to allSuccessfulPayments)
+                // This will fail if someone else tries to use the same reference simultaneously
+                await set(globalPaymentRef, {
                     uid: userId,
                     amount: amt,
                     timestamp: Date.now()
                 });
 
-                // Log to user history
-                const newTopup = push(topupRef);
-                await set(newTopup, {
+                // Second, update wallet balance
+                const walletPath = `users/${userId}/wallet`; // Or 'balance' based on your schema
+                const walletRef = ref(db, walletPath);
+                
+                await runTransaction(walletRef, (currentValue) => {
+                    return (currentValue || 0) + amt;
+                });
+
+                // Third, log to history (topupNotes)
+                const historyRef = push(ref(db, `topupNotes/${userId}`));
+                await set(historyRef, {
                     amount: amt,
                     fee: fee,
                     total_paid: amt + fee,
@@ -236,10 +240,12 @@
                     timestamp: Date.now()
                 });
 
-                alert("Wallet Funded Successfully!");
+                alert("Verification Successful! GH₵ " + amt + " added to wallet.");
                 window.location.href = "dashboard.html";
+
             } catch (e) {
-                alert("Critical error. If money was debited, contact admin with reference: " + reference);
+                console.error(e);
+                alert("Payment verification error. If money was deducted, contact admin with ref: " + reference);
             }
         }
 
@@ -252,23 +258,20 @@
             verifyBtn.innerText = "Verifying...";
 
             try {
-                // Check if reference exists in Paystack (Normally done via backend)
-                // For this implementation, we check if it was already used in our DB
-                const checkUsed = await get(ref(db, 'allSuccessfulPayments/' + refID));
+                const checkUsed = await get(ref(db, `allSuccessfulPayments/${refID}`));
                 
                 if (checkUsed.exists()) {
                     alert("This transaction was already credited.");
                 } else {
-                    // In a real-world scenario, you'd call a small API to confirm Paystack actually got the money.
-                    // Since this is client-side only, we prompt the user for the amount to credit (Self-Service)
-                    // Note: In production, always verify amount with Paystack API.
                     const confirmAmt = parseFloat(prompt("Enter the exact amount you paid (excluding fees):"));
-                    if (confirmAmt > 0) {
+                    if (!isNaN(confirmAmt) && confirmAmt > 0) {
                         await processCredit(confirmAmt, confirmAmt * 0.025, refID);
+                    } else {
+                        alert("Invalid amount entered.");
                     }
                 }
             } catch (err) {
-                alert("Verification failed. Please try again later.");
+                alert("Permission denied or Network error. Ensure you are logged in.");
             } finally {
                 verifyBtn.disabled = false;
                 verifyBtn.innerText = "VERIFY & CREDIT";
