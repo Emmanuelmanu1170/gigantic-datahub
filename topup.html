@@ -12,6 +12,7 @@
             --primary-blue: #0052cc;
             --orange-gradient: linear-gradient(135deg, #f06529 0%, #c02425 100%);
             --light-bg: #f4f7fe;
+            --success-green: #10b981;
         }
 
         body {
@@ -58,14 +59,36 @@
             border: none; padding: 16px; border-radius: 12px; font-weight: 700;
             font-size: 16px; margin-top: 20px; cursor: pointer;
             box-shadow: 0 5px 15px rgba(240, 101, 41, 0.3);
+            transition: 0.3s ease;
         }
 
+        .pay-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(240, 101, 41, 0.4); }
         .pay-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* Professional Success Toast */
+        #success-toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
+            background: white; border-left: 5px solid var(--success-green); padding: 16px 24px;
+            border-radius: 12px; box-shadow: 0 15px 30px rgba(0,0,0,0.1); z-index: 1000;
+            display: flex; align-items: center; gap: 15px; transition: 0.5s ease;
+        }
+        #success-toast.show { transform: translateX(-50%) translateY(0); }
+        .toast-icon { color: var(--success-green); font-size: 24px; }
+        .toast-content b { display: block; color: var(--deep-blue); margin-bottom: 2px; }
+        .toast-content span { font-size: 13px; color: #64748b; }
         
         a { text-decoration: none; }
     </style>
 </head>
 <body>
+
+    <div id="success-toast">
+        <i class="fas fa-check-circle toast-icon"></i>
+        <div class="toast-content">
+            <b>Transaction Successful</b>
+            <span id="toast-msg">Your wallet has been credited.</span>
+        </div>
+    </div>
 
     <div class="header">
         <a href="dashboard.html" style="color: white;"><i class="fas fa-arrow-left"></i></a>
@@ -111,7 +134,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-        import { getDatabase, ref, onValue, push, set, runTransaction } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+        import { getDatabase, ref, onValue, push, set, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
@@ -134,9 +157,8 @@
             if (user) {
                 userId = user.uid;
                 userEmail = user.email;
-                onValue(ref(db, `users/${user.uid}`), snap => {
-                    const d = snap.val() || {};
-                    document.getElementById('currBal').innerText = `GH₵ ${Number(d.wallet || 0).toFixed(2)}`;
+                onValue(ref(db, `users/${user.uid}/wallet`), snap => {
+                    document.getElementById('currBal').innerText = `GH₵ ${Number(snap.val() || 0).toFixed(2)}`;
                 });
             } else {
                 window.location.href = "login.html";
@@ -156,9 +178,22 @@
             document.getElementById('dispTotal').innerText = `GH₵ ${total.toFixed(2)}`;
         }
 
+        function showSuccess(amount) {
+            const toast = document.getElementById('success-toast');
+            document.getElementById('toast-msg').innerText = `GH₵ ${amount.toFixed(2)} has been successfully added to your wallet.`;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+                window.location.href = "dashboard.html";
+            }, 3500);
+        }
+
         window.payWithPaystack = function() {
             const amt = parseFloat(amountInput.value);
-            if (!amt || amt < 1) return alert("Enter a valid amount (Min GH₵ 1)");
+            if (!amt || amt < 1) return alert("Please enter a valid amount (Minimum GH₵ 1.00)");
+
+            document.getElementById('payBtn').disabled = true;
+            document.getElementById('payBtn').innerText = "INITIALIZING...";
 
             let fee = amt * 0.025;
             const finalTotal = (amt + fee) * 100; 
@@ -169,34 +204,38 @@
                 amount: Math.round(finalTotal),
                 currency: "GHS",
                 callback: function(response) {
-                    // --- AUTOMATIC CREDITING LOGIC ---
+                    // --- ENHANCED AUTOMATIC CREDITING LOGIC ---
                     const walletRef = ref(db, `users/${userId}/wallet`);
                     
-                    // Transaction ensures we add money safely without overwriting
                     runTransaction(walletRef, (currentValue) => {
                         return (currentValue || 0) + amt;
-                    }).then(() => {
-                        // Log record of payment
-                        const topupRef = ref(db, 'topupNotes/' + userId);
-                        const newTopup = push(topupRef);
-                        set(newTopup, {
-                            amount: amt,
-                            fee: fee,
-                            total_paid: amt + fee,
-                            reference: response.reference,
-                            status: "success",
-                            timestamp: Date.now()
-                        });
+                    }).then((result) => {
+                        if (result.committed) {
+                            // Log payment only after transaction succeeds
+                            const topupRef = ref(db, 'topupNotes/' + userId);
+                            const newTopup = push(topupRef);
+                            set(newTopup, {
+                                amount: amt,
+                                fee: fee,
+                                total_paid: amt + fee,
+                                reference: response.reference,
+                                method: 'Paystack',
+                                status: "success",
+                                timestamp: serverTimestamp()
+                            });
 
-                        alert("Wallet Funded Successfully!");
-                        window.location.href = "dashboard.html";
+                            showSuccess(amt);
+                        }
                     }).catch((error) => {
-                        console.error("Transaction failed: ", error);
-                        alert("Error updating wallet. Please contact admin.");
+                        console.error("Auto-credit failed: ", error);
+                        alert("An error occurred while updating your balance. Please take a screenshot of your receipt and contact support.");
+                        document.getElementById('payBtn').disabled = false;
+                        document.getElementById('payBtn').innerText = "PROCEED TO PAYMENT";
                     });
                 },
                 onClose: function() {
-                    alert('Transaction cancelled.');
+                    document.getElementById('payBtn').disabled = false;
+                    document.getElementById('payBtn').innerText = "PROCEED TO PAYMENT";
                 }
             });
             handler.openIframe();
