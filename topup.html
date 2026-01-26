@@ -12,7 +12,6 @@
             --primary-blue: #0052cc;
             --orange-gradient: linear-gradient(135deg, #f06529 0%, #c02425 100%);
             --light-bg: #f4f7fe;
-            --success: #10b981;
         }
 
         body {
@@ -44,9 +43,7 @@
         input {
             width: 100%; padding: 12px 12px 12px 50px; border: 2px solid #e2e8f0;
             border-radius: 12px; font-size: 16px; box-sizing: border-box;
-            outline: none;
         }
-        input:focus { border-color: var(--primary-blue); }
 
         .fee-box {
             background: #f8fafc; border-radius: 12px; padding: 15px;
@@ -63,21 +60,7 @@
             box-shadow: 0 5px 15px rgba(240, 101, 41, 0.3);
         }
 
-        .verify-section {
-            border-top: 2px solid #e2e8f0;
-            margin-top: 10px;
-            padding-top: 20px;
-        }
-
-        .verify-input { padding-left: 15px !important; margin-bottom: 10px; }
-        
-        .verify-btn {
-            width: 100%; background: #1e293b; color: white;
-            border: none; padding: 12px; border-radius: 10px; font-weight: 600;
-            font-size: 14px; cursor: pointer;
-        }
-
-        .pay-btn:disabled, .verify-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .pay-btn:disabled { opacity: 0.6; cursor: not-allowed; }
         
         a { text-decoration: none; }
     </style>
@@ -118,12 +101,6 @@
             </div>
 
             <button class="pay-btn" id="payBtn" onclick="payWithPaystack()">PROCEED TO PAYMENT</button>
-
-            <div class="verify-section">
-                <label><i class="fas fa-magnifying-glass"></i> Having issues? Verify Reference</label>
-                <input type="text" id="refInput" class="verify-input" placeholder="Enter Paystack Reference (e.g. T12345...)">
-                <button class="verify-btn" id="verifyBtn" onclick="manualVerify()">VERIFY & CREDIT</button>
-            </div>
         </div>
 
         <p style="font-size: 11px; color: #64748b; text-align: center;">
@@ -134,7 +111,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-        import { getDatabase, ref, onValue, push, set, runTransaction, get } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+        import { getDatabase, ref, onValue, push, set, runTransaction } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
@@ -159,9 +136,7 @@
                 userEmail = user.email;
                 onValue(ref(db, `users/${user.uid}`), snap => {
                     const d = snap.val() || {};
-                    // Check for both 'wallet' and 'balance' to match rules
-                    const balance = d.wallet !== undefined ? d.wallet : (d.balance || 0);
-                    document.getElementById('currBal').innerText = `GH₵ ${Number(balance).toFixed(2)}`;
+                    document.getElementById('currBal').innerText = `GH₵ ${Number(d.wallet || 0).toFixed(2)}`;
                 });
             } else {
                 window.location.href = "login.html";
@@ -194,88 +169,37 @@
                 amount: Math.round(finalTotal),
                 currency: "GHS",
                 callback: function(response) {
-                    processCredit(amt, fee, response.reference);
+                    // --- AUTOMATIC CREDITING LOGIC ---
+                    const walletRef = ref(db, `users/${userId}/wallet`);
+                    
+                    // Transaction ensures we add money safely without overwriting
+                    runTransaction(walletRef, (currentValue) => {
+                        return (currentValue || 0) + amt;
+                    }).then(() => {
+                        // Log record of payment
+                        const topupRef = ref(db, 'topupNotes/' + userId);
+                        const newTopup = push(topupRef);
+                        set(newTopup, {
+                            amount: amt,
+                            fee: fee,
+                            total_paid: amt + fee,
+                            reference: response.reference,
+                            status: "success",
+                            timestamp: Date.now()
+                        });
+
+                        alert("Wallet Funded Successfully!");
+                        window.location.href = "dashboard.html";
+                    }).catch((error) => {
+                        console.error("Transaction failed: ", error);
+                        alert("Error updating wallet. Please contact admin.");
+                    });
                 },
                 onClose: function() {
                     alert('Transaction cancelled.');
                 }
             });
             handler.openIframe();
-        }
-
-        async function processCredit(amt, fee, reference) {
-            const globalPaymentRef = ref(db, `allSuccessfulPayments/${reference}`);
-            
-            try {
-                // Check if reference used
-                const check = await get(globalPaymentRef);
-                if (check.exists()) {
-                    return alert("This payment has already been claimed.");
-                }
-
-                // First, claim the reference (Write to allSuccessfulPayments)
-                // This will fail if someone else tries to use the same reference simultaneously
-                await set(globalPaymentRef, {
-                    uid: userId,
-                    amount: amt,
-                    timestamp: Date.now()
-                });
-
-                // Second, update wallet balance
-                const walletPath = `users/${userId}/wallet`; // Or 'balance' based on your schema
-                const walletRef = ref(db, walletPath);
-                
-                await runTransaction(walletRef, (currentValue) => {
-                    return (currentValue || 0) + amt;
-                });
-
-                // Third, log to history (topupNotes)
-                const historyRef = push(ref(db, `topupNotes/${userId}`));
-                await set(historyRef, {
-                    amount: amt,
-                    fee: fee,
-                    total_paid: amt + fee,
-                    reference: reference,
-                    status: "success",
-                    timestamp: Date.now()
-                });
-
-                alert("Verification Successful! GH₵ " + amt + " added to wallet.");
-                window.location.href = "dashboard.html";
-
-            } catch (e) {
-                console.error(e);
-                alert("Payment verification error. If money was deducted, contact admin with ref: " + reference);
-            }
-        }
-
-        window.manualVerify = async function() {
-            const refID = document.getElementById('refInput').value.trim();
-            if (!refID) return alert("Please enter your Paystack reference.");
-
-            const verifyBtn = document.getElementById('verifyBtn');
-            verifyBtn.disabled = true;
-            verifyBtn.innerText = "Verifying...";
-
-            try {
-                const checkUsed = await get(ref(db, `allSuccessfulPayments/${refID}`));
-                
-                if (checkUsed.exists()) {
-                    alert("This transaction was already credited.");
-                } else {
-                    const confirmAmt = parseFloat(prompt("Enter the exact amount you paid (excluding fees):"));
-                    if (!isNaN(confirmAmt) && confirmAmt > 0) {
-                        await processCredit(confirmAmt, confirmAmt * 0.025, refID);
-                    } else {
-                        alert("Invalid amount entered.");
-                    }
-                }
-            } catch (err) {
-                alert("Permission denied or Network error. Ensure you are logged in.");
-            } finally {
-                verifyBtn.disabled = false;
-                verifyBtn.innerText = "VERIFY & CREDIT";
-            }
         }
     </script>
 </body>
