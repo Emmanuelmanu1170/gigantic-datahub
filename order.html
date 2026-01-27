@@ -114,7 +114,7 @@
             <i class="fas fa-bolt" style="color: var(--warning-amber)"></i>
             <div style="flex: 1">
                 <p style="margin:0; font-size: 0.75rem; font-weight: 700; color: var(--text-main);">Lower prices available!</p>
-                <a href="agent-request.html" style="font-size: 0.65rem; color: var(--primary-purple); font-weight: 800;">ACTIVATE AGENT STATUS</a>
+                <a href="dashboard.html" style="font-size: 0.65rem; color: var(--primary-purple); font-weight: 800;">ACTIVATE AGENT STATUS</a>
             </div>
         </div>
 
@@ -203,7 +203,7 @@
         const getK = () => atob("YmVhcmVyIA==") + atob("c2tfbGl2ZV8=") + atob("YmZkMjhmYmJlM2NhNDU1YmExNTQ1NWViZWQ3MTM4YjI0MDA5ZDEzNA==");
 
         const agentPlans = {
-            mtn:[{plan:"1GB",price:"4.4"},{plan:"2GB",price:"8.8"},{plan:"3GB",price:"13.2"},{plan:"4GB",price:"17.6"},{plan:"5GB",price:"22"},{plan:"6GB",price:"26.5"},{plan:"8GB",price:"36.38"},{plan:"10GB",price:"42.2"},{plan:"15GB",price:"62"},{plan:"20GB",price:"82"},{plan:"25GB",price:"103"},{plan:"30GB",price:"123"},{plan:"40GB",price:"160"},{plan:"50GB",price:"199"},{plan:"100GB",price:"380"}],
+            mtn:[{plan:"1GB",price:"4.45"},{plan:"2GB",price:"8.85"},{plan:"3GB",price:"13.25"},{plan:"4GB",price:"17.65"},{plan:"5GB",price:"22. 05"},{plan:"6GB",price:"26.55"},{plan:"8GB",price:"36.39"},{plan:"10GB",price:"42.25"},{plan:"15GB",price:"62.05"},{plan:"20GB",price:"82.05"},{plan:"25GB",price:"103.05"},{plan:"30GB",price:"123"},{plan:"40GB",price:"160"},{plan:"50GB",price:"199"},{plan:"100GB",price:"380"}],
             airteltigo:[{plan:"1GB",price:"4.3"},{plan:"2GB",price:"8.56"},{plan:"3GB",price:"12.84"},{plan:"4GB",price:"17.12"},{plan:"5GB",price:"21.4"},{plan:"6GB",price:"25.6"},{plan:"7GB",price:"29.96"},{plan:"8GB",price:"35"},{plan:"10GB",price:"44"},{plan:"15GB",price:"65"},{plan:"20GB",price:"76"},{plan:"30GB",price:"87"},{plan:"40GB",price:"100"},{plan:"50GB",price:"115"},{plan:"60GB",price:"150"},{plan:"80GB",price:"183"},{plan:"100GB",price:"200"}],
             telecel:[{plan:"10GB",price:"45"},{plan:"15GB",price:"62"},{plan:"20GB",price:"84"},{plan:"25GB",price:"105"},{plan:"30GB",price:"120"},{plan:"40GB",price:"158"},{plan:"50GB",price:"196"},{plan:"100GB",price:"384"}]
         };
@@ -218,12 +218,34 @@
             if (user) {
                 onValue(ref(db, 'users/' + user.uid), (snapshot) => {
                     const data = snapshot.val() || {};
-                    isAgent = data.status === "Agent";
+                    
+                    // --- SYNC LOGIC WITH DASHBOARD ---
+                    // Checks status field and matches with dashboard's userType sync
+                    isAgent = (data.status === "Agent" || data.userType === "agent" || localStorage.getItem('currentUserStatus') === 'agent');
+                    
                     currentBalance = Number(data.wallet || 0);
                     userReferrer = data.referredBy || null;
                     document.getElementById('walletBalance').innerText = `GH₵ ${currentBalance.toFixed(2)}`;
                     document.getElementById('userTypeBadge').innerText = isAgent ? "AGENT" : "NORMAL USER";
-                    if(!isAgent && currentBalance > 50) document.getElementById('agentPromo').style.display = "flex";
+                    
+                    // Show promo only to normal users with decent balance
+                    if(!isAgent && currentBalance > 40) {
+                        document.getElementById('agentPromo').style.display = "flex";
+                    } else {
+                        document.getElementById('agentPromo').style.display = "none";
+                    }
+
+                    // Refresh plans if already network selected
+                    if(window.selectedNet) {
+                        const select = document.getElementById('dataPlan');
+                        const currentVal = select.value;
+                        const plans = isAgent ? agentPlans[window.selectedNet] : normalPlans[window.selectedNet];
+                        select.innerHTML = '<option value="" disabled>-- Choose Plan --</option>';
+                        plans.forEach(p => { 
+                            select.innerHTML += `<option value="${p.price}" data-plan="${p.plan}">${p.plan} - GH₵ ${p.price}</option>`; 
+                        });
+                        select.value = currentVal;
+                    }
                 });
             } else { window.location.href = "login.html"; }
         });
