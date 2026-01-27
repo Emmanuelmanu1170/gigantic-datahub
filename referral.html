@@ -39,6 +39,29 @@
         }
         .top-header b { font-size: 16px; letter-spacing: 0.5px; }
 
+        /* User Identity Section */
+        .user-identity {
+            padding: 15px 20px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid #edf2f7;
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-blue);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        .user-details b { font-size: 13px; display: block; color: var(--text-gray); }
+        .user-details span { font-size: 14px; font-weight: 700; color: var(--deep-blue); }
+
         /* Main Earning Card */
         .reward-card {
             background: linear-gradient(135deg, var(--deep-blue) 0%, var(--primary-blue) 100%);
@@ -50,11 +73,6 @@
             position: relative;
             overflow: hidden;
             box-shadow: 0 15px 30px rgba(0, 51, 102, 0.2);
-        }
-        .reward-card::before {
-            content: ''; position: absolute; top: -50px; right: -50px;
-            width: 150px; height: 150px; background: rgba(255,255,255,0.1);
-            border-radius: 50%;
         }
 
         .promo-text h2 { margin: 0; font-size: 28px; font-weight: 900; }
@@ -142,15 +160,23 @@
 <body>
 
     <div class="top-header">
-        <b><i class="fas fa-users"></i> Affiliate Program</b>
+        <b><i class="fas fa-users"></i> Referral Hub</b>
         <a href="dashboard.html" style="color: white;"><i class="fas fa-house"></i></a>
+    </div>
+
+    <div class="user-identity">
+        <div class="user-avatar"><i class="fas fa-user"></i></div>
+        <div class="user-details">
+            <b>Logged in as:</b>
+            <span id="userEmail">Loading email...</span>
+        </div>
     </div>
 
     <div class="reward-card">
         <div class="promo-text">
-            <p>REFER & EARN CASH</p>
-            <h2>GH₵ 1.00</h2>
-            <p>Get paid for every friend who joins & funds wallet!</p>
+            <p>REFER FRIENDS & EARN</p>
+            <h2>₵ 1.00 FREE</h2>
+            <p>Get GH₵ 1.00 instantly when a friend registers using your link!</p>
         </div>
         <div class="link-container">
             <i class="fas fa-link" style="opacity: 0.5;"></i>
@@ -184,27 +210,29 @@
         </div>
     </div>
 
+    
+
     <div class="stepper-card">
-        <div class="section-title"><i class="fas fa-circle-info" style="color: var(--primary-blue);"></i> How it Works</div>
+        <div class="section-title"><i class="fas fa-circle-info" style="color: var(--primary-blue);"></i> Referral Rules</div>
         <div class="step">
             <div class="step-circle">1</div>
             <div class="step-content">
-                <b>Share your link</b>
-                <p>Send your unique referral link to friends or post on social media.</p>
+                <b>Share Link</b>
+                <p>Send your unique referral link to your friends on WhatsApp or Facebook.</p>
             </div>
         </div>
         <div class="step">
             <div class="step-circle">2</div>
             <div class="step-content">
-                <b>Friend Signs Up</b>
-                <p>They must use your link to register and verify their account.</p>
+                <b>Registration</b>
+                <p>Your friend clicks the link and completes registration on GiganticDataHub.</p>
             </div>
         </div>
         <div class="step">
             <div class="step-circle">3</div>
             <div class="step-content">
-                <b>Get Paid Instantly</b>
-                <p>Once they make their first deposit, GH₵ 1.00 hits your wallet.</p>
+                <b>Earn GH₵ 1.00</b>
+                <p>Once registration is confirmed, your wallet is credited with ₵1.00 for free.</p>
             </div>
         </div>
     </div>
@@ -217,7 +245,7 @@
     </div>
 
     <nav class="bottom-nav">
-        <a href="dashboard.html" class="nav-item"><i class="fas fa-house"></i>Home</a>
+        <a href="dashboard.html" class="nav-item"><i class="fas fa-home"></i>Home</a>
         <a href="order_history.html" class="nav-item"><i class="fas fa-receipt"></i>Orders</a>
         <a href="referral.html" class="nav-item active"><i class="fas fa-users"></i>Referral</a>
         <a href="profile.html" class="nav-item"><i class="fas fa-user-circle"></i>Profile</a>
@@ -244,6 +272,9 @@
 
         onAuthStateChanged(auth, user => {
             if (user) {
+                // Display User Email
+                document.getElementById('userEmail').innerText = user.email;
+
                 // 1. Sync User Stats
                 onValue(ref(db, 'users/' + user.uid), (snapshot) => {
                     const data = snapshot.val() || {};
@@ -256,7 +287,7 @@
                     document.getElementById('refLink').innerText = `${domain}/register.html?ref=${user.uid}`;
                 });
 
-                // 2. Sync Leaderboard (Professional Privacy)
+                // 2. Sync Leaderboard
                 const leaderQuery = query(ref(db, 'users'), orderByChild('referralCount'), limitToLast(10));
                 onValue(leaderQuery, (snap) => {
                     const board = document.getElementById('leaderboard');
@@ -274,7 +305,6 @@
                     }
 
                     users.forEach((u, i) => {
-                        // Privacy Masking (e.g. John Doe -> John D***)
                         const nameParts = (u.fullName || "Anonymous").split(' ');
                         const maskedName = nameParts[0] + (nameParts[1] ? ` ${nameParts[1][0]}***` : "");
                         
