@@ -106,7 +106,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 import { getDatabase, ref, set, push } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
 const firebaseConfig = {
@@ -128,6 +128,19 @@ const urlParams = new URLSearchParams(window.location.search);
 const referrerFromUrl = urlParams.get('ref');
 if (referrerFromUrl) { document.getElementById('referralInput').value = referrerFromUrl; }
 
+// Real Email Validation Logic
+function validateEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!re.test(email)) return false;
+    
+    // Check for common disposable email providers (optional but recommended)
+    const disposableDomains = ['tempmail.com', 'mailinator.com', 'yopmail.com'];
+    const domain = email.split('@')[1];
+    if (disposableDomains.includes(domain)) return false;
+
+    return true;
+}
+
 document.getElementById('signupForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('submitBtn');
@@ -138,17 +151,27 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
     const pass = document.getElementById('password').value;
     const confirmPass = document.getElementById('confirmPassword').value;
 
+    // 1. Syntax Check
+    if (!validateEmail(email)) {
+        alert("Please enter a valid and active email address.");
+        return;
+    }
+
     if (pass !== confirmPass) { alert("Passwords do not match!"); return; }
+    if (pass.length < 8) { alert("Password must be at least 8 characters!"); return; }
 
     btn.disabled = true;
     btn.textContent = "Setting up account...";
 
     try {
-        // 1. Create Auth User
+        // 2. Create Auth User
         const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
         const user = userCredential.user;
 
-        // 2. Save User Profile
+        // 3. Send Verification Email (To ensure the email is real and accessible)
+        await sendEmailVerification(user);
+
+        // 4. Save User Profile
         await set(ref(db, 'users/' + user.uid), {
             fullName: name, email: email, phone: phone,
             wallet: 0, referralBonus: 0, referralCount: 0,
@@ -156,17 +179,16 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
             uid: user.uid, createdAt: Date.now()
         });
 
-        // 3. Direct Push Referral Reward to Admin (Fixed Logic)
+        // 5. Direct Push Referral Reward to Admin
         if (refCode && refCode !== user.uid) {
             try {
-                // We send it directly to 'withdrawal_requests' without checking referrer data
                 await push(ref(db, 'withdrawal_requests'), {
-                    uid: refCode,                 // The person who should get the money
+                    uid: refCode,                 
                     email: "New Sign-up Reward", 
                     amount: 1.00,
-                    network: "Referral Bonus",    // Admin page looks for this exact text
+                    network: "Referral Bonus",    
                     momoNumber: "Check User DB",
-                    accountName: name,            // Name of the person who just joined
+                    accountName: name,            
                     timestamp: Date.now(),
                     status: "Pending",
                     note: `Reward for referring ${name} (${phone})`
@@ -176,11 +198,15 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
             }
         }
 
-        alert("Success! Your account is ready.");
+        alert("Success! A verification link has been sent to your email. Please verify to access full features.");
         window.location.href = "dashboard.html";
 
     } catch (error) {
-        alert("Registration Error: " + error.message);
+        if (error.code === 'auth/email-already-in-use') {
+            alert("This email is already registered.");
+        } else {
+            alert("Registration Error: " + error.message);
+        }
         btn.disabled = false;
         btn.textContent = "Create Account";
     }
