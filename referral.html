@@ -7,174 +7,220 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --brand-yellow: #ffc107;
-            --purple-grad: linear-gradient(135deg, #003366 0%, #0052cc 100%);
-            --light-bg: #f8f9fd;
-            --text-dark: #333;
             --deep-blue: #003366;
-            --orange: #ff8c00;
-            --success: #28a745;
+            --primary-blue: #0052cc;
+            --accent-orange: #ff8c00;
+            --light-bg: #f4f7fe;
+            --white: #ffffff;
+            --success: #10b981;
+            --text-gray: #64748b;
         }
 
         body {
             margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: 'Inter', -apple-system, sans-serif;
             background-color: var(--light-bg);
+            color: var(--deep-blue);
             padding-bottom: 100px;
         }
 
-        .top-bar {
+        /* Header Area */
+        .top-header {
             background-color: var(--deep-blue);
-            padding: 15px;
+            padding: 18px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             color: white;
-            font-weight: bold;
             position: sticky;
             top: 0;
-            z-index: 100;
+            z-index: 1000;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
+        .top-header b { font-size: 16px; letter-spacing: 0.5px; }
 
-        .link-card {
-            background: var(--purple-grad);
+        /* Main Earning Card */
+        .reward-card {
+            background: linear-gradient(135deg, var(--deep-blue) 0%, var(--primary-blue) 100%);
             margin: 20px 15px;
-            border-radius: 15px;
-            padding: 20px;
+            border-radius: 24px;
+            padding: 30px 20px;
             text-align: center;
             color: white;
-            box-shadow: 0 10px 20px rgba(0,51,102,0.15);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 15px 30px rgba(0, 51, 102, 0.2);
         }
-        .gift-icon { font-size: 40px; margin-bottom: 10px; }
-        .link-label { font-size: 11px; letter-spacing: 1px; margin-bottom: 10px; opacity: 0.9; text-transform: uppercase;}
-        
-        .link-input-area {
-            display: flex;
-            background: rgba(255,255,255,0.2);
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            align-items: center;
-        }
-        .link-text { flex: 1; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left;}
-        
-        .copy-btn {
-            background: white; color: var(--deep-blue); border: none;
-            width: 100%; padding: 12px; border-radius: 8px;
-            font-weight: bold; font-size: 14px; cursor: pointer;
+        .reward-card::before {
+            content: ''; position: absolute; top: -50px; right: -50px;
+            width: 150px; height: 150px; background: rgba(255,255,255,0.1);
+            border-radius: 50%;
         }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            padding: 0 15px;
-            margin-bottom: 15px;
-        }
-        .stat-box {
-            background: white; padding: 15px 5px; border-radius: 12px;
-            text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        .stat-box i { font-size: 20px; color: var(--orange); margin-bottom: 5px; display: block;}
-        .stat-box b { font-size: 14px; color: var(--text-dark); display: block;}
-        .stat-box span { font-size: 9px; color: #888; text-transform: uppercase; margin-top: 3px; display: block;}
+        .promo-text h2 { margin: 0; font-size: 28px; font-weight: 900; }
+        .promo-text p { margin: 5px 0 20px; font-size: 13px; opacity: 0.8; }
 
-        .action-area { padding: 0 15px; margin-bottom: 20px; }
-        .withdraw-btn {
-            background: var(--orange);
-            color: white;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            padding: 15px;
+        .link-container {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px dashed rgba(255, 255, 255, 0.3);
             border-radius: 12px;
-            font-weight: bold;
-            font-size: 14px;
-            box-shadow: 0 4px 12px rgba(255, 140, 0, 0.2);
-            transition: 0.3s;
+            padding: 12px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        .withdraw-btn:active { transform: scale(0.98); }
-
-        .content-card {
-            background: white; margin: 20px 15px; border-radius: 15px;
-            padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        .link-url {
+            flex: 1; font-size: 12px; font-family: monospace;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left;
         }
-        .card-title { font-size: 15px; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; color: var(--deep-blue); }
 
-        .leader-item {
+        .action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn-ref {
+            padding: 12px; border-radius: 10px; border: none; font-weight: 800;
+            font-size: 13px; cursor: pointer; display: flex; align-items: center;
+            justify-content: center; gap: 8px; transition: 0.3s;
+        }
+        .btn-copy { background: white; color: var(--deep-blue); }
+        .btn-share { background: #25D366; color: white; }
+
+        /* Stats Grid */
+        .stats-row {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 12px; padding: 0 15px; margin-bottom: 25px;
+        }
+        .stat-item {
+            background: var(--white); padding: 15px 10px; border-radius: 16px;
+            text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+            border: 1px solid #edf2f7;
+        }
+        .stat-item i { color: var(--accent-orange); font-size: 18px; margin-bottom: 8px; display: block; }
+        .stat-item b { font-size: 15px; display: block; }
+        .stat-item span { font-size: 9px; color: var(--text-gray); text-transform: uppercase; font-weight: 700; }
+
+        /* Stepper Instructions */
+        .stepper-card {
+            background: var(--white); margin: 0 15px 25px; border-radius: 20px;
+            padding: 20px; border: 1px solid #edf2f7;
+        }
+        .section-title { font-weight: 800; font-size: 14px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        
+        .step { display: flex; gap: 15px; margin-bottom: 15px; }
+        .step-circle {
+            min-width: 28px; height: 28px; background: #eff6ff; color: var(--primary-blue);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 12px;
+        }
+        .step-content b { font-size: 13px; display: block; margin-bottom: 2px; }
+        .step-content p { margin: 0; font-size: 11px; color: var(--text-gray); }
+
+        /* Leaderboard */
+        .leader-card { background: var(--white); margin: 0 15px; border-radius: 20px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+        .leader-row {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 10px 0; border-bottom: 1px solid #f1f5f9;
+            padding: 12px 0; border-bottom: 1px solid #f8fafc;
         }
-        .leader-info { display: flex; align-items: center; gap: 10px; }
-        .rank { width: 24px; height: 24px; background: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; }
-        .rank-1 { background: #ffd700; color: #000; }
-        .leader-name { font-size: 13px; font-weight: 500; }
-        .leader-count { font-size: 12px; color: var(--orange); font-weight: 700; }
+        .rank-badge {
+            width: 25px; height: 25px; border-radius: 50%; background: #f1f5f9;
+            display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800;
+        }
+        .gold { background: #fef3c7; color: #92400e; }
+        .leader-name { font-size: 13px; font-weight: 600; }
+        .leader-val { font-size: 12px; font-weight: 800; color: var(--success); }
 
+        /* Bottom Nav */
         .bottom-nav {
             position: fixed; bottom: 0; width: 100%; background: white;
-            display: flex; justify-content: space-around; padding: 12px 0;
-            border-top: 1px solid #eee; z-index: 1000;
+            display: flex; justify-content: space-around; padding: 15px 0;
+            border-top: 1px solid #f1f5f9; z-index: 2000;
         }
-        .nav-item { text-align: center; color: #64748b; text-decoration: none; font-size: 11px; font-weight: 600;}
+        .nav-item { text-align: center; color: #94a3b8; text-decoration: none; font-size: 10px; font-weight: 700; }
         .nav-item i { font-size: 20px; margin-bottom: 4px; display: block; }
-        .nav-item.active { color: var(--orange); }
+        .nav-item.active { color: var(--accent-orange); }
     </style>
 </head>
 <body>
 
-    <div class="top-bar">
-        <span>👥 Referral Program</span>
-        <a href="dashboard.html" style="color: white;"><i class="fas fa-home"></i></a>
+    <div class="top-header">
+        <b><i class="fas fa-users"></i> Affiliate Program</b>
+        <a href="dashboard.html" style="color: white;"><i class="fas fa-house"></i></a>
     </div>
 
-    <div class="link-card">
-        <div class="gift-icon">🎁</div>
-        <div class="link-label">EARN GH₵ 1.00 PER REFERRAL</div>
-        <div class="link-input-area">
-            <span class="link-text" id="referralLink">Generating link...</span>
+    <div class="reward-card">
+        <div class="promo-text">
+            <p>REFER & EARN CASH</p>
+            <h2>GH₵ 1.00</h2>
+            <p>Get paid for every friend who joins & funds wallet!</p>
         </div>
-        <button class="copy-btn" onclick="copyLink()">Copy Referral Link</button>
+        <div class="link-container">
+            <i class="fas fa-link" style="opacity: 0.5;"></i>
+            <span class="link-url" id="refLink">Generating your link...</span>
+        </div>
+        <div class="action-btns">
+            <button class="btn-ref btn-copy" onclick="copyLink()">
+                <i class="fas fa-copy"></i> Copy Link
+            </button>
+            <button class="btn-ref btn-share" onclick="shareWhatsApp()">
+                <i class="fab fa-whatsapp"></i> WhatsApp
+            </button>
+        </div>
     </div>
 
-    <div class="stats-grid">
-        <div class="stat-box">
-            <i class="fas fa-users"></i>
+    <div class="stats-row">
+        <div class="stat-item">
+            <i class="fas fa-user-plus"></i>
             <b id="refCount">0</b>
-            <span>Referrals</span>
+            <span>Friends</span>
         </div>
-        <div class="stat-box">
-            <i class="fas fa-coins"></i>
-            <b id="allTimeTotal">₵0.00</b>
-            <span>Total Earned</span>
+        <div class="stat-item">
+            <i class="fas fa-sack-dollar"></i>
+            <b id="allTime">₵0.00</b>
+            <span>Earned</span>
         </div>
-        <div class="stat-box">
+        <div class="stat-item">
             <i class="fas fa-wallet"></i>
-            <b id="withdrawable">₵0.00</b>
+            <b id="balance" style="color: var(--success);">₵0.00</b>
             <span>Available</span>
         </div>
     </div>
 
-    <div class="action-area">
-        <a href="withdraw.html" class="withdraw-btn">
-            <i class="fas fa-hand-holding-dollar"></i> Withdraw Commissions
-        </a>
+    <div class="stepper-card">
+        <div class="section-title"><i class="fas fa-circle-info" style="color: var(--primary-blue);"></i> How it Works</div>
+        <div class="step">
+            <div class="step-circle">1</div>
+            <div class="step-content">
+                <b>Share your link</b>
+                <p>Send your unique referral link to friends or post on social media.</p>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-circle">2</div>
+            <div class="step-content">
+                <b>Friend Signs Up</b>
+                <p>They must use your link to register and verify their account.</p>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-circle">3</div>
+            <div class="step-content">
+                <b>Get Paid Instantly</b>
+                <p>Once they make their first deposit, GH₵ 1.00 hits your wallet.</p>
+            </div>
+        </div>
     </div>
 
-    <div class="content-card">
-        <div class="card-title"><i class="fas fa-trophy" style="color: #ffd700;"></i> Top Referrers</div>
-        <div id="leaderboardList">
-            <p style="font-size: 12px; color: #888; text-align: center;">Loading leaderboard...</p>
+    <div class="leader-card">
+        <div class="section-title"><i class="fas fa-crown" style="color: #fbbf24;"></i> Hall of Fame</div>
+        <div id="leaderboard">
+            <div style="text-align: center; padding: 20px; color: #cbd5e1;"><i class="fas fa-spinner fa-spin"></i></div>
         </div>
     </div>
 
     <nav class="bottom-nav">
         <a href="dashboard.html" class="nav-item"><i class="fas fa-house"></i>Home</a>
-        <a href="order_history.html" class="nav-item"><i class="fas fa-list-ul"></i>Orders</a>
+        <a href="order_history.html" class="nav-item"><i class="fas fa-receipt"></i>Orders</a>
         <a href="referral.html" class="nav-item active"><i class="fas fa-users"></i>Referral</a>
-        <a href="profile.html" class="nav-item"><i class="fas fa-user-gear"></i>Profile</a>
+        <a href="profile.html" class="nav-item"><i class="fas fa-user-circle"></i>Profile</a>
     </nav>
 
     <script type="module">
@@ -198,77 +244,67 @@
 
         onAuthStateChanged(auth, user => {
             if (user) {
-                // 1. Fetch User Stats
+                // 1. Sync User Stats
                 onValue(ref(db, 'users/' + user.uid), (snapshot) => {
                     const data = snapshot.val() || {};
-                    const refs = data.referralCount || 0;
+                    const count = data.referralCount || 0;
+                    document.getElementById('refCount').innerText = count;
+                    document.getElementById('balance').innerText = `₵${Number(data.referralBonus || 0).toFixed(2)}`;
+                    document.getElementById('allTime').innerText = `₵${Number(count * 1.0).toFixed(2)}`;
                     
-                    document.getElementById('refCount').innerText = refs;
-                    document.getElementById('withdrawable').innerText = `₵${Number(data.referralBonus || 0).toFixed(2)}`;
-                    
-                    document.getElementById('allTimeTotal').innerText = `₵${Number(refs * 1).toFixed(2)}`;
-                    
-                    // Fixed: Using .com domain
-                    const liveDomain = "https://giganticdatahub.com"; 
-                    document.getElementById('referralLink').innerText = `${liveDomain}/register.html?ref=${user.uid}`;
+                    const domain = "https://giganticdatahub.com";
+                    document.getElementById('refLink').innerText = `${domain}/register.html?ref=${user.uid}`;
                 });
 
-                // 2. Fetch Top Referrers
-                const leadersQuery = query(ref(db, 'users'), orderByChild('referralCount'), limitToLast(15));
-                onValue(leadersQuery, (snapshot) => {
-                    const leaderboardList = document.getElementById('leaderboardList');
-                    leaderboardList.innerHTML = "";
+                // 2. Sync Leaderboard (Professional Privacy)
+                const leaderQuery = query(ref(db, 'users'), orderByChild('referralCount'), limitToLast(10));
+                onValue(leaderQuery, (snap) => {
+                    const board = document.getElementById('leaderboard');
+                    board.innerHTML = "";
                     let users = [];
-                    
-                    snapshot.forEach(child => {
-                        const u = child.val();
-                        if (u.referralCount && u.referralCount > 0) {
-                            users.push({
-                                name: u.fullName || "Anonymous",
-                                count: u.referralCount
-                            });
-                        }
+                    snap.forEach(child => {
+                        const val = child.val();
+                        if(val.referralCount > 0) users.push(val);
                     });
+                    users.sort((a,b) => b.referralCount - a.referralCount);
 
-                    users.sort((a, b) => b.count - a.count);
-
-                    if (users.length === 0) {
-                        leaderboardList.innerHTML = `<p style="font-size: 12px; color: #888; text-align: center;">No referrers yet. Start sharing!</p>`;
+                    if(users.length === 0) {
+                        board.innerHTML = "<p style='text-align:center; font-size:12px; color:#94a3b8;'>No one on the board yet!</p>";
                         return;
                     }
 
-                    users.forEach((u, index) => {
-                        const item = `
-                            <div class="leader-item">
-                                <div class="leader-info">
-                                    <div class="rank ${index === 0 ? 'rank-1' : ''}">${index + 1}</div>
-                                    <span class="leader-name">${u.name}</span>
+                    users.forEach((u, i) => {
+                        // Privacy Masking (e.g. John Doe -> John D***)
+                        const nameParts = (u.fullName || "Anonymous").split(' ');
+                        const maskedName = nameParts[0] + (nameParts[1] ? ` ${nameParts[1][0]}***` : "");
+                        
+                        const row = `
+                            <div class="leader-row">
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    <div class="rank-badge ${i === 0 ? 'gold' : ''}">${i + 1}</div>
+                                    <span class="leader-name">${maskedName}</span>
                                 </div>
-                                <span class="leader-count">${u.count} refs</span>
+                                <span class="leader-val">${u.referralCount} refs</span>
                             </div>`;
-                        leaderboardList.innerHTML += item;
+                        board.innerHTML += row;
                     });
                 });
-
             } else {
                 window.location.href = "login.html";
             }
         });
 
         window.copyLink = function() {
-            const linkText = document.getElementById('referralLink').innerText;
-            navigator.clipboard.writeText(linkText).then(() => {
-                const btn = document.querySelector('.copy-btn');
-                const originalText = btn.innerText;
-                btn.innerText = "Copied!";
-                btn.style.background = "#28a745";
-                btn.style.color = "#fff";
-                setTimeout(() => {
-                    btn.innerText = originalText;
-                    btn.style.background = "white";
-                    btn.style.color = "#003366";
-                }, 2000);
+            const link = document.getElementById('refLink').innerText;
+            navigator.clipboard.writeText(link).then(() => {
+                alert("Referral link copied to clipboard!");
             });
+        };
+
+        window.shareWhatsApp = function() {
+            const link = document.getElementById('refLink').innerText;
+            const text = encodeURIComponent(`Hi! Join GiganticDataHub and get affordable data bundles instantly. Register using my link: ${link}`);
+            window.open(`https://wa.me/?text=${text}`, '_blank');
         };
     </script>
 </body>
