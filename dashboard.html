@@ -151,6 +151,29 @@
         .btn-orange { background: var(--orange-gradient); color: white; }
         .btn-white { background: white; color: #003366; }
 
+        /* AGENT UPGRADE CARD */
+        .upgrade-card {
+            margin: 20px 18px;
+            padding: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            text-align: center;
+        }
+        .upgrade-card h4 { margin: 0; color: var(--header-bg); }
+        .upgrade-card p { font-size: 11px; color: var(--text-gray); margin: 5px 0 15px; }
+        .btn-upgrade {
+            background: var(--header-bg);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+            width: 100%;
+        }
+
         /* ANALYTICS PREVIEW */
         .insights-card {
             margin: 20px 18px;
@@ -165,41 +188,63 @@
         .spending-bar { flex: 1; background: var(--bg-body); border-radius: 4px; position: relative; transition: 0.5s; }
         .spending-bar.active { background: var(--accent-orange); }
 
-        /* AGENT ACCESS CARD */
-        .agent-card {
-            background: #fff;
+        /* NEW BOOST SERVICE BUTTON */
+        .boost-service-btn {
             margin: 20px 18px;
-            padding: 20px;
+            padding: 18px;
+            background: var(--bg-card);
+            border: 2px solid var(--accent-orange);
             border-radius: 20px;
-            border: 1px solid var(--border-color);
-            text-align: center;
-        }
-        .agent-card h4 { margin: 0; color: var(--header-bg); }
-        .agent-card p { font-size: 12px; color: var(--text-gray); margin: 8px 0 15px; }
-        .btn-agent {
-            background: var(--header-bg);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 12px;
-            border: none;
-            font-weight: bold;
-            font-size: 14px;
-            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            text-decoration: none;
+            color: var(--text-main);
+            position: relative;
             cursor: pointer;
+            animation: pulse-border 2s infinite;
         }
 
-        /* REFERRAL RANKING */
-        .rank-card {
-            background: #fff;
-            margin: 20px 18px;
-            padding: 20px;
+        .new-badge {
+            position: absolute;
+            top: -10px;
+            right: 15px;
+            background: var(--accent-orange);
+            color: white;
+            font-size: 10px;
+            font-weight: 900;
+            padding: 2px 10px;
             border-radius: 20px;
-            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
-        .rank-title { font-weight: 800; font-size: 14px; margin-bottom: 15px; color: var(--accent-orange); }
-        .rank-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f8fafc; font-size: 13px; }
-        .rank-badge { width: 20px; height: 20px; border-radius: 50%; background: #e2e8f0; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: 900; }
-        .gold { background: #ffd700; color: #000; }
+
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0 rgba(240, 101, 41, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(240, 101, 41, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(240, 101, 41, 0); }
+        }
+
+        /* ADS SYSTEM */
+        .ad-slot {
+            margin: 20px 18px; padding: 18px; 
+            background: var(--bg-card); 
+            border: 1px solid var(--border-color); 
+            border-radius: 20px;
+        }
+
+        .ad-badge { font-size: 10px; background: var(--accent-orange); color: white; padding: 2px 8px; border-radius: 5px; font-weight: bold; }
+
+        /* GRID */
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 18px; }
+        .grid-item {
+            background: var(--bg-card); padding: 25px 15px; border-radius: 20px;
+            text-align: center; text-decoration: none; color: inherit;
+            border: 1px solid var(--border-color);
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        .grid-item:active { transform: translateY(-5px); border-color: var(--accent-orange); }
+        .grid-item i { font-size: 28px; color: var(--accent-orange); margin-bottom: 10px; display: block; }
 
         /* BOTTOM NAV */
         .bottom-nav {
@@ -214,6 +259,7 @@
 
     </style>
     <script>
+        // Apply theme immediately to root to prevent white flash
         (function() {
             const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
@@ -258,30 +304,45 @@
                 <a href="topup.html" class="btn btn-white"><i class="fas fa-plus"></i> Top Up</a>
                 <a href="order.html" class="btn btn-orange"><i class="fas fa-wifi"></i> Buy Data</a>
             </div>
-            
-            <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.2);">
-                <div class="wallet-label">Referral Bonus: <b id="refBonusText">₵0.00</b></div>
-                <button onclick="convertToMainWallet()" class="btn btn-white" style="width: 100%; margin-top: 10px; font-size: 11px; padding: 8px;">
-                    <i class="fas fa-exchange-alt"></i> Convert to Main Wallet (Min: ₵50)
-                </button>
-            </div>
         </div>
     </div>
 
-    <div class="agent-card" id="agentSection">
+    <div class="upgrade-card" id="agentUpgradeBox">
         <h4><i class="fas fa-user-tie"></i> Agent Access</h4>
-        <p>Unlock cheaper pricing for just <b>GH₵ 45.00</b> once-off fee.</p>
-        <button class="btn-agent" onclick="activateAgent()">Activate Agent Account</button>
+        <p>Activate Agent pricing system for just <b>GH₵ 45.00</b> and save more on every data purchase.</p>
+        <button class="btn-upgrade" onclick="activateAgent()">Activate Agent Now</button>
     </div>
 
-    <div class="rank-card">
-        <div class="rank-title"><i class="fas fa-medal"></i> Top 3 Referrers (Month)</div>
-        <div id="topReferrersList">
-            </div>
-        <p style="font-size: 10px; color: var(--text-gray); margin-top: 10px; text-align: center;">
-            Note: Top referrer earns <b>FREE GH₵ 20.00</b> at the end of each month!
-        </p>
+    <div class="insights-card">
+        <div class="insights-header">
+            <span class="insights-title">Usage Insights</span>
+            <span style="font-size: 10px; color: var(--online-status); font-weight: bold;">LAST 7 DAYS</span>
+        </div>
+        <div class="spending-bar-container">
+            <div class="spending-bar" style="height: 30%;"></div>
+            <div class="spending-bar" style="height: 50%;"></div>
+            <div class="spending-bar" style="height: 40%;"></div>
+            <div class="spending-bar active" style="height: 90%;"></div>
+            <div class="spending-bar" style="height: 60%;"></div>
+            <div class="spending-bar" style="height: 45%;"></div>
+            <div class="spending-bar" style="height: 70%;"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 9px; color: var(--text-gray);">
+            <span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span>
+        </div>
     </div>
+
+    <a href="https://Giganticboost.shop" class="boost-service-btn">
+        <span class="new-badge">NEW</span>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div style="font-size: 24px; color: #1DA1F2;"><i class="fas fa-rocket"></i></div>
+            <div>
+                <b style="font-size: 15px;">Gigantic Social Boost</b>
+                <p style="font-size: 11px; color: var(--text-gray); margin: 2px 0;">Grow your TikTok, IG, & YouTube fast!</p>
+            </div>
+        </div>
+        <i class="fas fa-chevron-right" style="color: var(--accent-orange);"></i>
+    </a>
 
     <div class="grid">
         <a href="order.html" class="grid-item">
@@ -302,6 +363,21 @@
         </a>
     </div>
 
+    <div class="ad-slot" id="sponsoredSlot" style="display:none;">
+        <span class="ad-badge">SPONSORED</span>
+        <a id="adLink" href="#" target="_blank" style="text-decoration:none; display:flex; align-items:center; gap:15px; margin-top:10px;">
+            <div id="adIcon" style="font-size:24px; color:var(--primary-blue);"><i class="fas fa-star"></i></div>
+            <div>
+                <b id="adTitle" style="color:var(--text-main); font-size:14px;">...</b>
+                <p id="adDesc" style="color:var(--text-gray); font-size:11px; margin:2px 0;">...</p>
+            </div>
+        </a>
+    </div>
+
+    <a href="https://chat.whatsapp.com/DyyaJcgZKBMHnO2nRScmZ2" target="_blank" class="btn btn-orange" style="margin: 0 18px; border-radius:15px; text-decoration: none;">
+        <i class="fab fa-whatsapp"></i> JOIN COMMUNITY
+    </a>
+
     <nav class="bottom-nav">
         <a href="dashboard.html" class="nav-item active"><i class="fas fa-home"></i>Home</a>
         <a href="order_history.html" class="nav-item"><i class="fas fa-receipt"></i>Orders</a>
@@ -312,7 +388,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-        import { getDatabase, ref, onValue, update, runTransaction, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+        import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
@@ -326,8 +402,7 @@
         const db = getDatabase(app);
 
         let rawBalance = 0;
-        let refBonus = 0;
-        let userUID = "";
+        let currentUserUID = null;
         let isBalanceHidden = localStorage.getItem('balanceHidden') === 'true';
 
         // Set initial theme icon
@@ -335,15 +410,18 @@
         const themeBtn = document.getElementById('themeBtn');
         themeBtn.className = savedTheme === 'light' ? 'fas fa-moon theme-toggle' : 'fas fa-sun theme-toggle';
 
+        // Theme Toggle Function
         window.toggleTheme = function() {
             const doc = document.documentElement;
             const currentTheme = doc.getAttribute('data-theme');
             const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
             doc.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
             themeBtn.className = newTheme === 'light' ? 'fas fa-moon theme-toggle' : 'fas fa-sun theme-toggle';
         };
 
+        // Balance Masking
         window.toggleBalanceVisibility = function() {
             isBalanceHidden = !isBalanceHidden;
             localStorage.setItem('balanceHidden', isBalanceHidden);
@@ -353,6 +431,7 @@
         function renderBalance() {
             const balanceEl = document.getElementById('walletBalance');
             const iconEl = document.getElementById('toggleBalance');
+            
             if (isBalanceHidden) {
                 balanceEl.innerText = "GH₵ ****";
                 iconEl.className = "fas fa-eye-slash toggle-balance";
@@ -362,84 +441,91 @@
             }
         }
 
+        function updateGreeting(name) {
+            const hour = new Date().getHours();
+            const gText = document.getElementById('userGreeting');
+            if (hour < 12) { gText.innerText = `Good Morning, ${name} ☀️`; }
+            else if (hour < 17) { gText.innerText = `Good Afternoon, ${name} 🌤️`; }
+            else { gText.innerText = `Good Evening, ${name} 🌙`; }
+        }
+
         onAuthStateChanged(auth, user => {
             if (user) {
-                userUID = user.uid;
+                currentUserUID = user.uid;
                 onValue(ref(db, 'users/' + user.uid), (snapshot) => {
                     const data = snapshot.val() || {};
                     rawBalance = data.wallet || 0;
-                    refBonus = data.referralBonus || 0;
-                    document.getElementById('refBonusText').innerText = `₵${Number(refBonus).toFixed(2)}`;
                     renderBalance();
-                    
-                    const gText = document.getElementById('userGreeting');
-                    const hour = new Date().getHours();
-                    const name = data.fullName ? data.fullName.split(' ')[0] : 'Member';
-                    if (hour < 12) { gText.innerText = `Good Morning, ${name} ☀️`; }
-                    else if (hour < 17) { gText.innerText = `Good Afternoon, ${name} 🌤️`; }
-                    else { gText.innerText = `Good Evening, ${name} 🌙`; }
+                    updateGreeting(data.fullName ? data.fullName.split(' ')[0] : 'Member');
 
-                    if(data.userType === 'agent') {
-                        document.getElementById('agentSection').innerHTML = "<h4><i class='fas fa-check-circle' style='color:green'></i> Agent Active</h4><p>You are enjoying professional pricing.</p>";
+                    // Hide upgrade box if already an agent
+                    if (data.userType === 'agent') {
+                        document.getElementById('agentUpgradeBox').style.display = 'none';
                     }
                 });
 
-                // Top 3 Referrers
-                const refQuery = query(ref(db, 'users'), orderByChild('referralCount'), limitToLast(3));
-                onValue(refQuery, (snap) => {
-                    const board = document.getElementById('topReferrersList');
-                    board.innerHTML = "";
-                    let users = [];
-                    snap.forEach(child => { users.push(child.val()); });
-                    users.sort((a,b) => b.referralCount - a.referralCount);
-                    users.forEach((u, i) => {
-                        board.innerHTML += `
-                            <div class="rank-item">
-                                <div style="display:flex; align-items:center; gap:8px;">
-                                    <div class="rank-badge ${i === 0 ? 'gold' : ''}">${i + 1}</div>
-                                    <span>${u.fullName || 'Anonymous'}</span>
-                                </div>
-                                <b>${u.referralCount || 0} Refs</b>
-                            </div>`;
-                    });
+                onValue(ref(db, 'adsList'), (snapshot) => {
+                    const ads = snapshot.val();
+                    if (ads) {
+                        const adsArray = Object.keys(ads).map(k => ({id: k, ...ads[k]}));
+                        if(adsArray.length > 0) {
+                            document.getElementById('sponsoredSlot').style.display = 'block';
+                            const ad = adsArray[Math.floor(Math.random() * adsArray.length)];
+                            document.getElementById('adTitle').innerText = ad.title;
+                            document.getElementById('adDesc').innerText = ad.description;
+                            document.getElementById('adLink').href = ad.link;
+                        }
+                    }
                 });
             } else { window.location.href = "login.html"; }
         });
 
-        window.convertToMainWallet = function() {
-            if (refBonus < 50) return alert("Minimum conversion amount is GH₵ 50.00");
-            if (confirm(`Convert ₵${refBonus} to your main wallet?`)) {
-                const userRef = ref(db, 'users/' + userUID);
-                runTransaction(userRef, (user) => {
-                    if (user) {
-                        user.wallet = (user.wallet || 0) + user.referralBonus;
-                        user.referralBonus = 0;
-                    }
-                    return user;
-                }).then(() => alert("Converted Successfully!"));
-            }
-        };
-
+        // Agent Activation Logic
         window.activateAgent = function() {
-            if (rawBalance < 45) return alert("Insufficient balance! You need GH₵ 45.00 to activate Agent access.");
-            if (confirm("Confirm activation for GH₵ 45.00? Your pricing will be updated instantly.")) {
-                const userRef = ref(db, 'users/' + userUID);
-                runTransaction(userRef, (user) => {
-                    if (user) {
-                        if (user.wallet >= 45) {
-                            user.wallet -= 45;
-                            user.userType = 'agent';
+            if (!currentUserUID) return;
+            const cost = 45;
+
+            if (rawBalance < cost) {
+                alert("Insufficient Balance! You need at least GH₵ 45.00 to activate Agent access.");
+                return;
+            }
+
+            if (confirm("Are you sure you want to upgrade to Agent for GH₵ 45.00? This will deduct from your wallet.")) {
+                const userRef = ref(db, 'users/' + currentUserUID);
+
+                runTransaction(userRef, (userData) => {
+                    if (userData) {
+                        if (userData.wallet >= cost) {
+                            userData.wallet -= cost;
+                            userData.userType = 'agent';
                         } else {
-                            return; // Transaction abort
+                            // Transaction will abort
+                            return;
                         }
                     }
-                    return user;
-                }).then(() => alert("Agent Access Activated!"));
+                    return userData;
+                }).then((result) => {
+                    if (result.committed) {
+                        alert("Congratulations! Agent Access Activated successfully.");
+                    } else {
+                        alert("Upgrade failed. Please ensure you have sufficient balance.");
+                    }
+                }).catch((error) => {
+                    console.error("Agent Activation Error:", error);
+                    alert("A technical error occurred during activation.");
+                });
             }
         };
 
+        // Global Logout Function
         window.logoutUser = function() {
-            if(confirm("Logout?")) signOut(auth).then(() => window.location.href = "login.html");
+            if(confirm("Are you sure you want to log out?")) {
+                signOut(auth).then(() => {
+                    window.location.href = "login.html";
+                }).catch((error) => {
+                    console.error("Logout Error:", error);
+                });
+            }
         };
     </script>
 </body>
