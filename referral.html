@@ -3,339 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Referral Program - GiganticDataHub</title>
+    <title>Affiliate Hub — GiganticDataHub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --deep-blue: #003366;
-            --primary-blue: #0052cc;
-            --accent-orange: #ff8c00;
-            --light-bg: #f4f7fe;
-            --white: #ffffff;
+            --primary: #003366;
+            --accent: #ff8c00;
+            --bg: #f4f7fe;
             --success: #10b981;
+            --card-white: #ffffff;
             --text-gray: #64748b;
         }
 
+        [data-theme="dark"] {
+            --bg: #02040a;
+            --card-white: #0d1117;
+            --text-main: #f0f6fc;
+            --border: #30363d;
+        }
+
         body {
-            margin: 0;
-            font-family: 'Inter', -apple-system, sans-serif;
-            background-color: var(--light-bg);
-            color: var(--deep-blue);
-            padding-bottom: 100px;
+            margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: #1e293b; padding-bottom: 100px;
         }
 
-        /* Header Area */
-        .top-header {
-            background-color: var(--deep-blue);
-            padding: 18px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: white;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-        .top-header b { font-size: 16px; letter-spacing: 0.5px; }
-
-        /* User Identity Section */
-        .user-identity {
-            padding: 15px 20px;
-            background: #fff;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border-bottom: 1px solid #edf2f7;
-        }
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            background: var(--primary-blue);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-        }
-        .user-details b { font-size: 13px; display: block; color: var(--text-gray); }
-        .user-details span { font-size: 14px; font-weight: 700; color: var(--deep-blue); }
-
-        /* Main Earning Card */
-        .reward-card {
-            background: linear-gradient(135deg, var(--deep-blue) 0%, var(--primary-blue) 100%);
-            margin: 20px 15px;
-            border-radius: 24px;
-            padding: 30px 20px;
-            text-align: center;
-            color: white;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 15px 30px rgba(0, 51, 102, 0.2);
+        header {
+            background: var(--primary); color: white; padding: 20px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 100;
         }
 
-        .promo-text h2 { margin: 0; font-size: 28px; font-weight: 900; }
-        .promo-text p { margin: 5px 0 20px; font-size: 13px; opacity: 0.8; }
+        .container { padding: 20px; max-width: 500px; margin: auto; }
 
-        .link-container {
-            background: rgba(255, 255, 255, 0.15);
-            border: 1px dashed rgba(255, 255, 255, 0.3);
-            border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        /* Referral Card */
+        .referral-card {
+            background: linear-gradient(135deg, var(--primary) 0%, #0052cc 100%);
+            border-radius: 24px; padding: 25px; color: white; text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1); margin-bottom: 25px;
         }
-        .link-url {
-            flex: 1; font-size: 12px; font-family: monospace;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left;
-        }
-
-        .action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .btn-ref {
-            padding: 12px; border-radius: 10px; border: none; font-weight: 800;
-            font-size: 13px; cursor: pointer; display: flex; align-items: center;
-            justify-content: center; gap: 8px; transition: 0.3s;
-        }
-        .btn-copy { background: white; color: var(--deep-blue); }
-        .btn-share { background: #25D366; color: white; }
-
-        /* Stats Grid */
-        .stats-row {
-            display: grid; grid-template-columns: repeat(3, 1fr);
-            gap: 12px; padding: 0 15px; margin-bottom: 25px;
-        }
-        .stat-item {
-            background: var(--white); padding: 15px 10px; border-radius: 16px;
-            text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.03);
-            border: 1px solid #edf2f7;
-        }
-        .stat-item i { color: var(--accent-orange); font-size: 18px; margin-bottom: 8px; display: block; }
-        .stat-item b { font-size: 15px; display: block; }
-        .stat-item span { font-size: 9px; color: var(--text-gray); text-transform: uppercase; font-weight: 700; }
-
-        /* Stepper Instructions */
-        .stepper-card {
-            background: var(--white); margin: 0 15px 25px; border-radius: 20px;
-            padding: 20px; border: 1px solid #edf2f7;
-        }
-        .section-title { font-weight: 800; font-size: 14px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        .ref-bal-label { font-size: 11px; text-transform: uppercase; opacity: 0.8; letter-spacing: 1px; }
+        .ref-balance { font-size: 36px; font-weight: 900; margin: 10px 0; }
         
-        .step { display: flex; gap: 15px; margin-bottom: 15px; }
-        .step-circle {
-            min-width: 28px; height: 28px; background: #eff6ff; color: var(--primary-blue);
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-weight: 900; font-size: 12px;
+        .btn-convert {
+            background: white; color: var(--primary); border: none; padding: 12px 20px;
+            border-radius: 12px; font-weight: 800; font-size: 13px; width: 100%; cursor: pointer;
+            transition: 0.3s;
         }
-        .step-content b { font-size: 13px; display: block; margin-bottom: 2px; }
-        .step-content p { margin: 0; font-size: 11px; color: var(--text-gray); }
+        .btn-convert:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* Info Note */
+        .info-note {
+            background: rgba(255, 140, 0, 0.1); border-left: 4px solid var(--accent);
+            padding: 15px; border-radius: 8px; margin-bottom: 25px; font-size: 13px; line-height: 1.5;
+        }
 
         /* Leaderboard */
-        .leader-card { background: var(--white); margin: 0 15px; border-radius: 20px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
-        .leader-row {
+        .section-title { font-weight: 800; font-size: 15px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        .leader-card { background: var(--card-white); border-radius: 20px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        
+        .leader-item {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 0; border-bottom: 1px solid #f8fafc;
+            padding: 12px 0; border-bottom: 1px solid #f1f5f9;
         }
-        .rank-badge {
-            width: 25px; height: 25px; border-radius: 50%; background: #f1f5f9;
-            display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800;
+        .leader-item:last-child { border-bottom: none; }
+        
+        .rank-box {
+            width: 28px; height: 28px; border-radius: 50%; background: #f1f5f9;
+            display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800;
         }
-        .gold { background: #fef3c7; color: #92400e; }
-        .leader-name { font-size: 13px; font-weight: 600; }
-        .leader-val { font-size: 12px; font-weight: 800; color: var(--success); }
+        .rank-1 { background: #ffd700; color: #000; }
+        .rank-2 { background: #c0c0c0; color: #000; }
+        .rank-3 { background: #cd7f32; color: #fff; }
+
+        .name-box b { display: block; font-size: 13px; }
+        .name-box span { font-size: 11px; color: var(--text-gray); }
+
+        .ref-count { font-weight: 800; color: var(--success); font-size: 14px; }
 
         /* Bottom Nav */
         .bottom-nav {
             position: fixed; bottom: 0; width: 100%; background: white;
             display: flex; justify-content: space-around; padding: 15px 0;
-            border-top: 1px solid #f1f5f9; z-index: 2000;
+            border-top: 1px solid #eee;
         }
-        .nav-item { text-align: center; color: #94a3b8; text-decoration: none; font-size: 10px; font-weight: 700; }
+        .nav-item { text-align: center; color: #94a3b8; text-decoration: none; font-size: 11px; font-weight: 700; }
+        .nav-item.active { color: var(--accent); }
         .nav-item i { font-size: 20px; margin-bottom: 4px; display: block; }
-        .nav-item.active { color: var(--accent-orange); }
     </style>
 </head>
 <body>
 
-    <div class="top-header">
-        <b><i class="fas fa-users"></i> Referral Hub</b>
-        <a href="dashboard.html" style="color: white;"><i class="fas fa-house"></i></a>
+<header>
+    <a href="dashboard.html" style="color:white;"><i class="fas fa-arrow-left"></i></a>
+    <b style="letter-spacing: 1px;">AFFILIATE PROGRAM</b>
+    <i class="fas fa-question-circle"></i>
+</header>
+
+<div class="container">
+    <div class="referral-card">
+        <div class="ref-bal-label">Referral Earnings</div>
+        <div class="ref-balance" id="refBalanceDisplay">₵0.00</div>
+        <button class="btn-convert" id="convertBtn" onclick="handleConversion()">
+            CONVERT TO MAIN WALLET
+        </button>
+        <p style="font-size: 10px; margin-top: 12px; opacity: 0.8;">Minimum withdrawal: GH₵ 50.00</p>
     </div>
 
-    <div class="user-identity">
-        <div class="user-avatar"><i class="fas fa-user"></i></div>
-        <div class="user-details">
-            <b>Logged in as:</b>
-            <span id="userEmail">Loading email...</span>
-        </div>
+    <div class="info-note">
+        <i class="fas fa-bullhorn" style="color: var(--accent);"></i>
+        <b>Monthly Reward:</b> The Top Referrer at the end of this month earns an extra <b>GH₵ 20.00</b> free wallet bonus!
     </div>
 
-    <div class="reward-card">
-        <div class="promo-text">
-            <p>REFER FRIENDS & EARN</p>
-            <h2>₵ 1.00 FREE</h2>
-            <p>Get GH₵ 1.00 instantly when a friend registers using your link!</p>
-        </div>
-        <div class="link-container">
-            <i class="fas fa-link" style="opacity: 0.5;"></i>
-            <span class="link-url" id="refLink">Generating your link...</span>
-        </div>
-        <div class="action-btns">
-            <button class="btn-ref btn-copy" onclick="copyLink()">
-                <i class="fas fa-copy"></i> Copy Link
-            </button>
-            <button class="btn-ref btn-share" onclick="shareWhatsApp()">
-                <i class="fab fa-whatsapp"></i> WhatsApp
-            </button>
+    <div class="section-title">
+        <i class="fas fa-crown" style="color: #ffd700;"></i> Top 5 Referrers (Hall of Fame)
+    </div>
+    <div class="leader-card" id="leaderboardList">
+        <div style="text-align: center; padding: 20px; color: #94a3b8;">
+            <i class="fas fa-spinner fa-spin"></i> Fetching legends...
         </div>
     </div>
+</div>
 
-    <div class="stats-row">
-        <div class="stat-item">
-            <i class="fas fa-user-plus"></i>
-            <b id="refCount">0</b>
-            <span>Friends</span>
-        </div>
-        <div class="stat-item">
-            <i class="fas fa-sack-dollar"></i>
-            <b id="allTime">₵0.00</b>
-            <span>Earned</span>
-        </div>
-        <div class="stat-item">
-            <i class="fas fa-wallet"></i>
-            <b id="balance" style="color: var(--success);">₵0.00</b>
-            <span>Available</span>
-        </div>
-    </div>
+<nav class="bottom-nav">
+    <a href="dashboard.html" class="nav-item"><i class="fas fa-home"></i>Home</a>
+    <a href="order_history.html" class="nav-item"><i class="fas fa-receipt"></i>Orders</a>
+    <a href="referral.html" class="nav-item active"><i class="fas fa-users"></i>Referral</a>
+    <a href="profile.html" class="nav-item"><i class="fas fa-user-circle"></i>Profile</a>
+</nav>
 
-    
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+    import { getDatabase, ref, onValue, runTransaction, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-    <div class="stepper-card">
-        <div class="section-title"><i class="fas fa-circle-info" style="color: var(--primary-blue);"></i> Referral Rules</div>
-        <div class="step">
-            <div class="step-circle">1</div>
-            <div class="step-content">
-                <b>Share Link</b>
-                <p>Send your unique referral link to your friends on WhatsApp or Facebook.</p>
-            </div>
-        </div>
-        <div class="step">
-            <div class="step-circle">2</div>
-            <div class="step-content">
-                <b>Registration</b>
-                <p>Your friend clicks the link and completes registration on GiganticDataHub.</p>
-            </div>
-        </div>
-        <div class="step">
-            <div class="step-circle">3</div>
-            <div class="step-content">
-                <b>Earn GH₵ 1.00</b>
-                <p>Once registration is confirmed, your wallet is credited with ₵1.00 for free.</p>
-            </div>
-        </div>
-    </div>
+    const firebaseConfig = {
+        apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
+        authDomain: "gigantic-data.firebaseapp.com",
+        databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
+        projectId: "gigantic-data"
+    };
 
-    <div class="leader-card">
-        <div class="section-title"><i class="fas fa-crown" style="color: #fbbf24;"></i> Hall of Fame</div>
-        <div id="leaderboard">
-            <div style="text-align: center; padding: 20px; color: #cbd5e1;"><i class="fas fa-spinner fa-spin"></i></div>
-        </div>
-    </div>
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
 
-    <nav class="bottom-nav">
-        <a href="dashboard.html" class="nav-item"><i class="fas fa-home"></i>Home</a>
-        <a href="order_history.html" class="nav-item"><i class="fas fa-receipt"></i>Orders</a>
-        <a href="referral.html" class="nav-item active"><i class="fas fa-users"></i>Referral</a>
-        <a href="profile.html" class="nav-item"><i class="fas fa-user-circle"></i>Profile</a>
-    </nav>
+    let userUID = "";
+    let currentRefBonus = 0;
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-        import { getDatabase, ref, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
-            authDomain: "gigantic-data.firebaseapp.com",
-            databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
-            projectId: "gigantic-data",
-            storageBucket: "gigantic-data.firebasestorage.app",
-            messagingSenderId: "727845403550",
-            appId: "1:727845403550:web:e3c3a40ce615aaaca9748f"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getDatabase(app);
-
-        onAuthStateChanged(auth, user => {
-            if (user) {
-                // Display User Email
-                document.getElementById('userEmail').innerText = user.email;
-
-                // 1. Sync User Stats
-                onValue(ref(db, 'users/' + user.uid), (snapshot) => {
-                    const data = snapshot.val() || {};
-                    const count = data.referralCount || 0;
-                    document.getElementById('refCount').innerText = count;
-                    document.getElementById('balance').innerText = `₵${Number(data.referralBonus || 0).toFixed(2)}`;
-                    document.getElementById('allTime').innerText = `₵${Number(count * 1.0).toFixed(2)}`;
-                    
-                    const domain = "https://giganticdatahub.com";
-                    document.getElementById('refLink').innerText = `${domain}/register.html?ref=${user.uid}`;
-                });
-
-                // 2. Sync Leaderboard
-                const leaderQuery = query(ref(db, 'users'), orderByChild('referralCount'), limitToLast(10));
-                onValue(leaderQuery, (snap) => {
-                    const board = document.getElementById('leaderboard');
-                    board.innerHTML = "";
-                    let users = [];
-                    snap.forEach(child => {
-                        const val = child.val();
-                        if(val.referralCount > 0) users.push(val);
-                    });
-                    users.sort((a,b) => b.referralCount - a.referralCount);
-
-                    if(users.length === 0) {
-                        board.innerHTML = "<p style='text-align:center; font-size:12px; color:#94a3b8;'>No one on the board yet!</p>";
-                        return;
-                    }
-
-                    users.forEach((u, i) => {
-                        const nameParts = (u.fullName || "Anonymous").split(' ');
-                        const maskedName = nameParts[0] + (nameParts[1] ? ` ${nameParts[1][0]}***` : "");
-                        
-                        const row = `
-                            <div class="leader-row">
-                                <div style="display:flex; align-items:center; gap:12px;">
-                                    <div class="rank-badge ${i === 0 ? 'gold' : ''}">${i + 1}</div>
-                                    <span class="leader-name">${maskedName}</span>
-                                </div>
-                                <span class="leader-val">${u.referralCount} refs</span>
-                            </div>`;
-                        board.innerHTML += row;
-                    });
-                });
-            } else {
-                window.location.href = "login.html";
-            }
-        });
-
-        window.copyLink = function() {
-            const link = document.getElementById('refLink').innerText;
-            navigator.clipboard.writeText(link).then(() => {
-                alert("Referral link copied to clipboard!");
+    onAuthStateChanged(auth, user => {
+        if (user) {
+            userUID = user.uid;
+            
+            // 1. Listen for User Data
+            onValue(ref(db, 'users/' + user.uid), (snap) => {
+                const data = snap.val() || {};
+                currentRefBonus = data.referralBonus || 0;
+                document.getElementById('refBalanceDisplay').innerText = `₵${Number(currentRefBonus).toFixed(2)}`;
+                
+                // Disable button if below 50
+                document.getElementById('convertBtn').disabled = (currentRefBonus < 50);
             });
-        };
 
-        window.shareWhatsApp = function() {
-            const link = document.getElementById('refLink').innerText;
-            const text = encodeURIComponent(`Hi! Join GiganticDataHub and get affordable data bundles instantly. Register using my link: ${link}`);
-            window.open(`https://wa.me/?text=${text}`, '_blank');
-        };
-    </script>
+            // 2. Fetch Top 5 Referrers
+            const topQuery = query(ref(db, 'users'), orderByChild('referralCount'), limitToLast(5));
+            onValue(topQuery, (snap) => {
+                const board = document.getElementById('leaderboardList');
+                board.innerHTML = "";
+                let users = [];
+                snap.forEach(child => { users.push(child.val()); });
+                
+                // Sort Descending
+                users.sort((a,b) => (b.referralCount || 0) - (a.referralCount || 0));
+
+                users.forEach((u, i) => {
+                    const rank = i + 1;
+                    const rankClass = rank <= 3 ? `rank-${rank}` : '';
+                    // Privacy: Mask email/name
+                    const name = (u.fullName || "User").split(' ')[0];
+                    
+                    board.innerHTML += `
+                        <div class="leader-item">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div class="rank-box ${rankClass}">${rank}</div>
+                                <div class="name-box">
+                                    <b>${name}***</b>
+                                    <span>Joined ${new Date(u.joinedAt || Date.now()).toLocaleDateString()}</span>
+                                </div>
+                            </div>
+                            <div class="ref-count">${u.referralCount || 0} Refs</div>
+                        </div>`;
+                });
+            });
+
+        } else { window.location.href = "login.html"; }
+    });
+
+    window.handleConversion = function() {
+        if (currentRefBonus < 50) {
+            return alert("You need at least GH₵ 50.00 in referral earnings to withdraw.");
+        }
+
+        if (confirm(`Convert GH₵ ${currentRefBonus.toFixed(2)} to your main wallet balance?`)) {
+            const userRef = ref(db, 'users/' + userUID);
+            
+            runTransaction(userRef, (user) => {
+                if (user) {
+                    user.wallet = (user.wallet || 0) + (user.referralBonus || 0);
+                    user.referralBonus = 0;
+                }
+                return user;
+            }).then(() => {
+                alert("Earnings successfully converted to your main wallet!");
+            }).catch(err => {
+                console.error(err);
+                alert("Conversion failed. Please try again.");
+            });
+        }
+    }
+</script>
+
 </body>
 </html>
