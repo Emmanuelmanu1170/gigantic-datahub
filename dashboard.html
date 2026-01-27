@@ -19,6 +19,7 @@
             --orange-gradient: linear-gradient(135deg, #f06529 0%, #c02425 100%);
             --border-color: #e2e8f0;
             --nav-bg: rgba(255, 255, 255, 0.9);
+            --online-status: #10b981;
         }
 
         [data-theme="dark"] {
@@ -42,6 +43,28 @@
             padding-bottom: 120px;
             transition: background 0.3s, color 0.3s;
         }
+
+        /* --- SYSTEM STATUS --- */
+        .status-header {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--online-status);
+            padding: 8px;
+            font-size: 11px;
+            text-align: center;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--online-status);
+            border-radius: 50%;
+            animation: blink 1.5s infinite;
+        }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
         /* --- APP TOP BAR --- */
         .app-top-bar {
@@ -102,6 +125,14 @@
             padding: 25px;
             color: white;
             box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        .wallet-card::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
         }
 
         .balance { font-size: 32px; font-weight: 900; margin: 10px 0 20px; display: flex; align-items: center; gap: 12px; }
@@ -112,9 +143,25 @@
             flex: 1; padding: 14px; border-radius: 14px; border: none;
             font-size: 13px; font-weight: 700; display: flex;
             align-items: center; justify-content: center; gap: 8px; text-decoration: none;
+            transition: 0.2s;
         }
+        .btn:active { transform: scale(0.96); }
         .btn-orange { background: var(--orange-gradient); color: white; }
         .btn-white { background: white; color: #003366; }
+
+        /* ANALYTICS PREVIEW */
+        .insights-card {
+            margin: 20px 18px;
+            padding: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+        }
+        .insights-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .insights-title { font-size: 14px; font-weight: 700; color: var(--text-gray); }
+        .spending-bar-container { display: flex; align-items: flex-end; gap: 8px; height: 60px; padding-top: 10px; }
+        .spending-bar { flex: 1; background: var(--bg-body); border-radius: 4px; position: relative; transition: 0.5s; }
+        .spending-bar.active { background: var(--accent-orange); }
 
         /* NEW BOOST SERVICE BUTTON */
         .boost-service-btn {
@@ -167,7 +214,9 @@
             background: var(--bg-card); padding: 25px 15px; border-radius: 20px;
             text-align: center; text-decoration: none; color: inherit;
             border: 1px solid var(--border-color);
+            transition: 0.3s;
         }
+        .grid-item:active { transform: translateY(-5px); border-color: var(--accent-orange); }
         .grid-item i { font-size: 28px; color: var(--accent-orange); margin-bottom: 10px; display: block; }
 
         /* BOTTOM NAV */
@@ -183,7 +232,6 @@
 
     </style>
     <script>
-        // Apply theme immediately before body renders to prevent flash
         (function() {
             const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
@@ -191,6 +239,11 @@
     </script>
 </head>
 <body>
+
+    <div class="status-header">
+        <div class="status-dot"></div>
+        SYSTEM ONLINE: INSTANT DELIVERY ACTIVE
+    </div>
 
     <div class="app-top-bar">
         <a href="https://files.appsgeyser.com/Gigantic%20Data%20Hub_19462747.apk" class="app-link-box">
@@ -212,29 +265,6 @@
         <div class="sweet-words" id="sweetWords">Your reliable partner for affordable data.</div>
     </div>
 
-    <a href="https://Giganticboost.shop" class="boost-service-btn">
-        <span class="new-badge">NEW</span>
-        <div style="display: flex; align-items: center; gap: 15px;">
-            <div style="font-size: 24px; color: #1DA1F2;"><i class="fas fa-rocket"></i></div>
-            <div>
-                <b style="font-size: 15px;">Gigantic Social Boost</b>
-                <p style="font-size: 11px; color: var(--text-gray); margin: 2px 0;">Grow your TikTok, IG, & YouTube fast!</p>
-            </div>
-        </div>
-        <i class="fas fa-chevron-right" style="color: var(--accent-orange);"></i>
-    </a>
-
-    <div class="ad-slot" id="sponsoredSlotTop" style="display:none;">
-        <span class="ad-badge">PROMOTED</span>
-        <a id="adLinkTop" href="#" target="_blank" style="text-decoration:none; display:flex; align-items:center; gap:15px; margin-top:10px;">
-            <div id="adIconTop" style="font-size:24px; color:var(--accent-orange);"><i class="fas fa-bullhorn"></i></div>
-            <div>
-                <b id="adTitleTop" style="color:var(--text-main); font-size:14px;">...</b>
-                <p id="adDescTop" style="color:var(--text-gray); font-size:11px; margin:2px 0;">...</p>
-            </div>
-        </a>
-    </div>
-
     <div class="wallet-container">
         <div class="wallet-card">
             <div class="wallet-label">
@@ -249,6 +279,37 @@
         </div>
     </div>
 
+    <div class="insights-card">
+        <div class="insights-header">
+            <span class="insights-title">Usage Insights</span>
+            <span style="font-size: 10px; color: var(--online-status); font-weight: bold;">LAST 7 DAYS</span>
+        </div>
+        <div class="spending-bar-container">
+            <div class="spending-bar" style="height: 30%;"></div>
+            <div class="spending-bar" style="height: 50%;"></div>
+            <div class="spending-bar" style="height: 40%;"></div>
+            <div class="spending-bar active" style="height: 90%;"></div>
+            <div class="spending-bar" style="height: 60%;"></div>
+            <div class="spending-bar" style="height: 45%;"></div>
+            <div class="spending-bar" style="height: 70%;"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 9px; color: var(--text-gray);">
+            <span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span>
+        </div>
+    </div>
+
+    <a href="https://Giganticboost.shop" class="boost-service-btn">
+        <span class="new-badge">NEW</span>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div style="font-size: 24px; color: #1DA1F2;"><i class="fas fa-rocket"></i></div>
+            <div>
+                <b style="font-size: 15px;">Gigantic Social Boost</b>
+                <p style="font-size: 11px; color: var(--text-gray); margin: 2px 0;">Grow your TikTok, IG, & YouTube fast!</p>
+            </div>
+        </div>
+        <i class="fas fa-chevron-right" style="color: var(--accent-orange);"></i>
+    </a>
+
     <div class="grid">
         <a href="order.html" class="grid-item">
             <i class="fas fa-mobile-alt"></i>
@@ -257,6 +318,14 @@
         <a href="transaction.html" class="grid-item">
             <i class="fas fa-history"></i>
             <b>History</b>
+        </a>
+        <a href="referral.html" class="grid-item">
+            <i class="fas fa-hand-holding-dollar"></i>
+            <b>Earnings</b>
+        </a>
+        <a href="profile.html" class="grid-item">
+            <i class="fas fa-user-shield"></i>
+            <b>Support</b>
         </a>
     </div>
 
@@ -285,7 +354,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-        import { getDatabase, ref, onValue, update, increment } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
@@ -301,7 +370,6 @@
         let rawBalance = 0;
         let isBalanceHidden = localStorage.getItem('balanceHidden') === 'true';
 
-        // Theme Toggle Logic
         window.toggleTheme = function() {
             const doc = document.documentElement;
             const btn = document.getElementById('themeBtn');
@@ -313,7 +381,6 @@
             btn.className = newTheme === 'light' ? 'fas fa-moon theme-toggle' : 'fas fa-sun theme-toggle';
         }
 
-        // Balance Masking Logic
         window.toggleBalanceVisibility = function() {
             isBalanceHidden = !isBalanceHidden;
             localStorage.setItem('balanceHidden', isBalanceHidden);
@@ -333,17 +400,15 @@
             }
         }
 
-        // Initialize button icon on load
         const savedTheme = localStorage.getItem('theme') || 'light';
         document.getElementById('themeBtn').className = savedTheme === 'light' ? 'fas fa-moon theme-toggle' : 'fas fa-sun theme-toggle';
 
         function updateGreeting(name) {
             const hour = new Date().getHours();
             const gText = document.getElementById('userGreeting');
-            const sWords = document.getElementById('sweetWords');
-            if (hour < 12) { gText.innerText = `Good Morning, ${name} ☀️`; sWords.innerText = "Let's fuel your day with fast data!"; }
-            else if (hour < 17) { gText.innerText = `Good Afternoon, ${name} 🌤️`; sWords.innerText = "Stay productive, stay connected!"; }
-            else { gText.innerText = `Good Evening, ${name} 🌙`; sWords.innerText = "Relax and enjoy seamless browsing."; }
+            if (hour < 12) { gText.innerText = `Good Morning, ${name} ☀️`; }
+            else if (hour < 17) { gText.innerText = `Good Afternoon, ${name} 🌤️`; }
+            else { gText.innerText = `Good Evening, ${name} 🌙`; }
         }
 
         onAuthStateChanged(auth, user => {
@@ -355,24 +420,16 @@
                     updateGreeting(data.fullName ? data.fullName.split(' ')[0] : 'Member');
                 });
 
-                // Load Rotating Ads
                 onValue(ref(db, 'adsList'), (snapshot) => {
                     const ads = snapshot.val();
                     if (ads) {
                         const adsArray = Object.keys(ads).map(k => ({id: k, ...ads[k]}));
                         if(adsArray.length > 0) {
-                            document.getElementById('sponsoredSlotTop').style.display = 'block';
                             document.getElementById('sponsoredSlot').style.display = 'block';
-                            const ad1 = adsArray[0];
-                            const ad2 = adsArray[1] || adsArray[0];
-                            
-                            document.getElementById('adTitleTop').innerText = ad1.title;
-                            document.getElementById('adDescTop').innerText = ad1.description;
-                            document.getElementById('adLinkTop').href = ad1.link;
-
-                            document.getElementById('adTitle').innerText = ad2.title;
-                            document.getElementById('adDesc').innerText = ad2.description;
-                            document.getElementById('adLink').href = ad2.link;
+                            const ad = adsArray[Math.floor(Math.random() * adsArray.length)];
+                            document.getElementById('adTitle').innerText = ad.title;
+                            document.getElementById('adDesc').innerText = ad.description;
+                            document.getElementById('adLink').href = ad.link;
                         }
                     }
                 });
