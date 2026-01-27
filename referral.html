@@ -37,23 +37,33 @@
         /* Referral Card */
         .referral-card {
             background: linear-gradient(135deg, var(--primary) 0%, #0052cc 100%);
-            border-radius: 24px; padding: 25px; color: white; text-align: center;
+            border-radius: 24px; padding: 30px 25px; color: white; text-align: center;
             box-shadow: 0 10px 20px rgba(0,0,0,0.1); margin-bottom: 25px;
         }
         .ref-bal-label { font-size: 11px; text-transform: uppercase; opacity: 0.8; letter-spacing: 1px; }
         .ref-balance { font-size: 36px; font-weight: 900; margin: 10px 0; }
-        
-        .btn-convert {
-            background: white; color: var(--primary); border: none; padding: 12px 20px;
-            border-radius: 12px; font-weight: 800; font-size: 13px; width: 100%; cursor: pointer;
-            transition: 0.3s;
+
+        /* Link Box */
+        .link-section {
+            background: var(--card-white); border-radius: 20px; padding: 20px;
+            margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center;
         }
-        .btn-convert:disabled { opacity: 0.6; cursor: not-allowed; }
+        .link-box {
+            background: #f1f5f9; padding: 12px; border-radius: 12px;
+            font-size: 12px; color: var(--primary); font-weight: 600;
+            word-break: break-all; margin: 10px 0; border: 1px dashed #cbd5e1;
+        }
+        .copy-btn {
+            background: var(--accent); color: white; border: none;
+            padding: 10px 20px; border-radius: 10px; font-weight: 700;
+            cursor: pointer; width: 100%; transition: 0.3s;
+        }
+        .copy-btn:active { transform: scale(0.98); }
 
         /* Info Note */
         .info-note {
             background: rgba(255, 140, 0, 0.1); border-left: 4px solid var(--accent);
-            padding: 15px; border-radius: 8px; margin-bottom: 25px; font-size: 13px; line-height: 1.5;
+            padding: 15px; border-radius: 12px; margin-bottom: 25px; font-size: 13px; line-height: 1.5;
         }
 
         /* Leaderboard */
@@ -94,31 +104,37 @@
 
 <header>
     <a href="dashboard.html" style="color:white;"><i class="fas fa-arrow-left"></i></a>
-    <b style="letter-spacing: 1px;">AFFILIATE PROGRAM</b>
-    <i class="fas fa-question-circle"></i>
+    <b style="letter-spacing: 1px;">AFFILIATE HUB</b>
+    <i class="fas fa-medal"></i>
 </header>
 
 <div class="container">
     <div class="referral-card">
-        <div class="ref-bal-label">Referral Earnings</div>
-        <div class="ref-balance" id="refBalanceDisplay">₵0.00</div>
-        <button class="btn-convert" id="convertBtn" onclick="handleConversion()">
-            CONVERT TO MAIN WALLET
+        <div class="ref-bal-label">My Referrals</div>
+        <div class="ref-balance" id="refCountDisplay">0</div>
+        <div class="ref-bal-label" style="margin-top: 5px;">Total Friends Invited</div>
+    </div>
+
+    <div class="link-section">
+        <div class="ref-bal-label" style="color: var(--text-gray);">Your Referral Link</div>
+        <div class="link-box" id="referralLink">Generating link...</div>
+        <button class="copy-btn" onclick="copyLink()">
+            <i class="fas fa-copy"></i> Copy Link
         </button>
-        <p style="font-size: 10px; margin-top: 12px; opacity: 0.8;">Minimum withdrawal: GH₵ 50.00</p>
     </div>
 
     <div class="info-note">
-        <i class="fas fa-bullhorn" style="color: var(--accent);"></i>
-        <b>Monthly Reward:</b> The Top Referrer at the end of this month earns an extra <b>GH₵ 20.00</b> free wallet bonus!
+        <i class="fas fa-award" style="color: var(--accent);"></i>
+        <b>Top Referrer Bonus:</b> Only the <b>Rank #1</b> Referrer earns an extra <b>GH₵ 20.00</b> wallet bonus monthly. 
+        <br><small>*Must have a minimum of <b>20 referrals</b> to qualify.</small>
     </div>
 
     <div class="section-title">
-        <i class="fas fa-crown" style="color: #ffd700;"></i> Top 5 Referrers (Hall of Fame)
+        <i class="fas fa-crown" style="color: #ffd700;"></i> Top 5 Referrers (Monthly Hall of Fame)
     </div>
     <div class="leader-card" id="leaderboardList">
         <div style="text-align: center; padding: 20px; color: #94a3b8;">
-            <i class="fas fa-spinner fa-spin"></i> Fetching legends...
+            <i class="fas fa-spinner fa-spin"></i> Loading legends...
         </div>
     </div>
 </div>
@@ -133,7 +149,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-    import { getDatabase, ref, onValue, runTransaction, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+    import { getDatabase, ref, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
@@ -146,38 +162,46 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    let userUID = "";
-    let currentRefBonus = 0;
-
     onAuthStateChanged(auth, user => {
         if (user) {
-            userUID = user.uid;
-            
-            // 1. Listen for User Data
+            // Generate Referral Link with UID
+            const baseUrl = window.location.origin; // Or use your specific domain
+            const fullLink = `${baseUrl}/register.html?ref=${user.uid}`;
+            document.getElementById('referralLink').innerText = fullLink;
+
+            // 1. Sync Personal Referral Count
             onValue(ref(db, 'users/' + user.uid), (snap) => {
                 const data = snap.val() || {};
-                currentRefBonus = data.referralBonus || 0;
-                document.getElementById('refBalanceDisplay').innerText = `₵${Number(currentRefBonus).toFixed(2)}`;
-                
-                // Disable button if below 50
-                document.getElementById('convertBtn').disabled = (currentRefBonus < 50);
+                document.getElementById('refCountDisplay').innerText = data.referralCount || 0;
             });
 
             // 2. Fetch Top 5 Referrers
-            const topQuery = query(ref(db, 'users'), orderByChild('referralCount'), limitToLast(5));
+            const topQuery = query(ref(db, 'users'), orderByChild('referralCount'), limitToLast(10)); // Fetch more to filter
             onValue(topQuery, (snap) => {
                 const board = document.getElementById('leaderboardList');
                 board.innerHTML = "";
                 let users = [];
-                snap.forEach(child => { users.push(child.val()); });
+                snap.forEach(child => { 
+                    const userData = child.val();
+                    if(userData.referralCount > 0) {
+                        users.push(userData); 
+                    }
+                });
                 
-                // Sort Descending
+                // Sort Descending (Highest at top)
                 users.sort((a,b) => (b.referralCount || 0) - (a.referralCount || 0));
+                
+                // Take top 5
+                const top5 = users.slice(0, 5);
 
-                users.forEach((u, i) => {
+                if(top5.length === 0) {
+                    board.innerHTML = '<div style="text-align: center; padding: 20px; color: #94a3b8;">No referrals recorded yet.</div>';
+                    return;
+                }
+
+                top5.forEach((u, i) => {
                     const rank = i + 1;
                     const rankClass = rank <= 3 ? `rank-${rank}` : '';
-                    // Privacy: Mask email/name
                     const name = (u.fullName || "User").split(' ')[0];
                     
                     board.innerHTML += `
@@ -197,28 +221,17 @@
         } else { window.location.href = "login.html"; }
     });
 
-    window.handleConversion = function() {
-        if (currentRefBonus < 50) {
-            return alert("You need at least GH₵ 50.00 in referral earnings to withdraw.");
-        }
-
-        if (confirm(`Convert GH₵ ${currentRefBonus.toFixed(2)} to your main wallet balance?`)) {
-            const userRef = ref(db, 'users/' + userUID);
-            
-            runTransaction(userRef, (user) => {
-                if (user) {
-                    user.wallet = (user.wallet || 0) + (user.referralBonus || 0);
-                    user.referralBonus = 0;
-                }
-                return user;
-            }).then(() => {
-                alert("Earnings successfully converted to your main wallet!");
-            }).catch(err => {
-                console.error(err);
-                alert("Conversion failed. Please try again.");
-            });
-        }
-    }
+    // Copy Function
+    window.copyLink = function() {
+        const linkText = document.getElementById('referralLink').innerText;
+        navigator.clipboard.writeText(linkText).then(() => {
+            const btn = document.querySelector('.copy-btn');
+            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fas fa-copy"></i> Copy Link';
+            }, 2000);
+        });
+    };
 </script>
 
 </body>
