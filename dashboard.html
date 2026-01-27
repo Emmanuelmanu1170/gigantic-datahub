@@ -85,6 +85,7 @@
             text-decoration: none;
             width: 100%;
             max-width: 400px;
+            cursor: pointer;
         }
 
         .play-store-icon { color: #3DDC84; font-size: 22px; }
@@ -105,7 +106,7 @@
         }
 
         .header-logo { font-weight: 900; font-size: 18px; display: flex; align-items: center; gap: 8px; }
-        .theme-toggle { font-size: 20px; cursor: pointer; color: var(--accent-orange); }
+        .theme-toggle { font-size: 20px; cursor: pointer; color: var(--accent-orange); padding: 5px; }
 
         /* GREETING */
         .greeting-container {
@@ -128,24 +129,25 @@
             position: relative;
             overflow: hidden;
         }
+        
         .wallet-card::after {
             content: '';
             position: absolute;
             top: -50%; left: -50%; width: 200%; height: 200%;
             background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+            pointer-events: none;
         }
 
         .balance { font-size: 32px; font-weight: 900; margin: 10px 0 20px; display: flex; align-items: center; gap: 12px; }
         .wallet-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; display: flex; align-items: center; justify-content: space-between; }
-        .toggle-balance { cursor: pointer; font-size: 16px; opacity: 0.8; }
+        .toggle-balance { cursor: pointer; font-size: 18px; opacity: 0.8; padding: 5px; }
 
         .btn {
             flex: 1; padding: 14px; border-radius: 14px; border: none;
             font-size: 13px; font-weight: 700; display: flex;
             align-items: center; justify-content: center; gap: 8px; text-decoration: none;
-            transition: 0.2s;
+            cursor: pointer;
         }
-        .btn:active { transform: scale(0.96); }
         .btn-orange { background: var(--orange-gradient); color: white; }
         .btn-white { background: white; color: #003366; }
 
@@ -176,6 +178,7 @@
             text-decoration: none;
             color: var(--text-main);
             position: relative;
+            cursor: pointer;
             animation: pulse-border 2s infinite;
         }
 
@@ -215,6 +218,7 @@
             text-align: center; text-decoration: none; color: inherit;
             border: 1px solid var(--border-color);
             transition: 0.3s;
+            cursor: pointer;
         }
         .grid-item:active { transform: translateY(-5px); border-color: var(--accent-orange); }
         .grid-item i { font-size: 28px; color: var(--accent-orange); margin-bottom: 10px; display: block; }
@@ -226,17 +230,11 @@
             display: flex; justify-content: space-around; padding: 15px 0;
             border-top: 1px solid var(--border-color); z-index: 1000;
         }
-        .nav-item { text-align: center; color: var(--text-gray); text-decoration: none; font-size: 11px; }
+        .nav-item { text-align: center; color: var(--text-gray); text-decoration: none; font-size: 11px; cursor: pointer; }
         .nav-item i { font-size: 22px; margin-bottom: 4px; display: block; }
         .nav-item.active { color: var(--accent-orange); }
 
     </style>
-    <script>
-        (function() {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-        })();
-    </script>
 </head>
 <body>
 
@@ -256,7 +254,7 @@
         <div class="header-logo"><i class="fas fa-bolt"></i> GIGANTICDATAHUB</div>
         <div style="display: flex; gap: 15px; align-items: center;">
             <i class="fas fa-moon theme-toggle" id="themeBtn" onclick="toggleTheme()"></i>
-            <a href="#" onclick="logoutUser()" style="color:white;"><i class="fas fa-sign-out-alt"></i></a>
+            <a href="javascript:void(0)" onclick="logoutUser()" style="color:white; padding: 5px;"><i class="fas fa-sign-out-alt"></i></a>
         </div>
     </div>
 
@@ -340,7 +338,7 @@
         </a>
     </div>
 
-    <a href="https://chat.whatsapp.com/DyyaJcgZKBMHnO2nRScmZ2" target="_blank" class="btn btn-orange" style="margin: 0 18px; border-radius:15px;">
+    <a href="https://chat.whatsapp.com/DyyaJcgZKBMHnO2nRScmZ2" target="_blank" class="btn btn-orange" style="margin: 0 18px; border-radius:15px; text-decoration: none;">
         <i class="fab fa-whatsapp"></i> JOIN COMMUNITY
     </a>
 
@@ -370,6 +368,7 @@
         let rawBalance = 0;
         let isBalanceHidden = localStorage.getItem('balanceHidden') === 'true';
 
+        // Theme Toggle
         window.toggleTheme = function() {
             const doc = document.documentElement;
             const btn = document.getElementById('themeBtn');
@@ -379,13 +378,14 @@
             doc.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
             btn.className = newTheme === 'light' ? 'fas fa-moon theme-toggle' : 'fas fa-sun theme-toggle';
-        }
+        };
 
+        // Balance Masking
         window.toggleBalanceVisibility = function() {
             isBalanceHidden = !isBalanceHidden;
             localStorage.setItem('balanceHidden', isBalanceHidden);
             renderBalance();
-        }
+        };
 
         function renderBalance() {
             const balanceEl = document.getElementById('walletBalance');
@@ -400,6 +400,7 @@
             }
         }
 
+        // Initialize Theme Icon
         const savedTheme = localStorage.getItem('theme') || 'light';
         document.getElementById('themeBtn').className = savedTheme === 'light' ? 'fas fa-moon theme-toggle' : 'fas fa-sun theme-toggle';
 
@@ -436,7 +437,16 @@
             } else { window.location.href = "login.html"; }
         });
 
-        window.logoutUser = () => signOut(auth).then(() => window.location.href = "login.html");
+        // Global Logout Function
+        window.logoutUser = function() {
+            if(confirm("Are you sure you want to log out?")) {
+                signOut(auth).then(() => {
+                    window.location.href = "login.html";
+                }).catch((error) => {
+                    console.error("Logout Error:", error);
+                });
+            }
+        };
     </script>
 </body>
 </html>
