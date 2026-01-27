@@ -37,11 +37,13 @@
         /* Referral Card */
         .referral-card {
             background: linear-gradient(135deg, var(--primary) 0%, #0052cc 100%);
-            border-radius: 24px; padding: 30px 25px; color: white; text-align: center;
+            border-radius: 24px; padding: 25px; color: white; text-align: center;
             box-shadow: 0 10px 20px rgba(0,0,0,0.1); margin-bottom: 25px;
         }
-        .ref-bal-label { font-size: 11px; text-transform: uppercase; opacity: 0.8; letter-spacing: 1px; }
-        .ref-balance { font-size: 36px; font-weight: 900; margin: 10px 0; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+        .stat-item-box { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; }
+        .ref-bal-label { font-size: 10px; text-transform: uppercase; opacity: 0.8; letter-spacing: 1px; margin-bottom: 5px; display: block;}
+        .stat-value { font-size: 22px; font-weight: 900; }
 
         /* Link Box */
         .link-section {
@@ -110,9 +112,16 @@
 
 <div class="container">
     <div class="referral-card">
-        <div class="ref-bal-label">My Referrals</div>
-        <div class="ref-balance" id="refCountDisplay">0</div>
-        <div class="ref-bal-label" style="margin-top: 5px;">Total Friends Invited</div>
+        <div class="stats-grid">
+            <div class="stat-item-box">
+                <span class="ref-bal-label">My Referrals</span>
+                <div class="stat-value" id="refCountDisplay">0</div>
+            </div>
+            <div class="stat-item-box">
+                <span class="ref-bal-label">My Balance</span>
+                <div class="stat-value" id="refBalanceDisplay">₵0.00</div>
+            </div>
+        </div>
     </div>
 
     <div class="link-section">
@@ -125,7 +134,8 @@
 
     <div class="info-note">
         <i class="fas fa-award" style="color: var(--accent);"></i>
-        <b>Top Referrer Bonus:</b> Only the <b>Rank #1</b> Referrer earns an extra <b>GH₵ 20.00</b> wallet bonus monthly. 
+        <b>Monthly Reward:</b> The <b>Rank #1</b> Referrer earns an extra <b>GH₵ 20.00</b> monthly bonus. 
+        <br>Note: Monthly bonuses are sent directly to the winner's <b>registered email address</b>.
         <br><small>*Must have a minimum of <b>20 referrals</b> to qualify.</small>
     </div>
 
@@ -164,19 +174,19 @@
 
     onAuthStateChanged(auth, user => {
         if (user) {
-            // Generate Referral Link with UID
-            const baseUrl = window.location.origin; // Or use your specific domain
+            const baseUrl = window.location.origin;
             const fullLink = `${baseUrl}/register.html?ref=${user.uid}`;
             document.getElementById('referralLink').innerText = fullLink;
 
-            // 1. Sync Personal Referral Count
+            // 1. Sync Personal Data (Count & Balance)
             onValue(ref(db, 'users/' + user.uid), (snap) => {
                 const data = snap.val() || {};
                 document.getElementById('refCountDisplay').innerText = data.referralCount || 0;
+                document.getElementById('refBalanceDisplay').innerText = `₵${Number(data.referralBonus || 0).toFixed(2)}`;
             });
 
             // 2. Fetch Top 5 Referrers
-            const topQuery = query(ref(db, 'users'), orderByChild('referralCount'), limitToLast(10)); // Fetch more to filter
+            const topQuery = query(ref(db, 'users'), orderByChild('referralCount'), limitToLast(10));
             onValue(topQuery, (snap) => {
                 const board = document.getElementById('leaderboardList');
                 board.innerHTML = "";
@@ -188,10 +198,7 @@
                     }
                 });
                 
-                // Sort Descending (Highest at top)
                 users.sort((a,b) => (b.referralCount || 0) - (a.referralCount || 0));
-                
-                // Take top 5
                 const top5 = users.slice(0, 5);
 
                 if(top5.length === 0) {
@@ -221,7 +228,6 @@
         } else { window.location.href = "login.html"; }
     });
 
-    // Copy Function
     window.copyLink = function() {
         const linkText = document.getElementById('referralLink').innerText;
         navigator.clipboard.writeText(linkText).then(() => {
