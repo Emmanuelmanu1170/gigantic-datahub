@@ -65,6 +65,33 @@
         .pay-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(240, 101, 41, 0.4); }
         .pay-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
+        /* Secure Badges */
+        .badge-row {
+            display: flex; justify-content: center; align-items: center; 
+            gap: 15px; margin-top: 20px; opacity: 0.7;
+        }
+        .badge-row i { font-size: 24px; color: var(--deep-blue); }
+
+        /* Instructions Stepper */
+        .instruction-box {
+            background: #fff; border-radius: 15px; padding: 20px;
+            border: 1px solid #e2e8f0; margin-top: 10px;
+        }
+        .instruction-title {
+            font-size: 13px; font-weight: 800; color: #f06529;
+            margin-bottom: 15px; display: flex; align-items: center; gap: 8px;
+        }
+        .step {
+            display: flex; gap: 12px; margin-bottom: 12px; font-size: 12px;
+            line-height: 1.4; color: #64748b;
+        }
+        .step-num {
+            background: #f1f5f9; color: var(--deep-blue); font-weight: 800;
+            min-width: 22px; height: 22px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 10px;
+        }
+        .admin-link { color: var(--primary-blue); font-weight: 700; text-decoration: underline; }
+
         /* Professional Success Toast */
         #success-toast {
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
@@ -124,9 +151,34 @@
             </div>
 
             <button class="pay-btn" id="payBtn" onclick="payWithPaystack()">PROCEED TO PAYMENT</button>
+
+            <div class="badge-row">
+                <i class="fab fa-cc-visa"></i>
+                <i class="fab fa-cc-mastercard"></i>
+                <i class="fas fa-shield-alt"></i>
+                <span style="font-size: 10px; font-weight: 700; color: #94a3b8;">SECURE CHECKOUT</span>
+            </div>
         </div>
 
-        <p style="font-size: 11px; color: #64748b; text-align: center;">
+        <div class="instruction-box">
+            <div class="instruction-title">
+                <i class="fas fa-info-circle"></i> FUNDS NOT CREDITED?
+            </div>
+            <div class="step">
+                <div class="step-num">1</div>
+                <div>Keep your Paystack Transaction Reference/Receipt ready.</div>
+            </div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <div>Contact admin with your <b>Email</b> and <b>Actual Amount Paid</b> (excluding fees).</div>
+            </div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <div>Chat Admin on WhatsApp: <a href="https://wa.me/233549055308" class="admin-link">0549055308</a></div>
+            </div>
+        </div>
+
+        <p style="font-size: 11px; color: #64748b; text-align: center; margin-top: 20px;">
             <i class="fas fa-lock"></i> Secured by Paystack. Wallet updates automatically.
         </p>
     </div>
@@ -204,14 +256,12 @@
                 amount: Math.round(finalTotal),
                 currency: "GHS",
                 callback: function(response) {
-                    // --- ENHANCED AUTOMATIC CREDITING LOGIC ---
                     const walletRef = ref(db, `users/${userId}/wallet`);
                     
                     runTransaction(walletRef, (currentValue) => {
                         return (currentValue || 0) + amt;
                     }).then((result) => {
                         if (result.committed) {
-                            // Log payment only after transaction succeeds
                             const topupRef = ref(db, 'topupNotes/' + userId);
                             const newTopup = push(topupRef);
                             set(newTopup, {
@@ -228,7 +278,7 @@
                         }
                     }).catch((error) => {
                         console.error("Auto-credit failed: ", error);
-                        alert("An error occurred while updating your balance. Please take a screenshot of your receipt and contact support.");
+                        alert("An error occurred. Please contact admin on WhatsApp with your payment reference.");
                         document.getElementById('payBtn').disabled = false;
                         document.getElementById('payBtn').innerText = "PROCEED TO PAYMENT";
                     });
