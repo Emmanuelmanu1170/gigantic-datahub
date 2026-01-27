@@ -14,6 +14,7 @@
             --white: #ffffff;
             --success: #10b981;
             --danger: #ef4444;
+            --warning: #f59e0b;
         }
 
         * { margin:0; padding:0; box-sizing:border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -87,7 +88,7 @@
         .search-box {
             position: relative;
             flex: 1;
-            min-width: 300px;
+            min-width: 250px;
         }
 
         .search-box input {
@@ -102,22 +103,57 @@
         }
 
         .search-box input:focus { border-color: var(--primary-blue); background: white; box-shadow: 0 0 0 4px rgba(0,82,204,0.1); }
+        .search-box i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
 
-        .search-box i {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #94a3b8;
+        /* Inactive Toggle Styles */
+        .inactive-filter {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #fff4e5;
+            padding: 8px 15px;
+            border-radius: 10px;
+            border: 1px solid #ffedd5;
         }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 20px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px; width: 14px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider { background-color: var(--warning); }
+        input:checked + .slider:before { transform: translateX(20px); }
 
         .btn-group { display: flex; gap: 10px; }
 
         .btn {
-            padding: 10px 20px;
+            padding: 10px 18px;
             border-radius: 10px;
             border: none;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 700;
             cursor: pointer;
             transition: 0.3s;
@@ -128,6 +164,7 @@
 
         .btn-copy { background: #f1f5f9; color: var(--deep-blue); }
         .btn-active { background: var(--orange-gradient); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
         .btn:hover { transform: translateY(-2px); opacity: 0.9; }
 
         /* Table Styling */
@@ -166,6 +203,7 @@
         .uid-cell:hover { background: #e2e8f0; color: var(--primary-blue); }
 
         tr:hover { background: #fdfeff; }
+        tr.inactive-row { background: #fffaf0; }
 
         .wallet-amt { font-weight: 800; color: var(--success); }
         
@@ -248,14 +286,26 @@
     <div class="toolbar">
         <div class="search-box">
             <i class="fas fa-search"></i>
-            <input type="text" id="userInput" placeholder="Search by name, email, or UID..." onkeyup="filterUsers()">
+            <input type="text" id="userInput" placeholder="Search users..." onkeyup="filterUsers()">
         </div>
+
+        <div class="inactive-filter">
+            <label class="switch">
+                <input type="checkbox" id="inactiveToggle" onchange="filterUsers()">
+                <span class="slider"></span>
+            </label>
+            <span style="font-size: 0.8rem; font-weight: 700; color: var(--warning);">Show Inactive (1m+)</span>
+        </div>
+
         <div class="btn-group">
             <button class="btn btn-copy" onclick="copyAllEmails()">
-                <i class="fas fa-envelope"></i> Copy All Emails
+                <i class="fas fa-envelope"></i> Emails
             </button>
             <button class="btn btn-active" onclick="showActiveUsers()">
-                <i class="fas fa-bolt"></i> View Active Users
+                <i class="fas fa-bolt"></i> Online
+            </button>
+            <button id="bulkDeleteBtn" class="btn btn-danger" style="display: none;" onclick="bulkDeleteInactive()">
+                <i class="fas fa-user-slash"></i> Delete All Inactive
             </button>
         </div>
     </div>
@@ -265,26 +315,27 @@
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>User UID</th>
+                    <th>UID</th>
                     <th>Full Name</th>
-                    <th>Email Address</th>
-                    <th>Wallet Balance</th>
-                    <th>Total Spent</th>
-                    <th>User Type</th>
-                    <th>Status</th>
+                    <th>Email</th>
+                    <th>Wallet</th>
+                    <th>Spent</th>
+                    <th>Type</th>
+                    <th>Verify</th>
                     <th>Orders</th>
-                    <th>Join Date</th>
+                    <th>Joined</th>
+                    <th>Last Active</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody id="usersBody">
-                <tr><td colspan="11" style="text-align:center; padding:50px;">Fetching user database...</td></tr>
+                <tr><td colspan="12" style="text-align:center; padding:50px;">Fetching user database...</td></tr>
             </tbody>
         </table>
     </div>
 </main>
 
-<footer>Gigantic Data Hub Admin Panel © 2025</footer>
+<footer>Gigantic Data Hub Admin Panel © 2026</footer>
 
 <div class="popup-bg" id="popupBg">
     <div class="popup">
@@ -315,6 +366,7 @@
 
     const tbody = document.getElementById("usersBody");
     const ADMIN_EMAIL = "alenacloft0@gmail.com";
+    let allUsersData = {};
 
     onAuthStateChanged(auth, async user => {
         if(!user || user.email !== ADMIN_EMAIL){
@@ -332,21 +384,29 @@
         onValue(usersRef, snapshot => {
             tbody.innerHTML = "";
             if(!snapshot.exists()){
-                tbody.innerHTML = "<tr><td colspan='11' style='text-align:center;'>No users found in database</td></tr>";
+                tbody.innerHTML = "<tr><td colspan='12' style='text-align:center;'>No users found</td></tr>";
                 return;
             }
 
+            allUsersData = snapshot.val();
             let index = 1;
+            const now = Date.now();
+            const oneMonthMs = 30 * 24 * 60 * 60 * 1000;
+
             snapshot.forEach(snap => {
                 const uid = snap.key;
                 const u = snap.val();
+                const lastActive = u.lastActive || 0;
+                const isInactive = (now - lastActive) > oneMonthMs;
 
                 const row = document.createElement("tr");
                 row.setAttribute("data-search", `${u.fullname} ${u.email} ${uid}`.toLowerCase());
+                row.setAttribute("data-inactive", isInactive);
+                if(isInactive) row.classList.add('inactive-row');
                 
                 row.innerHTML = `
                     <td>${index++}</td>
-                    <td><span class="uid-cell" title="Click to copy UID" onclick="copyText('${uid}')">${uid.substring(0,8)}...</span></td>
+                    <td><span class="uid-cell" onclick="copyText('${uid}')">${uid.substring(0,6)}..</span></td>
                     <td><b>${u.fullname || "N/A"}</b></td>
                     <td>${u.email || "N/A"}</td>
                     <td class="wallet-amt">₵${Number(u.wallet || 0).toFixed(2)}</td>
@@ -360,39 +420,70 @@
                     </td>
                     <td>
                         ${u.verified ? 
-                            "<span class='verify-badge'><i class='fas fa-check-circle'></i> Verified</span>" :
+                            "<span class='verify-badge'><i class='fas fa-check-circle'></i> Yes</span>" :
                             `<button class='action-btn v-btn' onclick="verifyUser('${uid}')">Verify</button>`
                         }
                     </td>
                     <td>${u.orderCount || 0}</td>
                     <td>${u.timestamp ? new Date(u.timestamp).toLocaleDateString() : "—"}</td>
+                    <td style="color: ${isInactive ? 'var(--danger)' : '#64748b'}; font-weight: ${isInactive ? 'bold' : 'normal'}">
+                        ${lastActive ? new Date(lastActive).toLocaleDateString() : "Never"}
+                    </td>
                     <td class="action-btns">
                         <button class="action-btn d-btn" onclick="deleteUser('${uid}')"><i class="fas fa-trash"></i></button>
                     </td>
                 `;
                 tbody.appendChild(row);
             });
+            filterUsers();
         });
     }
 
-    // Global Search Function
     window.filterUsers = function() {
         const input = document.getElementById("userInput").value.toLowerCase();
+        const showOnlyInactive = document.getElementById("inactiveToggle").checked;
+        const bulkBtn = document.getElementById("bulkDeleteBtn");
         const rows = tbody.getElementsByTagName("tr");
+        let inactiveCount = 0;
 
         for (let row of rows) {
             const searchText = row.getAttribute("data-search");
-            if (searchText && searchText.includes(input)) {
+            const isInactive = row.getAttribute("data-inactive") === "true";
+
+            let matchesSearch = searchText && searchText.includes(input);
+            let matchesInactive = showOnlyInactive ? isInactive : true;
+
+            if (matchesSearch && matchesInactive) {
                 row.style.display = "";
+                if(isInactive) inactiveCount++;
             } else {
                 row.style.display = "none";
             }
+        }
+
+        bulkBtn.style.display = (showOnlyInactive && inactiveCount > 0) ? "flex" : "none";
+    }
+
+    window.bulkDeleteInactive = async function() {
+        const now = Date.now();
+        const oneMonthMs = 30 * 24 * 60 * 60 * 1000;
+        const inactiveUids = Object.keys(allUsersData).filter(uid => {
+            const lastActive = allUsersData[uid].lastActive || 0;
+            return (now - lastActive) > oneMonthMs;
+        });
+
+        if(inactiveUids.length === 0) return;
+
+        if(confirm(`WARNING: You are about to permanently delete ${inactiveUids.length} inactive accounts from the database. This cannot be undone. Proceed?`)) {
+            const promises = inactiveUids.map(uid => remove(ref(db, `users/${uid}`)));
+            await Promise.all(promises);
+            alert("Cleanup complete!");
         }
     }
 
     window.copyText = function(text) {
         navigator.clipboard.writeText(text);
-        alert("UID Copied: " + text);
+        alert("UID Copied");
     }
 
     window.changeStatus = function(uid, status){
@@ -400,43 +491,35 @@
     };
 
     window.verifyUser = function(uid){
-        if(confirm("Mark this user as verified?")){
-            update(ref(db, `users/${uid}`), { verified: true });
-        }
+        update(ref(db, `users/${uid}`), { verified: true });
     };
 
     window.deleteUser = function(uid){
-        if(confirm("Are you sure? This will delete the user account permanently.")){
+        if(confirm("Permanently delete this account from database?")){
             remove(ref(db, `users/${uid}`));
         }
     };
 
     window.copyAllEmails = function(){
-        const emails = [];
-        onValue(ref(db,"users"), snap=>{
-            snap.forEach(u=>{ if(u.val().email) emails.push(u.val().email); });
-            navigator.clipboard.writeText(emails.join(", "));
-            alert("All emails copied to clipboard!");
-        }, {onlyOnce:true});
+        const emails = Object.values(allUsersData).map(u => u.email).filter(e => e);
+        navigator.clipboard.writeText(emails.join(", "));
+        alert("Emails copied!");
     };
 
     window.showActiveUsers = function(){
         const list = document.getElementById("activeList");
-        list.innerHTML = "<div style='text-align:center; padding:20px;'>Scanning for online users...</div>";
+        list.innerHTML = "<div style='text-align:center;'>Scanning...</div>";
         const now = Date.now();
+        let html = "";
 
-        onValue(ref(db,"users"), snap=>{
-            let html = "";
-            let count = 0;
-            snap.forEach(u=>{
-                if(u.val().lastActive && now - u.val().lastActive < 5 * 60000){
-                    html += `<p><i class="fas fa-user" style="margin-right:10px; color:#64748b;"></i> ${u.val().fullname} <span style="font-size:11px; display:block; margin-left:25px; color:#94a3b8;">${u.val().email}</span></p>`;
-                    count++;
-                }
-            });
-            document.getElementById("popupBg").style.display = "flex";
-            list.innerHTML = html || "<div style='text-align:center; padding:20px; color:#94a3b8;'>No users currently active.</div>";
-        }, {onlyOnce:true});
+        Object.values(allUsersData).forEach(u => {
+            if(u.lastActive && now - u.lastActive < 5 * 60000){
+                html += `<p><i class="fas fa-user"></i> ${u.fullname} <span style="font-size:11px; display:block; color:#94a3b8;">${u.email}</span></p>`;
+            }
+        });
+
+        document.getElementById("popupBg").style.display = "flex";
+        list.innerHTML = html || "<div style='text-align:center;'>No users active.</div>";
     };
 
     window.closePopup = function(){
