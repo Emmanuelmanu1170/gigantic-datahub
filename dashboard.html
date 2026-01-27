@@ -454,7 +454,6 @@
                 currentUserUID = user.uid;
                 
                 // --- ACTIVE CHECK LOGIC ---
-                // Updates the last active timestamp every time the dashboard is loaded
                 update(ref(db, 'users/' + user.uid), { lastActive: Date.now() });
 
                 onValue(ref(db, 'users/' + user.uid), (snapshot) => {
@@ -463,8 +462,13 @@
                     renderBalance();
                     updateGreeting(data.fullName ? data.fullName.split(' ')[0] : 'Member');
 
+                    // --- ORDER PAGE AGENT SYNC LOGIC ---
+                    // Ensures that when the user goes to the order page, the system knows they are an agent
+                    const userType = data.userType || "Normal";
+                    localStorage.setItem('currentUserStatus', userType);
+
                     // Hide upgrade box if already an agent
-                    if (data.userType === 'agent') {
+                    if (userType === 'agent') {
                         document.getElementById('agentUpgradeBox').style.display = 'none';
                     }
                 });
@@ -504,7 +508,6 @@
                             userData.wallet -= cost;
                             userData.userType = 'agent';
                         } else {
-                            // Transaction will abort
                             return;
                         }
                     }
@@ -512,6 +515,8 @@
                 }).then((result) => {
                     if (result.committed) {
                         alert("Congratulations! Agent Access Activated successfully.");
+                        // Force an immediate local sync
+                        localStorage.setItem('currentUserStatus', 'agent');
                     } else {
                         alert("Upgrade failed. Please ensure you have sufficient balance.");
                     }
@@ -535,4 +540,3 @@
     </script>
 </body>
 </html>
-
