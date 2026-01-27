@@ -235,6 +235,13 @@
         .nav-item.active { color: var(--accent-orange); }
 
     </style>
+    <script>
+        // Apply theme immediately to root to prevent white flash
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
 </head>
 <body>
 
@@ -368,16 +375,20 @@
         let rawBalance = 0;
         let isBalanceHidden = localStorage.getItem('balanceHidden') === 'true';
 
-        // Theme Toggle
+        // Set initial theme icon
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        const themeBtn = document.getElementById('themeBtn');
+        themeBtn.className = savedTheme === 'light' ? 'fas fa-moon theme-toggle' : 'fas fa-sun theme-toggle';
+
+        // Theme Toggle Function
         window.toggleTheme = function() {
             const doc = document.documentElement;
-            const btn = document.getElementById('themeBtn');
             const currentTheme = doc.getAttribute('data-theme');
             const newTheme = currentTheme === 'light' ? 'dark' : 'light';
             
             doc.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
-            btn.className = newTheme === 'light' ? 'fas fa-moon theme-toggle' : 'fas fa-sun theme-toggle';
+            themeBtn.className = newTheme === 'light' ? 'fas fa-moon theme-toggle' : 'fas fa-sun theme-toggle';
         };
 
         // Balance Masking
@@ -399,10 +410,6 @@
                 iconEl.className = "fas fa-eye toggle-balance";
             }
         }
-
-        // Initialize Theme Icon
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        document.getElementById('themeBtn').className = savedTheme === 'light' ? 'fas fa-moon theme-toggle' : 'fas fa-sun theme-toggle';
 
         function updateGreeting(name) {
             const hour = new Date().getHours();
