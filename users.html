@@ -130,6 +130,20 @@
         .inactive-row { background: #fff5f5 !important; }
         .uid-cell { font-family: monospace; background: #f1f5f9; padding: 4px; border-radius: 4px; cursor: pointer; }
 
+        /* Type Select Styling */
+        .type-select {
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--deep-blue);
+            cursor: pointer;
+            outline: none;
+        }
+        .type-select:focus { border-color: var(--primary-blue); }
+
         .popup-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
         .popup { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; }
     </style>
@@ -178,7 +192,7 @@
                     <th>Full Name</th>
                     <th>Email</th>
                     <th>Wallet</th>
-                    <th>Type</th>
+                    <th>User Type</th>
                     <th>Last Active</th>
                     <th>Actions</th>
                 </tr>
@@ -247,6 +261,7 @@
         Object.entries(data).forEach(([uid, u]) => {
             const lastActive = u.lastActive || 0;
             const isInactive = (now - lastActive) > thirtyDays;
+            const currentStatus = u.status || "Normal";
             
             const tr = document.createElement("tr");
             tr.className = isInactive ? "inactive-row" : "";
@@ -259,7 +274,12 @@
                 <td><b>${u.fullname || "N/A"}</b></td>
                 <td>${u.email}</td>
                 <td>₵${Number(u.wallet || 0).toFixed(2)}</td>
-                <td>${u.status || "Normal"}</td>
+                <td>
+                    <select class="type-select" onchange="toggleUserType('${uid}', this.value)">
+                        <option value="Normal" ${currentStatus === 'Normal' ? 'selected' : ''}>Normal</option>
+                        <option value="Agent" ${currentStatus === 'Agent' ? 'selected' : ''}>Agent</option>
+                    </select>
+                </td>
                 <td style="color: ${isInactive ? 'red' : 'green'}; font-weight: bold;">
                     ${lastActive ? new Date(lastActive).toLocaleDateString() : "Never"}
                 </td>
@@ -271,6 +291,12 @@
         });
         filterUsers();
     }
+
+    window.toggleUserType = function(uid, newType) {
+        update(ref(db, `users/${uid}`), { status: newType })
+        .then(() => alert(`User successfully switched to ${newType}`))
+        .catch(err => alert("Error updating user type: " + err.message));
+    };
 
     window.filterUsers = function() {
         const query = document.getElementById("userInput").value.toLowerCase();
