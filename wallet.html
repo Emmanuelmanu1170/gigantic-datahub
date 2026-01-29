@@ -94,14 +94,14 @@
 
 <header>
     <div class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></div>
-    <div style="font-weight: 800; letter-spacing: 1px;">GLOBAL FINANCIAL TERMINAL</div>
+    <div style="font-weight: 800; letter-spacing: 1px;">MASTER FINANCIAL HUB</div>
     <div class="status-item">Admin: <span id="adminEmail">...</span></div>
 </header>
 
 <div class="container">
     <div class="status-bar">
         <div class="status-item">Cloud Sync: <span style="color: var(--success);">● REAL-TIME</span></div>
-        <div class="status-item">Total Logs: <span id="logCounter">0</span></div>
+        <div class="status-item">Records Found: <span id="logCounter">0</span></div>
     </div>
 
     <div class="card">
@@ -116,7 +116,7 @@
 
     <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap: wrap; gap:10px;">
-            <h3><i class="fas fa-history"></i> Sorted Financial Ledger</h3>
+            <h3><i class="fas fa-history"></i> Unified Transaction Ledger (All Users)</h3>
             <input type="text" id="searchLog" placeholder="Search Email / UID / Ref..." style="max-width:280px; padding: 10px; border-radius: 10px; border: 1px solid #ddd; outline: none;">
         </div>
         <div class="table-responsive">
@@ -126,7 +126,7 @@
                         <th>Source</th>
                         <th>Direction</th>
                         <th>User Email</th>
-                        <th>Reference ID</th>
+                        <th>Transaction Info</th>
                         <th>Amount</th>
                         <th>New Balance</th>
                         <th>Date & Time</th>
@@ -134,7 +134,7 @@
                     </tr>
                 </thead>
                 <tbody id="masterLogBody">
-                    <tr><td colspan="8" style="text-align:center; padding:50px;"><i class="fas fa-sync fa-spin"></i> Organizing database records...</td></tr>
+                    <tr><td colspan="8" style="text-align:center; padding:50px;"><i class="fas fa-sync fa-spin"></i> Harmonizing Global Data...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -164,44 +164,69 @@ let masterLogs = [];
 onAuthStateChanged(auth, user => {
     if (user && user.email === ADMIN_EMAIL) {
         document.getElementById("adminEmail").textContent = user.email;
-        loadGlobalData();
+        loadGlobalStreams();
     } else {
         window.location.href = "login.html";
     }
 });
 
-function loadGlobalData() {
+function loadGlobalStreams() {
+    // 1. Sync Users for Real-time Email Lookup
     onValue(ref(db, 'users'), snap => { usersData = snap.val() || {}; });
 
     const txRef = ref(db, 'transactions'); 
     const topupRef = ref(db, 'topupNotes'); 
+    const ordersRef = ref(db, 'user_orders'); // GLOBAL USER ORDERS PATH
 
     onValue(txRef, (txSnap) => {
         onValue(topupRef, (topSnap) => {
-            const txs = txSnap.exists() ? Object.entries(txSnap.val()).map(([id, v]) => {
-                const isDeduct = v.type === 'Deduct' || (!v.type && v.src !== 'TOPUP');
-                const isCredit = v.type === 'Credit' || v.src === 'BONUS';
-                return { 
-                    id, ...v, 
-                    ts: v.date || v.timestamp, 
-                    src: (v.type === 'Credit' || v.type === 'Deduct') ? 'ADMIN' : 'PURCHASE',
-                    direction: isCredit ? 'CREDIT' : 'DEDUCT'
-                };
-            }) : [];
-            
-            let tops = [];
-            if(topSnap.exists()){
-                Object.entries(topSnap.val()).forEach(([uid, notes]) => {
-                    Object.entries(notes).forEach(([id, v]) => {
-                        tops.push({ id, ...v, uid, ts: v.timestamp, src: 'TOPUP', direction: 'CREDIT', email: usersData[uid]?.email || 'User Not Found' });
+            onValue(ordersRef, (orderSnap) => {
+                
+                // Stream A: Admin & Manual Adjustments
+                const txs = txSnap.exists() ? Object.entries(txSnap.val()).map(([id, v]) => {
+                    const isCredit = v.type === 'Credit' || v.src === 'BONUS';
+                    return { 
+                        id, ...v, 
+                        ts: v.date || v.timestamp, 
+                        src: (v.type === 'Credit' || v.type === 'Deduct') ? 'ADMIN' : 'SYSTEM',
+                        direction: isCredit ? 'CREDIT' : 'DEDUCT',
+                        info: v.type ? `Manual ${v.type}` : 'Internal Log'
+                    };
+                }) : [];
+                
+                // Stream B: Deposits & Paystack (All Users)
+                let tops = [];
+                if(topSnap.exists()){
+                    Object.entries(topSnap.val()).forEach(([uid, notes]) => {
+                        Object.entries(notes).forEach(([id, v]) => {
+                            tops.push({ id, ...v, uid, ts: v.timestamp, src: 'TOPUP', direction: 'CREDIT', email: usersData[uid]?.email || 'N/A', info: 'Deposit' });
+                        });
                     });
-                });
-            }
+                }
 
-            // NEAREST AT TOP SORTING
-            masterLogs = [...txs, ...tops].sort((a, b) => b.ts - a.ts);
-            document.getElementById('logCounter').innerText = masterLogs.length;
-            renderTable(document.getElementById('searchLog').value);
+                // Stream C: Purchase History (All Users)
+                let orders = [];
+                if(orderSnap.exists()){
+                    Object.entries(orderSnap.val()).forEach(([uid, userLogs]) => {
+                        Object.entries(userLogs).forEach(([id, o]) => {
+                            orders.push({ 
+                                id, ...o, 
+                                uid, 
+                                ts: o.timestamp, 
+                                src: 'PURCHASE', 
+                                direction: 'DEDUCT', 
+                                email: usersData[uid]?.email || 'N/A',
+                                info: `${o.network} - ${o.plan}`
+                            });
+                        });
+                    });
+                }
+
+                // MERGE & SORT (NEWEST AT TOP)
+                masterLogs = [...txs, ...tops, ...orders].sort((a, b) => b.ts - a.ts);
+                document.getElementById('logCounter').innerText = masterLogs.length;
+                renderTable(document.getElementById('searchLog').value);
+            });
         });
     });
 }
@@ -213,12 +238,13 @@ function renderTable(filter = "") {
     const filtered = masterLogs.filter(l => 
         (l.email && l.email.toLowerCase().includes(filter.toLowerCase())) || 
         (l.uid && l.uid.includes(filter)) || 
-        (l.id && l.id.includes(filter))
+        (l.id && l.id.includes(filter)) ||
+        (l.info && l.info.toLowerCase().includes(filter.toLowerCase()))
     );
 
     filtered.forEach(log => {
         const badgeClass = log.src === 'PURCHASE' ? 'bg-purchase' : (log.src === 'TOPUP' ? 'bg-topup' : 'bg-admin');
-        const userEmail = log.email || usersData[log.uid]?.email || 'N/A';
+        const userEmail = log.email || usersData[log.uid]?.email || 'Unknown';
         const isCredit = log.direction === 'CREDIT';
 
         const tr = document.createElement("tr");
@@ -231,11 +257,14 @@ function renderTable(filter = "") {
                 </div>
             </td>
             <td><b>${userEmail}</b><br><small style="color:#94a3b8; font-family:monospace; font-size:9px;">${log.uid || '---'}</small></td>
-            <td style="font-family:monospace; font-size:10px;">${log.id.substring(0,12)}...</td>
+            <td style="font-size:11px;">
+                <span style="font-weight:700;">${log.info}</span><br>
+                <small style="font-family:monospace; opacity:0.6;">Ref: ${log.id.substring(0,12)}</small>
+            </td>
             <td style="font-weight:800; color:${isCredit ? '#10b981' : '#ef4444'};">
                 ${isCredit ? '+' : '-'}₵${parseFloat(log.amount || 0).toFixed(2)}
             </td>
-            <td style="font-weight:700;">₵${parseFloat(log.newBalance || 0).toFixed(2)}</td>
+            <td style="font-weight:700;">${log.newBalance ? '₵'+parseFloat(log.newBalance).toFixed(2) : '---'}</td>
             <td style="font-size:11px; color:#64748b;">${new Date(log.ts).toLocaleString()}</td>
             <td><i class="fas fa-trash-alt btn-delete" onclick="deleteEntry('${log.id}', '${log.src}', '${log.uid}')"></i></td>
         `;
@@ -244,9 +273,13 @@ function renderTable(filter = "") {
 }
 
 window.deleteEntry = (id, src, uid) => {
-    if(!confirm("Erase this financial record?")) return;
-    let path = src === 'TOPUP' ? `topupNotes/${uid}/${id}` : `transactions/${id}`;
-    remove(ref(db, path)).then(() => alert("Record Erased."));
+    if(!confirm("Erase this financial record permanently?")) return;
+    let path = "";
+    if(src === 'TOPUP') path = `topupNotes/${uid}/${id}`;
+    else if(src === 'PURCHASE') path = `user_orders/${uid}/${id}`;
+    else path = `transactions/${id}`;
+
+    remove(ref(db, path)).then(() => alert("Entry Deleted."));
 };
 
 document.getElementById('walletForm').addEventListener('submit', async (e) => {
@@ -255,7 +288,7 @@ document.getElementById('walletForm').addEventListener('submit', async (e) => {
     const credit = parseFloat(document.getElementById('creditAmount').value) || 0;
     const deduct = parseFloat(document.getElementById('deductAmount').value) || 0;
 
-    if(!usersData[uid]) return alert("Error: UID not found in database.");
+    if(!usersData[uid]) return alert("UID Not Found!");
 
     const currentBal = parseFloat(usersData[uid].wallet || 0);
     const newBal = Math.max(0, currentBal + credit - deduct);
@@ -270,7 +303,7 @@ document.getElementById('walletForm').addEventListener('submit', async (e) => {
     });
 
     document.getElementById('walletForm').reset();
-    alert("User wallet synced and logged.");
+    alert("User wallet synced successfully.");
 });
 
 document.getElementById('searchLog').addEventListener('input', (e) => renderTable(e.target.value));
