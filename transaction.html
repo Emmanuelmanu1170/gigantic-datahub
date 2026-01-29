@@ -71,14 +71,9 @@
         .tx-info p { font-size: 0.75rem; color: #64748b; }
         .tx-ref { font-family: 'Courier New', monospace; font-size: 10px; background: #f1f5f9; padding: 2px 5px; border-radius: 4px; cursor: pointer; }
 
-        .tx-amount { text-align: right; padding-right: 10px; }
+        .tx-amount { text-align: right; }
         .amount-val { font-weight: 800; font-size: 1rem; display: block; }
         .bal-val { font-size: 0.65rem; color: #94a3b8; font-weight: 600; }
-
-        .delete-action {
-            color: #cbd5e1; cursor: pointer; padding: 5px; transition: 0.2s;
-        }
-        .delete-action:hover { color: var(--danger); }
 
         .empty-state { text-align: center; padding: 80px 20px; color: #94a3b8; }
         .empty-state i { font-size: 4rem; margin-bottom: 15px; opacity: 0.2; }
@@ -111,17 +106,14 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { getDatabase, ref, onValue, query, orderByChild, equalTo, remove } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+import { getDatabase, ref, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
   authDomain: "gigantic-data.firebaseapp.com",
   databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
-  projectId: "gigantic-data",
-  storageBucket: "gigantic-data.firebasestorage.app",
-  messagingSenderId: "727845403550",
-  appId: "1:727845403550:web:e3c3a40ce615aaaca9748f"
+  projectId: "gigantic-data"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -214,7 +206,6 @@ function render(logs) {
                 <span class="amount-val" style="color: ${amountColor}">${!isPurchase || isCredit ? '+' : '-'}₵${parseFloat(log.amount).toFixed(2)}</span>
                 <span class="bal-val">${isPurchase ? 'Bal: ₵'+parseFloat(log.newBalance || 0).toFixed(2) : 'Successful'}</span>
             </div>
-            <div class="delete-action" onclick="deleteTx('${log.id}', '${log.src}')"><i class="fas fa-times"></i></div>
         `;
         listDiv.appendChild(card);
     });
@@ -237,12 +228,6 @@ window.filterLogs = (type, btn) => {
 window.copyRef = (text) => {
     navigator.clipboard.writeText(text);
     alert("Reference copied!");
-}
-
-window.deleteTx = (id, src) => {
-    if(!confirm("Remove this entry from logs?")) return;
-    let path = src === 'purchase' ? `transactions/${id}` : `topupNotes/${currentUserId}/${id}`;
-    remove(ref(db, path)).catch(e => alert(e.message));
 }
 </script>
 </body>
