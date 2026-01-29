@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketing Trigger Suite — GiganticDataHub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --p: #003366; --a: #ff8c00; --d: #020617; --c: #1e293b; --s: #10b981; }
+        body { font-family: 'Inter', sans-serif; background: var(--d); color: white; margin: 0; padding: 10px; padding-bottom: 100px; }
+        .container { max-width: 600px; margin: auto; }
+
+        .header { text-align: center; padding: 20px 0; }
+        .header h1 { font-size: 20px; color: var(--a); margin: 0; font-weight: 900; }
+        .header p { font-size: 12px; opacity: 0.7; margin-top: 5px; }
+
+        /* CATEGORY TABS */
+        .tab-wrapper {
+            display: flex; gap: 8px; overflow-x: auto; padding: 10px 0;
+            position: sticky; top: 0; background: var(--d); z-index: 100;
+            scrollbar-width: none;
+        }
+        .tab-wrapper::-webkit-scrollbar { display: none; }
+        .tab {
+            flex: 0 0 auto; padding: 10px 20px; border-radius: 20px;
+            background: var(--c); font-size: 12px; font-weight: 800;
+            cursor: pointer; border: 1px solid #334155; transition: 0.3s;
+        }
+        .tab.active { background: var(--a); border-color: var(--a); color: white; }
+
+        /* TRIGGER CARDS */
+        .trigger-list { margin-top: 15px; }
+        .trigger-card {
+            background: var(--c); border-radius: 15px; padding: 15px;
+            margin-bottom: 12px; border-left: 5px solid var(--a);
+            display: flex; justify-content: space-between; align-items: center;
+            transition: 0.3s;
+        }
+        .trigger-card:active { transform: scale(0.98); background: #2d3748; }
+        .trigger-text { font-size: 14px; font-weight: 600; line-height: 1.4; flex: 1; }
+        .copy-btn { background: rgba(255,140,0,0.1); color: var(--a); border: none; padding: 8px 12px; border-radius: 10px; cursor: pointer; font-size: 12px; }
+
+        /* SUGGESTIONS COMBO */
+        .combo-section {
+            background: linear-gradient(135deg, #003366 0%, #001a33 100%);
+            padding: 20px; border-radius: 20px; margin-top: 30px; border: 1px solid #334155;
+        }
+        .combo-title { font-size: 12px; font-weight: 900; color: #3b82f6; text-transform: uppercase; margin-bottom: 10px; }
+        .combo-card { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px; margin-bottom: 10px; font-size: 13px; line-height: 1.5; border: 1px dashed rgba(255,255,255,0.2); }
+
+        /* TOAST NOTIFICATION */
+        #toast {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: var(--s); color: white; padding: 10px 25px;
+            border-radius: 30px; font-size: 13px; font-weight: 800;
+            display: none; z-index: 1000; box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>SALES TRIGGER SUITE</h1>
+        <p>Copy high-conversion messages for your WhatsApp status</p>
+    </div>
+
+    <div class="tab-wrapper" id="tabContainer">
+        <div class="tab active" onclick="switchCategory('hustle', this)">🚀 HUSTLE & SUCCESS</div>
+        <div class="tab" onclick="switchCategory('fomo', this)">🔥 FOMO & URGENCY</div>
+        <div class="tab" onclick="switchCategory('value', this)">💡 SMART SAVINGS</div>
+        <div class="tab" onclick="switchCategory('lifestyle', this)">🌍 LIFE & CONNECTION</div>
+    </div>
+
+    <div class="trigger-list" id="triggerList">
+        </div>
+
+    <div class="combo-section">
+        <div class="combo-title"><i class="fas fa-layer-group"></i> Suggestion Combo (Caption + Price)</div>
+        <div class="combo-card">
+            "Your hustle deserves reliable internet. 🚀 No data, no progress — we fix that! ⚡"<br>
+            <b>1GB - ₵5.00 | 2GB - ₵10.00</b><br>
+            <span style="color:var(--a); font-size:10px;">Best for: Monday Mornings</span>
+        </div>
+        <div class="combo-card">
+            "Don’t let high prices disconnect you. 🔌 Cheap data, real value for everyday life! 🕊️"<br>
+            <b>5GB - ₵24.00 | 10GB - ₵45.00</b><br>
+            <span style="color:var(--a); font-size:10px;">Best for: Weekend Vibes</span>
+        </div>
+    </div>
+</div>
+
+<div id="toast">Copied to Clipboard!</div>
+
+<script>
+    const triggers = {
+        hustle: [
+            "Power your phone, power your dreams. ⚡ Don't go offline mid-grind! 🚀",
+            "Your hustle deserves reliable internet. 📈 Stay connected to opportunities! 💼",
+            "Learn, earn, and grow online without stress. 🧠 Your data is your investment! 💰",
+            "No data, no progress — we fix that instantly! 🛠️ Stay winning. 🏆",
+            "The internet is your workplace — stay connected and keep earning! 💻✨",
+            "Data for students, hustlers, and families. 🎓 Fuel your phone, fuel your hustle! 🔥",
+            "Data that works as hard as you do. 🦾 Stay active in a digital world! 🌐",
+            "Turn internet into income. 💵 Success starts with a strong connection! 🎯",
+            "Stay visible in a digital world. 📱 Your dreams are waiting for you online! ✨",
+            "One click closer to your goals. 🏁 Don't let a low balance slow you down! 🏃‍♂️",
+            "Data made for hustlers. 🛠️ Power your social life and your business! 🤝"
+        ],
+        fomo: [
+            "Don't let data finish your money! 💸 Prices increasing soon, grab your bundle now! ⏳",
+            "Stop begging for hotspot! 📶 Get your own data and stay independent. ✊",
+            "Never go offline unexpectedly. 📉 Be smart, buy data before it runs out! 🚨",
+            "Don’t let high prices disconnect you. 🔌 Stay online even when money is tight! 🕊️",
+            "Prices are dropping for a limited time! 📉 Get yours before the slot is full! 🔥",
+            "Data is no longer a luxury — it’s a necessity. 🍞 Don't be left behind! 🏃‍♂️",
+            "Stop overpaying for data! 🛑 Join the smart users getting more for less! 🧠",
+            "Stay visible or be forgotten. 👻 Keep chatting, posting, and earning! 📲",
+            "Don't choose between food and data. 🍲 With us, you can afford both! ✅",
+            "The world is moving fast. 🌎 No buffering. No stress. Get your data now! ⚡"
+        ],
+        value: [
+            "Internet that respects your pocket. 👛 Cheap data, real value! 💎",
+            "Data that understands your reality. 🌍 Stay online longer for less! 📉",
+            "Smart people buy data the smart way. 🧠 No hidden charges. Just value! ⚖️",
+            "Affordable data, peaceful mind. 🧘‍♂️ Spend less, connect more today! 💸",
+            "Internet that fits your lifestyle. 🍕 No stress, just data that works! ✅",
+            "Control your spending, not your connection. 🕹️ Safe money, stay online! 🏦",
+            "Every cedi matters. 💰 Buy data with confidence and save big! 💎",
+            "Reliable data for real people. 👨‍👩‍👧‍👦 Internet access without sacrifice! 🤝",
+            "Stop overpaying! 🛑 Reliable data for everyday life at the lowest rates! 📉",
+            "Data you can trust. 🛡️ High speed, low cost, 100% satisfaction! ⭐"
+        ],
+        lifestyle: [
+            "Stay connected to what matters most. ❤️ Never miss a message again! 📱",
+            "Data is connection. 🤝 Data is opportunity. Data is freedom! 🕊️",
+            "Data that keeps families close. 👨‍👩‍👧‍👦 Connection means everything! 📞",
+            "Online life made easier. 🌈 One purchase, total peace of mind! 😌",
+            "Stay online, stay relevant. 🌟 Keep your social life alive and glowing! ✨",
+            "Because staying online is survival. 🦾 Stay active, stay updated! 📰",
+            "Data that gives confidence. 😎 Post your best life without worry! 📸",
+            "Stay updated. Stay informed. 📡 Don't let the news pass you by! 🌍",
+            "Your online companion. 🤝 Never miss out on the latest trends! 📈",
+            "Connection without regret. 🕊️ Reliable internet for real life! 🏡"
+        ]
+    };
+
+    function switchCategory(cat, el) {
+        // Update Tabs
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+
+        // Update List
+        const list = document.getElementById('triggerList');
+        list.innerHTML = "";
+        
+        triggers[cat].forEach(text => {
+            const card = document.createElement('div');
+            card.className = 'trigger-card';
+            card.innerHTML = `
+                <div class="trigger-text">${text}</div>
+                <button class="copy-btn" onclick="copyText('${text.replace(/'/g, "\\'")}')">COPY</button>
+            `;
+            list.appendChild(card);
+        });
+    }
+
+    function copyText(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            const toast = document.getElementById('toast');
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 2000);
+        });
+    }
+
+    // Initialize
+    window.onload = () => { switchCategory('hustle', document.querySelector('.tab')); };
+</script>
+</body>
+</html>
