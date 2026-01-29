@@ -130,19 +130,19 @@
         .inactive-row { background: #fff5f5 !important; }
         .uid-cell { font-family: monospace; background: #f1f5f9; padding: 4px; border-radius: 4px; cursor: pointer; }
 
-        /* Type Select Styling */
         .type-select {
             padding: 6px 10px;
             border-radius: 8px;
             border: 1px solid #e2e8f0;
             background: #f8fafc;
             font-size: 0.8rem;
-            font-weight: 600;
+            font-weight: 700;
             color: var(--deep-blue);
             cursor: pointer;
             outline: none;
+            transition: 0.3s;
         }
-        .type-select:focus { border-color: var(--primary-blue); }
+        .type-select.agent-mode { background: #dcfce7; border-color: var(--success); color: #047857; }
 
         .popup-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
         .popup { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; }
@@ -164,7 +164,7 @@
     <div class="toolbar">
         <div class="search-box">
             <i class="fas fa-search"></i>
-            <input type="text" id="userInput" placeholder="Search users..." onkeyup="filterUsers()">
+            <input type="text" id="userInput" placeholder="Search by name, email or UID..." onkeyup="filterUsers()">
         </div>
 
         <div class="inactive-filter">
@@ -192,7 +192,7 @@
                     <th>Full Name</th>
                     <th>Email</th>
                     <th>Wallet</th>
-                    <th>User Type</th>
+                    <th>Access Type</th>
                     <th>Last Active</th>
                     <th>Actions</th>
                 </tr>
@@ -207,8 +207,8 @@
 <div class="popup-bg" id="popupBg">
     <div class="popup">
         <h3 id="popupTitle">Online Users</h3>
-        <div id="activeList" style="margin: 20px 0;"></div>
-        <button onclick="document.getElementById('popupBg').style.display='none'">Close</button>
+        <div id="activeList" style="margin: 20px 0; max-height: 200px; overflow-y: auto;"></div>
+        <button class="btn btn-active" style="width: 100%;" onclick="document.getElementById('popupBg').style.display='none'">Close</button>
     </div>
 </div>
 
@@ -221,10 +221,7 @@
         apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
         authDomain: "gigantic-data.firebaseapp.com",
         databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
-        projectId: "gigantic-data",
-        storageBucket: "gigantic-data.firebasestorage.app",
-        messagingSenderId: "727845403550",
-        appId: "1:727845403550:web:e3c3a40ce615aaaca9748f"
+        projectId: "gigantic-data"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -261,7 +258,7 @@
         Object.entries(data).forEach(([uid, u]) => {
             const lastActive = u.lastActive || 0;
             const isInactive = (now - lastActive) > thirtyDays;
-            const currentStatus = u.status || "Normal";
+            const currentStatus = (u.status || u.userType || "Normal").toLowerCase();
             
             const tr = document.createElement("tr");
             tr.className = isInactive ? "inactive-row" : "";
@@ -275,9 +272,9 @@
                 <td>${u.email}</td>
                 <td>₵${Number(u.wallet || 0).toFixed(2)}</td>
                 <td>
-                    <select class="type-select" onchange="toggleUserType('${uid}', this.value)">
-                        <option value="Normal" ${currentStatus === 'Normal' ? 'selected' : ''}>Normal</option>
-                        <option value="Agent" ${currentStatus === 'Agent' ? 'selected' : ''}>Agent</option>
+                    <select class="type-select ${currentStatus === 'agent' ? 'agent-mode' : ''}" onchange="toggleUserType('${uid}', this.value)">
+                        <option value="Normal" ${currentStatus === 'normal' ? 'selected' : ''}>Normal User</option>
+                        <option value="Agent" ${currentStatus === 'agent' ? 'selected' : ''}>Agent Merchant</option>
                     </select>
                 </td>
                 <td style="color: ${isInactive ? 'red' : 'green'}; font-weight: bold;">
@@ -292,10 +289,18 @@
         filterUsers();
     }
 
+    // UPDATED FUNCTION: Updates both status and userType for full synchronization
     window.toggleUserType = function(uid, newType) {
-        update(ref(db, `users/${uid}`), { status: newType })
-        .then(() => alert(`User successfully switched to ${newType}`))
-        .catch(err => alert("Error updating user type: " + err.message));
+        const updates = {
+            status: newType,
+            userType: newType.toLowerCase()
+        };
+
+        update(ref(db, `users/${uid}`), updates)
+        .then(() => {
+            console.log(`User ${uid} successfully switched to ${newType}`);
+        })
+        .catch(err => alert("Sync Error: " + err.message));
     };
 
     window.filterUsers = function() {
@@ -323,7 +328,7 @@
     };
 
     window.deleteSingle = function(uid) {
-        if(confirm("Permanently delete this user?")) {
+        if(confirm("Permanently delete this user from the database?")) {
             remove(ref(db, `users/${uid}`));
         }
     };
@@ -333,17 +338,18 @@
         const thirtyDays = 30 * 24 * 60 * 60 * 1000;
         const toDelete = Object.keys(allUsers).filter(uid => (now - (allUsers[uid].lastActive || 0)) > thirtyDays);
 
-        if(confirm(`Are you sure you want to delete ${toDelete.length} accounts?`)) {
+        if(confirm(`WARNING: You are about to wipe ${toDelete.length} inactive accounts. Continue?`)) {
             toDelete.forEach(uid => remove(ref(db, `users/${uid}`)));
-            alert("Database Cleaned.");
+            alert("Database optimized. Inactive users removed.");
         }
     };
 
     window.showActiveUsers = function() {
         const now = Date.now();
+        // Considered active if seen in the last 5 minutes
         const active = Object.values(allUsers).filter(u => u.lastActive && (now - u.lastActive < 300000));
         const list = document.getElementById("activeList");
-        list.innerHTML = active.length ? active.map(u => `<div>${u.fullname} (${u.email})</div>`).join("") : "No users online (last 5 mins)";
+        list.innerHTML = active.length ? active.map(u => `<div style="padding:8px; border-bottom:1px solid #eee;"><b>${u.fullname}</b><br><small>${u.email}</small></div>`).join("") : "No users online (last 5 mins)";
         document.getElementById("popupBg").style.display = "flex";
     };
 
