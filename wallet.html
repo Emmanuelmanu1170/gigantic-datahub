@@ -35,7 +35,6 @@
         }
         .sidebar ul li a:hover, .sidebar ul li a.active { background: rgba(255,255,255,0.1); color: #fff; }
 
-        /* Content */
         header { 
             background: var(--white); height: 70px; margin-left: 260px; 
             display: flex; align-items: center; justify-content: space-between; 
@@ -52,23 +51,26 @@
         .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-bottom: 30px; }
         .card h3 { font-size: 1.1rem; margin-bottom: 20px; color: var(--deep-blue); }
 
-        /* Form */
         .wallet-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
         input { padding: 12px; border-radius: 10px; border: 2px solid #e2e8f0; outline: none; width: 100%; }
         .btn-update { background: var(--orange-gradient); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 700; cursor: pointer; }
 
-        /* Table UI */
         .table-responsive { width: 100%; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+        table { width: 100%; border-collapse: collapse; min-width: 1100px; }
         th { background: #f8fafc; color: #64748b; padding: 15px; text-align: left; font-size: 0.7rem; text-transform: uppercase; border-bottom: 2px solid #f1f5f9; }
         td { padding: 15px; font-size: 0.8rem; border-bottom: 1px solid #f1f5f9; }
 
-        .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; }
+        .badge { padding: 4px 10px; border-radius: 6px; font-size: 0.65rem; font-weight: 900; text-transform: uppercase; }
         .bg-purchase { background: #fee2e2; color: #b91c1c; }
         .bg-topup { background: #dcfce7; color: #15803d; }
         .bg-admin { background: #e0f2fe; color: #0369a1; }
 
-        .btn-delete { color: var(--danger); cursor: pointer; background: none; border: none; font-size: 1rem; }
+        .status-indicator { display: flex; align-items: center; gap: 5px; font-weight: 800; }
+        .text-credit { color: var(--success); }
+        .text-deduct { color: var(--danger); }
+
+        .btn-delete { color: #cbd5e1; cursor: pointer; transition: 0.3s; }
+        .btn-delete:hover { color: var(--danger); }
         .menu-toggle { display: none; cursor: pointer; font-size: 1.5rem; }
 
         @media (max-width: 992px) {
@@ -92,46 +94,47 @@
 
 <header>
     <div class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></div>
-    <div style="font-weight: 800;">GLOBAL FINANCIAL LEDGER</div>
+    <div style="font-weight: 800; letter-spacing: 1px;">GLOBAL FINANCIAL TERMINAL</div>
     <div class="status-item">Admin: <span id="adminEmail">...</span></div>
 </header>
 
 <div class="container">
     <div class="status-bar">
-        <div class="status-item">System Status: <span style="color: var(--success);">● LIVE</span></div>
-        <div class="status-item">Data Sync: <span id="syncStatus">Connected</span></div>
+        <div class="status-item">Cloud Sync: <span style="color: var(--success);">● REAL-TIME</span></div>
+        <div class="status-item">Total Logs: <span id="logCounter">0</span></div>
     </div>
 
     <div class="card">
-        <h3><i class="fas fa-university"></i> Adjust User Balance</h3>
+        <h3><i class="fas fa-coins"></i> Quick Wallet Modification</h3>
         <form id="walletForm" class="wallet-grid">
-            <input type="text" id="userUid" placeholder="Enter User UID" required>
-            <input type="number" id="creditAmount" placeholder="Credit (₵)" step="0.01">
-            <input type="number" id="deductAmount" placeholder="Deduct (₵)" step="0.01">
-            <button type="submit" class="btn-update">Update & Log</button>
+            <input type="text" id="userUid" placeholder="Paste User UID" required>
+            <input type="number" id="creditAmount" placeholder="Credit (+) Amount" step="0.01">
+            <input type="number" id="deductAmount" placeholder="Deduct (-) Amount" step="0.01">
+            <button type="submit" class="btn-update">Submit Transaction</button>
         </form>
     </div>
 
     <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h3><i class="fas fa-list-ul"></i> Comprehensive Transaction History</h3>
-            <input type="text" id="searchLog" placeholder="Search Email/UID/Ref..." style="max-width:250px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap: wrap; gap:10px;">
+            <h3><i class="fas fa-history"></i> Sorted Financial Ledger</h3>
+            <input type="text" id="searchLog" placeholder="Search Email / UID / Ref..." style="max-width:280px; padding: 10px; border-radius: 10px; border: 1px solid #ddd; outline: none;">
         </div>
         <div class="table-responsive">
             <table>
                 <thead>
                     <tr>
                         <th>Source</th>
+                        <th>Direction</th>
                         <th>User Email</th>
-                        <th>Reference</th>
+                        <th>Reference ID</th>
                         <th>Amount</th>
-                        <th>New Bal</th>
+                        <th>New Balance</th>
                         <th>Date & Time</th>
                         <th>Action</th>
                     </tr>
                 </thead>
                 <tbody id="masterLogBody">
-                    <tr><td colspan="7" style="text-align:center; padding:50px;"><i class="fas fa-spinner fa-spin"></i> Merging database streams...</td></tr>
+                    <tr><td colspan="8" style="text-align:center; padding:50px;"><i class="fas fa-sync fa-spin"></i> Organizing database records...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -140,7 +143,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { getDatabase, ref, onValue, update, push, remove, query, limitToLast } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+import { getDatabase, ref, onValue, update, push, remove } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -168,27 +171,36 @@ onAuthStateChanged(auth, user => {
 });
 
 function loadGlobalData() {
-    // 1. Fetch Users (for Email mapping)
     onValue(ref(db, 'users'), snap => { usersData = snap.val() || {}; });
 
-    // 2. Multi-Stream Sync
-    const txRef = ref(db, 'transactions'); // Admin & Purchases
-    const topupRef = ref(db, 'topupNotes'); // Paystack / Manual Deposits
+    const txRef = ref(db, 'transactions'); 
+    const topupRef = ref(db, 'topupNotes'); 
 
     onValue(txRef, (txSnap) => {
         onValue(topupRef, (topSnap) => {
-            const txs = txSnap.exists() ? Object.entries(txSnap.val()).map(([id, v]) => ({ id, ...v, ts: v.date || v.timestamp, src: v.type === 'Credit' || v.type === 'Deduct' ? 'ADMIN' : 'PURCHASE' })) : [];
+            const txs = txSnap.exists() ? Object.entries(txSnap.val()).map(([id, v]) => {
+                const isDeduct = v.type === 'Deduct' || (!v.type && v.src !== 'TOPUP');
+                const isCredit = v.type === 'Credit' || v.src === 'BONUS';
+                return { 
+                    id, ...v, 
+                    ts: v.date || v.timestamp, 
+                    src: (v.type === 'Credit' || v.type === 'Deduct') ? 'ADMIN' : 'PURCHASE',
+                    direction: isCredit ? 'CREDIT' : 'DEDUCT'
+                };
+            }) : [];
             
             let tops = [];
             if(topSnap.exists()){
                 Object.entries(topSnap.val()).forEach(([uid, notes]) => {
                     Object.entries(notes).forEach(([id, v]) => {
-                        tops.push({ id, ...v, uid, ts: v.timestamp, src: 'TOPUP', email: usersData[uid]?.email || 'Unknown' });
+                        tops.push({ id, ...v, uid, ts: v.timestamp, src: 'TOPUP', direction: 'CREDIT', email: usersData[uid]?.email || 'User Not Found' });
                     });
                 });
             }
 
+            // NEAREST AT TOP SORTING
             masterLogs = [...txs, ...tops].sort((a, b) => b.ts - a.ts);
+            document.getElementById('logCounter').innerText = masterLogs.length;
             renderTable(document.getElementById('searchLog').value);
         });
     });
@@ -206,29 +218,35 @@ function renderTable(filter = "") {
 
     filtered.forEach(log => {
         const badgeClass = log.src === 'PURCHASE' ? 'bg-purchase' : (log.src === 'TOPUP' ? 'bg-topup' : 'bg-admin');
-        const userEmail = log.email || usersData[log.uid]?.email || 'Unknown';
-        const displayRef = log.id.substring(0,10) + (log.reference ? ` (${log.reference.substring(0,5)})` : '');
+        const userEmail = log.email || usersData[log.uid]?.email || 'N/A';
+        const isCredit = log.direction === 'CREDIT';
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
             <td><span class="badge ${badgeClass}">${log.src}</span></td>
-            <td><b>${userEmail}</b><br><small style="color:#94a3b8; font-size:9px;">${log.uid || '---'}</small></td>
-            <td style="font-family:monospace; font-size:10px;">${displayRef}</td>
-            <td style="font-weight:700; color:${log.src === 'PURCHASE' ? '#ef4444' : '#10b981'};">
-                ${log.src === 'PURCHASE' ? '-' : '+'}₵${parseFloat(log.amount || 0).toFixed(2)}
+            <td>
+                <div class="status-indicator ${isCredit ? 'text-credit' : 'text-deduct'}">
+                    <i class="fas ${isCredit ? 'fa-arrow-up' : 'fa-arrow-down'}"></i>
+                    ${log.direction}
+                </div>
+            </td>
+            <td><b>${userEmail}</b><br><small style="color:#94a3b8; font-family:monospace; font-size:9px;">${log.uid || '---'}</small></td>
+            <td style="font-family:monospace; font-size:10px;">${log.id.substring(0,12)}...</td>
+            <td style="font-weight:800; color:${isCredit ? '#10b981' : '#ef4444'};">
+                ${isCredit ? '+' : '-'}₵${parseFloat(log.amount || 0).toFixed(2)}
             </td>
             <td style="font-weight:700;">₵${parseFloat(log.newBalance || 0).toFixed(2)}</td>
             <td style="font-size:11px; color:#64748b;">${new Date(log.ts).toLocaleString()}</td>
-            <td><button class="btn-delete" onclick="deleteEntry('${log.id}', '${log.src}', '${log.uid}')"><i class="fas fa-trash"></i></button></td>
+            <td><i class="fas fa-trash-alt btn-delete" onclick="deleteEntry('${log.id}', '${log.src}', '${log.uid}')"></i></td>
         `;
         tbody.appendChild(tr);
     });
 }
 
 window.deleteEntry = (id, src, uid) => {
-    if(!confirm("Permanently delete this financial log?")) return;
+    if(!confirm("Erase this financial record?")) return;
     let path = src === 'TOPUP' ? `topupNotes/${uid}/${id}` : `transactions/${id}`;
-    remove(ref(db, path)).then(() => alert("Entry removed."));
+    remove(ref(db, path)).then(() => alert("Record Erased."));
 };
 
 document.getElementById('walletForm').addEventListener('submit', async (e) => {
@@ -237,7 +255,7 @@ document.getElementById('walletForm').addEventListener('submit', async (e) => {
     const credit = parseFloat(document.getElementById('creditAmount').value) || 0;
     const deduct = parseFloat(document.getElementById('deductAmount').value) || 0;
 
-    if(!usersData[uid]) return alert("UID not found!");
+    if(!usersData[uid]) return alert("Error: UID not found in database.");
 
     const currentBal = parseFloat(usersData[uid].wallet || 0);
     const newBal = Math.max(0, currentBal + credit - deduct);
@@ -252,7 +270,7 @@ document.getElementById('walletForm').addEventListener('submit', async (e) => {
     });
 
     document.getElementById('walletForm').reset();
-    alert("Wallet synchronized successfully.");
+    alert("User wallet synced and logged.");
 });
 
 document.getElementById('searchLog').addEventListener('input', (e) => renderTable(e.target.value));
