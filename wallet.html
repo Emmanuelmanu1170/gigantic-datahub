@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Wallet — GiganticDataHub</title>
+    <title>Global Wallet Admin — GiganticDataHub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
@@ -20,86 +20,62 @@
         
         body { background: var(--light-bg); color: #1e293b; min-height: 100vh; display: flex; flex-direction: column; }
 
-        /* Sidebar Styling */
+        /* Sidebar */
         .sidebar { 
             position: fixed; top: 0; left: 0; width: 260px; height: 100vh; 
             background: var(--deep-blue); color: #fff; padding: 30px 20px; 
             z-index: 1000; transition: 0.3s; 
         }
-        
         .sidebar h2 { font-size: 1.2rem; margin-bottom: 40px; text-align: center; color: #ff8c00; font-weight: 800; }
-        
         .sidebar ul { list-style: none; }
         .sidebar ul li { margin-bottom: 10px; }
         .sidebar ul li a { 
             color: #cbd5e1; text-decoration: none; padding: 12px 15px; 
             border-radius: 10px; display: flex; align-items: center; gap: 12px; font-weight: 600; transition: 0.3s; 
         }
-        
         .sidebar ul li a:hover, .sidebar ul li a.active { background: rgba(255,255,255,0.1); color: #fff; }
-        .sidebar ul li a i { width: 20px; text-align: center; }
 
-        /* Header & Content */
+        /* Content */
         header { 
             background: var(--white); height: 70px; margin-left: 260px; 
             display: flex; align-items: center; justify-content: space-between; 
             padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 900;
         }
-
         .container { margin-left: 260px; padding: 40px; flex-grow: 1; }
 
-        /* Stats & Forms */
         .status-bar {
             background: white; padding: 15px 25px; border-radius: 15px; 
             display: flex; gap: 30px; margin-bottom: 30px; border: 1px solid #edf2f7;
         }
         .status-item { font-size: 0.85rem; font-weight: 700; color: var(--deep-blue); }
-        .status-item span { font-weight: 400; color: #64748b; margin-left: 5px; }
 
         .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-bottom: 30px; }
-        .card h3 { font-size: 1.1rem; margin-bottom: 20px; color: var(--deep-blue); display: flex; align-items: center; gap: 10px; }
+        .card h3 { font-size: 1.1rem; margin-bottom: 20px; color: var(--deep-blue); }
 
-        /* Custom Form Layout */
-        .wallet-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        
-        input { 
-            padding: 12px 15px; border-radius: 10px; border: 2px solid #e2e8f0; 
-            font-size: 0.9rem; outline: none; transition: 0.3s; width: 100%;
-        }
-        input:focus { border-color: #ff8c00; }
+        /* Form */
+        .wallet-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
+        input { padding: 12px; border-radius: 10px; border: 2px solid #e2e8f0; outline: none; width: 100%; }
+        .btn-update { background: var(--orange-gradient); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 700; cursor: pointer; }
 
-        .btn-update { 
-            background: var(--orange-gradient); color: white; border: none; 
-            padding: 12px 25px; border-radius: 10px; font-weight: 700; cursor: pointer; 
-            box-shadow: 0 5px 15px rgba(255, 69, 0, 0.2); transition: 0.3s; 
-        }
-        .btn-update:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(255, 69, 0, 0.3); }
-
-        /* Table */
+        /* Table UI */
         .table-responsive { width: 100%; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 900px; }
-        th { background: #f8fafc; color: #64748b; padding: 15px; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; }
-        td { padding: 15px; font-size: 0.85rem; border-bottom: 1px solid #f1f5f9; color: var(--deep-blue); }
-        tr:hover { background: #fcfdfe; }
+        table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+        th { background: #f8fafc; color: #64748b; padding: 15px; text-align: left; font-size: 0.7rem; text-transform: uppercase; border-bottom: 2px solid #f1f5f9; }
+        td { padding: 15px; font-size: 0.8rem; border-bottom: 1px solid #f1f5f9; }
 
-        .type-credit { color: var(--success); font-weight: 700; }
-        .type-deduct { color: var(--danger); font-weight: 700; }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; }
+        .bg-purchase { background: #fee2e2; color: #b91c1c; }
+        .bg-topup { background: #dcfce7; color: #15803d; }
+        .bg-admin { background: #e0f2fe; color: #0369a1; }
 
-        .btn-delete { 
-            background: #fee2e2; color: var(--danger); border: none; 
-            padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 0.75rem;
-        }
-
-        .menu-toggle { display: none; font-size: 1.5rem; cursor: pointer; color: var(--deep-blue); }
-
-        footer { margin-left: 260px; padding: 20px; text-align: center; font-size: 0.8rem; color: #94a3b8; border-top: 1px solid #e2e8f0; }
+        .btn-delete { color: var(--danger); cursor: pointer; background: none; border: none; font-size: 1rem; }
+        .menu-toggle { display: none; cursor: pointer; font-size: 1.5rem; }
 
         @media (max-width: 992px) {
             .sidebar { left: -260px; }
             .sidebar.active { left: 0; }
-            header, .container, footer { margin-left: 0; }
+            header, .container { margin-left: 0; }
             .menu-toggle { display: block; }
-            header { padding: 0 20px; }
         }
     </style>
 </head>
@@ -110,70 +86,62 @@
     <ul>
         <li><a href="admin_dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a></li>
         <li><a href="users.html"><i class="fas fa-users"></i> User Management</a></li>
-        <li><a href="orders.html"><i class="fas fa-shopping-cart"></i> All Orders</a></li>
         <li><a href="wallet.html" class="active"><i class="fas fa-wallet"></i> Wallet Control</a></li>
     </ul>
 </aside>
 
 <header>
     <div class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></div>
-    <div style="font-weight: 800; color: var(--deep-blue);">WALLET MANAGEMENT</div>
-    <div class="status-item">Admin: <span id="adminEmail">Loading...</span></div>
+    <div style="font-weight: 800;">GLOBAL FINANCIAL LEDGER</div>
+    <div class="status-item">Admin: <span id="adminEmail">...</span></div>
 </header>
 
 <div class="container">
     <div class="status-bar">
-        <div class="status-item">System Status: <span style="color: #10b981;">● Online</span></div>
-        <div class="status-item">Admin Privileges: <span id="adminStatus" style="color:var(--primary-blue)">Master Admin</span></div>
+        <div class="status-item">System Status: <span style="color: var(--success);">● LIVE</span></div>
+        <div class="status-item">Data Sync: <span id="syncStatus">Connected</span></div>
     </div>
 
     <div class="card">
-        <h3><i class="fas fa-pen-to-square"></i> Modify User Balance</h3>
-        <form id="walletForm">
-            <div class="wallet-grid">
-                <input type="text" id="userUid" placeholder="Paste User UID here" required>
-                <input type="number" id="creditAmount" placeholder="Amount to Add (₵)" step="0.01">
-                <input type="number" id="deductAmount" placeholder="Amount to Deduct (₵)" step="0.01">
-                <button type="submit" class="btn-update">Update Wallet</button>
-            </div>
+        <h3><i class="fas fa-university"></i> Adjust User Balance</h3>
+        <form id="walletForm" class="wallet-grid">
+            <input type="text" id="userUid" placeholder="Enter User UID" required>
+            <input type="number" id="creditAmount" placeholder="Credit (₵)" step="0.01">
+            <input type="number" id="deductAmount" placeholder="Deduct (₵)" step="0.01">
+            <button type="submit" class="btn-update">Update & Log</button>
         </form>
     </div>
 
     <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
-            <h3 style="margin-bottom: 0;"><i class="fas fa-history"></i> Global Transaction Logs</h3>
-            <input type="text" id="searchUser" placeholder="Search by Email or UID..." style="max-width: 300px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h3><i class="fas fa-list-ul"></i> Comprehensive Transaction History</h3>
+            <input type="text" id="searchLog" placeholder="Search Email/UID/Ref..." style="max-width:250px;">
         </div>
-
         <div class="table-responsive">
-            <table id="walletTable">
+            <table>
                 <thead>
                     <tr>
-                        <th>User UID</th>
-                        <th>Email</th>
-                        <th>Type</th>
-                        <th>Amount (₵)</th>
-                        <th>Balance After (₵)</th>
+                        <th>Source</th>
+                        <th>User Email</th>
+                        <th>Reference</th>
+                        <th>Amount</th>
+                        <th>New Bal</th>
                         <th>Date & Time</th>
                         <th>Action</th>
                     </tr>
                 </thead>
-                <tbody id="txBody">
-                    <tr><td colspan="7" style="text-align: center; padding: 40px;">Establishing secure connection...</td></tr>
+                <tbody id="masterLogBody">
+                    <tr><td colspan="7" style="text-align:center; padding:50px;"><i class="fas fa-spinner fa-spin"></i> Merging database streams...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
 
-<footer>
-    <p>© 2026 GIGANTIC DATA HUB ADMIN CONTROL. All rights reserved.</p>
-</footer>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { getDatabase, ref, onValue, update, push, remove, get } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { getDatabase, ref, onValue, update, push, remove, query, limitToLast } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
@@ -187,128 +155,109 @@ const db = getDatabase(app);
 const auth = getAuth(app);
 
 const ADMIN_EMAIL = "alenacloft0@gmail.com";
-const txBody = document.getElementById("txBody");
-const searchUser = document.getElementById("searchUser");
+let usersData = {};
+let masterLogs = [];
 
-let usersList = [];
-let transactionsList = [];
-
-// Sidebar Toggle
-document.getElementById("menuToggle").addEventListener("click", () => {
-    document.getElementById("sidebar").classList.toggle("active");
-});
-
-onAuthStateChanged(auth, async user => {
-    if (!user || user.email !== ADMIN_EMAIL) {
+onAuthStateChanged(auth, user => {
+    if (user && user.email === ADMIN_EMAIL) {
+        document.getElementById("adminEmail").textContent = user.email;
+        loadGlobalData();
+    } else {
         window.location.href = "login.html";
-        return;
     }
-    document.getElementById("adminEmail").textContent = user.email;
-    initDataLoad();
 });
 
-function initDataLoad() {
-    // Sync Users for UID verification
-    onValue(ref(db, 'users'), snapshot => {
-        const data = snapshot.val();
-        usersList = data ? Object.entries(data).map(([uid, u]) => ({ uid, ...u })) : [];
-    });
+function loadGlobalData() {
+    // 1. Fetch Users (for Email mapping)
+    onValue(ref(db, 'users'), snap => { usersData = snap.val() || {}; });
 
-    // Sync Global Transactions
-    onValue(ref(db, 'transactions'), snapshot => {
-        const data = snapshot.val();
-        transactionsList = data ? Object.entries(data).map(([id, t]) => ({ id, ...t })) : [];
-        transactionsList.sort((a, b) => b.date - a.date);
-        renderLogs(searchUser.value);
+    // 2. Multi-Stream Sync
+    const txRef = ref(db, 'transactions'); // Admin & Purchases
+    const topupRef = ref(db, 'topupNotes'); // Paystack / Manual Deposits
+
+    onValue(txRef, (txSnap) => {
+        onValue(topupRef, (topSnap) => {
+            const txs = txSnap.exists() ? Object.entries(txSnap.val()).map(([id, v]) => ({ id, ...v, ts: v.date || v.timestamp, src: v.type === 'Credit' || v.type === 'Deduct' ? 'ADMIN' : 'PURCHASE' })) : [];
+            
+            let tops = [];
+            if(topSnap.exists()){
+                Object.entries(topSnap.val()).forEach(([uid, notes]) => {
+                    Object.entries(notes).forEach(([id, v]) => {
+                        tops.push({ id, ...v, uid, ts: v.timestamp, src: 'TOPUP', email: usersData[uid]?.email || 'Unknown' });
+                    });
+                });
+            }
+
+            masterLogs = [...txs, ...tops].sort((a, b) => b.ts - a.ts);
+            renderTable(document.getElementById('searchLog').value);
+        });
     });
 }
 
-function renderLogs(query = "") {
-    txBody.innerHTML = "";
-    const filtered = transactionsList.filter(t => 
-        (t.email && t.email.toLowerCase().includes(query.toLowerCase())) || 
-        (t.uid && t.uid.includes(query))
+function renderTable(filter = "") {
+    const tbody = document.getElementById("masterLogBody");
+    tbody.innerHTML = "";
+    
+    const filtered = masterLogs.filter(l => 
+        (l.email && l.email.toLowerCase().includes(filter.toLowerCase())) || 
+        (l.uid && l.uid.includes(filter)) || 
+        (l.id && l.id.includes(filter))
     );
 
-    if (filtered.length === 0) {
-        txBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:#94a3b8;">No transaction records match your search.</td></tr>';
-        return;
-    }
+    filtered.forEach(log => {
+        const badgeClass = log.src === 'PURCHASE' ? 'bg-purchase' : (log.src === 'TOPUP' ? 'bg-topup' : 'bg-admin');
+        const userEmail = log.email || usersData[log.uid]?.email || 'Unknown';
+        const displayRef = log.id.substring(0,10) + (log.reference ? ` (${log.reference.substring(0,5)})` : '');
 
-    filtered.forEach(tx => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-            <td style="font-family: monospace; font-size: 0.7rem; color: #64748b;">${tx.uid}</td>
-            <td style="font-weight: 700;">${tx.email || 'System User'}</td>
-            <td><span class="type-${tx.type.toLowerCase()}">${tx.type.toUpperCase()}</span></td>
-            <td style="font-weight: 800;">₵${parseFloat(tx.amount || 0).toFixed(2)}</td>
-            <td style="font-weight: 800; color: var(--deep-blue);">₵${parseFloat(tx.newBalance || 0).toFixed(2)}</td>
-            <td style="font-size: 0.8rem; color: #64748b;">${new Date(tx.date).toLocaleString()}</td>
-            <td><button class="btn-delete" onclick="removeLog('${tx.id}')"><i class="fas fa-trash"></i></button></td>
+            <td><span class="badge ${badgeClass}">${log.src}</span></td>
+            <td><b>${userEmail}</b><br><small style="color:#94a3b8; font-size:9px;">${log.uid || '---'}</small></td>
+            <td style="font-family:monospace; font-size:10px;">${displayRef}</td>
+            <td style="font-weight:700; color:${log.src === 'PURCHASE' ? '#ef4444' : '#10b981'};">
+                ${log.src === 'PURCHASE' ? '-' : '+'}₵${parseFloat(log.amount || 0).toFixed(2)}
+            </td>
+            <td style="font-weight:700;">₵${parseFloat(log.newBalance || 0).toFixed(2)}</td>
+            <td style="font-size:11px; color:#64748b;">${new Date(log.ts).toLocaleString()}</td>
+            <td><button class="btn-delete" onclick="deleteEntry('${log.id}', '${log.src}', '${log.uid}')"><i class="fas fa-trash"></i></button></td>
         `;
-        txBody.appendChild(tr);
+        tbody.appendChild(tr);
     });
 }
 
-window.removeLog = function(id) {
-    if (confirm("Delete this log permanently? This will not revert the user's balance.")) {
-        remove(ref(db, `transactions/${id}`));
-    }
-}
+window.deleteEntry = (id, src, uid) => {
+    if(!confirm("Permanently delete this financial log?")) return;
+    let path = src === 'TOPUP' ? `topupNotes/${uid}/${id}` : `transactions/${id}`;
+    remove(ref(db, path)).then(() => alert("Entry removed."));
+};
 
-// Wallet Update Logic
-const walletForm = document.getElementById("walletForm");
-walletForm.addEventListener("submit", async e => {
+document.getElementById('walletForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const uid = document.getElementById("userUid").value.trim();
-    const credit = parseFloat(document.getElementById("creditAmount").value) || 0;
-    const deduct = parseFloat(document.getElementById("deductAmount").value) || 0;
+    const uid = document.getElementById('userUid').value.trim();
+    const credit = parseFloat(document.getElementById('creditAmount').value) || 0;
+    const deduct = parseFloat(document.getElementById('deductAmount').value) || 0;
 
-    const user = usersList.find(u => u.uid === uid);
-    if (!user) {
-        alert("CRITICAL ERROR: UID does not exist in the database.");
-        return;
-    }
+    if(!usersData[uid]) return alert("UID not found!");
 
-    const currentBal = parseFloat(user.wallet || 0);
-    let finalBal = currentBal + credit - deduct;
-    if (finalBal < 0) finalBal = 0;
+    const currentBal = parseFloat(usersData[uid].wallet || 0);
+    const newBal = Math.max(0, currentBal + credit - deduct);
 
-    try {
-        // 1. Update User Wallet
-        await update(ref(db, `users/${uid}`), { wallet: finalBal });
+    await update(ref(db, `users/${uid}`), { wallet: newBal });
+    
+    const type = credit > 0 ? 'Credit' : 'Deduct';
+    const amount = credit > 0 ? credit : deduct;
 
-        // 2. Generate Transaction Log
-        if (credit > 0) {
-            push(ref(db, 'transactions'), {
-                uid: uid,
-                email: user.email,
-                type: "Credit",
-                amount: credit,
-                newBalance: finalBal,
-                date: Date.now()
-            });
-        }
-        if (deduct > 0) {
-            push(ref(db, 'transactions'), {
-                uid: uid,
-                email: user.email,
-                type: "Deduct",
-                amount: deduct,
-                newBalance: finalBal,
-                date: Date.now()
-            });
-        }
+    push(ref(db, 'transactions'), {
+        uid, email: usersData[uid].email, type, amount, newBalance: newBal, date: Date.now()
+    });
 
-        walletForm.reset();
-        alert(`SUCCESS: ₵${(credit || deduct).toFixed(2)} processed for ${user.fullname}`);
-    } catch (err) {
-        alert("DATABASE ERROR: " + err.message);
-    }
+    document.getElementById('walletForm').reset();
+    alert("Wallet synchronized successfully.");
 });
 
-searchUser.addEventListener("input", e => renderLogs(e.target.value));
-</script>
+document.getElementById('searchLog').addEventListener('input', (e) => renderTable(e.target.value));
+document.getElementById('menuToggle').onclick = () => document.getElementById('sidebar').classList.toggle('active');
 
+</script>
 </body>
 </html>
