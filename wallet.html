@@ -106,7 +106,7 @@
 <body>
 
 <aside class="sidebar" id="sidebar">
-    <h2>BLAQDATA HUB</h2>
+    <h2>GIGANTIC ADMIN</h2>
     <ul>
         <li><a href="admin_dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a></li>
         <li><a href="users.html"><i class="fas fa-users"></i> User Management</a></li>
@@ -124,14 +124,14 @@
 <div class="container">
     <div class="status-bar">
         <div class="status-item">System Status: <span style="color: #10b981;">● Online</span></div>
-        <div class="status-item">Admin Role: <span id="adminStatus">Loading...</span></div>
+        <div class="status-item">Admin Privileges: <span id="adminStatus" style="color:var(--primary-blue)">Master Admin</span></div>
     </div>
 
     <div class="card">
         <h3><i class="fas fa-pen-to-square"></i> Modify User Balance</h3>
         <form id="walletForm">
             <div class="wallet-grid">
-                <input type="text" id="userUid" placeholder="Paste User UID here">
+                <input type="text" id="userUid" placeholder="Paste User UID here" required>
                 <input type="number" id="creditAmount" placeholder="Amount to Add (₵)" step="0.01">
                 <input type="number" id="deductAmount" placeholder="Amount to Deduct (₵)" step="0.01">
                 <button type="submit" class="btn-update">Update Wallet</button>
@@ -141,8 +141,8 @@
 
     <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
-            <h3 style="margin-bottom: 0;"><i class="fas fa-history"></i> Recent Transactions</h3>
-            <input type="text" id="searchUser" placeholder="Search by email or UID..." style="max-width: 300px;">
+            <h3 style="margin-bottom: 0;"><i class="fas fa-history"></i> Global Transaction Logs</h3>
+            <input type="text" id="searchUser" placeholder="Search by Email or UID..." style="max-width: 300px;">
         </div>
 
         <div class="table-responsive">
@@ -153,13 +153,13 @@
                         <th>Email</th>
                         <th>Type</th>
                         <th>Amount (₵)</th>
-                        <th>New Balance (₵)</th>
+                        <th>Balance After (₵)</th>
                         <th>Date & Time</th>
                         <th>Action</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr><td colspan="7" style="text-align: center; padding: 40px;">Fetching logs...</td></tr>
+                <tbody id="txBody">
+                    <tr><td colspan="7" style="text-align: center; padding: 40px;">Establishing secure connection...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -167,7 +167,7 @@
 </div>
 
 <footer>
-    <p>© 2025 BLAQDATA HUB ADMIN PANEL. All rights reserved.</p>
+    <p>© 2026 GIGANTIC DATA HUB ADMIN CONTROL. All rights reserved.</p>
 </footer>
 
 <script type="module">
@@ -176,117 +176,138 @@ import { getDatabase, ref, onValue, update, push, remove, get } from "https://ww
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
-  authDomain: "gigantic-data.firebaseapp.com",
-  databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
-  projectId: "gigantic-data",
-  storageBucket: "gigantic-data.firebasestorage.app",
-  messagingSenderId: "727845403550",
-  appId: "1:727845403550:web:e3c3a40ce615aaaca9748f"
+    apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
+    authDomain: "gigantic-data.firebaseapp.com",
+    databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
+    projectId: "gigantic-data"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
 
-// Toggle Sidebar
+const ADMIN_EMAIL = "alenacloft0@gmail.com";
+const txBody = document.getElementById("txBody");
+const searchUser = document.getElementById("searchUser");
+
+let usersList = [];
+let transactionsList = [];
+
+// Sidebar Toggle
 document.getElementById("menuToggle").addEventListener("click", () => {
     document.getElementById("sidebar").classList.toggle("active");
 });
 
-const walletTbody = document.querySelector("#walletTable tbody");
-const searchUser = document.getElementById("searchUser");
-
-let users = [];
-let transactions = [];
-const ADMIN_EMAIL = "alenacloft0@gmail.com";
-
 onAuthStateChanged(auth, async user => {
-  if(!user || user.email !== ADMIN_EMAIL){
-    signOut(auth);
-    window.location.href = "admin_login.html";
-    return;
-  }
-  document.getElementById("adminEmail").textContent = user.email;
-  try {
-    const statusSnap = await get(ref(db, `users/${user.uid}/status`));
-    document.getElementById("adminStatus").textContent = statusSnap.exists() ? statusSnap.val() : "Administrator";
-  } catch { document.getElementById("adminStatus").textContent = "Administrator"; }
-  loadUsers();
+    if (!user || user.email !== ADMIN_EMAIL) {
+        window.location.href = "login.html";
+        return;
+    }
+    document.getElementById("adminEmail").textContent = user.email;
+    initDataLoad();
 });
 
-function loadUsers() {
-  onValue(ref(db, 'users'), snapshot => {
-    const data = snapshot.val();
-    users = data ? Object.entries(data).map(([uid, u]) => ({ uid, ...u })) : [];
-  });
-  onValue(ref(db, 'transactions'), snapshot => {
-    const data = snapshot.val();
-    transactions = data ? Object.entries(data).map(([id, t]) => ({ id, ...t })) : [];
-    transactions.sort((a,b) => b.date - a.date);
-    renderTransactions(searchUser.value);
-  });
-}
+function initDataLoad() {
+    // Sync Users for UID verification
+    onValue(ref(db, 'users'), snapshot => {
+        const data = snapshot.val();
+        usersList = data ? Object.entries(data).map(([uid, u]) => ({ uid, ...u })) : [];
+    });
 
-function renderTransactions(filter="") {
-  walletTbody.innerHTML = "";
-  const filtered = transactions.filter(t => t.email.toLowerCase().includes(filter.toLowerCase()) || t.uid.includes(filter));
-  
-  if(filtered.length === 0) {
-      walletTbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px;">No transaction records found.</td></tr>';
-      return;
-  }
-
-  filtered.forEach(tx=>{
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td style="font-family: monospace; font-size: 0.75rem; color: #94a3b8;">${tx.uid}</td>
-        <td style="font-weight: 600;">${tx.email}</td>
-        <td><span class="type-${tx.type.toLowerCase()}">${tx.type}</span></td>
-        <td style="font-weight: 700;">₵${parseFloat(tx.amount).toFixed(2)}</td>
-        <td style="font-weight: 700; color: var(--deep-blue);">₵${parseFloat(tx.newBalance).toFixed(2)}</td>
-        <td style="color: #64748b;">${new Date(tx.date).toLocaleString()}</td>
-        <td><button class="btn-delete" onclick="deleteTransaction('${tx.id}')">Delete</button></td>
-      `;
-      walletTbody.appendChild(tr);
+    // Sync Global Transactions
+    onValue(ref(db, 'transactions'), snapshot => {
+        const data = snapshot.val();
+        transactionsList = data ? Object.entries(data).map(([id, t]) => ({ id, ...t })) : [];
+        transactionsList.sort((a, b) => b.date - a.date);
+        renderLogs(searchUser.value);
     });
 }
 
-window.deleteTransaction = function(txId){
-  if(confirm("Permanently remove this log? (Doesn't affect wallet balance)")){
-    remove(ref(db, `transactions/${txId}`));
-  }
+function renderLogs(query = "") {
+    txBody.innerHTML = "";
+    const filtered = transactionsList.filter(t => 
+        (t.email && t.email.toLowerCase().includes(query.toLowerCase())) || 
+        (t.uid && t.uid.includes(query))
+    );
+
+    if (filtered.length === 0) {
+        txBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:#94a3b8;">No transaction records match your search.</td></tr>';
+        return;
+    }
+
+    filtered.forEach(tx => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td style="font-family: monospace; font-size: 0.7rem; color: #64748b;">${tx.uid}</td>
+            <td style="font-weight: 700;">${tx.email || 'System User'}</td>
+            <td><span class="type-${tx.type.toLowerCase()}">${tx.type.toUpperCase()}</span></td>
+            <td style="font-weight: 800;">₵${parseFloat(tx.amount || 0).toFixed(2)}</td>
+            <td style="font-weight: 800; color: var(--deep-blue);">₵${parseFloat(tx.newBalance || 0).toFixed(2)}</td>
+            <td style="font-size: 0.8rem; color: #64748b;">${new Date(tx.date).toLocaleString()}</td>
+            <td><button class="btn-delete" onclick="removeLog('${tx.id}')"><i class="fas fa-trash"></i></button></td>
+        `;
+        txBody.appendChild(tr);
+    });
 }
 
+window.removeLog = function(id) {
+    if (confirm("Delete this log permanently? This will not revert the user's balance.")) {
+        remove(ref(db, `transactions/${id}`));
+    }
+}
+
+// Wallet Update Logic
 const walletForm = document.getElementById("walletForm");
-walletForm.addEventListener("submit", async e=>{
-  e.preventDefault();
-  const uid = document.getElementById("userUid").value.trim();
-  const credit = parseFloat(document.getElementById("creditAmount").value) || 0;
-  const deduct = parseFloat(document.getElementById("deductAmount").value) || 0;
+walletForm.addEventListener("submit", async e => {
+    e.preventDefault();
+    const uid = document.getElementById("userUid").value.trim();
+    const credit = parseFloat(document.getElementById("creditAmount").value) || 0;
+    const deduct = parseFloat(document.getElementById("deductAmount").value) || 0;
 
-  if(!uid){ alert("User UID is required!"); return; }
+    const user = usersList.find(u => u.uid === uid);
+    if (!user) {
+        alert("CRITICAL ERROR: UID does not exist in the database.");
+        return;
+    }
 
-  const user = users.find(u => u.uid === uid);
-  if(!user){ alert("User UID not found in system!"); return; }
+    const currentBal = parseFloat(user.wallet || 0);
+    let finalBal = currentBal + credit - deduct;
+    if (finalBal < 0) finalBal = 0;
 
-  let newBalance = parseFloat(user.wallet || 0) + credit - deduct;
-  if(newBalance < 0) newBalance = 0;
+    try {
+        // 1. Update User Wallet
+        await update(ref(db, `users/${uid}`), { wallet: finalBal });
 
-  await update(ref(db, `users/${uid}`), { wallet: newBalance });
+        // 2. Generate Transaction Log
+        if (credit > 0) {
+            push(ref(db, 'transactions'), {
+                uid: uid,
+                email: user.email,
+                type: "Credit",
+                amount: credit,
+                newBalance: finalBal,
+                date: Date.now()
+            });
+        }
+        if (deduct > 0) {
+            push(ref(db, 'transactions'), {
+                uid: uid,
+                email: user.email,
+                type: "Deduct",
+                amount: deduct,
+                newBalance: finalBal,
+                date: Date.now()
+            });
+        }
 
-  if(credit>0){
-    push(ref(db, 'transactions'), { uid: user.uid, email: user.email, type: "Credit", amount: credit, newBalance: newBalance, date: Date.now() });
-  }
-  if(deduct>0){
-    push(ref(db, 'transactions'), { uid: user.uid, email: user.email, type: "Deduct", amount: deduct, newBalance: newBalance, date: Date.now() });
-  }
-
-  walletForm.reset();
-  alert("Wallet updated successfully!");
+        walletForm.reset();
+        alert(`SUCCESS: ₵${(credit || deduct).toFixed(2)} processed for ${user.fullname}`);
+    } catch (err) {
+        alert("DATABASE ERROR: " + err.message);
+    }
 });
 
-searchUser.addEventListener("input", e=> renderTransactions(e.target.value));
+searchUser.addEventListener("input", e => renderLogs(e.target.value));
 </script>
 
 </body>
