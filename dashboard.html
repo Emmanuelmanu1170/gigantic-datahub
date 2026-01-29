@@ -302,7 +302,7 @@
             <div class="balance" id="walletBalance">GH₵ 0.00</div>
             <div style="display:flex; gap:10px;">
                 <a href="topup.html" class="btn btn-white"><i class="fas fa-plus"></i> Top Up</a>
-                <a href="order.html" class="btn btn-orange"><i class="fas fa-wifi"></i> Buy Data</a>
+                <a href="javascript:void(0)" onclick="navigateToOrder()" class="btn btn-orange"><i class="fas fa-wifi"></i> Buy Data</a>
             </div>
         </div>
     </div>
@@ -345,7 +345,7 @@
     </a>
 
     <div class="grid">
-        <a href="order.html" class="grid-item">
+        <a href="javascript:void(0)" onclick="navigateToOrder()" class="grid-item">
             <i class="fas fa-mobile-alt"></i>
             <b>Buy Data</b>
         </a>
@@ -404,6 +404,7 @@
         let rawBalance = 0;
         let currentUserUID = null;
         let isBalanceHidden = localStorage.getItem('balanceHidden') === 'true';
+        let userStatus = "Normal";
 
         // Set initial theme icon
         const savedTheme = localStorage.getItem('theme') || 'light';
@@ -449,6 +450,15 @@
             else { gText.innerText = `Good Evening, ${name} 🌙`; }
         }
 
+        // Logic to redirect based on status
+        window.navigateToOrder = function() {
+            if (userStatus.toLowerCase() === 'agent') {
+                window.location.href = "agent_shop.html";
+            } else {
+                window.location.href = "order.html";
+            }
+        };
+
         onAuthStateChanged(auth, user => {
             if (user) {
                 currentUserUID = user.uid;
@@ -462,13 +472,12 @@
                     renderBalance();
                     updateGreeting(data.fullName ? data.fullName.split(' ')[0] : 'Member');
 
-                    // --- ORDER PAGE AGENT SYNC LOGIC ---
-                    // Ensures that when the user goes to the order page, the system knows they are an agent
-                    const userType = data.userType || "Normal";
-                    localStorage.setItem('currentUserStatus', userType);
+                    // Set user status locally for navigation logic
+                    userStatus = data.userType || data.status || "Normal";
+                    localStorage.setItem('currentUserStatus', userStatus);
 
                     // Hide upgrade box if already an agent
-                    if (userType === 'agent') {
+                    if (userStatus.toLowerCase() === 'agent') {
                         document.getElementById('agentUpgradeBox').style.display = 'none';
                     }
                 });
@@ -515,7 +524,7 @@
                 }).then((result) => {
                     if (result.committed) {
                         alert("Congratulations! Agent Access Activated successfully.");
-                        // Force an immediate local sync
+                        userStatus = 'agent';
                         localStorage.setItem('currentUserStatus', 'agent');
                     } else {
                         alert("Upgrade failed. Please ensure you have sufficient balance.");
