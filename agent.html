@@ -131,7 +131,6 @@
     let allAgents = [];
     let loggedInUserEmail = "";
 
-    // Track logged in user to include their email in the WhatsApp message
     onAuthStateChanged(auth, (user) => {
         if (user) {
             loggedInUserEmail = user.email;
@@ -140,7 +139,6 @@
         }
     });
 
-    // Fetch and filter users who are agents
     onValue(ref(db, 'users'), (snapshot) => {
         const loader = document.getElementById('loader');
         const listDiv = document.getElementById('agentList');
@@ -152,10 +150,13 @@
             return;
         }
 
+        // IMPROVED FILTER: Captures anyone with 'agent' status regardless of capitalization
+        // Checks both status and userType fields to ensure self-activated users show up.
         allAgents = Object.entries(data)
             .filter(([id, u]) => {
-                const status = (u.status || u.userType || "").toLowerCase();
-                return status === 'agent';
+                const s = (u.status || "").toLowerCase();
+                const t = (u.userType || "").toLowerCase();
+                return s === 'agent' || t === 'agent';
             })
             .map(([id, u]) => ({ id, ...u }));
 
@@ -172,12 +173,11 @@
         }
 
         agents.forEach(agent => {
-            const initial = (agent.fullname || agent.fullName || "U").charAt(0).toUpperCase();
+            const initial = (agent.fullname || agent.fullName || agent.fullName || "U").charAt(0).toUpperCase();
             const name = agent.fullname || agent.fullName || "Certified Agent";
             const email = agent.email || "Contact for details";
             const phone = agent.phone || "";
             
-            // Create WhatsApp Link with Logged-In User's Email included in the text
             const message = `Hello Agent ${name}, I am a user on GiganticDataHub (Email: ${loggedInUserEmail}). I would like to purchase data.`;
             const waLink = phone ? `https://wa.me/${phone.replace(/\D/g,'')}?text=${encodeURIComponent(message)}` : `mailto:${email}`;
 
