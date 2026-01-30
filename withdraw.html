@@ -6,7 +6,7 @@
     <title>Withdraw Bonus - Gigantic Data Hub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --primary: #6a5af9; --deep: #0a2a66; --error: #ef4444; --accent: #ff8c00; }
+        :root { --primary: #6a5af9; --deep: #0a2a66; --error: #ef4444; --accent: #ff8c00; --success: #10b981; }
         body { background: #f4f7ff; font-family: 'Segoe UI', sans-serif; margin: 0; color: var(--deep); }
         header { background: var(--deep); color: white; padding: 18px; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; }
         header h3 { margin: 0; font-size: 1.1rem; }
@@ -35,9 +35,13 @@
             font-size: 1rem; margin-top: 10px; transition: 0.3s;
         }
         .btn-withdraw:hover { background: #5649d8; transform: translateY(-2px); }
-        .btn-withdraw:active { transform: translateY(0); }
+        .btn-withdraw:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; }
 
-        /* Top Referrers Styles */
+        /* Status Badge */
+        .status-msg { margin-top: 15px; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 600; display: none; text-align: center; }
+        .msg-success { background: #dcfce7; color: var(--success); display: block; }
+
+        /* Leaderboard */
         .leaderboard { margin-top: 30px; border-top: 1px solid #edf2f7; padding-top: 20px; }
         .leader-title { font-size: 0.9rem; font-weight: 800; display: flex; align-items: center; gap: 8px; margin-bottom: 15px; color: var(--accent); }
         .leader-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f8fafc; }
@@ -50,20 +54,24 @@
 <body>
 
 <header>
-    <a href="dashboard.html" style="color:white; text-decoration:none;"><i class="fas fa-arrow-left"></i></a>
+    <a href="referral.html" style="color:white; text-decoration:none;"><i class="fas fa-arrow-left"></i></a>
     <h3>Withdraw to MoMo</h3>
 </header>
 
 <div class="card">
     <div class="balance-box">
-        <span>Referral Rewards</span>
+        <span>Approved Rewards</span>
         <h2 id="bonusBalance">₵0.00</h2>
+    </div>
+
+    <div id="successNote" class="status-msg msg-success" style="display: none;">
+        <i class="fas fa-check-circle"></i> Request sent! Admin will pay to your MoMo soon.
     </div>
 
     <div class="form-group">
         <label>Withdrawal Amount</label>
         <input type="number" id="withdrawAmt" placeholder="Minimum ₵27.00">
-        <div class="info-note"><i class="fas fa-info-circle"></i> Minimum withdrawal is GH₵ 27.00</div>
+        <div class="info-note"><i class="fas fa-shield-alt"></i> Only Admin-approved bonuses can be withdrawn.</div>
     </div>
 
     <div class="form-group">
@@ -90,7 +98,7 @@
     <div class="leaderboard">
         <div class="leader-title"><i class="fas fa-trophy"></i> Top 5 Referrers</div>
         <div id="leaderList">
-            <p style="font-size: 12px; color: #94a3b8; text-align: center;">Loading leaderboard...</p>
+            <p style="font-size: 12px; color: #94a3b8; text-align: center;">Syncing Hall of Fame...</p>
         </div>
     </div>
 </div>
@@ -98,23 +106,20 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-    import { getDatabase, ref, onValue, push, set, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+    import { getDatabase, ref, onValue, push, set, query, orderByChild, limitToLast, runTransaction } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
         authDomain: "gigantic-data.firebaseapp.com",
         databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
-        projectId: "gigantic-data",
-        storageBucket: "gigantic-data.firebasestorage.app",
-        messagingSenderId: "727845403550",
-        appId: "1:727845403550:web:e3c3a40ce615aaaca9748f"
+        projectId: "gigantic-data"
     };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    let currentBonus = 0;
+    let currentApprovedBonus = 0;
 
     onAuthStateChanged(auth, (user) => {
         if (!user) {
@@ -122,28 +127,32 @@
             return;
         }
 
-        // Real-time listener for referral wallet
+        // SYNC APPROVED BONUS ONLY
+        // This listens to the exact field where admin approves the commission
         onValue(ref(db, `users/${user.uid}`), (snap) => {
-            const data = snap.val();
-            currentBonus = parseFloat(data.referralBonus || 0);
-            document.getElementById('bonusBalance').innerText = "₵" + currentBonus.toFixed(2);
+            const data = snap.val() || {};
+            currentApprovedBonus = parseFloat(data.referralBonus || 0);
+            document.getElementById('bonusBalance').innerText = "₵" + currentApprovedBonus.toFixed(2);
         });
 
-        // Load Top Referrers
-        const topRefQuery = query(ref(db, 'users'), orderByChild('referralCount'), limitToLast(5));
+        // SYNC LEADERBOARD
+        const topRefQuery = query(ref(db, 'users'), orderByChild('referralCount'), limitToLast(10));
         onValue(topRefQuery, (snap) => {
             const list = document.getElementById('leaderList');
             list.innerHTML = "";
             let users = [];
-            snap.forEach(child => { users.push(child.val()); });
+            snap.forEach(child => { 
+                const u = child.val();
+                if(u.referralCount > 0) users.push(u); 
+            });
             users.sort((a,b) => (b.referralCount || 0) - (a.referralCount || 0));
 
             if(users.length === 0) {
-                list.innerHTML = "<p style='font-size:11px; text-align:center; color:#94a3b8;'>No data available.</p>";
+                list.innerHTML = "<p style='font-size:11px; text-align:center; color:#94a3b8;'>No referrals approved yet.</p>";
                 return;
             }
 
-            users.forEach((u, i) => {
+            users.slice(0, 5).forEach((u, i) => {
                 const name = u.fullName || "Member";
                 const row = `
                     <div class="leader-item">
@@ -155,18 +164,20 @@
             });
         });
 
-        document.getElementById('submitBtn').onclick = () => {
+        // WITHDRAWAL PROCESS
+        document.getElementById('submitBtn').onclick = async () => {
             const amt = parseFloat(document.getElementById('withdrawAmt').value);
             const net = document.getElementById('momoNetwork').value;
             const num = document.getElementById('momoNumber').value.trim();
             const name = document.getElementById('momoName').value.trim();
+            const btn = document.getElementById('submitBtn');
             
             if (!amt || amt < 27) { 
-                alert("Minimum withdrawal amount is GH₵ 27.00"); 
+                alert("Minimum withdrawal GH₵ 27.00 required."); 
                 return; 
             }
-            if (amt > currentBonus) { 
-                alert("Insufficient Referral Bonus! You only have GH₵ " + currentBonus.toFixed(2)); 
+            if (amt > currentApprovedBonus) { 
+                alert("Insufficient Approved Balance! Current: GH₵ " + currentApprovedBonus.toFixed(2)); 
                 return; 
             }
             if (num.length < 10 || name === "") {
@@ -174,27 +185,40 @@
                 return;
             }
 
-            if(!confirm(`Withdraw GH₵ ${amt.toFixed(2)} to ${num} (${net})?`)) return;
+            if(!confirm(`Proceed with withdrawal of GH₵ ${amt.toFixed(2)} to ${num}?`)) return;
 
-            const reqRef = push(ref(db, 'withdrawal_requests'));
-            set(reqRef, {
-                uid: user.uid,
-                email: user.email,
-                amount: amt,
-                method: "Mobile Money",
-                network: net,
-                momoNumber: num,
-                accountName: name,
-                status: "Pending",
-                timestamp: Date.now()
-            }).then(() => {
-                alert("Success! Your withdrawal request has been sent to Admin for payment.");
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processing...`;
+
+            try {
+                // Submit request to Admin panel
+                const reqRef = push(ref(db, 'withdrawal_requests'));
+                await set(reqRef, {
+                    uid: user.uid,
+                    email: user.email,
+                    amount: amt,
+                    method: "Mobile Money",
+                    network: net,
+                    momoNumber: num,
+                    accountName: name,
+                    status: "Pending",
+                    timestamp: Date.now()
+                });
+
+                // Clear fields and show success
                 document.getElementById('withdrawAmt').value = "";
                 document.getElementById('momoNumber').value = "";
                 document.getElementById('momoName').value = "";
-            }).catch(err => {
+                document.getElementById('successNote').style.display = "block";
+                
+                alert("Request Successful! Your bonus is being processed by Admin.");
+                
+            } catch (err) {
                 alert("Error: " + err.message);
-            });
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "PROCEED WITHDRAWAL";
+            }
         };
     });
 </script>
