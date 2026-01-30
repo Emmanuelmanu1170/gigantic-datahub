@@ -115,6 +115,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
     import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
@@ -125,8 +126,19 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    const auth = getAuth(app);
 
     let allAgents = [];
+    let loggedInUserEmail = "";
+
+    // Track logged in user to include their email in the WhatsApp message
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            loggedInUserEmail = user.email;
+        } else {
+            window.location.href = "login.html";
+        }
+    });
 
     // Fetch and filter users who are agents
     onValue(ref(db, 'users'), (snapshot) => {
@@ -140,7 +152,6 @@
             return;
         }
 
-        // Filter: Status or UserType must be "Agent"
         allAgents = Object.entries(data)
             .filter(([id, u]) => {
                 const status = (u.status || u.userType || "").toLowerCase();
@@ -164,10 +175,11 @@
             const initial = (agent.fullname || agent.fullName || "U").charAt(0).toUpperCase();
             const name = agent.fullname || agent.fullName || "Certified Agent";
             const email = agent.email || "Contact for details";
-            
-            // Generate WhatsApp link if phone exists, otherwise fallback to a generic message
             const phone = agent.phone || "";
-            const waLink = phone ? `https://wa.me/${phone.replace(/\D/g,'')}?text=Hello%20Agent%20${name},%20I%20want%20to%20buy%20data.` : `mailto:${email}`;
+            
+            // Create WhatsApp Link with Logged-In User's Email included in the text
+            const message = `Hello Agent ${name}, I am a user on GiganticDataHub (Email: ${loggedInUserEmail}). I would like to purchase data.`;
+            const waLink = phone ? `https://wa.me/${phone.replace(/\D/g,'')}?text=${encodeURIComponent(message)}` : `mailto:${email}`;
 
             listDiv.innerHTML += `
                 <div class="agent-card" data-name="${name.toLowerCase()}">
@@ -201,4 +213,3 @@
 </script>
 </body>
 </html>
-Q
