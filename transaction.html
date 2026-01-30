@@ -13,6 +13,7 @@
             --success: #10b981;
             --danger: #ef4444;
             --info: #3b82f6;
+            --purple: #a855f7;
             --card-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
 
@@ -65,6 +66,7 @@
         .icon-purchase { background: #fee2e2; color: var(--danger); }
         .icon-topup { background: #dcfce7; color: var(--success); }
         .icon-bonus { background: #e0f2fe; color: var(--info); }
+        .icon-agent { background: #f3e8ff; color: var(--purple); }
 
         .tx-info { flex: 1; }
         .tx-info h4 { font-size: 0.9rem; font-weight: 700; color: #0f172a; margin-bottom: 2px; }
@@ -95,6 +97,7 @@
     <button class="filter-btn active" onclick="filterLogs('all', this)">All</button>
     <button class="filter-btn" onclick="filterLogs('purchase', this)">Purchases</button>
     <button class="filter-btn" onclick="filterLogs('topup', this)">Deposits</button>
+    <button class="filter-btn" onclick="filterLogs('agent', this)">Agent Upgrades</button>
 </div>
 
 <div class="container">
@@ -139,7 +142,11 @@ function loadData(uid) {
     let txData = [], topData = [];
 
     onValue(txRef, (snap) => {
-        txData = snap.exists() ? Object.entries(snap.val()).map(([id, v]) => ({ id, ...v, ts: v.date, src: 'purchase' })) : [];
+        txData = snap.exists() ? Object.entries(snap.val()).map(([id, v]) => {
+            // DETECT AGENT ACTIVATION: If amount is 45 and it's a deduction
+            let isAgent = parseFloat(v.amount) === 45 && v.type === "Deduct";
+            return { id, ...v, ts: v.date, src: isAgent ? 'agent' : 'purchase' };
+        }) : [];
         combineAndRender(txData, topData);
     });
 
@@ -185,26 +192,39 @@ function render(logs) {
         }
 
         const isPurchase = log.src === 'purchase';
+        const isAgent = log.src === 'agent';
         const isCredit = log.type === "Credit";
         const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
         const card = document.createElement('div');
         card.className = "tx-card";
         
-        let icon = isPurchase ? (isCredit ? 'fa-gift' : 'fa-bolt') : 'fa-wallet';
-        let iconClass = isPurchase ? (isCredit ? 'icon-bonus' : 'icon-purchase') : 'icon-topup';
-        let title = isPurchase ? (isCredit ? 'Referral Bonus' : 'Data Bundle') : 'Wallet Top-up';
-        let amountColor = isPurchase ? (isCredit ? varToHex('--success') : varToHex('--danger')) : varToHex('--info');
+        let icon = 'fa-wallet';
+        let iconClass = 'icon-topup';
+        let title = 'Wallet Top-up';
+        let amountColor = varToHex('--info');
+
+        if(isAgent){
+            icon = 'fa-user-tie';
+            iconClass = 'icon-agent';
+            title = 'Agent Access Activation';
+            amountColor = varToHex('--purple');
+        } else if(isPurchase){
+            icon = isCredit ? 'fa-gift' : 'fa-bolt';
+            iconClass = isCredit ? 'icon-bonus' : 'icon-purchase';
+            title = isCredit ? 'Referral Bonus' : 'Data Bundle';
+            amountColor = isCredit ? varToHex('--success') : varToHex('--danger');
+        }
 
         card.innerHTML = `
             <div class="icon-box ${iconClass}"><i class="fas ${icon}"></i></div>
             <div class="tx-info">
                 <h4>${title}</h4>
-                <p>${time} • <span class="tx-ref" onclick="copyRef('${log.id}')">${isPurchase ? log.id.substring(0,8) : log.reference.substring(0,8)}...</span></p>
+                <p>${time} • <span class="tx-ref" onclick="copyRef('${log.id}')">${log.id.substring(0,8)}...</span></p>
             </div>
             <div class="tx-amount">
-                <span class="amount-val" style="color: ${amountColor}">${!isPurchase || isCredit ? '+' : '-'}₵${parseFloat(log.amount).toFixed(2)}</span>
-                <span class="bal-val">${isPurchase ? 'Bal: ₵'+parseFloat(log.newBalance || 0).toFixed(2) : 'Successful'}</span>
+                <span class="amount-val" style="color: ${amountColor}">${log.src === 'topup' || isCredit ? '+' : '-'}₵${parseFloat(log.amount).toFixed(2)}</span>
+                <span class="bal-val">${log.newBalance ? 'Bal: ₵'+parseFloat(log.newBalance).toFixed(2) : 'Successful'}</span>
             </div>
         `;
         listDiv.appendChild(card);
@@ -215,6 +235,7 @@ function varToHex(v) {
     if(v === '--success') return '#10b981';
     if(v === '--danger') return '#ef4444';
     if(v === '--info') return '#3b82f6';
+    if(v === '--purple') return '#a855f7';
     return '#000';
 }
 
