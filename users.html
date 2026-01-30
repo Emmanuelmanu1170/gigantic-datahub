@@ -1,4 +1,4 @@
-Ui<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -121,9 +121,11 @@ Ui<!DOCTYPE html>
         .btn { padding: 10px 18px; border-radius: 10px; border: none; font-size: 0.8rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-active { background: var(--orange-gradient); color: white; }
+        .btn-mirror { background: #1e293b; color: white; text-decoration: none; transition: 0.3s; }
+        .btn-mirror:hover { background: var(--primary-blue); transform: translateY(-2px); }
 
         .table-responsive { width: 100%; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 1100px; }
+        table { width: 100%; border-collapse: collapse; min-width: 1200px; }
         th { background: #f8fafc; color: #64748b; font-size: 0.75rem; font-weight: 800; padding: 15px; text-align: left; border-bottom: 2px solid #f1f5f9; }
         td { padding: 15px; font-size: 0.85rem; border-bottom: 1px solid #f1f5f9; }
         
@@ -143,6 +145,15 @@ Ui<!DOCTYPE html>
             transition: 0.3s;
         }
         .type-select.agent-mode { background: #dcfce7; border-color: var(--success); color: #047857; }
+
+        .bonus-badge {
+            background: #dcfce7;
+            color: #166534;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 800;
+        }
 
         .popup-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
         .popup { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; }
@@ -177,6 +188,9 @@ Ui<!DOCTYPE html>
 
         <div class="btn-group">
             <button class="btn btn-active" onclick="showActiveUsers()">Online Now</button>
+            <a href="admin_mirror_login.html" class="btn btn-mirror">
+                <i class="fas fa-user-secret"></i> Mirror Login
+            </a>
             <button id="bulkDeleteBtn" class="btn btn-danger" style="display: none;" onclick="bulkDeleteInactive()">
                 <i class="fas fa-trash-can"></i> Wipe All Inactive
             </button>
@@ -191,6 +205,7 @@ Ui<!DOCTYPE html>
                     <th>UID</th>
                     <th>Full Name</th>
                     <th>Email</th>
+                    <th>Referral Bonus</th>
                     <th>Wallet</th>
                     <th>Access Type</th>
                     <th>Last Active</th>
@@ -198,7 +213,7 @@ Ui<!DOCTYPE html>
                 </tr>
             </thead>
             <tbody id="usersBody">
-                <tr><td colspan="8" style="text-align:center;">Loading database...</td></tr>
+                <tr><td colspan="9" style="text-align:center;">Loading database...</td></tr>
             </tbody>
         </table>
     </div>
@@ -230,23 +245,37 @@ Ui<!DOCTYPE html>
 
     const tbody = document.getElementById("usersBody");
     let allUsers = {};
+    let allTransactions = [];
 
     onAuthStateChanged(auth, user => {
         if(user && user.email === "alenacloft0@gmail.com"){
             document.getElementById("adminEmail").textContent = user.email;
-            fetchUsers();
+            fetchData();
         } else {
             window.location.href = "login.html";
         }
     });
 
-    function fetchUsers() {
-        onValue(ref(db, "users"), snap => {
-            if(!snap.exists()) return;
-            allUsers = snap.val();
-            renderTable(allUsers);
-            document.getElementById("userStats").textContent = `Total Users: ${Object.keys(allUsers).length}`;
+    function fetchData() {
+        // Sync transactions first to calculate bonuses
+        onValue(ref(db, "transactions"), tSnap => {
+            allTransactions = tSnap.exists() ? Object.values(tSnap.val()) : [];
+            
+            // Then fetch users
+            onValue(ref(db, "users"), snap => {
+                if(!snap.exists()) return;
+                allUsers = snap.val();
+                renderTable(allUsers);
+                document.getElementById("userStats").textContent = `Total Users: ${Object.keys(allUsers).length}`;
+            });
         });
+    }
+
+    function calculateReferralBonus(uid) {
+        // Filters transactions for this UID that are labeled as BONUSES
+        return allTransactions
+            .filter(t => t.uid === uid && (t.type === "Credit" && (t.info || "").toLowerCase().includes("bonus")))
+            .reduce((sum, t) => sum + Number(t.amount || 0), 0);
     }
 
     function renderTable(data) {
@@ -258,11 +287,11 @@ Ui<!DOCTYPE html>
         Object.entries(data).forEach(([uid, u]) => {
             const lastActive = u.lastActive || 0;
             const isInactive = (now - lastActive) > thirtyDays;
-            
-            // Logic to determine Agent status for Dashboard relationship
-            // This reads the exact same fields the dashboard looks for
             const currentStatus = (u.status || u.userType || "Normal").toLowerCase();
             const isAgent = currentStatus === 'agent';
+            
+            // Calculate actual bonus from transaction history
+            const refBonus = calculateReferralBonus(uid);
             
             const tr = document.createElement("tr");
             tr.className = isInactive ? "inactive-row" : "";
@@ -274,7 +303,8 @@ Ui<!DOCTYPE html>
                 <td class="uid-cell" onclick="navigator.clipboard.writeText('${uid}'); alert('UID Copied')">${uid.substring(0,6)}..</td>
                 <td><b>${u.fullname || "N/A"}</b></td>
                 <td>${u.email}</td>
-                <td>₵${Number(u.wallet || 0).toFixed(2)}</td>
+                <td><span class="bonus-badge">₵${refBonus.toFixed(2)}</span></td>
+                <td><b>₵${Number(u.wallet || 0).toFixed(2)}</b></td>
                 <td>
                     <select class="type-select ${isAgent ? 'agent-mode' : ''}" onchange="toggleUserType('${uid}', this.value)">
                         <option value="Normal" ${!isAgent ? 'selected' : ''}>Normal User</option>
@@ -293,18 +323,13 @@ Ui<!DOCTYPE html>
         filterUsers();
     }
 
-    // UPDATED FUNCTION: Updates both status and userType for full synchronization
-    // This function ensures the dashboard 'figures out' the user is an agent instantly
     window.toggleUserType = function(uid, newType) {
         const updates = {
-            status: newType, // Dashboard uses this
-            userType: newType.toLowerCase() // Dashboard and analytics use this
+            status: newType,
+            userType: newType.toLowerCase()
         };
 
         update(ref(db, `users/${uid}`), updates)
-        .then(() => {
-            console.log(`User ${uid} successfully switched to ${newType}`);
-        })
         .catch(err => alert("Sync Error: " + err.message));
     };
 
@@ -358,28 +383,6 @@ Ui<!DOCTYPE html>
     };
 
 </script>
-<a href="admin_mirror_login.html" class="btn btn-mirror">
-    <i class="fas fa-user-secret"></i> Mirror Login
-</a>
-
-<style>
-    .btn-mirror {
-        background: #1e293b; /* Deep slate color for a secure feel */
-        color: white;
-        text-decoration: none;
-        transition: 0.3s;
-    }
-    .btn-mirror:hover {
-        background: var(--primary-blue);
-        transform: translateY(-2px);
-    }
-</style>
-
-<a href="agent.html" class="grid-item agent-link">
-    <div class="agent-badge-mini">VERIFIED</div>
-    <i class="fas fa-user-tie"></i>
-    <b>Agents</b>
-</a>
 
 </body>
 </html>
