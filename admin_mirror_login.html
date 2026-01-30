@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Mirror Login — GiganticDataHub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #003366;
+            --accent: #ff8c00;
+            --bg: #f4f7fe;
+            --white: #ffffff;
+            --text: #1e293b;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .login-card {
+            background: var(--white);
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .icon-box {
+            width: 70px;
+            height: 70px;
+            background: #e0f2fe;
+            color: var(--primary);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            margin: 0 auto 20px;
+        }
+
+        h2 { color: var(--primary); margin-bottom: 10px; font-weight: 800; }
+        p { color: #64748b; font-size: 14px; margin-bottom: 30px; }
+
+        .input-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; font-size: 12px; font-weight: 700; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; }
+        
+        input {
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            outline: none;
+            font-size: 14px;
+            font-family: monospace;
+            box-sizing: border-box;
+            transition: 0.3s;
+        }
+
+        input:focus { border-color: var(--accent); }
+
+        .btn-mirror {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #ff8c00 0%, #ff4500 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 15px;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(255, 69, 0, 0.2);
+            transition: 0.3s;
+        }
+
+        .btn-mirror:hover { transform: translateY(-2px); }
+
+        .loader {
+            display: none;
+            margin-top: 15px;
+            color: var(--primary);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .back-link {
+            display: block;
+            margin-top: 25px;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <div class="icon-box"><i class="fas fa-user-secret"></i></div>
+        <h2>Mirror Login</h2>
+        <p>Access any user account instantly via UID.</p>
+
+        <div class="input-group">
+            <label>Target User UID</label>
+            <input type="text" id="targetUid" placeholder="e.g. jf83kL92m0X..." autocomplete="off">
+        </div>
+
+        <button class="btn-mirror" onclick="processMirrorLogin()">Login as User</button>
+        
+        <div id="statusMsg" class="loader">
+            <i class="fas fa-spinner fa-spin"></i> Authenticating Mirror Session...
+        </div>
+
+        <a href="admin_dashboard.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Admin</a>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
+            authDomain: "gigantic-data.firebaseapp.com",
+            databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
+            projectId: "gigantic-data"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const auth = getAuth(app);
+
+        const ADMIN_EMAIL = "alenacloft0@gmail.com";
+
+        // Security check: Only the master admin can even stay on this page
+        onAuthStateChanged(auth, user => {
+            if (!user || user.email !== ADMIN_EMAIL) {
+                alert("Unauthorized Access!");
+                window.location.href = "login.html";
+            }
+        });
+
+        window.processMirrorLogin = async function() {
+            const uid = document.getElementById('targetUid').value.trim();
+            const msg = document.getElementById('statusMsg');
+
+            if (!uid) {
+                alert("Please enter a valid UID.");
+                return;
+            }
+
+            msg.style.display = "block";
+
+            try {
+                const userRef = ref(db, `users/${uid}`);
+                const snapshot = await get(userRef);
+
+                if (snapshot.exists()) {
+                    const userData = snapshot.val();
+
+                    // --- MIRROR SESSION LOGIC ---
+                    // We save the target user's details into local storage so the dashboard
+                    // and purchase pages recognize you as this user.
+                    
+                    localStorage.setItem('mirrorMode', 'true');
+                    localStorage.setItem('targetUid', uid);
+                    localStorage.setItem('currentUserStatus', userData.status || userData.userType || 'Normal');
+                    
+                    // Note: This does not change the actual Firebase Auth UID, 
+                    // but it tricks your frontend logic to show this user's data.
+                    
+                    setTimeout(() => {
+                        window.location.href = "dashboard.html";
+                    }, 1500);
+
+                } else {
+                    msg.style.display = "none";
+                    alert("User UID not found in database.");
+                }
+            } catch (error) {
+                msg.style.display = "none";
+                alert("Error: " + error.message);
+            }
+        };
+    </script>
+</body>
+</html>
