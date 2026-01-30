@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Directory — GiganticDataHub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #003366;
+            --accent: #ff8c00;
+            --bg: #f4f7fe;
+            --white: #ffffff;
+            --text-main: #1e293b;
+            --text-gray: #64748b;
+            --verified: #10b981;
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', -apple-system, sans-serif; }
+        body { background: var(--bg); color: var(--text-main); padding-bottom: 50px; }
+
+        /* HEADER */
+        header { 
+            background: var(--primary); color: white; padding: 25px 20px; 
+            text-align: center; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        header h1 { font-size: 1.4rem; font-weight: 800; margin-bottom: 5px; }
+        header p { font-size: 0.8rem; opacity: 0.8; }
+
+        .search-container {
+            margin: -25px 20px 20px;
+            background: var(--white);
+            padding: 12px 20px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+        .search-container i { color: var(--text-gray); }
+        .search-container input { border: none; outline: none; width: 100%; font-size: 0.9rem; }
+
+        .container { padding: 0 20px; }
+
+        /* AGENT CARD */
+        .agent-card {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border: 1px solid rgba(0,0,0,0.03);
+            transition: 0.3s;
+        }
+        .agent-avatar {
+            width: 60px;
+            height: 60px;
+            background: #eef2ff;
+            color: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+        .agent-info { flex: 1; }
+        .agent-info h3 { font-size: 1rem; color: var(--primary); margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+        .verified-badge { color: var(--verified); font-size: 0.8rem; }
+        .agent-info p { font-size: 0.8rem; color: var(--text-gray); }
+
+        .contact-btn {
+            background: #25d366;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3);
+        }
+
+        .empty-state { text-align: center; padding: 100px 20px; color: var(--text-gray); }
+        .loader { text-align: center; padding: 50px; color: var(--primary); }
+
+        .back-nav { padding: 15px 20px; display: flex; align-items: center; gap: 10px; color: white; text-decoration: none; font-size: 0.9rem; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<header>
+    <a href="dashboard.html" class="back-nav"><i class="fas fa-chevron-left"></i> Dashboard</a>
+    <h1><i class="fas fa-user-tie"></i> Certified Agents</h1>
+    <p>Find a verified GiganticDataHub merchant near you</p>
+</header>
+
+<div class="search-container">
+    <i class="fas fa-search"></i>
+    <input type="text" id="agentSearch" placeholder="Search by name or email..." onkeyup="filterAgents()">
+</div>
+
+<div class="container">
+    <div id="loader" class="loader">
+        <i class="fas fa-circle-notch fa-spin fa-2x"></i>
+    </div>
+    <div id="agentList"></div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
+        authDomain: "gigantic-data.firebaseapp.com",
+        databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
+        projectId: "gigantic-data"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    let allAgents = [];
+
+    // Fetch and filter users who are agents
+    onValue(ref(db, 'users'), (snapshot) => {
+        const loader = document.getElementById('loader');
+        const listDiv = document.getElementById('agentList');
+        loader.style.display = 'none';
+        
+        const data = snapshot.val();
+        if (!data) {
+            listDiv.innerHTML = `<div class="empty-state"><p>No agents found.</p></div>`;
+            return;
+        }
+
+        // Filter: Status or UserType must be "Agent"
+        allAgents = Object.entries(data)
+            .filter(([id, u]) => {
+                const status = (u.status || u.userType || "").toLowerCase();
+                return status === 'agent';
+            })
+            .map(([id, u]) => ({ id, ...u }));
+
+        renderAgents(allAgents);
+    });
+
+    function renderAgents(agents) {
+        const listDiv = document.getElementById('agentList');
+        listDiv.innerHTML = "";
+
+        if (agents.length === 0) {
+            listDiv.innerHTML = `<div class="empty-state"><i class="fas fa-users-slash fa-3x" style="opacity:0.2; margin-bottom:15px; display:block;"></i><p>No verified agents available yet.</p></div>`;
+            return;
+        }
+
+        agents.forEach(agent => {
+            const initial = (agent.fullname || agent.fullName || "U").charAt(0).toUpperCase();
+            const name = agent.fullname || agent.fullName || "Certified Agent";
+            const email = agent.email || "Contact for details";
+            
+            // Generate WhatsApp link if phone exists, otherwise fallback to a generic message
+            const phone = agent.phone || "";
+            const waLink = phone ? `https://wa.me/${phone.replace(/\D/g,'')}?text=Hello%20Agent%20${name},%20I%20want%20to%20buy%20data.` : `mailto:${email}`;
+
+            listDiv.innerHTML += `
+                <div class="agent-card" data-name="${name.toLowerCase()}">
+                    <div class="agent-avatar">${initial}</div>
+                    <div class="agent-info">
+                        <h3>${name} <i class="fas fa-check-circle verified-badge" title="Verified Merchant"></i></h3>
+                        <p><i class="fas fa-envelope"></i> ${email}</p>
+                        <p><i class="fas fa-id-badge"></i> Certified Vendor</p>
+                    </div>
+                    <a href="${waLink}" target="_blank" class="contact-btn">
+                        <i class="fab fa-whatsapp"></i>
+                    </a>
+                </div>
+            `;
+        });
+    }
+
+    window.filterAgents = () => {
+        const query = document.getElementById('agentSearch').value.toLowerCase();
+        const cards = document.querySelectorAll('.agent-card');
+        
+        cards.forEach(card => {
+            const name = card.getAttribute('data-name');
+            if (name.includes(query)) {
+                card.style.display = "flex";
+            } else {
+                card.style.display = "none";
+            }
+        });
+    }
+</script>
+</body>
+</html>
