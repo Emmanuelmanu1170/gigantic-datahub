@@ -20,181 +20,65 @@
         }
         
         * { margin:0; padding:0; box-sizing:border-box; font-family:"Poppins", sans-serif; }
-        
         body { background: var(--bg); color: var(--deep); padding-bottom: 50px; }
         
         header { 
-            background: var(--deep); 
-            color: #fff; 
-            padding: 18px 5%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between; 
-            position: sticky; 
-            top: 0; 
-            z-index: 100;
+            background: var(--deep); color: #fff; padding: 18px 5%; 
+            display: flex; align-items: center; justify-content: space-between; 
+            position: sticky; top: 0; z-index: 100;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
         .container { padding: 25px 5%; max-width: 1100px; margin: auto; }
         
-        /* ADMIN CARDS */
         .admin-card { 
-            background: var(--white); 
-            padding: 25px; 
-            border-radius: 20px; 
-            margin-bottom: 30px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.03); 
+            background: var(--white); padding: 25px; border-radius: 20px; 
+            margin-bottom: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.03); 
             border: 1px solid #e2e8f0;
         }
         
         .card-title { font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; color: var(--primary); font-size: 1.1rem; }
         
         .input-group { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-        
-        input { 
-            padding: 14px; 
-            border: 2px solid #f1f5f9; 
-            border-radius: 12px; 
-            outline: none; 
-            width: 100%; 
-            font-size: 0.9rem;
-            transition: 0.3s;
-            background: #f8fafc;
-        }
-        
+        input { padding: 14px; border: 2px solid #f1f5f9; border-radius: 12px; outline: none; width: 100%; font-size: 0.9rem; transition: 0.3s; background: #f8fafc; }
         input:focus { border-color: var(--primary); background: var(--white); }
         
         .btn-row { display: flex; gap: 12px; }
-        
-        .btn-sm { 
-            flex: 1; 
-            padding: 14px; 
-            border: none; 
-            border-radius: 12px; 
-            font-weight: 700; 
-            cursor: pointer; 
-            color: white; 
-            transition: 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            text-transform: uppercase;
-            font-size: 0.8rem;
-        }
-        
-        .btn-sm:hover { filter: brightness(1.1); transform: translateY(-2px); }
+        .btn-sm { flex: 1; padding: 14px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; color: white; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; text-transform: uppercase; font-size: 0.8rem; }
         .bg-success { background: var(--success); }
         .bg-danger { background: var(--danger); }
 
-        /* LEADERBOARD STYLES */
-        .leader-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 15px;
-            background: #f8fafc;
-            border-radius: 12px;
-            margin-bottom: 8px;
-            border: 1px solid #f1f5f9;
-        }
-        .leader-info { display: flex; align-items: center; gap: 12px; }
-        .rank-circle {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background: var(--deep);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.8rem;
-            font-weight: 700;
-        }
+        .leader-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; background: #f8fafc; border-radius: 12px; margin-bottom: 8px; border: 1px solid #f1f5f9; }
+        .rank-circle { width: 30px; height: 30px; border-radius: 50%; background: var(--deep); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; }
         .top-1 { background: var(--gold); }
-        .leader-email { font-size: 0.85rem; font-weight: 600; }
         .leader-count { background: var(--primary); color: white; padding: 2px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
 
-        /* STATS */
-        .stat-bar { 
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .stat-item { 
-            background: var(--white); 
-            padding: 20px; 
-            border-radius: 20px; 
-            text-align: center; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
-            border: 1px solid #e2e8f0;
-        }
-        
+        .stat-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+        .stat-item { background: var(--white); padding: 20px; border-radius: 20px; text-align: center; border: 1px solid #e2e8f0; }
         .stat-item label { display: block; font-size: 0.7rem; color: #64748b; font-weight: 800; text-transform: uppercase; margin-bottom: 5px; }
         .stat-item span { font-size: 1.6rem; font-weight: 800; color: var(--deep); }
 
-        /* REQUEST CARDS */
-        .request-card { 
-            background: var(--white); 
-            border-radius: 20px; 
-            padding: 20px; 
-            margin-bottom: 15px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03); 
-            border: 1px solid #e2e8f0;
-            border-left: 6px solid var(--orange);
-        }
-        
+        .request-card { background: var(--white); border-radius: 20px; padding: 20px; margin-bottom: 15px; border: 1px solid #e2e8f0; border-left: 6px solid var(--orange); }
         .reg-highlight { border-left-color: var(--teal); background: #f0fdfa; }
 
         .request-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        
         .user-details b { display: block; font-size: 0.95rem; color: var(--deep); }
-        .user-details span { font-size: 0.75rem; color: #64748b; font-weight: 500; }
-        .uid-tag { font-size: 10px; background: #eee; padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block; color: #666; font-family: monospace; }
+        .enjoyer-text { font-size: 11px; color: var(--primary); font-weight: 700; margin-top: 5px; display: block; }
         
-        .amount-circle { 
-            background: #fff; 
-            color: var(--orange); 
-            height: 55px; 
-            width: 100px; 
-            border-radius: 15px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-weight: 800; 
-            font-size: 1.2rem; 
-            border: 2px solid #fff3e0; 
-        }
-        
+        .uid-container { display: flex; align-items: center; gap: 8px; margin-top: 5px; }
+        .uid-tag { font-size: 10px; background: #eee; padding: 4px 8px; border-radius: 4px; color: #666; font-family: monospace; }
+        .copy-icon { cursor: pointer; color: var(--primary); font-size: 12px; }
+
+        .amount-circle { background: #fff; color: var(--orange); height: 55px; width: 100px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem; border: 2px solid #fff3e0; }
         .reg-amount { color: var(--teal); border-color: #ccfbf1; }
         
         .momo-box { background: rgba(0,0,0,0.02); padding: 12px; border-radius: 12px; font-size: 0.8rem; margin-bottom: 15px; border: 1px solid rgba(0,0,0,0.03); }
-        .momo-box b { color: var(--deep); }
+        .btn { flex: 1; border: none; padding: 12px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 0.75rem; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .btn-approve { background: var(--success); color: white; width: 100%; margin-bottom: 8px;}
+        .btn-reject { background: #fee2e2; color: var(--danger); width: 100%;}
 
-        .btn { 
-            flex: 1; border: none; padding: 12px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 0.75rem; text-transform: uppercase;
-        }
-        
-        .btn-approve { background: var(--success); color: white; }
-        .btn-reject { background: #fee2e2; color: var(--danger); }
-
-        .section-label { 
-            font-size: 11px; 
-            font-weight: 800; 
-            color: #64748b; 
-            text-transform: uppercase; 
-            margin: 35px 0 15px; 
-            letter-spacing: 1.5px; 
-            display: flex; 
-            align-items: center; 
-            gap: 10px; 
-        }
-        
+        .section-label { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin: 35px 0 15px; letter-spacing: 1.5px; display: flex; align-items: center; gap: 10px; }
         .section-label::after { content: ""; height: 2px; flex: 1; background: #e2e8f0; }
-        
         .empty-msg { text-align: center; padding: 50px; color: #94a3b8; font-size: 0.85rem; }
     </style>
 </head>
@@ -212,9 +96,7 @@
 
     <div class="admin-card">
         <div class="card-title"><i class="fas fa-crown" style="color:var(--gold)"></i> Hall of Fame (Top 5 Referrers)</div>
-        <div id="topReferrersList">
-            <div class="empty-msg">Loading leaderboard...</div>
-        </div>
+        <div id="topReferrersList"><div class="empty-msg">Loading leaderboard...</div></div>
     </div>
     
     <div class="admin-card">
@@ -230,40 +112,27 @@
     </div>
 
     <div class="stat-bar">
-        <div class="stat-item">
-            <label>Pending Requests</label>
-            <span id="countBox">0</span>
-        </div>
-        <div class="stat-item">
-            <label>Total Value</label>
-            <span id="totalBox">₵0.00</span>
-        </div>
+        <div class="stat-item"><label>Pending Requests</label><span id="countBox">0</span></div>
+        <div class="stat-item"><label>Total Value</label><span id="totalBox">₵0.00</span></div>
     </div>
 
     <div class="section-label"><i class="fas fa-user-plus" style="color:var(--teal)"></i> Registration Rewards (Auto-Credit)</div>
-    <div id="registrationPayoutList">
-        <div class="empty-msg">No pending registration rewards.</div>
-    </div>
+    <div id="registrationPayoutList"><div class="empty-msg">No pending registration rewards.</div></div>
 
     <div class="section-label"><i class="fas fa-wallet" style="color:var(--orange)"></i> Manual Cash Withdrawals</div>
-    <div id="payoutList">
-        <div class="empty-msg">Loading requests...</div>
-    </div>
+    <div id="payoutList"><div class="empty-msg">Loading requests...</div></div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-    import { getDatabase, ref, onValue, update, get, remove, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+    import { getDatabase, ref, onValue, update, get, remove } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
         authDomain: "gigantic-data.firebaseapp.com",
         databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
-        projectId: "gigantic-data",
-        storageBucket: "gigantic-data.firebasestorage.app",
-        messagingSenderId: "727845403550",
-        appId: "1:727845403550:web:e3c3a40ce615aaaca9748f"
+        projectId: "gigantic-data"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -276,136 +145,101 @@
             return;
         }
         
-        // 1. TOP REFERRERS LOGIC
         onValue(ref(db, 'users'), (snapshot) => {
             const leaderboard = document.getElementById('topReferrersList');
             const data = snapshot.val();
             if (!data) return;
-
             const sortedUsers = Object.entries(data)
                 .map(([uid, val]) => ({ uid, ...val }))
                 .filter(u => u.referralCount > 0)
                 .sort((a, b) => b.referralCount - a.referralCount)
                 .slice(0, 5);
-
-            if (sortedUsers.length === 0) {
-                leaderboard.innerHTML = `<div class="empty-msg">No referrals yet.</div>`;
-                return;
-            }
-
             let leaderHtml = "";
             sortedUsers.forEach((user, index) => {
-                leaderHtml += `
-                    <div class="leader-item">
-                        <div class="leader-info">
-                            <div class="rank-circle ${index === 0 ? 'top-1' : ''}">${index + 1}</div>
-                            <span class="leader-email">${user.email}</span>
-                        </div>
-                        <span class="leader-count">${user.referralCount} Refs</span>
-                    </div>
-                `;
+                leaderHtml += `<div class="leader-item"><div class="leader-info"><div class="rank-circle ${index === 0 ? 'top-1' : ''}">${index+1}</div><span class="leader-email">${user.email}</span></div><span class="leader-count">${user.referralCount} Refs</span></div>`;
             });
-            leaderboard.innerHTML = leaderHtml;
+            leaderboard.innerHTML = leaderHtml || `<div class="empty-msg">No referrals yet.</div>`;
         });
 
-        // 2. PAYOUT LIST LOGIC
         onValue(ref(db, 'withdrawal_requests'), (snapshot) => {
             const standardContainer = document.getElementById('payoutList');
             const regContainer = document.getElementById('registrationPayoutList');
             const data = snapshot.val();
-            
             if (!data) {
                 standardContainer.innerHTML = `<div class="empty-msg">No pending withdrawals.</div>`;
-                regContainer.innerHTML = `<div class="empty-msg">No pending registration rewards.</div>`;
+                regContainer.innerHTML = `<div class="empty-msg">No pending rewards.</div>`;
                 document.getElementById('countBox').innerText = "0";
                 document.getElementById('totalBox').innerText = "₵0.00";
                 return;
             }
-
             let standardHtml = ""; let regHtml = ""; let totalSum = 0; let count = 0;
-
             Object.entries(data).sort((a,b) => b[1].timestamp - a[1].timestamp).forEach(([id, req]) => {
-                count++;
-                totalSum += parseFloat(req.amount);
+                count++; totalSum += parseFloat(req.amount);
                 const isReg = req.network === "Referral Bonus";
-                const time = new Date(req.timestamp).toLocaleString();
-                
                 const card = `
                     <div class="request-card ${isReg ? 'reg-highlight' : ''}">
                         <div class="request-flex">
                             <div class="user-details">
                                 <b>${req.email}</b>
-                                <span>Requested: ${time}</span><br>
-                                <div class="uid-tag">ID: ${req.uid}</div>
-                                ${req.note ? `<p style="font-size:10px; color:var(--teal); font-weight:700; margin-top:8px;"><i class="fas fa-info-circle"></i> ${req.note}</p>` : ''}
+                                <span class="enjoyer-text">${req.uid} is going to enjoy the reward</span>
+                                <div class="uid-container">
+                                    <div class="uid-tag">${req.uid}</div>
+                                    <i class="fas fa-copy copy-icon" onclick="copyUid('${req.uid}')"></i>
+                                </div>
                             </div>
                             <div class="amount-circle ${isReg ? 'reg-amount' : ''}">₵${parseFloat(req.amount).toFixed(2)}</div>
                         </div>
-                        <div class="momo-box">
-                            <b>${req.network}</b> | Num: <b>${req.momoNumber}</b> | Name: <b>${req.accountName}</b>
-                        </div>
-                        <div class="actions">
-                            <button class="btn btn-approve" onclick="approveAndCredit('${id}', '${req.uid}', ${req.amount}, ${isReg})">
-                                <i class="fas fa-check-circle"></i> ${isReg ? 'APPROVE & CREDIT' : 'MARK AS PAID'}
-                            </button>
-                            <button class="btn btn-reject" onclick="deleteReq('${id}')"><i class="fas fa-times"></i> REJECT</button>
-                        </div>
+                        <div class="momo-box"><b>${req.network}</b> | Num: <b>${req.momoNumber}</b> | Name: <b>${req.accountName}</b></div>
+                        <button class="btn btn-approve" onclick="approveAndCredit('${id}', '${req.uid}', ${req.amount}, ${isReg})"><i class="fas fa-check-circle"></i> ${isReg ? 'APPROVE & CREDIT' : 'MARK AS PAID'}</button>
+                        <button class="btn btn-reject" onclick="deleteReq('${id}')"><i class="fas fa-times"></i> REJECT</button>
                     </div>`;
-
                 if (isReg) regHtml += card; else standardHtml += card;
             });
-
-            standardContainer.innerHTML = standardHtml || `<div class="empty-msg">No manual withdrawals.</div>`;
-            regContainer.innerHTML = regHtml || `<div class="empty-msg">No registration rewards.</div>`;
+            standardContainer.innerHTML = standardHtml || `<div class="empty-msg">No withdrawals.</div>`;
+            regContainer.innerHTML = regHtml || `<div class="empty-msg">No rewards.</div>`;
             document.getElementById('countBox').innerText = count;
             document.getElementById('totalBox').innerText = "₵" + totalSum.toFixed(2);
         });
     });
 
-    window.approveAndCredit = async (reqId, uid, amount, isReg) => {
-        const actionText = isReg ? "credit this user's balance automatically" : "confirm you have paid this user";
-        if (!confirm(`Are you sure you want to ${actionText}?`)) return;
+    window.copyUid = (uid) => {
+        navigator.clipboard.writeText(uid).then(() => alert("UID Copied!"));
+    };
 
+    window.approveAndCredit = async (reqId, uid, amount, isReg) => {
+        if (!confirm("Confirm this transaction?")) return;
         try {
-            if (isReg) {
-                const userRef = ref(db, `users/${uid}`);
-                const snap = await get(userRef);
-                if (snap.exists()) {
-                    const currentBalance = parseFloat(snap.val().referralBonus || 0);
-                    const currentRefTotal = parseInt(snap.val().referralCount || 0);
-                    await update(userRef, {
-                        referralBonus: parseFloat((currentBalance + amount).toFixed(2)),
-                        referralCount: currentRefTotal + 1
-                    });
-                }
+            const userRef = ref(db, `users/${uid}`);
+            const snap = await get(userRef);
+            if (snap.exists() && isReg) {
+                const curBonus = parseFloat(snap.val().referralBonus || 0);
+                const curCount = parseInt(snap.val().referralCount || 0);
+                await update(userRef, {
+                    referralBonus: parseFloat((curBonus + amount).toFixed(2)),
+                    referralCount: curCount + 1
+                });
             }
             await remove(ref(db, `withdrawal_requests/${reqId}`));
-            alert("Success!");
-        } catch (e) {
-            alert("Error: " + e.message);
-        }
+            alert("Action Successful!");
+        } catch (e) { alert(e.message); }
     };
 
-    window.deleteReq = async (id) => {
-        if (confirm("Delete this request?")) {
-            await remove(ref(db, `withdrawal_requests/${id}`));
-        }
-    };
+    window.deleteReq = (id) => { if (confirm("Delete?")) remove(ref(db, `withdrawal_requests/${id}`)); };
 
     window.adjustBalance = async (type) => {
         const uid = document.getElementById('targetUid').value.trim();
         const amount = parseFloat(document.getElementById('adjustAmount').value);
-        if (!uid || isNaN(amount)) return alert("Fill all fields");
-
+        if (!uid || isNaN(amount)) return alert("Invalid inputs");
         try {
             const userRef = ref(db, `users/${uid}`);
             const snap = await get(userRef);
-            if (!snap.exists()) return alert("User not found!");
-
-            const current = parseFloat(snap.val().referralBonus || 0);
-            const newValue = type === 'credit' ? current + amount : Math.max(0, current - amount);
-            await update(userRef, { referralBonus: newValue });
-            alert(`New Balance: ₵${newValue.toFixed(2)}`);
+            if (!snap.exists()) return alert("User not found");
+            const cur = parseFloat(snap.val().referralBonus || 0);
+            const curCount = parseInt(snap.val().referralCount || 0);
+            const newVal = type === 'credit' ? cur + amount : Math.max(0, cur - amount);
+            const newCount = type === 'credit' ? curCount + 1 : curCount;
+            await update(userRef, { referralBonus: newVal, referralCount: newCount });
+            alert("Updated! New Bonus: ₵" + newVal.toFixed(2) + " | New Count: " + newCount);
         } catch (e) { alert(e.message); }
     };
 </script>
