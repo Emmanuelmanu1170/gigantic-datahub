@@ -114,11 +114,11 @@
     <div class="referral-card">
         <div class="stats-grid">
             <div class="stat-item-box">
-                <span class="ref-bal-label">My Referrals</span>
+                <span class="ref-bal-label">Approved Refs</span>
                 <div class="stat-value" id="refCountDisplay">0</div>
             </div>
             <div class="stat-item-box">
-                <span class="ref-bal-label">My Balance</span>
+                <span class="ref-bal-label">Total Earnings</span>
                 <div class="stat-value" id="refBalanceDisplay">₵0.00</div>
             </div>
         </div>
@@ -136,7 +136,7 @@
         <i class="fas fa-award" style="color: var(--accent);"></i>
         <b>Monthly Reward:</b> The <b>Rank #1</b> Referrer earns an extra <b>GH₵ 20.00</b> monthly bonus. 
         <br>Note: Monthly bonuses are sent directly to the winner's <b>registered email address</b>.
-        <br><small>*Must have a minimum of <b>20gh</b> to qualify.</small>
+        <br><small>*Admin must approve referrals before they reflect in your balance.</small>
     </div>
 
     <div class="section-title">
@@ -144,7 +144,7 @@
     </div>
     <div class="leader-card" id="leaderboardList">
         <div style="text-align: center; padding: 20px; color: #94a3b8;">
-            <i class="fas fa-spinner fa-spin"></i> Loading legends...
+            <i class="fas fa-spinner fa-spin"></i> Syncing leaderboard...
         </div>
     </div>
 </div>
@@ -178,15 +178,19 @@
             const fullLink = `${baseUrl}/register.html?ref=${user.uid}`;
             document.getElementById('referralLink').innerText = fullLink;
 
-            // 1. Sync Personal Data (Count & Balance)
+            // REAL-TIME SYNC FOR APPROVED DATA
+            // This ensures Admin-approved bonuses in 'referralBonus' field show immediately
             onValue(ref(db, 'users/' + user.uid), (snap) => {
                 const data = snap.val() || {};
                 document.getElementById('refCountDisplay').innerText = data.referralCount || 0;
-                document.getElementById('refBalanceDisplay').innerText = `₵${Number(data.referralBonus || 0).toFixed(2)}`;
+                
+                // Using referralBonus as the source for admin-approved earnings
+                const approvedEarnings = Number(data.referralBonus || 0);
+                document.getElementById('refBalanceDisplay').innerText = `₵${approvedEarnings.toFixed(2)}`;
             });
 
-            // 2. Fetch Top 5 Referrers
-            const topQuery = query(ref(db, 'users'), orderByChild('referralCount'), limitToLast(10));
+            // SYNC LEADERBOARD
+            const topQuery = query(ref(db, 'users'), orderByChild('referralCount'), limitToLast(20));
             onValue(topQuery, (snap) => {
                 const board = document.getElementById('leaderboardList');
                 board.innerHTML = "";
@@ -198,11 +202,12 @@
                     }
                 });
                 
+                // Perfect Arrangement: Highest referralCount first
                 users.sort((a,b) => (b.referralCount || 0) - (a.referralCount || 0));
                 const top5 = users.slice(0, 5);
 
                 if(top5.length === 0) {
-                    board.innerHTML = '<div style="text-align: center; padding: 20px; color: #94a3b8;">No referrals recorded yet.</div>';
+                    board.innerHTML = '<div style="text-align: center; padding: 20px; color: #94a3b8;">No approved referrals yet.</div>';
                     return;
                 }
 
@@ -217,7 +222,7 @@
                                 <div class="rank-box ${rankClass}">${rank}</div>
                                 <div class="name-box">
                                     <b>${name}***</b>
-                                    <span>Joined ${new Date(u.joinedAt || Date.now()).toLocaleDateString()}</span>
+                                    <span>Joined Member</span>
                                 </div>
                             </div>
                             <div class="ref-count">${u.referralCount || 0} Refs</div>
