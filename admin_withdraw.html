@@ -89,33 +89,33 @@
 <header>
     <div style="display:flex; align-items:center; gap:15px;">
         <a href="admin_dashboard.html" style="color:white; font-size: 1.2rem;"><i class="fas fa-chevron-left"></i></a>
-        <h1 style="font-size:1.1rem; font-weight: 700;">Payout Panel</h1>
+        <h1 style="font-size:1.1rem; font-weight: 700;">Payout Control Hub</h1>
     </div>
-    <div class="admin-id-badge" id="activeAdminEmail">Admin: alenacloft0@gmail.com</div>
+    <div class="admin-id-badge" id="activeAdminEmail">Admin Portal</div>
 </header>
 
 <div class="container">
 
     <div class="admin-card">
-        <div class="card-title"><i class="fas fa-crown" style="color:var(--gold)"></i> Hall of Fame (Top 5 Referrers)</div>
-        <div id="topReferrersList"><div class="empty-msg">Loading leaderboard...</div></div>
+        <div class="card-title"><i class="fas fa-crown" style="color:var(--gold)"></i> Real-Time Hall of Fame (Top 5)</div>
+        <div id="topReferrersList"><div class="empty-msg">Syncing database...</div></div>
     </div>
     
     <div class="admin-card">
-        <div class="card-title"><i class="fas fa-coins"></i> Quick Wallet Adjustment</div>
+        <div class="card-title"><i class="fas fa-coins"></i> Wallet & Referral Count Adjuster</div>
         <div class="input-group">
             <input type="text" id="targetUid" placeholder="Paste User UID here">
             <input type="number" id="adjustAmount" placeholder="Amount (₵)">
         </div>
         <div class="btn-row">
             <button class="btn-sm bg-success" onclick="adjustBalance('credit')"><i class="fas fa-plus-circle"></i> Add Balance</button>
-            <button class="btn-sm bg-danger" onclick="adjustBalance('deduct')"><i class="fas fa-minus-circle"></i> Remove</button>
+            <button class="btn-sm bg-danger" onclick="adjustBalance('deduct')"><i class="fas fa-minus-circle"></i> Remove Balance</button>
         </div>
     </div>
 
     <div class="stat-bar">
-        <div class="stat-item"><label>Pending Requests</label><span id="countBox">0</span></div>
-        <div class="stat-item"><label>Total Value</label><span id="totalBox">₵0.00</span></div>
+        <div class="stat-item"><label>Requests Queue</label><span id="countBox">0</span></div>
+        <div class="stat-item"><label>Total Payout Volume</label><span id="totalBox">₵0.00</span></div>
     </div>
 
     <div class="section-label"><i class="fas fa-user-plus" style="color:var(--teal)"></i> Registration Rewards (Auto-Credit)</div>
@@ -149,22 +149,31 @@
 
         document.getElementById('activeAdminEmail').innerText = "Admin: " + user.email;
         
+        // REAL-TIME LEADERBOARD SYNC
         onValue(ref(db, 'users'), (snapshot) => {
             const leaderboard = document.getElementById('topReferrersList');
             const data = snapshot.val();
             if (!data) return;
             const sortedUsers = Object.entries(data)
                 .map(([uid, val]) => ({ uid, ...val }))
-                .filter(u => u.referralCount > 0)
-                .sort((a, b) => b.referralCount - a.referralCount)
+                .filter(u => (u.referralCount || 0) > 0)
+                .sort((a, b) => (b.referralCount || 0) - (a.referralCount || 0))
                 .slice(0, 5);
             let leaderHtml = "";
             sortedUsers.forEach((user, index) => {
-                leaderHtml += `<div class="leader-item"><div class="leader-info"><div class="rank-circle ${index === 0 ? 'top-1' : ''}">${index+1}</div><span class="leader-email">${user.email}</span></div><span class="leader-count">${user.referralCount} Refs</span></div>`;
+                leaderHtml += `
+                <div class="leader-item">
+                    <div class="leader-info">
+                        <div class="rank-circle ${index === 0 ? 'top-1' : ''}">${index+1}</div>
+                        <span class="leader-email">${user.email || 'No Email'}</span>
+                    </div>
+                    <span class="leader-count">${user.referralCount || 0} Refs</span>
+                </div>`;
             });
-            leaderboard.innerHTML = leaderHtml || `<div class="empty-msg">No referrals yet.</div>`;
+            leaderboard.innerHTML = leaderHtml || `<div class="empty-msg">No active referrers found.</div>`;
         });
 
+        // REAL-TIME REQUESTS SYNC
         onValue(ref(db, 'withdrawal_requests'), (snapshot) => {
             const standardContainer = document.getElementById('payoutList');
             const regContainer = document.getElementById('registrationPayoutList');
@@ -185,7 +194,7 @@
                         <div class="request-flex">
                             <div class="user-details">
                                 <b>${req.email}</b>
-                                <span class="enjoyer-text">${req.uid} is going to enjoy the reward</span>
+                                <span class="enjoyer-text">UID: ${req.uid} is going to enjoy the reward</span>
                                 <div class="uid-container">
                                     <div class="uid-tag">${req.uid}</div>
                                     <i class="fas fa-copy copy-icon" onclick="copyUid('${req.uid}')"></i>
@@ -194,7 +203,9 @@
                             <div class="amount-circle ${isReg ? 'reg-amount' : ''}">₵${parseFloat(req.amount).toFixed(2)}</div>
                         </div>
                         <div class="momo-box"><b>${req.network}</b> | Num: <b>${req.momoNumber}</b> | Name: <b>${req.accountName}</b></div>
-                        <button class="btn btn-approve" onclick="approveAndCredit('${id}', '${req.uid}', ${req.amount}, ${isReg})"><i class="fas fa-check-circle"></i> ${isReg ? 'APPROVE & CREDIT' : 'MARK AS PAID'}</button>
+                        <button class="btn btn-approve" onclick="approveAndCredit('${id}', '${req.uid}', ${req.amount}, ${isReg})">
+                            <i class="fas fa-check-circle"></i> ${isReg ? 'APPROVE & CREDIT +1 REF' : 'MARK AS PAID'}
+                        </button>
                         <button class="btn btn-reject" onclick="deleteReq('${id}')"><i class="fas fa-times"></i> REJECT</button>
                     </div>`;
                 if (isReg) regHtml += card; else standardHtml += card;
@@ -211,39 +222,43 @@
     };
 
     window.approveAndCredit = async (reqId, uid, amount, isReg) => {
-        if (!confirm("Confirm this transaction?")) return;
+        if (!confirm("Approve this transaction and update user stats?")) return;
         try {
             const userRef = ref(db, `users/${uid}`);
             const snap = await get(userRef);
             if (snap.exists() && isReg) {
                 const curBonus = parseFloat(snap.val().referralBonus || 0);
                 const curCount = parseInt(snap.val().referralCount || 0);
+                // Synchronized update: Increase balance and referral count simultaneously
                 await update(userRef, {
                     referralBonus: parseFloat((curBonus + amount).toFixed(2)),
                     referralCount: curCount + 1
                 });
             }
             await remove(ref(db, `withdrawal_requests/${reqId}`));
-            alert("Action Successful!");
-        } catch (e) { alert(e.message); }
+            alert("Successful! Stats updated and request removed.");
+        } catch (e) { alert("Error: " + e.message); }
     };
 
-    window.deleteReq = (id) => { if (confirm("Delete?")) remove(ref(db, `withdrawal_requests/${id}`)); };
+    window.deleteReq = (id) => { if (confirm("Delete this request?")) remove(ref(db, `withdrawal_requests/${id}`)); };
 
     window.adjustBalance = async (type) => {
         const uid = document.getElementById('targetUid').value.trim();
         const amount = parseFloat(document.getElementById('adjustAmount').value);
-        if (!uid || isNaN(amount)) return alert("Invalid inputs");
+        if (!uid || isNaN(amount)) return alert("UID and Amount are required.");
         try {
             const userRef = ref(db, `users/${uid}`);
             const snap = await get(userRef);
-            if (!snap.exists()) return alert("User not found");
+            if (!snap.exists()) return alert("User not found in database.");
             const cur = parseFloat(snap.val().referralBonus || 0);
             const curCount = parseInt(snap.val().referralCount || 0);
+            
+            // Logic for manual credit also increments referral count by +1
             const newVal = type === 'credit' ? cur + amount : Math.max(0, cur - amount);
             const newCount = type === 'credit' ? curCount + 1 : curCount;
+            
             await update(userRef, { referralBonus: newVal, referralCount: newCount });
-            alert("Updated! New Bonus: ₵" + newVal.toFixed(2) + " | New Count: " + newCount);
+            alert(`Updated! Bonus: ₵${newVal.toFixed(2)} | Count: ${newCount}`);
         } catch (e) { alert(e.message); }
     };
 </script>
