@@ -258,7 +258,11 @@
         Object.entries(data).forEach(([uid, u]) => {
             const lastActive = u.lastActive || 0;
             const isInactive = (now - lastActive) > thirtyDays;
+            
+            // Logic to determine Agent status for Dashboard relationship
+            // This reads the exact same fields the dashboard looks for
             const currentStatus = (u.status || u.userType || "Normal").toLowerCase();
+            const isAgent = currentStatus === 'agent';
             
             const tr = document.createElement("tr");
             tr.className = isInactive ? "inactive-row" : "";
@@ -272,9 +276,9 @@
                 <td>${u.email}</td>
                 <td>₵${Number(u.wallet || 0).toFixed(2)}</td>
                 <td>
-                    <select class="type-select ${currentStatus === 'agent' ? 'agent-mode' : ''}" onchange="toggleUserType('${uid}', this.value)">
-                        <option value="Normal" ${currentStatus === 'normal' ? 'selected' : ''}>Normal User</option>
-                        <option value="Agent" ${currentStatus === 'agent' ? 'selected' : ''}>Agent Merchant</option>
+                    <select class="type-select ${isAgent ? 'agent-mode' : ''}" onchange="toggleUserType('${uid}', this.value)">
+                        <option value="Normal" ${!isAgent ? 'selected' : ''}>Normal User</option>
+                        <option value="Agent" ${isAgent ? 'selected' : ''}>Agent Merchant</option>
                     </select>
                 </td>
                 <td style="color: ${isInactive ? 'red' : 'green'}; font-weight: bold;">
@@ -290,10 +294,11 @@
     }
 
     // UPDATED FUNCTION: Updates both status and userType for full synchronization
+    // This function ensures the dashboard 'figures out' the user is an agent instantly
     window.toggleUserType = function(uid, newType) {
         const updates = {
-            status: newType,
-            userType: newType.toLowerCase()
+            status: newType, // Dashboard uses this
+            userType: newType.toLowerCase() // Dashboard and analytics use this
         };
 
         update(ref(db, `users/${uid}`), updates)
@@ -346,7 +351,6 @@
 
     window.showActiveUsers = function() {
         const now = Date.now();
-        // Considered active if seen in the last 5 minutes
         const active = Object.values(allUsers).filter(u => u.lastActive && (now - u.lastActive < 300000));
         const list = document.getElementById("activeList");
         list.innerHTML = active.length ? active.map(u => `<div style="padding:8px; border-bottom:1px solid #eee;"><b>${u.fullname}</b><br><small>${u.email}</small></div>`).join("") : "No users online (last 5 mins)";
