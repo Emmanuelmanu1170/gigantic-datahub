@@ -29,6 +29,8 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
+        .admin-id-badge { font-size: 0.75rem; background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); }
+
         .container { padding: 25px 5%; max-width: 1100px; margin: auto; }
         
         .admin-card { 
@@ -87,9 +89,9 @@
 <header>
     <div style="display:flex; align-items:center; gap:15px;">
         <a href="admin_dashboard.html" style="color:white; font-size: 1.2rem;"><i class="fas fa-chevron-left"></i></a>
-        <h1 style="font-size:1.1rem; font-weight: 700;">Payout & Auto-Credit Panel</h1>
+        <h1 style="font-size:1.1rem; font-weight: 700;">Payout Panel</h1>
     </div>
-    <i class="fas fa-shield-alt" style="opacity: 0.5;"></i>
+    <div class="admin-id-badge" id="activeAdminEmail">Admin: alenacloft0@gmail.com</div>
 </header>
 
 <div class="container">
@@ -144,6 +146,8 @@
             window.location.href = "login.html";
             return;
         }
+
+        document.getElementById('activeAdminEmail').innerText = "Admin: " + user.email;
         
         onValue(ref(db, 'users'), (snapshot) => {
             const leaderboard = document.getElementById('topReferrersList');
