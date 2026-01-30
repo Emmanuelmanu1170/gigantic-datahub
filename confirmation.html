@@ -77,7 +77,6 @@
         }
     </style>
     <script>
-        // Apply theme immediately
         (function() {
             const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
@@ -102,7 +101,7 @@
     <div class="success-modal">
         <div class="success-icon"><i class="fas fa-check"></i></div>
         <h3 style="margin-bottom: 10px; color: #22c55e;">Payment Successful!</h3>
-        <p style="font-size: 0.85rem; color: var(--text-gray); opacity: 0.8;">Your order is being processed and will be delivered shortly.</p>
+        <p id="apiStatus" style="font-size: 0.85rem; color: var(--text-gray); opacity: 0.8;">Processing delivery via API...</p>
         <button class="modal-btn" onclick="window.location.replace('order_history.html')">View History</button>
     </div>
 </div>
@@ -110,7 +109,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-    import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+    import { getDatabase, ref, onValue, update, push } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
@@ -123,7 +122,9 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    // Theme Toggle
+    const API_KEY = "tera_live_95abf76d96984f4612153a4869e43d3e";
+    const API_ENDPOINT = "https://idatagh.com/wp-json/custom/v1/place-order";
+
     window.toggleTheme = () => {
         const doc = document.documentElement;
         const icon = document.getElementById('themeIcon');
@@ -133,10 +134,6 @@
         localStorage.setItem('theme', target);
         icon.className = target === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
     };
-
-    // Set initial icon
-    const initialTheme = localStorage.getItem('theme') || 'light';
-    document.getElementById('themeIcon').className = initialTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
 
     onAuthStateChanged(auth, (user) => {
         if (!user) { window.location.href = "login.html"; return; }
@@ -153,7 +150,7 @@
             const cost = parseFloat(order.amount);
 
             document.getElementById('renderArea').innerHTML = `
-                <div class="summary-item"><span>Network</span><span>${order.network}</span></div>
+                <div class="summary-item"><span>Network</span><span>${order.network.toUpperCase()}</span></div>
                 <div class="summary-item"><span>Plan</span><span>${order.plan}</span></div>
                 <div class="summary-item"><span>Recipient</span><span>${order.recipient}</span></div>
                 <div class="summary-item"><span>My Balance</span><span>GH₵ ${wallet.toFixed(2)}</span></div>
@@ -164,58 +161,71 @@
                 <button class="pay-btn" id="payBtn">AUTHORIZE & PAY</button>
             `;
 
-            document.getElementById('payBtn').onclick = () => {
+            document.getElementById('payBtn').onclick = async () => {
                 if (wallet < cost) {
                     alert("Insufficient Balance!");
                     return;
                 }
 
                 document.getElementById('payBtn').disabled = true;
-                document.getElementById('payBtn').innerText = "Processing...";
+                document.getElementById('payBtn').innerText = "Processing Transaction...";
 
-                const orderId = "ORD-" + Math.floor(Math.random() * 900000 + 100000);
-                const newBalance = parseFloat((wallet - cost).toFixed(2));
+                try {
+                    // 1. DEDUCT LOCALLY FIRST
+                    const newBalance = parseFloat((wallet - cost).toFixed(2));
+                    const orderId = "ORD-" + Date.now().toString().slice(-6);
 
-                const updates = {};
-                updates[`users/${user.uid}/wallet`] = newBalance;
-                
-                const orderData = {
-                    orderId: orderId,
-                    uid: user.uid,
-                    network: order.network,
-                    plan: order.plan,
-                    recipient: order.recipient,
-                    amount: cost,
-                    email: user.email,
-                    status: "Pending",
-                    timestamp: Date.now()
-                };
+                    // 2. PREPARE API PAYLOAD
+                    const apiPayload = {
+                        network: order.network.toLowerCase(), // e.g., "mtn"
+                        beneficiary: order.recipient,
+                        "pa_data-bundle-packages": parseInt(order.data_id) // API bundle ID
+                    };
 
-                updates[`orders/${orderId}`] = orderData;
-                updates[`user_orders/${user.uid}/${orderId}`] = {
-                    orderId: orderId,
-                    network: order.network,
-                    plan: order.plan,
-                    recipient: order.recipient,
-                    amount: cost,
-                    status: "Pending",
-                    timestamp: Date.now()
-                };
-
-                update(ref(db), updates)
-                    .then(() => {
-                        localStorage.removeItem('pendingOrder');
-                        showSuccess();
-                    })
-                    .catch(err => {
-                        alert("Error processing transaction.");
-                        document.getElementById('payBtn').disabled = false;
+                    // 3. CALL EXTERNAL API
+                    const apiResponse = await fetch(API_ENDPOINT, {
+                        method: "POST",
+                        headers: {
+                            "Authorization": `Bearer ${API_KEY}`,
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(apiPayload)
                     });
+
+                    const apiResult = await apiResponse.json();
+
+                    // 4. UPDATE FIREBASE WITH RESULTS
+                    const updates = {};
+                    updates[`users/${user.uid}/wallet`] = newBalance;
+                    
+                    const record = {
+                        orderId,
+                        uid: user.uid,
+                        ...order,
+                        apiResponse: apiResult,
+                        status: apiResponse.ok ? "Processing" : "Failed",
+                        timestamp: Date.now()
+                    };
+
+                    updates[`orders/${orderId}`] = record;
+                    updates[`user_orders/${user.uid}/${orderId}`] = record;
+
+                    await update(ref(db), updates);
+                    
+                    localStorage.removeItem('pendingOrder');
+                    showSuccess(apiResponse.ok ? "Success! Data is being delivered." : "Payment received. Delivery pending manual review.");
+
+                } catch (err) {
+                    console.error(err);
+                    alert("System error. If balance was deducted, contact support.");
+                    document.getElementById('payBtn').disabled = false;
+                }
             };
         });
     });
 
-    function showSuccess() {
+    function showSuccess(msg) {
+        document.getElementById('apiStatus').innerText = msg;
         const overlay = document.getElementById('modalOverlay');
         overlay.style.display = 'flex';
         setTimeout(() => overlay.classList.add('modal-active'), 10);
