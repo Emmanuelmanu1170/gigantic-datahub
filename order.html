@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            /* Light Mode */
             --primary-purple: #6a5af9;
             --secondary-purple: #a855f7;
             --bg-gray: #fcfdfe;
@@ -23,10 +22,8 @@
         }
 
         [data-theme="dark"] {
-            /* Dark Mode */
             --bg-gray: #02040a;
             --card-bg: #0d1117;
-            --border-color: #30363d;
             --text-main: #f0f6fc;
             --text-muted: #8b949e;
             --input-bg: #161b22;
@@ -187,23 +184,18 @@
         let userReferrer = null;
         window.selectedNet = "";
 
-        // Theme Logic
-        window.toggleTheme = () => {
-            const current = document.documentElement.getAttribute('data-theme');
-            const target = current === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', target);
-            localStorage.setItem('theme', target);
-            document.getElementById('themeIcon').className = target === 'dark' ? 'fas fa-sun theme-toggle' : 'fas fa-moon theme-toggle';
+        // API ID Mapping Logic
+        const getApiId = (net, plan) => {
+            const mappings = {
+                mtn: { "1GB": 1, "2GB": 2, "3GB": 3, "4GB": 4, "5GB": 5, "6GB": 6, "8GB": 7, "10GB": 8, "15GB": 9, "20GB": 10, "25GB": 11, "30GB": 12, "40GB": 13, "50GB": 14, "100GB": 15 },
+                airteltigo: { "1GB": 16, "2GB": 17, "3GB": 18, "4GB": 19, "5GB": 20, "6GB": 21, "7GB": 22, "8GB": 23, "10GB": 24, "15GB": 25, "20GB": 26, "30GB": 27, "40GB": 28, "50GB": 29, "60GB": 30, "80GB": 31, "100GB": 32 },
+                telecel: { "10GB": 33, "15GB": 34, "20GB": 35, "25GB": 36, "30GB": 37, "40GB": 38, "50GB": 39, "100GB": 40 }
+            };
+            return mappings[net]?.[plan] || 0;
         };
 
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        document.documentElement.setAttribute('data-theme', savedTheme);
-        document.getElementById('themeIcon').className = savedTheme === 'dark' ? 'fas fa-sun theme-toggle' : 'fas fa-moon theme-toggle';
-
-        const getK = () => atob("YmVhcmVyIA==") + atob("c2tfbGl2ZV8=") + atob("YmZkMjhmYmJlM2NhNDU1YmExNTQ1NWViZWQ3MTM4YjI0MDA5ZDEzNA==");
-
         const agentPlans = {
-            mtn:[{plan:"1GB",price:"4.45"},{plan:"2GB",price:"8.85"},{plan:"3GB",price:"13.25"},{plan:"4GB",price:"17.65"},{plan:"5GB",price:"22. 05"},{plan:"6GB",price:"26.55"},{plan:"8GB",price:"36.39"},{plan:"10GB",price:"42.25"},{plan:"15GB",price:"62.05"},{plan:"20GB",price:"82.05"},{plan:"25GB",price:"103.05"},{plan:"30GB",price:"123"},{plan:"40GB",price:"160"},{plan:"50GB",price:"199"},{plan:"100GB",price:"380"}],
+            mtn:[{plan:"1GB",price:"4.45"},{plan:"2GB",price:"8.85"},{plan:"3GB",price:"13.25"},{plan:"4GB",price:"17.65"},{plan:"5GB",price:"22.05"},{plan:"6GB",price:"26.55"},{plan:"8GB",price:"36.39"},{plan:"10GB",price:"42.25"},{plan:"15GB",price:"62.05"},{plan:"20GB",price:"82.05"},{plan:"25GB",price:"103.05"},{plan:"30GB",price:"123"},{plan:"40GB",price:"160"},{plan:"50GB",price:"199"},{plan:"100GB",price:"380"}],
             airteltigo:[{plan:"1GB",price:"4.3"},{plan:"2GB",price:"8.56"},{plan:"3GB",price:"12.84"},{plan:"4GB",price:"17.12"},{plan:"5GB",price:"21.4"},{plan:"6GB",price:"25.6"},{plan:"7GB",price:"29.96"},{plan:"8GB",price:"35"},{plan:"10GB",price:"44"},{plan:"15GB",price:"65"},{plan:"20GB",price:"76"},{plan:"30GB",price:"87"},{plan:"40GB",price:"100"},{plan:"50GB",price:"115"},{plan:"60GB",price:"150"},{plan:"80GB",price:"183"},{plan:"100GB",price:"200"}],
             telecel:[{plan:"10GB",price:"45"},{plan:"15GB",price:"62"},{plan:"20GB",price:"84"},{plan:"25GB",price:"105"},{plan:"30GB",price:"120"},{plan:"40GB",price:"158"},{plan:"50GB",price:"196"},{plan:"100GB",price:"384"}]
         };
@@ -218,37 +210,24 @@
             if (user) {
                 onValue(ref(db, 'users/' + user.uid), (snapshot) => {
                     const data = snapshot.val() || {};
-                    
-                    // --- SYNC LOGIC WITH DASHBOARD ---
-                    // Checks status field and matches with dashboard's userType sync
-                    isAgent = (data.status === "Agent" || data.userType === "agent" || localStorage.getItem('currentUserStatus') === 'agent');
-                    
+                    isAgent = (data.status === "Agent" || data.userType === "agent");
                     currentBalance = Number(data.wallet || 0);
                     userReferrer = data.referredBy || null;
                     document.getElementById('walletBalance').innerText = `GH₵ ${currentBalance.toFixed(2)}`;
                     document.getElementById('userTypeBadge').innerText = isAgent ? "AGENT" : "NORMAL USER";
-                    
-                    // Show promo only to normal users with decent balance
-                    if(!isAgent && currentBalance > 40) {
-                        document.getElementById('agentPromo').style.display = "flex";
-                    } else {
-                        document.getElementById('agentPromo').style.display = "none";
-                    }
-
-                    // Refresh plans if already network selected
-                    if(window.selectedNet) {
-                        const select = document.getElementById('dataPlan');
-                        const currentVal = select.value;
-                        const plans = isAgent ? agentPlans[window.selectedNet] : normalPlans[window.selectedNet];
-                        select.innerHTML = '<option value="" disabled>-- Choose Plan --</option>';
-                        plans.forEach(p => { 
-                            select.innerHTML += `<option value="${p.price}" data-plan="${p.plan}">${p.plan} - GH₵ ${p.price}</option>`; 
-                        });
-                        select.value = currentVal;
-                    }
+                    if(!isAgent && currentBalance > 40) document.getElementById('agentPromo').style.display = "flex";
+                    else document.getElementById('agentPromo').style.display = "none";
                 });
             } else { window.location.href = "login.html"; }
         });
+
+        window.toggleTheme = () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            const target = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', target);
+            localStorage.setItem('theme', target);
+            document.getElementById('themeIcon').className = target === 'dark' ? 'fas fa-sun theme-toggle' : 'fas fa-moon theme-toggle';
+        };
 
         window.setPurchaseMode = (mode) => {
             purchaseMode = mode;
@@ -265,7 +244,10 @@
             const select = document.getElementById('dataPlan');
             select.innerHTML = '<option value="" selected disabled>-- Choose Plan --</option>';
             const plans = isAgent ? agentPlans[net] : normalPlans[net];
-            plans.forEach(p => { select.innerHTML += `<option value="${p.price}" data-plan="${p.plan}">${p.plan} - GH₵ ${p.price}</option>`; });
+            plans.forEach(p => { 
+                const apiId = getApiId(net, p.plan);
+                select.innerHTML += `<option value="${p.price}" data-plan="${p.plan}" data-api="${apiId}">${p.plan} - GH₵ ${p.price}</option>`; 
+            });
             document.getElementById('step2').classList.remove('disabled');
             document.getElementById('step2').classList.add('active-step');
         };
@@ -275,29 +257,11 @@
             document.getElementById('step3').classList.add('active-step');
         };
 
-        document.getElementById('phoneNumber').addEventListener('input', async function(e) {
-            const num = e.target.value;
-            const box = document.getElementById('validationBox');
-            const nameSpan = document.getElementById('displayAccName');
-            if (num.length === 10) {
-                box.style.display = "flex";
-                nameSpan.innerText = "Searching...";
-                nameSpan.classList.add('loading-dots');
-                const bankMapping = { 'mtn': 'MTN', 'airteltigo': 'ATL', 'telecel': 'VOD' };
-                try {
-                    const response = await fetch(`https://api.paystack.co/bank/resolve?account_number=${num}&bank_code=${bankMapping[window.selectedNet]}`, {
-                        headers: { 'Authorization': getK() }
-                    });
-                    const result = await response.json();
-                    nameSpan.classList.remove('loading-dots');
-                    nameSpan.innerText = result.status ? result.data.account_name : "RECIPIENT VALID";
-                } catch (err) { nameSpan.innerText = "RECIPIENT VALID"; }
-            } else { box.style.display = "none"; }
-        });
-
         window.processToConfirmation = () => {
             const planSelect = document.getElementById('dataPlan');
             if (!planSelect.value) { alert("Please select a plan"); return; }
+            const selectedOption = planSelect.options[planSelect.selectedIndex];
+            
             let recipients = [];
             if (purchaseMode === 'single') {
                 const num = document.getElementById('phoneNumber').value.trim();
@@ -310,16 +274,17 @@
 
             const unitPrice = parseFloat(planSelect.value);
             const totalAmount = unitPrice * recipients.length;
-
             if (currentBalance < totalAmount) { alert("Insufficient Funds!"); return; }
 
+            // PREPARE DATA FOR CONFIRMATION & API
             const order = {
-                network: window.selectedNet.toUpperCase(),
-                plan: planSelect.options[planSelect.selectedIndex].getAttribute('data-plan'),
+                network: window.selectedNet,
+                plan: selectedOption.getAttribute('data-plan'),
+                data_id: selectedOption.getAttribute('data-api'), // FOR API
                 unitPrice: unitPrice,
                 amount: totalAmount,
                 recipients: recipients,
-                recipient: recipients.join(', '),
+                recipient: recipients[0], // Primary for confirmation display
                 count: recipients.length,
                 mode: purchaseMode,
                 referrer: userReferrer,
