@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Withdraw Bonus - Gigantic Data Hub</title>
+    <title>Withdraw & Hall of Fame - Gigantic Data Hub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --primary: #6a5af9; --deep: #0a2a66; --error: #ef4444; --accent: #ff8c00; --success: #10b981; }
@@ -27,8 +27,6 @@
         }
         input:focus, select:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(106, 90, 249, 0.1); }
 
-        .info-note { font-size: 0.75rem; color: #64748b; margin-top: 5px; display: flex; align-items: center; gap: 5px; }
-        
         .btn-withdraw { 
             background: var(--primary); color: white; border: none; width: 100%; 
             padding: 16px; border-radius: 12px; font-weight: 700; cursor: pointer; 
@@ -40,20 +38,21 @@
         .status-msg { margin-top: 15px; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 600; display: none; text-align: center; }
         .msg-success { background: #dcfce7; color: var(--success); }
 
+        /* Updated Leaderboard Styles */
         .leaderboard { margin-top: 30px; border-top: 1px solid #edf2f7; padding-top: 20px; }
         .leader-title { font-size: 0.9rem; font-weight: 800; display: flex; align-items: center; gap: 8px; margin-bottom: 15px; color: var(--accent); }
-        .leader-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f8fafc; }
-        .leader-rank { width: 24px; height: 24px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; }
-        .rank-1 { background: #ffd700; color: #000; }
-        .leader-name { font-size: 13px; font-weight: 600; flex: 1; margin-left: 10px; }
-        .leader-count { font-size: 12px; font-weight: 800; color: #10b981; }
+        .leader-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 10px; border-bottom: 1px solid #f8fafc; background: #fff; border-radius: 10px; margin-bottom: 8px; border: 1px solid #eee; }
+        .leader-rank { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; background: #f1f5f9; }
+        .rank-1 { background: #ffd700; color: #000; box-shadow: 0 4px 10px rgba(255, 215, 0, 0.3); }
+        .leader-email { font-size: 12px; font-weight: 600; flex: 1; margin-left: 12px; word-break: break-all; color: var(--deep); }
+        .leader-count { font-size: 11px; font-weight: 800; color: white; background: var(--success); padding: 4px 8px; border-radius: 20px; white-space: nowrap; }
     </style>
 </head>
 <body>
 
 <header>
     <a href="referral.html" style="color:white; text-decoration:none;"><i class="fas fa-arrow-left"></i></a>
-    <h3>Withdraw to MoMo</h3>
+    <h3>Withdraw & Hall of Fame</h3>
 </header>
 
 <div class="card">
@@ -63,13 +62,12 @@
     </div>
 
     <div id="successNote" class="status-msg msg-success">
-        <i class="fas fa-check-circle"></i> Request sent! Admin will pay to your MoMo soon.
+        <i class="fas fa-check-circle"></i> Request sent! Admin will process payout soon.
     </div>
 
     <div class="form-group">
         <label>Withdrawal Amount</label>
         <input type="number" id="withdrawAmt" placeholder="Minimum ₵27.00">
-        <div class="info-note"><i class="fas fa-shield-alt"></i> Only Admin-approved bonuses can be withdrawn.</div>
     </div>
 
     <div class="form-group">
@@ -94,9 +92,9 @@
     <button class="btn-withdraw" id="submitBtn">PROCEED WITHDRAWAL</button>
 
     <div class="leaderboard">
-        <div class="leader-title"><i class="fas fa-trophy"></i> Top 5 Referrers</div>
+        <div class="leader-title"><i class="fas fa-crown"></i> Top 5 Elite Referrers</div>
         <div id="leaderList">
-            <p style="font-size: 12px; color: #94a3b8; text-align: center;">Syncing Hall of Fame...</p>
+            <p style="font-size: 12px; color: #94a3b8; text-align: center;">Refreshing Hall of Fame...</p>
         </div>
     </div>
 </div>
@@ -120,20 +118,16 @@
     let currentApprovedBonus = 0;
 
     onAuthStateChanged(auth, (user) => {
-        if (!user) {
-            window.location.href = "login.html";
-            return;
-        }
+        if (!user) { window.location.href = "login.html"; return; }
 
-        // 1. SYNC APPROVED BONUS BALANCE
-        // This listens to the specific 'referralBonus' field in your user object
+        // SYNC USER BALANCE
         onValue(ref(db, `users/${user.uid}`), (snap) => {
             const data = snap.val() || {};
             currentApprovedBonus = parseFloat(data.referralBonus || 0);
             document.getElementById('bonusBalance').innerText = "₵" + currentApprovedBonus.toFixed(2);
         });
 
-        // 2. SYNC LEADERBOARD (REAL-TIME)
+        // SYNC LEADERBOARD (SHOWING FULL EMAILS)
         const topRefQuery = query(ref(db, 'users'), orderByChild('referralCount'), limitToLast(20));
         onValue(topRefQuery, (snap) => {
             const list = document.getElementById('leaderList');
@@ -145,75 +139,59 @@
                 if(u.referralCount > 0) users.push(u); 
             });
 
-            // Sort descending: highest referralCount first
+            // Highest referrals first
             users.sort((a,b) => (b.referralCount || 0) - (a.referralCount || 0));
 
             if(users.length === 0) {
-                list.innerHTML = "<p style='font-size:11px; text-align:center; color:#94a3b8;'>No referrals approved yet.</p>";
+                list.innerHTML = "<p style='font-size:11px; text-align:center; color:#94a3b8;'>No rankings yet.</p>";
                 return;
             }
 
             users.slice(0, 5).forEach((u, i) => {
-                const fullName = u.fullName || "Member";
+                const userEmail = u.email || "Confidential User";
                 const row = `
                     <div class="leader-item">
                         <div class="leader-rank ${i === 0 ? 'rank-1' : ''}">${i + 1}</div>
-                        <div class="leader-name">${fullName.split(' ')[0]}***</div>
+                        <div class="leader-email">${userEmail}</div>
                         <div class="leader-count">${u.referralCount || 0} refs</div>
                     </div>`;
                 list.innerHTML += row;
             });
         });
 
-        // 3. WITHDRAWAL LOGIC
+        // WITHDRAWAL HANDLING
         document.getElementById('submitBtn').onclick = async () => {
-            const amtInput = document.getElementById('withdrawAmt');
-            const amt = parseFloat(amtInput.value);
-            const net = document.getElementById('momoNetwork').value;
+            const amt = parseFloat(document.getElementById('withdrawAmt').value);
             const num = document.getElementById('momoNumber').value.trim();
             const name = document.getElementById('momoName').value.trim();
             const btn = document.getElementById('submitBtn');
-            const successNote = document.getElementById('successNote');
             
-            if (!amt || amt < 27) { 
-                alert("Minimum withdrawal is GH₵ 27.00."); 
-                return; 
-            }
-            if (amt > currentApprovedBonus) { 
-                alert("Insufficient balance! Your approved bonus is GH₵ " + currentApprovedBonus.toFixed(2)); 
-                return; 
-            }
-            if (num.length < 10 || name === "") {
-                alert("Please check your MoMo number and account name.");
-                return;
-            }
-
-            if(!confirm(`Submit withdrawal request for GH₵ ${amt.toFixed(2)} to ${num}?`)) return;
+            if (!amt || amt < 27) { alert("Minimum payout is GH₵ 27.00."); return; }
+            if (amt > currentApprovedBonus) { alert("Insufficient Balance!"); return; }
+            if (num.length < 10 || name === "") { alert("Provide valid MoMo details."); return; }
 
             btn.disabled = true;
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processing...`;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Submitting...`;
 
             try {
-                // Generate a request in the global queue for Admin Panel
                 const requestRef = push(ref(db, 'withdrawal_requests'));
                 await set(requestRef, {
                     uid: user.uid,
                     email: user.email,
                     amount: amt,
-                    network: net,
+                    network: document.getElementById('momoNetwork').value,
                     momoNumber: num,
                     accountName: name,
                     status: "Pending",
                     timestamp: Date.now()
                 });
 
-                amtInput.value = "";
-                successNote.style.display = "block";
-                alert("Withdrawal request sent successfully! Admin will process payment soon.");
+                document.getElementById('withdrawAmt').value = "";
+                document.getElementById('successNote').style.display = "block";
+                alert("Withdrawal request sent to Admin!");
                 
             } catch (err) {
-                alert("Error sending request: " + err.message);
-                console.error(err);
+                alert("Error: " + err.message);
             } finally {
                 btn.disabled = false;
                 btn.innerText = "PROCEED WITHDRAWAL";
