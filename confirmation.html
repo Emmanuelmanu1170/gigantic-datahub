@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --primary: #6a5af9; --deep: #0a2a66; --bg: #f4f7fe; 
+            --primary: #6a5af9; --deep: #0a2a66; --bg: #f4f7ff; 
             --card: #ffffff; --text: #0a2a66; --border: #f1f5f9;
         }
         [data-theme="dark"] {
@@ -99,7 +99,6 @@
             document.getElementById('payBtn').onclick = async () => {
                 if (wallet < cost) { alert("Insufficient Balance!"); return; }
                 
-                // Force Package ID to be a Number (Integer) as required by API
                 const packageId = parseInt(order.data_id);
                 if (isNaN(packageId)) {
                     alert("Invalid package selection. Please re-select your plan.");
@@ -110,7 +109,7 @@
                 document.getElementById('payBtn').innerText = "Initiating API Request...";
 
                 try {
-                    // STEP 1: PLACE API ORDER (Strict JSON format)
+                    // STEP 1: PLACE API ORDER (Strict Lowercase & Order)
                     const response = await fetch(API_URL, {
                         method: "POST",
                         headers: {
@@ -130,26 +129,23 @@
                         throw new Error(apiResult.message || "The data vendor rejected the order.");
                     }
 
-                    // STEP 2: DEDUCT LOCALLY ONLY ON API SUCCESS
+                    // STEP 2: DEDUCT LOCALLY ONLY AFTER API CONFIRMS SUCCESS
                     const orderId = "ORD-" + Math.floor(Math.random() * 900000 + 100000);
                     const newBalance = parseFloat((wallet - cost).toFixed(2));
                     
                     const updates = {};
-                    // Update user wallet
                     updates[`users/${user.uid}/wallet`] = newBalance;
                     
                     const finalOrderData = {
                         ...order,
-                        uid: user.uid, 
+                        uid: user.uid,
                         orderId: orderId,
                         status: "Successful",
                         api_reference: apiResult.order_id || "N/A",
                         timestamp: Date.now()
                     };
 
-                    // Path 2: Global orders node
                     updates[`orders/${orderId}`] = finalOrderData;
-                    // Path 3: Personal user orders node
                     updates[`user_orders/${user.uid}/${orderId}`] = finalOrderData;
 
                     await update(ref(db), updates);
