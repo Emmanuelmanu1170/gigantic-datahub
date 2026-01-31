@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --primary: #6a5af9; --deep: #0a2a66; --bg: #f4f7ff; 
+            --primary: #6a5af9; --deep: #0a2a66; --bg: #f4f7fe; 
             --card: #ffffff; --text: #0a2a66; --border: #f1f5f9;
         }
         [data-theme="dark"] {
@@ -100,14 +100,14 @@
                 if (wallet < cost) { alert("Insufficient Balance!"); return; }
                 
                 // Force Package ID to be a Number (Integer) as required by API
-                const packageId = Number(order.data_id);
-                if (!packageId || isNaN(packageId)) {
+                const packageId = parseInt(order.data_id);
+                if (isNaN(packageId)) {
                     alert("Invalid package selection. Please re-select your plan.");
                     return;
                 }
 
                 document.getElementById('payBtn').disabled = true;
-                document.getElementById('payBtn').innerText = "Processing Delivery...";
+                document.getElementById('payBtn').innerText = "Initiating API Request...";
 
                 try {
                     // STEP 1: PLACE API ORDER (Strict JSON format)
@@ -135,18 +135,21 @@
                     const newBalance = parseFloat((wallet - cost).toFixed(2));
                     
                     const updates = {};
+                    // Update user wallet
                     updates[`users/${user.uid}/wallet`] = newBalance;
                     
                     const finalOrderData = {
                         ...order,
-                        uid: user.uid,
+                        uid: user.uid, 
                         orderId: orderId,
                         status: "Successful",
                         api_reference: apiResult.order_id || "N/A",
                         timestamp: Date.now()
                     };
 
+                    // Path 2: Global orders node
                     updates[`orders/${orderId}`] = finalOrderData;
+                    // Path 3: Personal user orders node
                     updates[`user_orders/${user.uid}/${orderId}`] = finalOrderData;
 
                     await update(ref(db), updates);
@@ -156,7 +159,7 @@
 
                 } catch (err) {
                     console.error("Order Error:", err);
-                    alert("Order Aborted: " + err.message);
+                    alert("Order Aborted: " + err.message + ". Your balance was not touched.");
                     document.getElementById('payBtn').disabled = false;
                     document.getElementById('payBtn').innerText = "RETRY PAYMENT";
                 }
