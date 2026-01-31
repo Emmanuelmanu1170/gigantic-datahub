@@ -112,7 +112,7 @@
     </div>
 
     <div class="admin-card">
-        <div class="card-header"><div class="card-title"><i class="fas fa-trophy" style="color:var(--gold)"></i> Top Performing Agents</div></div>
+        <div class="card-header"><div class="card-title"><i class="fas fa-trophy" style="color:var(--gold)"></i> Top 10 Performing Agents</div></div>
         <div id="leaderboardBody"></div>
     </div>
 
@@ -144,22 +144,23 @@
         if (!user || user.email !== "alenacloft0@gmail.com") { window.location.href = "login.html"; return; }
         document.getElementById('activeUser').innerText = user.email;
 
-        // 1. LEADERBOARD
+        // 1. LEADERBOARD (UPDATED TO TOP 10)
         onValue(ref(db, 'users'), (snap) => {
             const users = snap.val();
             if (!users) return;
-            const top5 = Object.entries(users)
+            const top10 = Object.entries(users)
                 .map(([uid, val]) => ({ uid, ...val }))
                 .filter(u => u.referralCount > 0)
                 .sort((a,b) => b.referralCount - a.referralCount)
-                .slice(0, 5);
+                .slice(0, 10);
             
             let html = "";
-            top5.forEach((u, i) => {
+            top10.forEach((u, i) => {
+                const isGold = i === 0;
                 html += `
                 <div class="leader-row">
                     <div style="display:flex; align-items:center; gap:12px;">
-                        <div class="rank-badge" style="background:${i==0?'#fef3c7':'#f1f5f9'}; color:${i==0?'#b45309':'#64748b'}">${i+1}</div>
+                        <div class="rank-badge" style="background:${isGold ? '#fef3c7' : '#f1f5f9'}; color:${isGold ? '#b45309' : '#64748b'}">${i+1}</div>
                         <b style="font-size:0.85rem;">${u.email}</b>
                     </div>
                     <span style="font-weight:800; color:var(--primary); font-size:0.9rem;">${u.referralCount} Refs</span>
@@ -218,12 +219,15 @@
         try {
             const userRef = ref(db, `users/${uid}`);
             const snap = await get(userRef);
-            if(snap.exists() && isReg) {
+            if(snap.exists()) {
                 const data = snap.val();
-                await update(userRef, {
-                    referralBonus: parseFloat(((data.referralBonus||0) + amt).toFixed(2)),
-                    referralCount: (data.referralCount||0) + 1
-                });
+                const updatePayload = {
+                    referralBonus: parseFloat(((data.referralBonus||0) + amt).toFixed(2))
+                };
+                if(isReg) {
+                    updatePayload.referralCount = (data.referralCount||0) + 1;
+                }
+                await update(userRef, updatePayload);
             }
             await remove(ref(db, `withdrawal_requests/${reqId}`));
             alert("Action finalized.");
