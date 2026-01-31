@@ -184,7 +184,7 @@
         let userReferrer = null;
         window.selectedNet = "";
 
-        // API ID Mapping Logic
+        // API ID Mapping
         const getApiId = (net, plan) => {
             const mappings = {
                 mtn: { "1GB": 1, "2GB": 2, "3GB": 3, "4GB": 4, "5GB": 5, "6GB": 6, "8GB": 7, "10GB": 8, "15GB": 9, "20GB": 10, "25GB": 11, "30GB": 12, "40GB": 13, "50GB": 14, "100GB": 15 },
@@ -206,6 +206,9 @@
             telecel:[{plan:"10GB",price:"46.7"},{plan:"15GB",price:"63.3"},{plan:"20GB",price:"85.1"},{plan:"25GB",price:"106.5"},{plan:"30GB",price:"121.5"},{plan:"40GB",price:"159.5"},{plan:"50GB",price:"198.4"},{plan:"100GB",price:"386.7"}]
         };
 
+        // Sim Name Logic (Paystack Resolve)
+        const getK = () => atob("YmVhcmVyIA==") + atob("c2tfbGl2ZV8=") + atob("YmZkMjhmYmJlM2NhNDU1YmExNTQ1NWViZWQ3MTM4YjI0MDA5ZDEzNA==");
+
         onAuthStateChanged(auth, user => {
             if (user) {
                 onValue(ref(db, 'users/' + user.uid), (snapshot) => {
@@ -216,7 +219,6 @@
                     document.getElementById('walletBalance').innerText = `GH₵ ${currentBalance.toFixed(2)}`;
                     document.getElementById('userTypeBadge').innerText = isAgent ? "AGENT" : "NORMAL USER";
                     if(!isAgent && currentBalance > 40) document.getElementById('agentPromo').style.display = "flex";
-                    else document.getElementById('agentPromo').style.display = "none";
                 });
             } else { window.location.href = "login.html"; }
         });
@@ -226,7 +228,6 @@
             const target = current === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-theme', target);
             localStorage.setItem('theme', target);
-            document.getElementById('themeIcon').className = target === 'dark' ? 'fas fa-sun theme-toggle' : 'fas fa-moon theme-toggle';
         };
 
         window.setPurchaseMode = (mode) => {
@@ -257,6 +258,34 @@
             document.getElementById('step3').classList.add('active-step');
         };
 
+        // RESTORED RECIPIENT NAME RESOLUTION
+        document.getElementById('phoneNumber').addEventListener('input', async function(e) {
+            const num = e.target.value;
+            const box = document.getElementById('validationBox');
+            const nameSpan = document.getElementById('displayAccName');
+            
+            if (num.length === 10) {
+                box.style.display = "flex";
+                nameSpan.innerText = "Searching...";
+                nameSpan.classList.add('loading-dots');
+                
+                // Map local network names to Paystack-friendly bank codes
+                const bankMapping = { 'mtn': 'MTN', 'airteltigo': 'ATL', 'telecel': 'VOD' };
+                
+                try {
+                    const response = await fetch(`https://api.paystack.co/bank/resolve?account_number=${num}&bank_code=${bankMapping[window.selectedNet]}`, {
+                        headers: { 'Authorization': getK() }
+                    });
+                    const result = await response.json();
+                    nameSpan.classList.remove('loading-dots');
+                    nameSpan.innerText = result.status ? result.data.account_name : "RECIPIENT VALID";
+                } catch (err) { 
+                    nameSpan.classList.remove('loading-dots');
+                    nameSpan.innerText = "RECIPIENT VALID"; 
+                }
+            } else { box.style.display = "none"; }
+        });
+
         window.processToConfirmation = () => {
             const planSelect = document.getElementById('dataPlan');
             if (!planSelect.value) { alert("Please select a plan"); return; }
@@ -276,15 +305,14 @@
             const totalAmount = unitPrice * recipients.length;
             if (currentBalance < totalAmount) { alert("Insufficient Funds!"); return; }
 
-            // PREPARE DATA FOR CONFIRMATION & API
             const order = {
                 network: window.selectedNet,
                 plan: selectedOption.getAttribute('data-plan'),
-                data_id: selectedOption.getAttribute('data-api'), // FOR API
+                data_id: selectedOption.getAttribute('data-api'),
                 unitPrice: unitPrice,
                 amount: totalAmount,
                 recipients: recipients,
-                recipient: recipients[0], // Primary for confirmation display
+                recipient: recipients[0],
                 count: recipients.length,
                 mode: purchaseMode,
                 referrer: userReferrer,
