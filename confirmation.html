@@ -98,18 +98,17 @@
             document.getElementById('payBtn').onclick = async () => {
                 if (wallet < cost) { alert("Insufficient Balance!"); return; }
                 
-                // Ensure data_id is a clean integer for the API
                 const packageId = parseInt(order.data_id);
                 if (isNaN(packageId)) {
-                    alert("Invalid Package ID. Please try again.");
+                    alert("Invalid Package Selection.");
                     return;
                 }
 
                 document.getElementById('payBtn').disabled = true;
-                document.getElementById('payBtn').innerText = "Processing Delivery...";
+                document.getElementById('payBtn').innerText = "Initiating API Request...";
 
                 try {
-                    // STEP 1: PLACE API ORDER
+                    // STEP 1: PLACE API ORDER FIRST
                     const response = await fetch(API_URL, {
                         method: "POST",
                         headers: {
@@ -126,27 +125,31 @@
                     const apiResult = await response.json();
 
                     if (!response.ok) {
-                        // Detailed error handling for "Required fields missing"
-                        throw new Error(apiResult.message || "API Rejected Order");
+                        throw new Error(apiResult.message || "The data vendor rejected the order.");
                     }
 
-                    // STEP 2: DEDUCT LOCALLY ONLY ON API SUCCESS
-                    const orderId = "ORD-" + Math.floor(Math.random() * 900000);
+                    // STEP 2: DEDUCT LOCALLY ONLY AFTER API CONFIRMS
+                    // We use an atomic update to ensure all three paths (user, personal orders, global orders) update at once
+                    const orderId = "ORD-" + Math.floor(Math.random() * 900000 + 100000);
                     const newBalance = parseFloat((wallet - cost).toFixed(2));
-                    const updates = {};
                     
+                    const updates = {};
+                    // Path 1: Update user wallet
                     updates[`users/${user.uid}/wallet`] = newBalance;
                     
-                    const record = {
+                    const finalOrderData = {
                         ...order,
-                        orderId,
+                        uid: user.uid, // Required for security rules
+                        orderId: orderId,
                         status: "Successful",
-                        api_order_id: apiResult.order_id || "N/A",
+                        api_reference: apiResult.order_id || "N/A",
                         timestamp: Date.now()
                     };
 
-                    updates[`user_orders/${user.uid}/${orderId}`] = record;
-                    updates[`orders/${orderId}`] = record;
+                    // Path 2: Global orders node
+                    updates[`orders/${orderId}`] = finalOrderData;
+                    // Path 3: Personal user orders node
+                    updates[`user_orders/${user.uid}/${orderId}`] = finalOrderData;
 
                     await update(ref(db), updates);
                     
@@ -154,12 +157,8 @@
                     document.getElementById('modalOverlay').style.display = 'flex';
 
                 } catch (err) {
-                    console.error("Payload Debug:", {
-                        network: order.network.toLowerCase(),
-                        beneficiary: order.recipient,
-                        package: packageId
-                    });
-                    alert("System Error: " + err.message + ". Your balance was NOT deducted.");
+                    console.error("Order Error:", err);
+                    alert("Order Aborted: " + err.message + ". Your balance was not touched.");
                     document.getElementById('payBtn').disabled = false;
                     document.getElementById('payBtn').innerText = "RETRY PAYMENT";
                 }
