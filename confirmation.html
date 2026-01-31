@@ -99,28 +99,30 @@
             document.getElementById('payBtn').onclick = async () => {
                 if (wallet < cost) { alert("Insufficient Balance!"); return; }
                 
-                const packageId = parseInt(order.data_id);
-                if (isNaN(packageId)) {
+                const packageId = Number(order.data_id);
+                if (!packageId || isNaN(packageId)) {
                     alert("Invalid package selection. Please re-select your plan.");
                     return;
                 }
 
                 document.getElementById('payBtn').disabled = true;
-                document.getElementById('payBtn').innerText = "Initiating API Request...";
+                document.getElementById('payBtn').innerText = "Processing Delivery...";
 
                 try {
-                    // STEP 1: PLACE API ORDER (Strict Lowercase & Order)
+                    // STEP 1: PLACE API ORDER (Strict Sequence & Lowercase)
+                    const requestBody = {
+                        "network": order.network.toLowerCase(),
+                        "beneficiary": order.recipient,
+                        "pa_data-bundle-packages": packageId
+                    };
+
                     const response = await fetch(API_URL, {
                         method: "POST",
                         headers: {
                             "Authorization": "Bearer " + API_KEY,
                             "Content-Type": "application/json"
                         },
-                        body: JSON.stringify({
-                            "network": order.network.toLowerCase(),
-                            "beneficiary": order.recipient,
-                            "pa_data-bundle-packages": packageId
-                        })
+                        body: JSON.stringify(requestBody)
                     });
 
                     const apiResult = await response.json();
@@ -129,7 +131,7 @@
                         throw new Error(apiResult.message || "The data vendor rejected the order.");
                     }
 
-                    // STEP 2: DEDUCT LOCALLY ONLY AFTER API CONFIRMS SUCCESS
+                    // STEP 2: DEDUCT LOCALLY ONLY ON API SUCCESS
                     const orderId = "ORD-" + Math.floor(Math.random() * 900000 + 100000);
                     const newBalance = parseFloat((wallet - cost).toFixed(2));
                     
@@ -155,7 +157,7 @@
 
                 } catch (err) {
                     console.error("Order Error:", err);
-                    alert("Order Aborted: " + err.message + ". Your balance was not touched.");
+                    alert("Order Aborted: " + err.message);
                     document.getElementById('payBtn').disabled = false;
                     document.getElementById('payBtn').innerText = "RETRY PAYMENT";
                 }
