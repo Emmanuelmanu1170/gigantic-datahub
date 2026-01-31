@@ -8,80 +8,30 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --primary: #6a5af9; 
-            --deep: #0a2a66; 
-            --bg: #f4f7ff; 
-            --card: #ffffff;
-            --text: #0a2a66;
-            --border: #f1f5f9;
+            --primary: #6a5af9; --deep: #0a2a66; --bg: #f4f7ff; 
+            --card: #ffffff; --text: #0a2a66; --border: #f1f5f9;
         }
-
         [data-theme="dark"] {
-            --bg: #02040a;
-            --card: #0d1117;
-            --text: #f0f6fc;
-            --deep: #f0f6fc;
-            --border: #30363d;
+            --bg: #02040a; --card: #0d1117; --text: #f0f6fc;
+            --deep: #f0f6fc; --border: #30363d;
         }
-
         * { margin:0; padding:0; box-sizing:border-box; font-family:"Poppins", sans-serif; transition: background 0.3s, color 0.3s; }
         body { background: var(--bg); color: var(--text); }
-        
-        header { 
-            background: #010409; 
-            color: #fff; 
-            padding: 15px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between; 
-            position: sticky; 
-            top: 0; 
-            z-index: 100; 
-        }
-
+        header { background: #010409; color: #fff; padding: 15px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
         .container { padding: 20px; display: flex; justify-content: center; margin-top: 20px; }
         .card { background: var(--card); width: 100%; max-width: 400px; border-radius: 20px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid var(--border); }
-        
         .summary-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
         .summary-item span:last-child { font-weight: 700; color: var(--deep); }
-        
         .price-focus { background: rgba(106, 90, 249, 0.05); border: 2px dashed var(--primary); border-radius: 15px; padding: 20px; text-align: center; margin: 20px 0; }
         .price-focus h2 { font-size: 2rem; color: #ff4500; }
-        
         .pay-btn { background: linear-gradient(135deg, var(--primary), #a855f7); color: #fff; border: none; width: 100%; padding: 18px; border-radius: 15px; font-weight: 700; font-size: 1.1rem; cursor: pointer; }
         .pay-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
-
-        /* SUCCESS MODAL STYLES */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); display: none; align-items: center;
-            justify-content: center; z-index: 2000; padding: 20px;
-        }
-        .success-modal {
-            background: var(--card); border-radius: 25px; padding: 30px;
-            width: 100%; max-width: 350px; text-align: center;
-            transform: scale(0.5); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border: 1px solid var(--border);
-        }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
+        .success-modal { background: var(--card); border-radius: 25px; padding: 30px; width: 100%; max-width: 350px; text-align: center; transform: scale(0.5); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 1px solid var(--border); }
         .modal-active .success-modal { transform: scale(1); }
-        .success-icon {
-            width: 70px; height: 70px; background: #22c55e; color: white;
-            border-radius: 50%; display: flex; align-items: center;
-            justify-content: center; font-size: 30px; margin: 0 auto 20px;
-            box-shadow: 0 10px 20px rgba(34, 197, 94, 0.3);
-        }
-        .modal-btn {
-            background: #22c55e; color: white; border: none;
-            padding: 12px 30px; border-radius: 12px; font-weight: 700;
-            margin-top: 20px; cursor: pointer; width: 100%;
-        }
+        .success-icon { width: 70px; height: 70px; background: #22c55e; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto 20px; box-shadow: 0 10px 20px rgba(34, 197, 94, 0.3); }
+        .modal-btn { background: #22c55e; color: white; border: none; padding: 12px 30px; border-radius: 12px; font-weight: 700; margin-top: 20px; cursor: pointer; width: 100%; }
     </style>
-    <script>
-        (function() {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-        })();
-    </script>
 </head>
 <body>
 
@@ -100,8 +50,8 @@
 <div class="modal-overlay" id="modalOverlay">
     <div class="success-modal">
         <div class="success-icon"><i class="fas fa-check"></i></div>
-        <h3 style="margin-bottom: 10px; color: #22c55e;">Payment Successful!</h3>
-        <p id="apiStatus" style="font-size: 0.85rem; color: var(--text-gray); opacity: 0.8;">Processing delivery via API...</p>
+        <h3 style="margin-bottom: 10px; color: #22c55e;">Order Placed!</h3>
+        <p id="apiStatus" style="font-size: 0.85rem; color: var(--text-gray); opacity: 0.8;">Your data is being delivered.</p>
         <button class="modal-btn" onclick="window.location.replace('order_history.html')">View History</button>
     </div>
 </div>
@@ -109,7 +59,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-    import { getDatabase, ref, onValue, update, push } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+    import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
@@ -123,24 +73,14 @@
     const db = getDatabase(app);
 
     const API_KEY = "tera_live_95abf76d96984f4612153a4869e43d3e";
-    const API_ENDPOINT = "https://idatagh.com/wp-json/custom/v1/place-order";
-
-    window.toggleTheme = () => {
-        const doc = document.documentElement;
-        const icon = document.getElementById('themeIcon');
-        const current = doc.getAttribute('data-theme');
-        const target = current === 'dark' ? 'light' : 'dark';
-        doc.setAttribute('data-theme', target);
-        localStorage.setItem('theme', target);
-        icon.className = target === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-    };
+    const API_URL = "https://idatagh.com/wp-json/custom/v1/place-order";
 
     onAuthStateChanged(auth, (user) => {
         if (!user) { window.location.href = "login.html"; return; }
 
         const order = JSON.parse(localStorage.getItem('pendingOrder'));
         if (!order) {
-            document.getElementById('renderArea').innerHTML = "<p style='text-align:center'>Session expired. Please re-order.</p>";
+            document.getElementById('renderArea').innerHTML = "<p style='text-align:center'>Session expired.</p>";
             return;
         }
 
@@ -153,72 +93,70 @@
                 <div class="summary-item"><span>Network</span><span>${order.network.toUpperCase()}</span></div>
                 <div class="summary-item"><span>Plan</span><span>${order.plan}</span></div>
                 <div class="summary-item"><span>Recipient</span><span>${order.recipient}</span></div>
-                <div class="summary-item"><span>My Balance</span><span>GH₵ ${wallet.toFixed(2)}</span></div>
+                <div class="summary-item"><span>Balance</span><span>GH₵ ${wallet.toFixed(2)}</span></div>
                 <div class="price-focus">
-                    <label style="font-size:0.7rem; font-weight:bold; color:var(--primary)">TOTAL DEDUCTION</label>
                     <h2>GH₵ ${cost.toFixed(2)}</h2>
                 </div>
                 <button class="pay-btn" id="payBtn">AUTHORIZE & PAY</button>
             `;
 
             document.getElementById('payBtn').onclick = async () => {
-                if (wallet < cost) {
-                    alert("Insufficient Balance!");
-                    return;
-                }
+                if (wallet < cost) { alert("Insufficient Balance!"); return; }
 
                 document.getElementById('payBtn').disabled = true;
-                document.getElementById('payBtn').innerText = "Processing Transaction...";
+                document.getElementById('payBtn').innerText = "Processing...";
 
                 try {
-                    // 1. DEDUCT LOCALLY FIRST
-                    const newBalance = parseFloat((wallet - cost).toFixed(2));
-                    const orderId = "ORD-" + Date.now().toString().slice(-6);
-
-                    // 2. PREPARE API PAYLOAD
-                    const apiPayload = {
-                        network: order.network.toLowerCase(), // e.g., "mtn"
-                        beneficiary: order.recipient,
-                        "pa_data-bundle-packages": parseInt(order.data_id) // API bundle ID
+                    // API Body Construction
+                    const payload = {
+                        "network": order.network.toLowerCase(),
+                        "beneficiary": order.recipient,
+                        "pa_data-bundle-packages": order.data_id // Ensure data_id is passed from the previous page
                     };
 
-                    // 3. CALL EXTERNAL API
-                    const apiResponse = await fetch(API_ENDPOINT, {
+                    const response = await fetch(API_URL, {
                         method: "POST",
                         headers: {
-                            "Authorization": `Bearer ${API_KEY}`,
+                            "Authorization": "Bearer " + API_KEY,
                             "Content-Type": "application/json"
                         },
-                        body: JSON.stringify(apiPayload)
+                        body: JSON.stringify(payload)
                     });
 
-                    const apiResult = await apiResponse.json();
+                    const result = await response.json();
 
-                    // 4. UPDATE FIREBASE WITH RESULTS
+                    // If API call was successful or even if it returned an error we can log
+                    const orderId = "ORD-" + Math.floor(Math.random() * 900000);
+                    const newBalance = (wallet - cost).toFixed(2);
+
                     const updates = {};
-                    updates[`users/${user.uid}/wallet`] = newBalance;
+                    updates[`users/${user.uid}/wallet`] = parseFloat(newBalance);
                     
                     const record = {
-                        orderId,
-                        uid: user.uid,
                         ...order,
-                        apiResponse: apiResult,
-                        status: apiResponse.ok ? "Processing" : "Failed",
+                        orderId,
+                        api_response: result,
+                        status: response.ok ? "Successful" : "Failed",
                         timestamp: Date.now()
                     };
 
-                    updates[`orders/${orderId}`] = record;
                     updates[`user_orders/${user.uid}/${orderId}`] = record;
+                    updates[`orders/${orderId}`] = record;
 
                     await update(ref(db), updates);
                     
-                    localStorage.removeItem('pendingOrder');
-                    showSuccess(apiResponse.ok ? "Success! Data is being delivered." : "Payment received. Delivery pending manual review.");
+                    if(response.ok) {
+                        localStorage.removeItem('pendingOrder');
+                        showSuccess("Data bundle sent successfully!");
+                    } else {
+                        throw new Error(result.message || "API Rejected Order");
+                    }
 
                 } catch (err) {
-                    console.error(err);
-                    alert("System error. If balance was deducted, contact support.");
+                    console.error("Order Error:", err);
+                    alert("Order Failed: " + err.message + ". Please contact support if balance was deducted.");
                     document.getElementById('payBtn').disabled = false;
+                    document.getElementById('payBtn').innerText = "RETRY PAYMENT";
                 }
             };
         });
