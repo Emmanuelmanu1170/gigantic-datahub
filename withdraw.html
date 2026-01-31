@@ -126,12 +126,12 @@
         }
 
         // 1. SYNC APPROVED BONUS BALANCE
-        const userRef = ref(db, `users/${user.uid}`);
-        onValue(userRef, (snap) => {
+        // This listens to the specific 'referralBonus' field in your user object
+        onValue(ref(db, `users/${user.uid}`), (snap) => {
             const data = snap.val() || {};
             currentApprovedBonus = parseFloat(data.referralBonus || 0);
             document.getElementById('bonusBalance').innerText = "₵" + currentApprovedBonus.toFixed(2);
-        }, (error) => console.error("Balance Load Error:", error));
+        });
 
         // 2. SYNC LEADERBOARD (REAL-TIME)
         const topRefQuery = query(ref(db, 'users'), orderByChild('referralCount'), limitToLast(20));
@@ -145,6 +145,7 @@
                 if(u.referralCount > 0) users.push(u); 
             });
 
+            // Sort descending: highest referralCount first
             users.sort((a,b) => (b.referralCount || 0) - (a.referralCount || 0));
 
             if(users.length === 0) {
@@ -153,42 +154,44 @@
             }
 
             users.slice(0, 5).forEach((u, i) => {
-                const name = u.fullName || "Member";
+                const fullName = u.fullName || "Member";
                 const row = `
                     <div class="leader-item">
                         <div class="leader-rank ${i === 0 ? 'rank-1' : ''}">${i + 1}</div>
-                        <div class="leader-name">${name.split(' ')[0]}***</div>
+                        <div class="leader-name">${fullName.split(' ')[0]}***</div>
                         <div class="leader-count">${u.referralCount || 0} refs</div>
                     </div>`;
                 list.innerHTML += row;
             });
-        }, (error) => console.error("Leaderboard Sync Error:", error));
+        });
 
         // 3. WITHDRAWAL LOGIC
         document.getElementById('submitBtn').onclick = async () => {
-            const amt = parseFloat(document.getElementById('withdrawAmt').value);
+            const amtInput = document.getElementById('withdrawAmt');
+            const amt = parseFloat(amtInput.value);
             const net = document.getElementById('momoNetwork').value;
             const num = document.getElementById('momoNumber').value.trim();
             const name = document.getElementById('momoName').value.trim();
             const btn = document.getElementById('submitBtn');
+            const successNote = document.getElementById('successNote');
             
             if (!amt || amt < 27) { 
                 alert("Minimum withdrawal is GH₵ 27.00."); 
                 return; 
             }
             if (amt > currentApprovedBonus) { 
-                alert("Insufficient balance! Approved: GH₵ " + currentApprovedBonus.toFixed(2)); 
+                alert("Insufficient balance! Your approved bonus is GH₵ " + currentApprovedBonus.toFixed(2)); 
                 return; 
             }
             if (num.length < 10 || name === "") {
-                alert("Please check your MoMo number or name.");
+                alert("Please check your MoMo number and account name.");
                 return;
             }
 
-            if(!confirm(`Send withdrawal request for GH₵ ${amt.toFixed(2)}?`)) return;
+            if(!confirm(`Submit withdrawal request for GH₵ ${amt.toFixed(2)} to ${num}?`)) return;
 
             btn.disabled = true;
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Sending Request...`;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processing...`;
 
             try {
                 // Generate a request in the global queue for Admin Panel
@@ -204,12 +207,12 @@
                     timestamp: Date.now()
                 });
 
-                document.getElementById('withdrawAmt').value = "";
-                document.getElementById('successNote').style.display = "block";
-                alert("Success! Your request has been sent to the Admin for payout.");
+                amtInput.value = "";
+                successNote.style.display = "block";
+                alert("Withdrawal request sent successfully! Admin will process payment soon.");
                 
             } catch (err) {
-                alert("Request Failed: " + err.message);
+                alert("Error sending request: " + err.message);
                 console.error(err);
             } finally {
                 btn.disabled = false;
