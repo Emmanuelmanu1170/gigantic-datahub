@@ -37,11 +37,9 @@
         .btn-withdraw:hover { background: #5649d8; transform: translateY(-2px); }
         .btn-withdraw:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; }
 
-        /* Status Badge */
         .status-msg { margin-top: 15px; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 600; display: none; text-align: center; }
-        .msg-success { background: #dcfce7; color: var(--success); display: block; }
+        .msg-success { background: #dcfce7; color: var(--success); }
 
-        /* Leaderboard */
         .leaderboard { margin-top: 30px; border-top: 1px solid #edf2f7; padding-top: 20px; }
         .leader-title { font-size: 0.9rem; font-weight: 800; display: flex; align-items: center; gap: 8px; margin-bottom: 15px; color: var(--accent); }
         .leader-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f8fafc; }
@@ -64,7 +62,7 @@
         <h2 id="bonusBalance">₵0.00</h2>
     </div>
 
-    <div id="successNote" class="status-msg msg-success" style="display: none;">
+    <div id="successNote" class="status-msg msg-success">
         <i class="fas fa-check-circle"></i> Request sent! Admin will pay to your MoMo soon.
     </div>
 
@@ -106,7 +104,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-    import { getDatabase, ref, onValue, push, set, query, orderByChild, limitToLast, runTransaction } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+    import { getDatabase, ref, onValue, push, set, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
@@ -127,24 +125,26 @@
             return;
         }
 
-        // SYNC APPROVED BONUS ONLY
-        // This listens to the exact field where admin approves the commission
-        onValue(ref(db, `users/${user.uid}`), (snap) => {
+        // 1. SYNC APPROVED BONUS BALANCE
+        const userRef = ref(db, `users/${user.uid}`);
+        onValue(userRef, (snap) => {
             const data = snap.val() || {};
             currentApprovedBonus = parseFloat(data.referralBonus || 0);
             document.getElementById('bonusBalance').innerText = "₵" + currentApprovedBonus.toFixed(2);
-        });
+        }, (error) => console.error("Balance Load Error:", error));
 
-        // SYNC LEADERBOARD
-        const topRefQuery = query(ref(db, 'users'), orderByChild('referralCount'), limitToLast(10));
+        // 2. SYNC LEADERBOARD (REAL-TIME)
+        const topRefQuery = query(ref(db, 'users'), orderByChild('referralCount'), limitToLast(20));
         onValue(topRefQuery, (snap) => {
             const list = document.getElementById('leaderList');
             list.innerHTML = "";
             let users = [];
+            
             snap.forEach(child => { 
                 const u = child.val();
                 if(u.referralCount > 0) users.push(u); 
             });
+
             users.sort((a,b) => (b.referralCount || 0) - (a.referralCount || 0));
 
             if(users.length === 0) {
@@ -162,9 +162,9 @@
                     </div>`;
                 list.innerHTML += row;
             });
-        });
+        }, (error) => console.error("Leaderboard Sync Error:", error));
 
-        // WITHDRAWAL PROCESS
+        // 3. WITHDRAWAL LOGIC
         document.getElementById('submitBtn').onclick = async () => {
             const amt = parseFloat(document.getElementById('withdrawAmt').value);
             const net = document.getElementById('momoNetwork').value;
@@ -173,31 +173,30 @@
             const btn = document.getElementById('submitBtn');
             
             if (!amt || amt < 27) { 
-                alert("Minimum withdrawal GH₵ 27.00 required."); 
+                alert("Minimum withdrawal is GH₵ 27.00."); 
                 return; 
             }
             if (amt > currentApprovedBonus) { 
-                alert("Insufficient Approved Balance! Current: GH₵ " + currentApprovedBonus.toFixed(2)); 
+                alert("Insufficient balance! Approved: GH₵ " + currentApprovedBonus.toFixed(2)); 
                 return; 
             }
             if (num.length < 10 || name === "") {
-                alert("Please provide valid MoMo details.");
+                alert("Please check your MoMo number or name.");
                 return;
             }
 
-            if(!confirm(`Proceed with withdrawal of GH₵ ${amt.toFixed(2)} to ${num}?`)) return;
+            if(!confirm(`Send withdrawal request for GH₵ ${amt.toFixed(2)}?`)) return;
 
             btn.disabled = true;
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processing...`;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Sending Request...`;
 
             try {
-                // Submit request to Admin panel
-                const reqRef = push(ref(db, 'withdrawal_requests'));
-                await set(reqRef, {
+                // Generate a request in the global queue for Admin Panel
+                const requestRef = push(ref(db, 'withdrawal_requests'));
+                await set(requestRef, {
                     uid: user.uid,
                     email: user.email,
                     amount: amt,
-                    method: "Mobile Money",
                     network: net,
                     momoNumber: num,
                     accountName: name,
@@ -205,16 +204,13 @@
                     timestamp: Date.now()
                 });
 
-                // Clear fields and show success
                 document.getElementById('withdrawAmt').value = "";
-                document.getElementById('momoNumber').value = "";
-                document.getElementById('momoName').value = "";
                 document.getElementById('successNote').style.display = "block";
-                
-                alert("Request Successful! Your bonus is being processed by Admin.");
+                alert("Success! Your request has been sent to the Admin for payout.");
                 
             } catch (err) {
-                alert("Error: " + err.message);
+                alert("Request Failed: " + err.message);
+                console.error(err);
             } finally {
                 btn.disabled = false;
                 btn.innerText = "PROCEED WITHDRAWAL";
