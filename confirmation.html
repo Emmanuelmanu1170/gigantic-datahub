@@ -7,9 +7,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #6a5af9; --deep: #0a2a66; --bg: #f4f7ff; --card: #ffffff; --text: #0a2a66; --border: #f1f5f9; }
-        [data-theme="dark"] { --bg: #02040a; --card: #0d1117; --text: #f0f6fc; --deep: #f0f6fc; --border: #30363d; }
-        * { margin:0; padding:0; box-sizing:border-box; font-family:"Poppins", sans-serif; }
+        :root { 
+            --primary: #6a5af9; --deep: #0a2a66; --bg: #f4f7ff; 
+            --card: #ffffff; --text: #0a2a66; --border: #f1f5f9;
+        }
+        [data-theme="dark"] {
+            --bg: #02040a; --card: #0d1117; --text: #f0f6fc;
+            --deep: #f0f6fc; --border: #30363d;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:"Poppins", sans-serif; transition: background 0.3s, color 0.3s; }
         body { background: var(--bg); color: var(--text); padding-bottom: 50px; }
         header { background: #010409; color: #fff; padding: 15px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
         .container { padding: 20px; display: flex; justify-content: center; margin-top: 20px; }
@@ -92,11 +98,18 @@
             document.getElementById('payBtn').onclick = async () => {
                 if (wallet < cost) { alert("Insufficient Balance!"); return; }
                 
+                // Ensure data_id is a clean integer for the API
+                const packageId = parseInt(order.data_id);
+                if (isNaN(packageId)) {
+                    alert("Invalid Package ID. Please try again.");
+                    return;
+                }
+
                 document.getElementById('payBtn').disabled = true;
-                document.getElementById('payBtn').innerText = "Connecting to API...";
+                document.getElementById('payBtn').innerText = "Processing Delivery...";
 
                 try {
-                    // STEP 1: TEST API CONNECTION FIRST (Avoid deducting money if API is blocked by CORS)
+                    // STEP 1: PLACE API ORDER
                     const response = await fetch(API_URL, {
                         method: "POST",
                         headers: {
@@ -106,24 +119,30 @@
                         body: JSON.stringify({
                             "network": order.network.toLowerCase(),
                             "beneficiary": order.recipient,
-                            "pa_data-bundle-packages": order.data_id
+                            "pa_data-bundle-packages": packageId
                         })
                     });
 
                     const apiResult = await response.json();
 
                     if (!response.ok) {
-                        throw new Error(apiResult.message || "API Connection Failed");
+                        // Detailed error handling for "Required fields missing"
+                        throw new Error(apiResult.message || "API Rejected Order");
                     }
 
-                    // STEP 2: IF API SUCCESS, DEDUCT MONEY FROM FIREBASE
+                    // STEP 2: DEDUCT LOCALLY ONLY ON API SUCCESS
                     const orderId = "ORD-" + Math.floor(Math.random() * 900000);
-                    const newBalance = (wallet - cost).toFixed(2);
+                    const newBalance = parseFloat((wallet - cost).toFixed(2));
                     const updates = {};
-                    updates[`users/${user.uid}/wallet`] = parseFloat(newBalance);
+                    
+                    updates[`users/${user.uid}/wallet`] = newBalance;
                     
                     const record = {
-                        ...order, orderId, status: "Successful", timestamp: Date.now()
+                        ...order,
+                        orderId,
+                        status: "Successful",
+                        api_order_id: apiResult.order_id || "N/A",
+                        timestamp: Date.now()
                     };
 
                     updates[`user_orders/${user.uid}/${orderId}`] = record;
@@ -135,7 +154,11 @@
                     document.getElementById('modalOverlay').style.display = 'flex';
 
                 } catch (err) {
-                    console.error(err);
+                    console.error("Payload Debug:", {
+                        network: order.network.toLowerCase(),
+                        beneficiary: order.recipient,
+                        package: packageId
+                    });
                     alert("System Error: " + err.message + ". Your balance was NOT deducted.");
                     document.getElementById('payBtn').disabled = false;
                     document.getElementById('payBtn').innerText = "RETRY PAYMENT";
