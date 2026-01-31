@@ -7,16 +7,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { 
-            --primary: #6a5af9; --deep: #0a2a66; --bg: #f4f7ff; 
-            --card: #ffffff; --text: #0a2a66; --border: #f1f5f9;
-        }
-        [data-theme="dark"] {
-            --bg: #02040a; --card: #0d1117; --text: #f0f6fc;
-            --deep: #f0f6fc; --border: #30363d;
-        }
-        * { margin:0; padding:0; box-sizing:border-box; font-family:"Poppins", sans-serif; transition: background 0.3s, color 0.3s; }
-        body { background: var(--bg); color: var(--text); }
+        :root { --primary: #6a5af9; --deep: #0a2a66; --bg: #f4f7ff; --card: #ffffff; --text: #0a2a66; --border: #f1f5f9; }
+        [data-theme="dark"] { --bg: #02040a; --card: #0d1117; --text: #f0f6fc; --deep: #f0f6fc; --border: #30363d; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:"Poppins", sans-serif; }
+        body { background: var(--bg); color: var(--text); padding-bottom: 50px; }
         header { background: #010409; color: #fff; padding: 15px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
         .container { padding: 20px; display: flex; justify-content: center; margin-top: 20px; }
         .card { background: var(--card); width: 100%; max-width: 400px; border-radius: 20px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid var(--border); }
@@ -27,18 +21,16 @@
         .pay-btn { background: linear-gradient(135deg, var(--primary), #a855f7); color: #fff; border: none; width: 100%; padding: 18px; border-radius: 15px; font-weight: 700; font-size: 1.1rem; cursor: pointer; }
         .pay-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
-        .success-modal { background: var(--card); border-radius: 25px; padding: 30px; width: 100%; max-width: 350px; text-align: center; transform: scale(0.5); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 1px solid var(--border); }
-        .modal-active .success-modal { transform: scale(1); }
-        .success-icon { width: 70px; height: 70px; background: #22c55e; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto 20px; box-shadow: 0 10px 20px rgba(34, 197, 94, 0.3); }
-        .modal-btn { background: #22c55e; color: white; border: none; padding: 12px 30px; border-radius: 12px; font-weight: 700; margin-top: 20px; cursor: pointer; width: 100%; }
+        .success-modal { background: var(--card); border-radius: 25px; padding: 30px; width: 100%; max-width: 350px; text-align: center; border: 1px solid var(--border); }
+        .success-icon { width: 70px; height: 70px; background: #22c55e; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto 20px; }
     </style>
 </head>
 <body>
 
 <header>
     <a href="order.html" style="color:white"><i class="fas fa-arrow-left"></i></a>
-    <span style="font-weight:700">Confirm Purchase</span>
-    <i class="fas fa-moon" id="themeIcon" style="cursor:pointer" onclick="toggleTheme()"></i>
+    <span style="font-weight:700">Confirm Order</span>
+    <div></div>
 </header>
 
 <div class="container">
@@ -50,9 +42,9 @@
 <div class="modal-overlay" id="modalOverlay">
     <div class="success-modal">
         <div class="success-icon"><i class="fas fa-check"></i></div>
-        <h3 style="margin-bottom: 10px; color: #22c55e;">Order Placed!</h3>
-        <p id="apiStatus" style="font-size: 0.85rem; color: var(--text-gray); opacity: 0.8;">Your data is being delivered.</p>
-        <button class="modal-btn" onclick="window.location.replace('order_history.html')">View History</button>
+        <h3 style="margin-bottom: 10px; color: #22c55e;">Payment Successful!</h3>
+        <p id="apiStatus" style="font-size: 0.85rem; color: #64748b;">Your data is being delivered.</p>
+        <button onclick="window.location.replace('order_history.html')" style="background:#22c55e; color:white; border:none; padding:12px; width:100%; border-radius:12px; margin-top:20px; font-weight:700;">View History</button>
     </div>
 </div>
 
@@ -80,7 +72,7 @@
 
         const order = JSON.parse(localStorage.getItem('pendingOrder'));
         if (!order) {
-            document.getElementById('renderArea').innerHTML = "<p style='text-align:center'>Session expired.</p>";
+            document.getElementById('renderArea').innerHTML = "<p>Session expired.</p>";
             return;
         }
 
@@ -91,53 +83,47 @@
 
             document.getElementById('renderArea').innerHTML = `
                 <div class="summary-item"><span>Network</span><span>${order.network.toUpperCase()}</span></div>
-                <div class="summary-item"><span>Plan</span><span>${order.plan}</span></div>
                 <div class="summary-item"><span>Recipient</span><span>${order.recipient}</span></div>
                 <div class="summary-item"><span>Balance</span><span>GH₵ ${wallet.toFixed(2)}</span></div>
-                <div class="price-focus">
-                    <h2>GH₵ ${cost.toFixed(2)}</h2>
-                </div>
+                <div class="price-focus"><h2>GH₵ ${cost.toFixed(2)}</h2></div>
                 <button class="pay-btn" id="payBtn">AUTHORIZE & PAY</button>
             `;
 
             document.getElementById('payBtn').onclick = async () => {
                 if (wallet < cost) { alert("Insufficient Balance!"); return; }
-
+                
                 document.getElementById('payBtn').disabled = true;
-                document.getElementById('payBtn').innerText = "Processing...";
+                document.getElementById('payBtn').innerText = "Connecting to API...";
 
                 try {
-                    // API Body Construction
-                    const payload = {
-                        "network": order.network.toLowerCase(),
-                        "beneficiary": order.recipient,
-                        "pa_data-bundle-packages": order.data_id // Ensure data_id is passed from the previous page
-                    };
-
+                    // STEP 1: TEST API CONNECTION FIRST (Avoid deducting money if API is blocked by CORS)
                     const response = await fetch(API_URL, {
                         method: "POST",
                         headers: {
                             "Authorization": "Bearer " + API_KEY,
                             "Content-Type": "application/json"
                         },
-                        body: JSON.stringify(payload)
+                        body: JSON.stringify({
+                            "network": order.network.toLowerCase(),
+                            "beneficiary": order.recipient,
+                            "pa_data-bundle-packages": order.data_id
+                        })
                     });
 
-                    const result = await response.json();
+                    const apiResult = await response.json();
 
-                    // If API call was successful or even if it returned an error we can log
+                    if (!response.ok) {
+                        throw new Error(apiResult.message || "API Connection Failed");
+                    }
+
+                    // STEP 2: IF API SUCCESS, DEDUCT MONEY FROM FIREBASE
                     const orderId = "ORD-" + Math.floor(Math.random() * 900000);
                     const newBalance = (wallet - cost).toFixed(2);
-
                     const updates = {};
                     updates[`users/${user.uid}/wallet`] = parseFloat(newBalance);
                     
                     const record = {
-                        ...order,
-                        orderId,
-                        api_response: result,
-                        status: response.ok ? "Successful" : "Failed",
-                        timestamp: Date.now()
+                        ...order, orderId, status: "Successful", timestamp: Date.now()
                     };
 
                     updates[`user_orders/${user.uid}/${orderId}`] = record;
@@ -145,29 +131,18 @@
 
                     await update(ref(db), updates);
                     
-                    if(response.ok) {
-                        localStorage.removeItem('pendingOrder');
-                        showSuccess("Data bundle sent successfully!");
-                    } else {
-                        throw new Error(result.message || "API Rejected Order");
-                    }
+                    localStorage.removeItem('pendingOrder');
+                    document.getElementById('modalOverlay').style.display = 'flex';
 
                 } catch (err) {
-                    console.error("Order Error:", err);
-                    alert("Order Failed: " + err.message + ". Please contact support if balance was deducted.");
+                    console.error(err);
+                    alert("System Error: " + err.message + ". Your balance was NOT deducted.");
                     document.getElementById('payBtn').disabled = false;
                     document.getElementById('payBtn').innerText = "RETRY PAYMENT";
                 }
             };
         });
     });
-
-    function showSuccess(msg) {
-        document.getElementById('apiStatus').innerText = msg;
-        const overlay = document.getElementById('modalOverlay');
-        overlay.style.display = 'flex';
-        setTimeout(() => overlay.classList.add('modal-active'), 10);
-    }
 </script>
 </body>
 </html>
