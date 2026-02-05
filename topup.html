@@ -3,117 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Top-up Wallet — Giganticdata</title>
+    <title>Fund Wallet - GiganticDataHub</title>
     <script src="https://js.paystack.co/v1/inline.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --deep-blue: #0a0e27;
-            --primary-blue: #0052cc;
-            --orange-gradient: linear-gradient(135deg, #f06529 0%, #c02425 100%);
-            --light-bg: #f4f7fe;
-            --success-green: #10b981;
+            --deep-blue: #0f172a;
+            --primary: #4f46e5;
+            --success: #10b981;
+            --error: #ef4444;
+            --white: #ffffff;
+            --glass: rgba(255, 255, 255, 0.9);
         }
 
-        body {
-            margin: 0; font-family: sans-serif; background: var(--light-bg); color: #1e293b;
-        }
-
-        .header {
-            background: var(--deep-blue); color: white; padding: 20px;
-            display: flex; align-items: center; gap: 15px;
-        }
-
-        .container { padding: 20px; max-width: 500px; margin: 0 auto; }
+        body { margin: 0; font-family: 'Poppins', sans-serif; background: #f1f5f9; color: var(--deep-blue); }
+        .header { background: var(--deep-blue); color: white; padding: 20px; display: flex; align-items: center; gap: 15px; }
+        .container { padding: 20px; max-width: 480px; margin: auto; }
 
         .card {
-            background: white; padding: 25px; border-radius: 20px;
+            background: var(--white); border-radius: 24px; padding: 25px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
         }
 
-        .wallet-mini {
+        .balance-box {
             background: var(--deep-blue); color: white; padding: 15px;
-            border-radius: 15px; margin-bottom: 25px; display: flex;
-            justify-content: space-between; align-items: center;
+            border-radius: 18px; margin-bottom: 20px; text-align: center;
         }
 
-        label { display: block; font-weight: 700; font-size: 13px; margin-bottom: 8px; color: var(--deep-blue); }
-
+        label { display: block; font-weight: 700; font-size: 13px; margin-bottom: 10px; color: #64748b; text-transform: uppercase; }
         .input-group { position: relative; margin-bottom: 20px; }
-        .input-group span { position: absolute; left: 15px; top: 12px; font-weight: 700; color: #64748b; }
+        .input-group span { position: absolute; left: 15px; top: 12px; font-weight: 800; color: var(--deep-blue); }
         input {
-            width: 100%; padding: 12px 12px 12px 50px; border: 2px solid #e2e8f0;
-            border-radius: 12px; font-size: 16px; box-sizing: border-box;
+            width: 100%; padding: 14px 14px 14px 55px; border: 2px solid #f1f5f9;
+            border-radius: 14px; font-size: 1.1rem; outline: none; transition: 0.3s;
         }
+        input:focus { border-color: var(--primary); }
 
-        .fee-box {
-            background: #f8fafc; border-radius: 12px; padding: 15px;
-            font-size: 14px; line-height: 2; border: 1px dashed #cbd5e1;
-        }
-
-        .fee-item { display: flex; justify-content: space-between; }
-        .total-row { border-top: 1px solid #e2e8f0; margin-top: 10px; padding-top: 10px; font-weight: 800; color: #f06529; }
+        .fee-info { background: #f8fafc; border-radius: 14px; padding: 15px; font-size: 0.85rem; border: 1px dashed #cbd5e1; }
+        .fee-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .total-row { border-top: 2px solid #e2e8f0; padding-top: 10px; margin-top: 10px; font-weight: 800; color: var(--primary); font-size: 1rem; }
 
         .pay-btn {
-            width: 100%; background: var(--orange-gradient); color: white;
-            border: none; padding: 16px; border-radius: 12px; font-weight: 700;
-            font-size: 16px; margin-top: 20px; cursor: pointer;
-            box-shadow: 0 5px 15px rgba(240, 101, 41, 0.3);
-            transition: 0.3s ease;
+            width: 100%; background: var(--primary); color: white; border: none;
+            padding: 18px; border-radius: 16px; font-weight: 700; font-size: 1rem;
+            margin-top: 25px; cursor: pointer; transition: 0.3s;
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.2);
         }
 
-        .pay-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(240, 101, 41, 0.4); }
-        .pay-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .whatsapp-note {
+            background: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px;
+            border-radius: 16px; margin-top: 20px; font-size: 0.8rem;
+            display: flex; align-items: center; gap: 12px;
+        }
+        .wa-link { color: #16a34a; font-weight: 800; text-decoration: underline; cursor: pointer; }
 
-        /* Secure Badges */
-        .badge-row {
-            display: flex; justify-content: center; align-items: center; 
-            gap: 15px; margin-top: 20px; opacity: 0.7;
+        /* Professional Success Popup */
+        #status-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5); 
+            display: none; align-items: center; justify-content: center; z-index: 1000;
         }
-        .badge-row i { font-size: 24px; color: var(--deep-blue); }
-
-        /* Instructions Stepper */
-        .instruction-box {
-            background: #fff; border-radius: 15px; padding: 20px;
-            border: 1px solid #e2e8f0; margin-top: 10px;
+        .modal-content {
+            background: white; width: 90%; max-width: 350px; padding: 30px;
+            border-radius: 24px; text-align: center;
         }
-        .instruction-title {
-            font-size: 13px; font-weight: 800; color: #f06529;
-            margin-bottom: 15px; display: flex; align-items: center; gap: 8px;
-        }
-        .step {
-            display: flex; gap: 12px; margin-bottom: 12px; font-size: 12px;
-            line-height: 1.4; color: #64748b;
-        }
-        .step-num {
-            background: #f1f5f9; color: var(--deep-blue); font-weight: 800;
-            min-width: 22px; height: 22px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; font-size: 10px;
-        }
-        .admin-link { color: var(--primary-blue); font-weight: 700; text-decoration: underline; }
-
-        /* Professional Success Toast */
-        #success-toast {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
-            background: white; border-left: 5px solid var(--success-green); padding: 16px 24px;
-            border-radius: 12px; box-shadow: 0 15px 30px rgba(0,0,0,0.1); z-index: 1000;
-            display: flex; align-items: center; gap: 15px; transition: 0.5s ease;
-        }
-        #success-toast.show { transform: translateX(-50%) translateY(0); }
-        .toast-icon { color: var(--success-green); font-size: 24px; }
-        .toast-content b { display: block; color: var(--deep-blue); margin-bottom: 2px; }
-        .toast-content span { font-size: 13px; color: #64748b; }
-        
-        a { text-decoration: none; }
+        .success-icon { font-size: 60px; color: var(--success); margin-bottom: 15px; }
     </style>
 </head>
 <body>
 
-    <div id="success-toast">
-        <i class="fas fa-check-circle toast-icon"></i>
-        <div class="toast-content">
-            <b>Transaction Successful</b>
-            <span id="toast-msg">Your wallet has been credited.</span>
+    <div id="status-modal">
+        <div class="modal-content">
+            <i class="fas fa-check-circle success-icon"></i>
+            <h2 style="margin:0">Payment Recorded</h2>
+            <p style="color:#64748b; font-size: 13px;">Security verification is active. Your balance will be updated automatically in a few moments.</p>
+            <button class="pay-btn" onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
         </div>
     </div>
 
@@ -124,172 +88,92 @@
 
     <div class="container">
         <div class="card">
-            <div class="wallet-mini">
-                <span>Current Balance</span>
-                <b id="currBal">GH₵ 0.00</b>
+            <div class="balance-box">
+                <p style="margin:0; font-size:0.7rem; opacity:0.8">WALLET BALANCE</p>
+                <h2 id="displayBal" style="margin:5px 0 0">GH₵ 0.00</h2>
             </div>
 
             <label>Amount to Deposit</label>
             <div class="input-group">
                 <span>GH₵</span>
-                <input type="number" id="amount" placeholder="0.00" step="0.01">
+                <input type="number" id="amtInput" placeholder="Minimum 1.00">
             </div>
 
-            <div class="fee-box">
-                <div class="fee-item">
-                    <span>Deposit Amount</span>
-                    <span id="dispAmt">GH₵ 0.00</span>
-                </div>
-                <div class="fee-item">
-                    <span>Paystack Fee (2.5%)</span>
-                    <span id="dispFee">GH₵ 0.00</span>
-                </div>
-                <div class="total-row">
-                    <span>Total to Pay</span>
-                    <span id="dispTotal">GH₵ 0.00</span>
-                </div>
+            <div class="fee-info">
+                <div class="fee-row"><span>Subtotal</span> <span id="subTotal">GH₵ 0.00</span></div>
+                <div class="fee-row"><span>Admin Fee (2.5%)</span> <span id="feeTotal">GH₵ 0.00</span></div>
+                <div class="total-row"><span>Total Payable</span> <span id="totalPay">GH₵ 0.00</span></div>
             </div>
 
-            <button class="pay-btn" id="payBtn" onclick="payWithPaystack()">PROCEED TO PAYMENT</button>
-
-            <div class="badge-row">
-                <i class="fab fa-cc-visa"></i>
-                <i class="fab fa-cc-mastercard"></i>
-                <i class="fas fa-shield-alt"></i>
-                <span style="font-size: 10px; font-weight: 700; color: #94a3b8;">SECURE CHECKOUT</span>
-            </div>
+            <button class="pay-btn" id="payBtn" onclick="initiatePayment()">AUTHENTIC TOP-UP</button>
         </div>
 
-        <div class="instruction-box">
-            <div class="instruction-title">
-                <i class="fas fa-info-circle"></i> FUNDS NOT CREDITED?
-            </div>
-            <div class="step">
-                <div class="step-num">1</div>
-                <div>Keep your Paystack Transaction Reference/Receipt ready.</div>
-            </div>
-            <div class="step">
-                <div class="step-num">2</div>
-                <div>Contact admin with your <b>Email</b> and <b>Actual Amount Paid</b> (excluding fees).</div>
-            </div>
-            <div class="step">
-                <div class="step-num">3</div>
-                <div>Chat Admin on WhatsApp: <a href="https://wa.me/233549055308" class="admin-link">0549055308</a></div>
+        <div class="whatsapp-note">
+            <i class="fab fa-whatsapp" style="font-size: 24px; color: #16a34a;"></i>
+            <div>
+                <b>Account not credited?</b><br>
+                Chat Admin with receipt: <span class="wa-link" onclick="window.location.href='https://wa.me/233549055308'">0549055308</span>
             </div>
         </div>
-
-        <p style="font-size: 11px; color: #64748b; text-align: center; margin-top: 20px;">
-            <i class="fas fa-lock"></i> Secured by Paystack. Wallet updates automatically.
-        </p>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-        import { getDatabase, ref, onValue, push, set, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+        import { getDatabase, ref, onValue, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
-            authDomain: "gigantic-data.firebaseapp.com",
-            databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
-            projectId: "gigantic-data",
-            storageBucket: "gigantic-data.firebasestorage.app",
-            messagingSenderId: "727845403550",
-            appId: "1:727845403550:web:e3c3a40ce615aaaca9748f"
-        };
-
+        const firebaseConfig = { apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4", authDomain: "gigantic-data.firebaseapp.com", databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com", projectId: "gigantic-data" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        let userEmail = "";
-        let userId = "";
+        let userDetails = {};
 
         onAuthStateChanged(auth, user => {
             if (user) {
-                userId = user.uid;
-                userEmail = user.email;
-                onValue(ref(db, `users/${user.uid}/wallet`), snap => {
-                    document.getElementById('currBal').innerText = `GH₵ ${Number(snap.val() || 0).toFixed(2)}`;
+                userDetails = { uid: user.uid, email: user.email };
+                onValue(ref(db, `users/${user.uid}/wallet`), s => {
+                    document.getElementById('displayBal').innerText = `GH₵ ${Number(s.val() || 0).toFixed(2)}`;
                 });
-            } else {
-                window.location.href = "login.html";
-            }
+            } else { window.location.href = "login.html"; }
         });
 
-        const amountInput = document.getElementById('amount');
-        amountInput.addEventListener('input', updateFees);
+        const input = document.getElementById('amtInput');
+        input.addEventListener('input', () => {
+            const val = parseFloat(input.value) || 0;
+            const fee = val * 0.025;
+            document.getElementById('subTotal').innerText = `GH₵ ${val.toFixed(2)}`;
+            document.getElementById('feeTotal').innerText = `GH₵ ${fee.toFixed(2)}`;
+            document.getElementById('totalPay').innerText = `GH₵ ${(val + fee).toFixed(2)}`;
+        });
 
-        function updateFees() {
-            const amt = parseFloat(amountInput.value) || 0;
-            let fee = amt * 0.025;
-            const total = amt + fee;
+        window.initiatePayment = function() {
+            const amtRequested = parseFloat(input.value);
+            if (amtRequested < 1 || isNaN(amtRequested)) return alert("Minimum GH₵ 1.00");
 
-            document.getElementById('dispAmt').innerText = `GH₵ ${amt.toFixed(2)}`;
-            document.getElementById('dispFee').innerText = `GH₵ ${fee.toFixed(2)}`;
-            document.getElementById('dispTotal').innerText = `GH₵ ${total.toFixed(2)}`;
-        }
-
-        function showSuccess(amount) {
-            const toast = document.getElementById('success-toast');
-            document.getElementById('toast-msg').innerText = `GH₵ ${amount.toFixed(2)} has been successfully added to your wallet.`;
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-                window.location.href = "dashboard.html";
-            }, 3500);
-        }
-
-        window.payWithPaystack = function() {
-            const amt = parseFloat(amountInput.value);
-            if (!amt || amt < 1) return alert("Please enter a valid amount (Minimum GH₵ 1.00)");
-
-            document.getElementById('payBtn').disabled = true;
-            document.getElementById('payBtn').innerText = "INITIALIZING...";
-
-            let fee = amt * 0.025;
-            const finalTotal = (amt + fee) * 100; 
+            const finalAmt = Math.round((amtRequested * 1.025) * 100);
 
             const handler = PaystackPop.setup({
                 key: 'pk_live_faecdb3166144fadebd8269829343698dd43de63',
-                email: userEmail,
-                amount: Math.round(finalTotal),
+                email: userDetails.email,
+                amount: finalAmt,
                 currency: "GHS",
-                callback: function(response) {
-                    const walletRef = ref(db, `users/${userId}/wallet`);
-                    
-                    runTransaction(walletRef, (currentValue) => {
-                        return (currentValue || 0) + amt;
-                    }).then((result) => {
-                        if (result.committed) {
-                            const topupRef = ref(db, 'topupNotes/' + userId);
-                            const newTopup = push(topupRef);
-                            set(newTopup, {
-                                amount: amt,
-                                fee: fee,
-                                total_paid: amt + fee,
-                                reference: response.reference,
-                                method: 'Paystack',
-                                status: "success",
-                                timestamp: serverTimestamp()
-                            });
-
-                            showSuccess(amt);
-                        }
-                    }).catch((error) => {
-                        console.error("Auto-credit failed: ", error);
-                        alert("An error occurred. Please contact admin on WhatsApp with your payment reference.");
-                        document.getElementById('payBtn').disabled = false;
-                        document.getElementById('payBtn').innerText = "PROCEED TO PAYMENT";
+                callback: (res) => {
+                    // SECURE HANDSHAKE: Write proof of payment
+                    const proofRef = ref(db, `verified_payments/${res.reference}`);
+                    set(proofRef, {
+                        uid: userDetails.uid,
+                        email: userDetails.email,
+                        amount: amtRequested,
+                        timestamp: serverTimestamp(),
+                        status: "awaiting_sync"
+                    }).then(() => {
+                        document.getElementById('status-modal').style.display = 'flex';
                     });
-                },
-                onClose: function() {
-                    document.getElementById('payBtn').disabled = false;
-                    document.getElementById('payBtn').innerText = "PROCEED TO PAYMENT";
                 }
             });
             handler.openIframe();
-        }
+        };
     </script>
 </body>
 </html>
