@@ -185,7 +185,6 @@
         let userReferrer = null;
         window.selectedNet = "";
 
-        // Theme Logic
         window.toggleTheme = () => {
             const current = document.documentElement.getAttribute('data-theme');
             const target = current === 'dark' ? 'light' : 'dark';
@@ -200,18 +199,18 @@
 
         const getK = () => atob("YmVhcmVyIA==") + atob("c2tfbGl2ZV8=") + atob("YmZkMjhmYmJlM2NhNDU1YmExNTQ1NWViZWQ3MTM4YjI0MDA5ZDEzNA==");
 
-        // ADDED REAL PACKAGE IDs FROM YOUR VENDOR
-     
- agentPlans = {
-            mtn:[{plan:"1GB",price:"4.45"},{plan:"2GB",price:"8.85"},{plan:"3GB",price:"13.25"},{plan:"4GB",price:"17.65"},{plan:"5GB",price:"22. 05"},{plan:"6GB",price:"26.55"},{plan:"8GB",price:"36.39"},{plan:"10GB",price:"42.25"},{plan:"15GB",price:"62.05"},{plan:"20GB",price:"82.05"},{plan:"25GB",price:"103.05"},{plan:"30GB",price:"123"},{plan:"40GB",price:"160"},{plan:"50GB",price:"199"},{plan:"100GB",price:"380"}],
-            airteltigo:[{plan:"1GB",price:"4.3"},{plan:"2GB",price:"8.56"},{plan:"3GB",price:"12.84"},{plan:"4GB",price:"17.12"},{plan:"5GB",price:"21.4"},{plan:"6GB",price:"25.6"},{plan:"7GB",price:"29.96"},{plan:"8GB",price:"35"},{plan:"10GB",price:"44"},{plan:"15GB",price:"65"},{plan:"20GB",price:"76"},{plan:"30GB",price:"87"},{plan:"40GB",price:"100"},{plan:"50GB",price:"115"},{plan:"60GB",price:"150"},{plan:"80GB",price:"183"},{plan:"100GB",price:"200"}],
-            telecel:[{plan:"10GB",price:"45"},{plan:"15GB",price:"62"},{plan:"20GB",price:"84"},{plan:"25GB",price:"105"},{plan:"30GB",price:"120"},{plan:"40GB",price:"158"},{plan:"50GB",price:"196"},{plan:"100GB",price:"384"}]
+        // FIXED: Added numerical 'id' fields to all plans. 
+        // Replace these IDs with your vendor's specific ID numbers.
+        const agentPlans = {
+            mtn:[{plan:"1GB",price:"4.45",id:"101"},{plan:"2GB",price:"8.85",id:"102"},{plan:"3GB",price:"13.25",id:"103"},{plan:"4GB",price:"17.65",id:"104"},{plan:"5GB",price:"22.05",id:"105"},{plan:"6GB",price:"26.55",id:"106"},{plan:"8GB",price:"36.39",id:"108"},{plan:"10GB",price:"42.25",id:"110"},{plan:"15GB",price:"62.05",id:"115"},{plan:"20GB",price:"82.05",id:"120"},{plan:"25GB",price:"103.05",id:"125"},{plan:"30GB",price:"123",id:"130"},{plan:"40GB",price:"160",id:"140"},{plan:"50GB",price:"199",id:"150"},{plan:"100GB",price:"380",id:"199"}],
+            airteltigo:[{plan:"1GB",price:"4.3",id:"201"},{plan:"2GB",price:"8.56",id:"202"},{plan:"3GB",price:"12.84",id:"203"},{plan:"4GB",price:"17.12",id:"204"},{plan:"5GB",price:"21.4",id:"205"},{plan:"6GB",price:"25.6",id:"206"},{plan:"7GB",price:"29.96",id:"207"},{plan:"8GB",price:"35",id:"208"},{plan:"10GB",price:"44",id:"210"},{plan:"15GB",price:"65",id:"215"},{plan:"20GB",price:"76",id:"220"},{plan:"30GB",price:"87",id:"230"},{plan:"40GB",price:"100",id:"240"},{plan:"50GB",price:"115",id:"250"},{plan:"60GB",price:"150",id:"260"},{plan:"80GB",price:"183",id:"280"},{plan:"100GB",price:"200",id:"299"}],
+            telecel:[{plan:"10GB",price:"45",id:"310"},{plan:"15GB",price:"62",id:"315"},{plan:"20GB",price:"84",id:"320"},{plan:"25GB",price:"105",id:"325"},{plan:"30GB",price:"120",id:"330"},{plan:"40GB",price:"158",id:"340"},{plan:"50GB",price:"196",id:"350"},{plan:"100GB",price:"384",id:"399"}]
         };
 
         const normalPlans = {
-            mtn:[{plan:"1GB",price:"4.6"},{plan:"2GB",price:"9.2"},{plan:"3GB",price:"13.8"},{plan:"4GB",price:"18"},{plan:"5GB",price:"22.2"},{plan:"6GB",price:"26.6"},{plan:"8GB",price:"36"},{plan:"10GB",price:"45.4"},{plan:"15GB",price:"66.8"},{plan:"20GB",price:"82.2"},{plan:"30GB",price:"125"},{plan:"40GB",price:"199"},{plan:"50GB",price:"210"},{plan:"100GB",price:"420"}],
-            airteltigo:[{plan:"1GB",price:"4.4"},{plan:"2GB",price:"8.6"},{plan:"3GB",price:"13"},{plan:"4GB",price:"18.1"},{plan:"5GB",price:"22.8"},{plan:"6GB",price:"26.9"},{plan:"7GB",price:"31.1"},{plan:"8GB",price:"35.4"},{plan:"10GB",price:"44.5"},{plan:"15GB",price:"67.9"},{plan:"20GB",price:"78.8"},{plan:"30GB",price:"89.7"},{plan:"40GB",price:"106"},{plan:"50GB",price:"121.5"},{plan:"60GB",price:"173"},{plan:"80GB",price:"194.5"},{plan:"100GB",price:"215.5"}],
-            telecel:[{plan:"10GB",price:"46.7"},{plan:"15GB",price:"63.3"},{plan:"20GB",price:"85.1"},{plan:"25GB",price:"106.5"},{plan:"30GB",price:"121.5"},{plan:"40GB",price:"159.5"},{plan:"50GB",price:"198.4"},{plan:"100GB",price:"386.7"}]
+            mtn:[{plan:"1GB",price:"4.6",id:"101"},{plan:"2GB",price:"9.2",id:"102"},{plan:"3GB",price:"13.8",id:"103"},{plan:"4GB",price:"18",id:"104"},{plan:"5GB",price:"22.2",id:"105"},{plan:"6GB",price:"26.6",id:"106"},{plan:"8GB",price:"36",id:"108"},{plan:"10GB",price:"45.4",id:"110"},{plan:"15GB",price:"66.8",id:"115"},{plan:"20GB",price:"82.2",id:"120"},{plan:"30GB",price:"125",id:"130"},{plan:"40GB",price:"199",id:"140"},{plan:"50GB",price:"210",id:"150"},{plan:"100GB",price:"420",id:"199"}],
+            airteltigo:[{plan:"1GB",price:"4.4",id:"201"},{plan:"2GB",price:"8.6",id:"202"},{plan:"3GB",price:"13",id:"203"},{plan:"4GB",price:"18.1",id:"204"},{plan:"5GB",price:"22.8",id:"205"},{plan:"6GB",price:"26.9",id:"206"},{plan:"7GB",price:"31.1",id:"207"},{plan:"8GB",price:"35.4",id:"208"},{plan:"10GB",price:"44.5",id:"210"},{plan:"15GB",price:"67.9",id:"215"},{plan:"20GB",price:"78.8",id:"220"},{plan:"30GB",price:"89.7",id:"230"},{plan:"40GB",price:"106",id:"240"},{plan:"50GB",price:"121.5",id:"250"},{plan:"60GB",price:"173",id:"260"},{plan:"80GB",price:"194.5",id:"280"},{plan:"100GB",price:"215.5",id:"299"}],
+            telecel:[{plan:"10GB",price:"46.7",id:"310"},{plan:"15GB",price:"63.3",id:"315"},{plan:"20GB",price:"85.1",id:"320"},{plan:"25GB",price:"106.5",id:"325"},{plan:"30GB",price:"121.5",id:"330"},{plan:"40GB",price:"159.5",id:"340"},{plan:"50GB",price:"198.4",id:"350"},{plan:"100GB",price:"386.7",id:"399"}]
         };
 
         onAuthStateChanged(auth, user => {
@@ -236,6 +235,7 @@
                         const plans = isAgent ? agentPlans[window.selectedNet] : normalPlans[window.selectedNet];
                         select.innerHTML = '<option value="" disabled>-- Choose Plan --</option>';
                         plans.forEach(p => { 
+                            // FIXED: Added data-id to ensure the ID is captured
                             select.innerHTML += `<option value="${p.price}" data-plan="${p.plan}" data-id="${p.id}">${p.plan} - GH₵ ${p.price}</option>`; 
                         });
                         select.value = currentVal;
@@ -260,7 +260,7 @@
             select.innerHTML = '<option value="" selected disabled>-- Choose Plan --</option>';
             const plans = isAgent ? agentPlans[net] : normalPlans[net];
             plans.forEach(p => { 
-                // FIXED: Passing data-id to the option tag
+                // FIXED: Passed p.id into the data-id attribute
                 select.innerHTML += `<option value="${p.price}" data-plan="${p.plan}" data-id="${p.id}">${p.plan} - GH₵ ${p.price}</option>`; 
             });
             document.getElementById('step2').classList.remove('disabled');
