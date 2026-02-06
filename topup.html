@@ -25,7 +25,9 @@ label { display:block; font-weight:700; font-size:12px; margin-bottom:10px; colo
 input { width:100%; padding:16px 16px 16px 60px; border:2px solid #f1f5f9; border-radius:18px; font-size:1.2rem; outline:none; transition:0.3s; box-sizing:border-box; font-weight:600; }
 input:focus { border-color:var(--primary); background:#fff; box-shadow:0 0 0 4px rgba(79,70,229,0.1); }
 
-.fee-info { display:none; } /* Fees hidden since wallet credits actual paid amount */
+.fee-info { background:#f8fafc; border-radius:18px; padding:18px; font-size:0.9rem; border:1px dashed #cbd5e1; margin-bottom:15px; }
+.fee-row { display:flex; justify-content:space-between; margin-bottom:8px; color:#64748b; }
+.total-row { border-top:2px solid #e2e8f0; padding-top:12px; margin-top:12px; font-weight:800; color:var(--primary); font-size:1.1rem; }
 
 .pay-btn { width:100%; background:var(--primary); color:white; border:none; padding:20px; border-radius:20px; font-weight:700; font-size:1rem; margin-top:25px; cursor:pointer; transition:0.3s; box-shadow:0 10px 25px rgba(79,70,229,0.3); text-transform:uppercase; letter-spacing:1px;}
 .pay-btn:disabled { background:#94a3b8; cursor:not-allowed; box-shadow:none; }
@@ -65,6 +67,13 @@ input:focus { border-color:var(--primary); background:#fff; box-shadow:0 0 0 4px
         <div class="input-group">
             <span>GH₵</span>
             <input type="number" id="amtInput" placeholder="Min: 1.00" step="0.01" min="1">
+        </div>
+
+        <!-- Fee display -->
+        <div class="fee-info">
+            <div class="fee-row"><span>Subtotal</span> <span id="subTotal">GH₵ 0.00</span></div>
+            <div class="fee-row"><span>Service Fee (2.5%)</span> <span id="feeTotal">GH₵ 0.00</span></div>
+            <div class="total-row"><span>Total Payable</span> <span id="totalPay">GH₵ 0.00</span></div>
         </div>
 
         <button class="pay-btn" id="payBtn" onclick="initiatePayment()">SECURE TOP-UP NOW</button>
@@ -110,23 +119,38 @@ onAuthStateChanged(auth, user => {
     }
 });
 
-// Secure Paystack payment
+// Fee calculation for display and Paystack amount
+const input = document.getElementById('amtInput');
+input.addEventListener('input', () => {
+    const val = parseFloat(input.value) || 0;
+    const fee = val * 0.025;
+    const total = val + fee;
+
+    document.getElementById('subTotal').innerText = `GH₵ ${val.toFixed(2)}`;
+    document.getElementById('feeTotal').innerText = `GH₵ ${fee.toFixed(2)}`;
+    document.getElementById('totalPay').innerText = `GH₵ ${total.toFixed(2)}`;
+});
+
+// Initiate Paystack payment
 window.initiatePayment = function() {
-    const amtRequested = parseFloat(document.getElementById('amtInput').value);
+    const amtRequested = parseFloat(input.value);
     if (amtRequested < 1 || isNaN(amtRequested)) return alert("Enter a valid amount (≥1)");
 
     const payBtn = document.getElementById('payBtn');
     payBtn.disabled = true;
     payBtn.innerText = "CONNECTING...";
 
+    const fee = amtRequested * 0.025;
+    const totalToPay = Math.round((amtRequested + fee) * 100); // amount including 2.5% fee in pesewas
+
     const handler = PaystackPop.setup({
-        key: 'pk_live_faecdb3166144fadebd8269829343698dd43de63', // Live key
+        key: 'pk_live_faecdb3166144fadebd8269829343698dd43de63',
         email: currentUser.email,
-        amount: Math.round(amtRequested * 100), // only actual paid amount
+        amount: totalToPay,
         currency: "GHS",
         metadata: { custom_fields:[{display_name:"User ID", variable_name:"uid", value:currentUser.uid}] },
         callback: function(response) {
-            // Cloud Function will credit wallet automatically
+            // Wallet credit handled by Cloud Function; frontend only shows modal
             document.getElementById('status-modal').style.display='flex';
         },
         onClose: function() {
