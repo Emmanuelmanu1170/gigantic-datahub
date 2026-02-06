@@ -148,7 +148,7 @@ window.initiatePayment = function() {
         email: currentUser.email,
         amount: totalToPay,
         currency: "GHS",
-        metadata: { custom_fields:[{display_name:"User ID", variable_name:"uid", value:currentUser.uid}] },
+        metadata: { uid: currentUser.uid }, // ✅ Updated here
         callback: function(response) {
             // Wallet credit handled by Cloud Function; frontend only shows modal
             document.getElementById('status-modal').style.display='flex';
