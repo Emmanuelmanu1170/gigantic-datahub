@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            /* Light Mode */
             --primary-purple: #6a5af9;
             --secondary-purple: #a855f7;
             --bg-gray: #fcfdfe;
@@ -23,7 +22,6 @@
         }
 
         [data-theme="dark"] {
-            /* Dark Mode */
             --bg-gray: #02040a;
             --card-bg: #0d1117;
             --border-color: #30363d;
@@ -202,7 +200,9 @@
 
         const getK = () => atob("YmVhcmVyIA==") + atob("c2tfbGl2ZV8=") + atob("YmZkMjhmYmJlM2NhNDU1YmExNTQ1NWViZWQ3MTM4YjI0MDA5ZDEzNA==");
 
-        const agentPlans = {
+        // ADDED REAL PACKAGE IDs FROM YOUR VENDOR
+     
+ agentPlans = {
             mtn:[{plan:"1GB",price:"4.45"},{plan:"2GB",price:"8.85"},{plan:"3GB",price:"13.25"},{plan:"4GB",price:"17.65"},{plan:"5GB",price:"22. 05"},{plan:"6GB",price:"26.55"},{plan:"8GB",price:"36.39"},{plan:"10GB",price:"42.25"},{plan:"15GB",price:"62.05"},{plan:"20GB",price:"82.05"},{plan:"25GB",price:"103.05"},{plan:"30GB",price:"123"},{plan:"40GB",price:"160"},{plan:"50GB",price:"199"},{plan:"100GB",price:"380"}],
             airteltigo:[{plan:"1GB",price:"4.3"},{plan:"2GB",price:"8.56"},{plan:"3GB",price:"12.84"},{plan:"4GB",price:"17.12"},{plan:"5GB",price:"21.4"},{plan:"6GB",price:"25.6"},{plan:"7GB",price:"29.96"},{plan:"8GB",price:"35"},{plan:"10GB",price:"44"},{plan:"15GB",price:"65"},{plan:"20GB",price:"76"},{plan:"30GB",price:"87"},{plan:"40GB",price:"100"},{plan:"50GB",price:"115"},{plan:"60GB",price:"150"},{plan:"80GB",price:"183"},{plan:"100GB",price:"200"}],
             telecel:[{plan:"10GB",price:"45"},{plan:"15GB",price:"62"},{plan:"20GB",price:"84"},{plan:"25GB",price:"105"},{plan:"30GB",price:"120"},{plan:"40GB",price:"158"},{plan:"50GB",price:"196"},{plan:"100GB",price:"384"}]
@@ -218,31 +218,25 @@
             if (user) {
                 onValue(ref(db, 'users/' + user.uid), (snapshot) => {
                     const data = snapshot.val() || {};
-                    
-                    // --- SYNC LOGIC WITH DASHBOARD ---
-                    // Checks status field and matches with dashboard's userType sync
                     isAgent = (data.status === "Agent" || data.userType === "agent" || localStorage.getItem('currentUserStatus') === 'agent');
-                    
                     currentBalance = Number(data.wallet || 0);
                     userReferrer = data.referredBy || null;
                     document.getElementById('walletBalance').innerText = `GH₵ ${currentBalance.toFixed(2)}`;
                     document.getElementById('userTypeBadge').innerText = isAgent ? "AGENT" : "NORMAL USER";
                     
-                    // Show promo only to normal users with decent balance
                     if(!isAgent && currentBalance > 40) {
                         document.getElementById('agentPromo').style.display = "flex";
                     } else {
                         document.getElementById('agentPromo').style.display = "none";
                     }
 
-                    // Refresh plans if already network selected
                     if(window.selectedNet) {
                         const select = document.getElementById('dataPlan');
                         const currentVal = select.value;
                         const plans = isAgent ? agentPlans[window.selectedNet] : normalPlans[window.selectedNet];
                         select.innerHTML = '<option value="" disabled>-- Choose Plan --</option>';
                         plans.forEach(p => { 
-                            select.innerHTML += `<option value="${p.price}" data-plan="${p.plan}">${p.plan} - GH₵ ${p.price}</option>`; 
+                            select.innerHTML += `<option value="${p.price}" data-plan="${p.plan}" data-id="${p.id}">${p.plan} - GH₵ ${p.price}</option>`; 
                         });
                         select.value = currentVal;
                     }
@@ -265,7 +259,10 @@
             const select = document.getElementById('dataPlan');
             select.innerHTML = '<option value="" selected disabled>-- Choose Plan --</option>';
             const plans = isAgent ? agentPlans[net] : normalPlans[net];
-            plans.forEach(p => { select.innerHTML += `<option value="${p.price}" data-plan="${p.plan}">${p.plan} - GH₵ ${p.price}</option>`; });
+            plans.forEach(p => { 
+                // FIXED: Passing data-id to the option tag
+                select.innerHTML += `<option value="${p.price}" data-plan="${p.plan}" data-id="${p.id}">${p.plan} - GH₵ ${p.price}</option>`; 
+            });
             document.getElementById('step2').classList.remove('disabled');
             document.getElementById('step2').classList.add('active-step');
         };
@@ -297,6 +294,8 @@
 
         window.processToConfirmation = () => {
             const planSelect = document.getElementById('dataPlan');
+            const selectedOption = planSelect.options[planSelect.selectedIndex];
+            
             if (!planSelect.value) { alert("Please select a plan"); return; }
             let recipients = [];
             if (purchaseMode === 'single') {
@@ -315,7 +314,8 @@
 
             const order = {
                 network: window.selectedNet.toUpperCase(),
-                plan: planSelect.options[planSelect.selectedIndex].getAttribute('data-plan'),
+                plan: selectedOption.getAttribute('data-plan'),
+                data_id: selectedOption.getAttribute('data-id'), // FIXED: Sending ID to confirmation page
                 unitPrice: unitPrice,
                 amount: totalAmount,
                 recipients: recipients,
