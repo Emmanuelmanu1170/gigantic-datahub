@@ -3,53 +3,332 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Security Maintenance - GiganticDataHub</title>
+    <title>Buy Data Bundle - GiganticDataHub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { 
-            background-color: #f8fafc; 
-            margin: 0; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            height: 100vh; 
-            font-family: -apple-system, sans-serif;
-            text-align: center;
+        :root {
+            /* Light Mode */
+            --primary-purple: #6a5af9;
+            --secondary-purple: #a855f7;
+            --bg-gray: #fcfdfe;
+            --card-bg: #ffffff;
+            --border-color: #eef2f6;
+            --text-main: #1e293b;
+            --text-muted: #94a3b8;
+            --active-blue: #3b82f6;
+            --success-green: #16a34a;
+            --light-green: #f0fdf4;
+            --warning-amber: #f59e0b;
+            --input-bg: #f8fafc;
         }
-        .lockdown-card {
-            background: white;
-            padding: 40px;
-            border-radius: 24px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            max-width: 400px;
-            border: 1px solid #e2e8f0;
+
+        [data-theme="dark"] {
+            /* Dark Mode */
+            --bg-gray: #02040a;
+            --card-bg: #0d1117;
+            --border-color: #30363d;
+            --text-main: #f0f6fc;
+            --text-muted: #8b949e;
+            --input-bg: #161b22;
+            --light-green: #064e3b20;
         }
-        .icon { color: #ef4444; font-size: 50px; margin-bottom: 20px; }
-        h1 { color: #1e293b; font-size: 1.5rem; margin-bottom: 10px; }
-        p { color: #64748b; line-height: 1.6; font-size: 0.9rem; }
+
+        * { box-sizing: border-box; font-family: -apple-system, sans-serif; transition: background 0.3s, border-color 0.3s, color 0.1s; }
+        body { background-color: var(--bg-gray); margin: 0; display: flex; justify-content: center; color: var(--text-main); }
+        .container { width: 100%; max-width: 480px; padding: 16px; min-height: 100vh; }
+
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .back-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-main); text-decoration: none;}
+        .theme-toggle { font-size: 1.1rem; color: var(--warning-amber); cursor: pointer; }
+
+        .balance-card {
+            background: linear-gradient(135deg, var(--primary-purple) 0%, var(--secondary-purple) 100%);
+            color: white; padding: 24px; border-radius: 20px; margin-bottom: 15px;
+            box-shadow: 0 10px 20px rgba(106, 90, 249, 0.2);
+        }
+        .balance-card p { margin: 0; font-size: 0.75rem; opacity: 0.8; }
+        .balance-card h2 { margin: 8px 0 0; font-size: 1.75rem; font-weight: 800; }
+        .user-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; background: rgba(255,255,255,0.2); font-size: 0.65rem; font-weight: 700; margin-top: 10px; }
+
+        .agent-promo {
+            background: #fffbeb; border: 1px dashed var(--warning-amber); padding: 12px;
+            border-radius: 12px; margin-bottom: 15px; display: none; align-items: center; gap: 10px;
+        }
+        [data-theme="dark"] .agent-promo { background: #451a0320; }
+
+        .mode-selector {
+            display: flex; background: var(--card-bg); border: 1px solid var(--border-color);
+            padding: 5px; border-radius: 12px; margin-bottom: 20px;
+        }
+        .mode-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; background: transparent; transition: 0.3s; font-size: 0.85rem; color: var(--text-main); }
+        .mode-btn.active { background: var(--primary-purple); color: white; }
+
+        .step { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; margin-bottom: 16px; }
+        .active-step { border: 2px solid var(--primary-purple) !important; opacity: 1 !important; pointer-events: auto !important; }
+        .disabled { opacity: 0.5; pointer-events: none; filter: grayscale(1); }
+
+        .step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+        .step-number { background: #f1f5f9; color: var(--active-blue); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; }
+        [data-theme="dark"] .step-number { background: #1f2937; }
+        .step-title h3 { margin: 0; font-size: 0.85rem; }
+
+        .network-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .network-option { border: 1px solid var(--border-color); border-radius: 12px; padding: 12px 5px; text-align: center; cursor: pointer; }
+        .network-option.selected { border: 2px solid var(--primary-purple); background: #f5f3ff10; }
+        .logo-box { width: 35px; height: 35px; margin: 0 auto 8px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 900; color: white; }
+        
+        .mtn { background: #ffcc00; color: #000; } .airtel { background: #ed1c24; } .telecel { background: #e60000; }
+
+        select, input, textarea { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--input-bg); outline: none; font-size: 0.9rem; margin-top: 10px; color: var(--text-main); }
+        textarea { height: 100px; resize: none; font-family: monospace; }
+        
+        .validation-card {
+            background-color: var(--light-green); border: 1px solid #dcfce7;
+            border-radius: 12px; padding: 12px; margin-top: 15px;
+            display: none; align-items: flex-start; gap: 12px;
+        }
+        .validation-card i { color: var(--success-green); font-size: 1.1rem; margin-top: 2px; }
+        .acc-name { font-weight: 800; text-transform: uppercase; color: var(--success-green); }
+
+        .confirm-btn { width: 100%; padding: 16px; background: var(--primary-purple); color: white; border: none; border-radius: 14px; font-weight: 700; margin-top: 20px; cursor: pointer; }
+        .loading-dots:after { content: ' .'; animation: dots 1s steps(5, end) infinite;}
+        @keyframes dots { 0%, 20% { content: ' .'; } 40% { content: ' ..'; } 60% { content: ' ...'; } 80%, 100% { content: ''; } }
     </style>
 </head>
 <body>
 
-    <div class="lockdown-card">
-        <div class="icon"><i class="fas fa-user-shield"></i></div>
-        <h1>Security Lockdown</h1>
-        <p>This page has been disabled by the administrator due to unauthorized activity. Transactions are currently suspended.</p>
-        <div style="margin-top: 25px; font-size: 0.7rem; color: #94a3b8;">Ref ID: SECURITY_EMERGENCY_SHUTDOWN</div>
+    <div class="container">
+        <header>
+            <a href="dashboard.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+            <h1 style="font-size: 1rem;">Buy Data Bundle</h1>
+            <i class="fas fa-moon theme-toggle" id="themeIcon" onclick="toggleTheme()"></i>
+        </header>
+
+        <div class="balance-card">
+            <p>Wallet Balance</p>
+            <h2 id="walletBalance">GH₵ 0.00</h2>
+            <div class="user-badge" id="userTypeBadge">USER</div>
+        </div>
+
+        <div class="agent-promo" id="agentPromo">
+            <i class="fas fa-bolt" style="color: var(--warning-amber)"></i>
+            <div style="flex: 1">
+                <p style="margin:0; font-size: 0.75rem; font-weight: 700; color: var(--text-main);">Lower prices available!</p>
+                <a href="dashboard.html" style="font-size: 0.65rem; color: var(--primary-purple); font-weight: 800;">ACTIVATE AGENT STATUS</a>
+            </div>
+        </div>
+
+        <div class="mode-selector">
+            <button class="mode-btn active" id="btnSingle" onclick="setPurchaseMode('single')">Single</button>
+            <button class="mode-btn" id="btnBulk" onclick="setPurchaseMode('bulk')">Bulk</button>
+        </div>
+
+        <div class="step active-step" id="step1">
+            <div class="step-header">
+                <div class="step-number">1</div>
+                <div class="step-title"><h3>Select Network</h3></div>
+            </div>
+            <div class="network-grid">
+                <div class="network-option" onclick="selectNetwork(this, 'mtn')"><div class="logo-box mtn">MTN</div><p style="font-size:11px">MTN</p></div>
+                <div class="network-option" onclick="selectNetwork(this, 'airteltigo')"><div class="logo-box airtel">AT</div><p style="font-size:11px">AirtelTigo</p></div>
+                <div class="network-option" onclick="selectNetwork(this, 'telecel')"><div class="logo-box telecel">TEL</div><p style="font-size:11px">Telecel</p></div>
+            </div>
+        </div>
+
+        <div class="step disabled" id="step2">
+            <div class="step-header">
+                <div class="step-number">2</div>
+                <div class="step-title"><h3>Choose Data Plan</h3></div>
+            </div>
+            <select id="dataPlan" onchange="unlockStep3()">
+                <option value="" selected disabled>-- Select Network First --</option>
+            </select>
+        </div>
+
+        <div class="step disabled" id="step3">
+            <div class="step-header">
+                <div class="step-number">3</div>
+                <div class="step-title"><h3>Recipient Details</h3></div>
+            </div>
+            
+            <div id="singleInput">
+                <input type="tel" id="phoneNumber" placeholder="024XXXXXXX" maxlength="10">
+                <div class="validation-card" id="validationBox">
+                    <i class="fas fa-check-circle"></i>
+                    <div class="validation-text">
+                        <b style="font-size: 0.85rem; display: block;">Recipient Verified</b>
+                        <p style="font-size: 0.75rem; margin: 0;">Name: <span class="acc-name" id="displayAccName">Verifying...</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="bulkInput" style="display: none;">
+                <textarea id="bulkNumbers" placeholder="024XXXXXXX, 055XXXXXXX"></textarea>
+                <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 5px;">Separate numbers with commas (,)</p>
+            </div>
+
+            <button class="confirm-btn" onclick="processToConfirmation()">Proceed to Confirm</button>
+        </div>
     </div>
 
     <script type="module">
-        // 1. Immediate local cleanup
-        localStorage.clear();
-        sessionStorage.clear();
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-        // 2. Prevent any back-navigation to the order form
-        window.history.pushState(null, null, window.location.href);
-        window.onpopstate = function () {
-            window.history.go(1);
+        const firebaseConfig = { apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4", authDomain: "gigantic-data.firebaseapp.com", databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com", projectId: "gigantic-data", storageBucket: "gigantic-data.firebasestorage.app", messagingSenderId: "727845403550", appId: "1:727845403550:web:e3c3a40ce615aaaca9748f" };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        let isAgent = false;
+        let purchaseMode = 'single';
+        let currentBalance = 0;
+        let userReferrer = null;
+        window.selectedNet = "";
+
+        // Theme Logic
+        window.toggleTheme = () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            const target = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', target);
+            localStorage.setItem('theme', target);
+            document.getElementById('themeIcon').className = target === 'dark' ? 'fas fa-sun theme-toggle' : 'fas fa-moon theme-toggle';
         };
 
-        console.log("Emergency shutdown executed. Order logic destroyed.");
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        document.getElementById('themeIcon').className = savedTheme === 'dark' ? 'fas fa-sun theme-toggle' : 'fas fa-moon theme-toggle';
+
+        const getK = () => atob("YmVhcmVyIA==") + atob("c2tfbGl2ZV8=") + atob("YmZkMjhmYmJlM2NhNDU1YmExNTQ1NWViZWQ3MTM4YjI0MDA5ZDEzNA==");
+
+        const agentPlans = {
+            mtn:[{plan:"1GB",price:"4.45"},{plan:"2GB",price:"8.85"},{plan:"3GB",price:"13.25"},{plan:"4GB",price:"17.65"},{plan:"5GB",price:"22. 05"},{plan:"6GB",price:"26.55"},{plan:"8GB",price:"36.39"},{plan:"10GB",price:"42.25"},{plan:"15GB",price:"62.05"},{plan:"20GB",price:"82.05"},{plan:"25GB",price:"103.05"},{plan:"30GB",price:"123"},{plan:"40GB",price:"160"},{plan:"50GB",price:"199"},{plan:"100GB",price:"380"}],
+            airteltigo:[{plan:"1GB",price:"4.3"},{plan:"2GB",price:"8.56"},{plan:"3GB",price:"12.84"},{plan:"4GB",price:"17.12"},{plan:"5GB",price:"21.4"},{plan:"6GB",price:"25.6"},{plan:"7GB",price:"29.96"},{plan:"8GB",price:"35"},{plan:"10GB",price:"44"},{plan:"15GB",price:"65"},{plan:"20GB",price:"76"},{plan:"30GB",price:"87"},{plan:"40GB",price:"100"},{plan:"50GB",price:"115"},{plan:"60GB",price:"150"},{plan:"80GB",price:"183"},{plan:"100GB",price:"200"}],
+            telecel:[{plan:"10GB",price:"45"},{plan:"15GB",price:"62"},{plan:"20GB",price:"84"},{plan:"25GB",price:"105"},{plan:"30GB",price:"120"},{plan:"40GB",price:"158"},{plan:"50GB",price:"196"},{plan:"100GB",price:"384"}]
+        };
+
+        const normalPlans = {
+            mtn:[{plan:"1GB",price:"4.6"},{plan:"2GB",price:"9.2"},{plan:"3GB",price:"13.8"},{plan:"4GB",price:"18"},{plan:"5GB",price:"22.2"},{plan:"6GB",price:"26.6"},{plan:"8GB",price:"36"},{plan:"10GB",price:"45.4"},{plan:"15GB",price:"66.8"},{plan:"20GB",price:"82.2"},{plan:"30GB",price:"125"},{plan:"40GB",price:"199"},{plan:"50GB",price:"210"},{plan:"100GB",price:"420"}],
+            airteltigo:[{plan:"1GB",price:"4.4"},{plan:"2GB",price:"8.6"},{plan:"3GB",price:"13"},{plan:"4GB",price:"18.1"},{plan:"5GB",price:"22.8"},{plan:"6GB",price:"26.9"},{plan:"7GB",price:"31.1"},{plan:"8GB",price:"35.4"},{plan:"10GB",price:"44.5"},{plan:"15GB",price:"67.9"},{plan:"20GB",price:"78.8"},{plan:"30GB",price:"89.7"},{plan:"40GB",price:"106"},{plan:"50GB",price:"121.5"},{plan:"60GB",price:"173"},{plan:"80GB",price:"194.5"},{plan:"100GB",price:"215.5"}],
+            telecel:[{plan:"10GB",price:"46.7"},{plan:"15GB",price:"63.3"},{plan:"20GB",price:"85.1"},{plan:"25GB",price:"106.5"},{plan:"30GB",price:"121.5"},{plan:"40GB",price:"159.5"},{plan:"50GB",price:"198.4"},{plan:"100GB",price:"386.7"}]
+        };
+
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                onValue(ref(db, 'users/' + user.uid), (snapshot) => {
+                    const data = snapshot.val() || {};
+                    
+                    // --- SYNC LOGIC WITH DASHBOARD ---
+                    // Checks status field and matches with dashboard's userType sync
+                    isAgent = (data.status === "Agent" || data.userType === "agent" || localStorage.getItem('currentUserStatus') === 'agent');
+                    
+                    currentBalance = Number(data.wallet || 0);
+                    userReferrer = data.referredBy || null;
+                    document.getElementById('walletBalance').innerText = `GH₵ ${currentBalance.toFixed(2)}`;
+                    document.getElementById('userTypeBadge').innerText = isAgent ? "AGENT" : "NORMAL USER";
+                    
+                    // Show promo only to normal users with decent balance
+                    if(!isAgent && currentBalance > 40) {
+                        document.getElementById('agentPromo').style.display = "flex";
+                    } else {
+                        document.getElementById('agentPromo').style.display = "none";
+                    }
+
+                    // Refresh plans if already network selected
+                    if(window.selectedNet) {
+                        const select = document.getElementById('dataPlan');
+                        const currentVal = select.value;
+                        const plans = isAgent ? agentPlans[window.selectedNet] : normalPlans[window.selectedNet];
+                        select.innerHTML = '<option value="" disabled>-- Choose Plan --</option>';
+                        plans.forEach(p => { 
+                            select.innerHTML += `<option value="${p.price}" data-plan="${p.plan}">${p.plan} - GH₵ ${p.price}</option>`; 
+                        });
+                        select.value = currentVal;
+                    }
+                });
+            } else { window.location.href = "login.html"; }
+        });
+
+        window.setPurchaseMode = (mode) => {
+            purchaseMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(mode === 'single' ? 'btnSingle' : 'btnBulk').classList.add('active');
+            document.getElementById('singleInput').style.display = mode === 'single' ? 'block' : 'none';
+            document.getElementById('bulkInput').style.display = mode === 'bulk' ? 'block' : 'none';
+        };
+
+        window.selectNetwork = (el, net) => {
+            window.selectedNet = net;
+            document.querySelectorAll('.network-option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+            const select = document.getElementById('dataPlan');
+            select.innerHTML = '<option value="" selected disabled>-- Choose Plan --</option>';
+            const plans = isAgent ? agentPlans[net] : normalPlans[net];
+            plans.forEach(p => { select.innerHTML += `<option value="${p.price}" data-plan="${p.plan}">${p.plan} - GH₵ ${p.price}</option>`; });
+            document.getElementById('step2').classList.remove('disabled');
+            document.getElementById('step2').classList.add('active-step');
+        };
+
+        window.unlockStep3 = () => {
+            document.getElementById('step3').classList.remove('disabled');
+            document.getElementById('step3').classList.add('active-step');
+        };
+
+        document.getElementById('phoneNumber').addEventListener('input', async function(e) {
+            const num = e.target.value;
+            const box = document.getElementById('validationBox');
+            const nameSpan = document.getElementById('displayAccName');
+            if (num.length === 10) {
+                box.style.display = "flex";
+                nameSpan.innerText = "Searching...";
+                nameSpan.classList.add('loading-dots');
+                const bankMapping = { 'mtn': 'MTN', 'airteltigo': 'ATL', 'telecel': 'VOD' };
+                try {
+                    const response = await fetch(`https://api.paystack.co/bank/resolve?account_number=${num}&bank_code=${bankMapping[window.selectedNet]}`, {
+                        headers: { 'Authorization': getK() }
+                    });
+                    const result = await response.json();
+                    nameSpan.classList.remove('loading-dots');
+                    nameSpan.innerText = result.status ? result.data.account_name : "RECIPIENT VALID";
+                } catch (err) { nameSpan.innerText = "RECIPIENT VALID"; }
+            } else { box.style.display = "none"; }
+        });
+
+        window.processToConfirmation = () => {
+            const planSelect = document.getElementById('dataPlan');
+            if (!planSelect.value) { alert("Please select a plan"); return; }
+            let recipients = [];
+            if (purchaseMode === 'single') {
+                const num = document.getElementById('phoneNumber').value.trim();
+                if (num.length < 10) { alert("Invalid Number"); return; }
+                recipients.push(num);
+            } else {
+                recipients = document.getElementById('bulkNumbers').value.split(',').map(n => n.trim()).filter(n => n.length >= 10);
+                if (recipients.length === 0) { alert("Enter valid numbers"); return; }
+            }
+
+            const unitPrice = parseFloat(planSelect.value);
+            const totalAmount = unitPrice * recipients.length;
+
+            if (currentBalance < totalAmount) { alert("Insufficient Funds!"); return; }
+
+            const order = {
+                network: window.selectedNet.toUpperCase(),
+                plan: planSelect.options[planSelect.selectedIndex].getAttribute('data-plan'),
+                unitPrice: unitPrice,
+                amount: totalAmount,
+                recipients: recipients,
+                recipient: recipients.join(', '),
+                count: recipients.length,
+                mode: purchaseMode,
+                referrer: userReferrer,
+                commissionRate: 0.02
+            };
+
+            localStorage.setItem('pendingOrder', JSON.stringify(order));
+            window.location.href = "confirmation.html";
+        };
     </script>
 </body>
 </html>
