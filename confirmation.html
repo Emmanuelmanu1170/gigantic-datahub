@@ -58,6 +58,7 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
+    // Using your specific API key and Endpoint
     const API_KEY = "tera_live_95abf76d96984f4612153a4869e43d3e";
     const API_URL = "https://idatagh.com/wp-json/custom/v1/place-order";
 
@@ -65,8 +66,10 @@
         if (!user) { window.location.href = "login.html"; return; }
 
         const order = JSON.parse(localStorage.getItem('pendingOrder'));
+        
+        // Critical Fix: Ensuring data_id is present for the API
         if (!order || !order.data_id) {
-            document.getElementById('renderArea').innerHTML = "<p>Session expired or invalid package selected. Please go back.</p>";
+            document.getElementById('renderArea').innerHTML = "<p style='text-align:center; color:red;'>Invalid package selection. Please re-select your plan.</p>";
             return;
         }
 
@@ -79,7 +82,7 @@
                 <div class="summary-item"><span>Network</span><span>${order.network}</span></div>
                 <div class="summary-item"><span>Plan</span><span>${order.plan}</span></div>
                 <div class="summary-item"><span>Recipient</span><span>${order.recipient}</span></div>
-                <div class="summary-item"><span>Balance</span><span>GH₵ ${wallet.toFixed(2)}</span></div>
+                <div class="summary-item"><span>Wallet Balance</span><span>GH₵ ${wallet.toFixed(2)}</span></div>
                 <div class="price-focus"><h2>GH₵ ${cost.toFixed(2)}</h2></div>
                 <button class="pay-btn" id="payBtn">AUTHORIZE & PAY</button>
             `;
@@ -91,31 +94,45 @@
                 document.getElementById('payBtn').innerText = "Processing Delivery...";
 
                 try {
+                    // Structuring request body exactly as required by idatagh.com
                     const requestBody = {
-                        "network": order.network.toLowerCase(),
+                        "network": order.network.toLowerCase(), // Network must be lowercase
                         "beneficiary": order.recipient,
-                        "pa_data-bundle-packages": Number(order.data_id) // Sending the numerical ID
+                        "pa_data-bundle-packages": Number(order.data_id) // Numerical ID is mandatory
                     };
 
                     const response = await fetch(API_URL, {
                         method: "POST",
-                        headers: { "Authorization": "Bearer " + API_KEY, "Content-Type": "application/json" },
+                        headers: { 
+                            "Authorization": "Bearer " + API_KEY, // Bearer token authentication
+                            "Content-Type": "application/json" 
+                        },
                         body: JSON.stringify(requestBody)
                     });
 
                     const apiResult = await response.json();
 
+                    // Checking for API-specific error responses
                     if (!response.ok || apiResult.status === "error") {
-                        throw new Error(apiResult.message || "Provider error: Package unavailable.");
+                        throw new Error(apiResult.message || "Provider error: Package currently not available.");
                     }
 
-                    // Success Logic
+                    // On API success, generate Order ID and update Firebase
                     const orderId = "ORD-" + Math.floor(Math.random() * 900000 + 100000);
                     const newBalance = parseFloat((wallet - cost).toFixed(2));
                     const updates = {};
+                    
                     updates[`users/${user.uid}/wallet`] = newBalance;
                     
-                    const finalOrderData = { ...order, uid: user.uid, orderId: orderId, status: "Successful", timestamp: Date.now() };
+                    const finalOrderData = { 
+                        ...order, 
+                        uid: user.uid, 
+                        orderId: orderId, 
+                        status: "Successful", 
+                        vendor_ref: apiResult.order_id || "N/A",
+                        timestamp: Date.now() 
+                    };
+
                     updates[`orders/${orderId}`] = finalOrderData;
                     updates[`user_orders/${user.uid}/${orderId}`] = finalOrderData;
 
