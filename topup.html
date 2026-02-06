@@ -45,8 +45,8 @@ input:focus { border-color:var(--primary); background:#fff; box-shadow:0 0 0 4px
 <div id="status-modal">
     <div class="modal-content">
         <i class="fas fa-check-circle success-icon"></i>
-        <h2 style="margin:0; color: var(--deep);">Payment Received!</h2>
-        <p style="color:#64748b; font-size:14px; margin:20px 0;">Your wallet is being updated securely via our system.</p>
+        <h2 style="margin:0; color: var(--deep);">Payment Successful!</h2>
+        <p style="color:#64748b; font-size:14px; margin:20px 0;">Your wallet will be updated automatically.</p>
         <button class="pay-btn" onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
     </div>
 </div>
@@ -76,7 +76,7 @@ input:focus { border-color:var(--primary); background:#fff; box-shadow:0 0 0 4px
             <div class="total-row"><span>Total Payable</span> <span id="totalPay">GH₵ 0.00</span></div>
         </div>
 
-        <button class="pay-btn" id="payBtn" onclick="initiatePayment()">SECURE TOP-UP NOW</button>
+        <button class="pay-btn" id="payBtn">SECURE TOP-UP NOW</button>
     </div>
 
     <div class="whatsapp-note">
@@ -108,18 +108,23 @@ const db = getDatabase(app);
 
 let currentUser = null;
 
+// Secure auth check
 onAuthStateChanged(auth, user => {
     if (user) {
         currentUser = user;
+        // Display wallet balance
         onValue(ref(db, `users/${user.uid}/wallet`), s => {
             document.getElementById('displayBal').innerText = `GH₵ ${Number(s.val() || 0).toFixed(2)}`;
         });
+        // Enable payment button only for logged-in users
+        document.getElementById('payBtn').disabled = false;
+        document.getElementById('payBtn').addEventListener('click', initiatePayment);
     } else { 
         window.location.href = "login.html"; 
     }
 });
 
-// Fee calculation for display and Paystack amount
+// Fee calculation display (informational only)
 const input = document.getElementById('amtInput');
 input.addEventListener('input', () => {
     const val = parseFloat(input.value) || 0;
@@ -132,7 +137,7 @@ input.addEventListener('input', () => {
 });
 
 // Initiate Paystack payment
-window.initiatePayment = function() {
+function initiatePayment() {
     const amtRequested = parseFloat(input.value);
     if (amtRequested < 1 || isNaN(amtRequested)) return alert("Enter a valid amount (≥1)");
 
@@ -140,18 +145,18 @@ window.initiatePayment = function() {
     payBtn.disabled = true;
     payBtn.innerText = "CONNECTING...";
 
-    const fee = amtRequested * 0.025;
-    const totalToPay = Math.round((amtRequested + fee) * 100); // amount including 2.5% fee in pesewas
+    const fee = amtRequested * 0.025; // informational only
+    const totalToPay = Math.round((amtRequested + fee) * 100); // in pesewas
 
     const handler = PaystackPop.setup({
         key: 'pk_live_faecdb3166144fadebd8269829343698dd43de63',
         email: currentUser.email,
         amount: totalToPay,
         currency: "GHS",
-        metadata: { uid: currentUser.uid }, // ✅ Updated here
+        metadata: { uid: currentUser.uid }, // secure
         callback: function(response) {
-            // Wallet credit handled by Cloud Function; frontend only shows modal
-            document.getElementById('status-modal').style.display='flex';
+            // ✅ Show modal; wallet credit handled securely in Cloud Function
+            document.getElementById('status-modal').style.display = 'flex';
         },
         onClose: function() {
             payBtn.disabled=false;
@@ -159,7 +164,7 @@ window.initiatePayment = function() {
         }
     });
     handler.openIframe();
-};
+}
 </script>
 </body>
 </html>
