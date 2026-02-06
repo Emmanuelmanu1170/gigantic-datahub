@@ -13,7 +13,6 @@
     --success: #10b981;
     --white: #ffffff;
 }
-
 body { margin:0; font-family:'Poppins', sans-serif; background:#f8fafc; color:var(--deep); overflow-x:hidden; }
 .header { background:var(--deep); color:white; padding:20px; display:flex; align-items:center; gap:15px; box-shadow:0 4px 12px rgba(0,0,0,0.1);}
 .container { padding:20px; max-width:450px; margin:auto; }
@@ -32,8 +31,6 @@ input:focus { border-color:var(--primary); background:#fff; box-shadow:0 0 0 4px
 .pay-btn { width:100%; background:var(--primary); color:white; border:none; padding:20px; border-radius:20px; font-weight:700; font-size:1rem; margin-top:25px; cursor:pointer; transition:0.3s; box-shadow:0 10px 25px rgba(79,70,229,0.3); text-transform:uppercase; letter-spacing:1px;}
 .pay-btn:disabled { background:#94a3b8; cursor:not-allowed; box-shadow:none; }
 
-.whatsapp-note { background:#f0fdf4; border:1px solid #bbf7d0; padding:18px; border-radius:20px; margin-top:20px; font-size:0.85rem; display:flex; align-items:center; gap:15px; line-height:1.4; }
-
 #status-modal { position:fixed; inset:0; background:rgba(15,23,42,0.9); display:none; align-items:center; justify-content:center; z-index:2000; backdrop-filter:blur(8px);}
 .modal-content { background:white; width:85%; max-width:380px; padding:40px 30px; border-radius:32px; text-align:center; animation:slideUp 0.4s ease-out; }
 @keyframes slideUp { from { transform:translateY(50px); opacity:0; } to { transform:translateY(0); opacity:1; } }
@@ -46,7 +43,7 @@ input:focus { border-color:var(--primary); background:#fff; box-shadow:0 0 0 4px
     <div class="modal-content">
         <i class="fas fa-check-circle success-icon"></i>
         <h2 style="margin:0; color: var(--deep);">Payment Successful!</h2>
-        <p style="color:#64748b; font-size:14px; margin:20px 0;">Your wallet will be updated automatically.</p>
+        <p style="color:#64748b; font-size:14px; margin:20px 0;">Wallet will update automatically.</p>
         <button class="pay-btn" onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
     </div>
 </div>
@@ -69,23 +66,13 @@ input:focus { border-color:var(--primary); background:#fff; box-shadow:0 0 0 4px
             <input type="number" id="amtInput" placeholder="Min: 1.00" step="0.01" min="1">
         </div>
 
-        <!-- Fee display -->
         <div class="fee-info">
             <div class="fee-row"><span>Subtotal</span> <span id="subTotal">GH₵ 0.00</span></div>
             <div class="fee-row"><span>Service Fee (2.5%)</span> <span id="feeTotal">GH₵ 0.00</span></div>
             <div class="total-row"><span>Total Payable</span> <span id="totalPay">GH₵ 0.00</span></div>
         </div>
 
-        <button class="pay-btn" id="payBtn">SECURE TOP-UP NOW</button>
-    </div>
-
-    <div class="whatsapp-note">
-        <i class="fab fa-whatsapp" style="font-size:28px; color:#16a34a;"></i>
-        <div>
-            <b style="color:#166534;">Payment Assistance</b><br>
-            If your account is not credited within 2 mins, contact us: 
-            <span class="wa-link" onclick="window.location.href='https://wa.me/233549055308'">0549055308</span>
-        </div>
+        <button class="pay-btn" id="payBtn" disabled>SECURE TOP-UP NOW</button>
     </div>
 </div>
 
@@ -94,73 +81,63 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebas
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-// Firebase Config
-const firebaseConfig = { 
-    apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4", 
-    authDomain: "gigantic-data.firebaseapp.com", 
-    databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com", 
-    projectId: "gigantic-data" 
+// Firebase config
+const firebaseConfig = {
+    apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
+    authDomain: "gigantic-data.firebaseapp.com",
+    databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
+    projectId: "gigantic-data"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
-
 let currentUser = null;
 
-// Secure auth check
+// Auth check
 onAuthStateChanged(auth, user => {
-    if (user) {
-        currentUser = user;
-        // Display wallet balance
-        onValue(ref(db, `users/${user.uid}/wallet`), s => {
-            document.getElementById('displayBal').innerText = `GH₵ ${Number(s.val() || 0).toFixed(2)}`;
-        });
-        // Enable payment button only for logged-in users
-        document.getElementById('payBtn').disabled = false;
-        document.getElementById('payBtn').addEventListener('click', initiatePayment);
-    } else { 
-        window.location.href = "login.html"; 
-    }
+    if (!user) return window.location.href = "login.html";
+    currentUser = user;
+
+    // Listen to wallet changes (realtime)
+    onValue(ref(db, `users/${user.uid}/wallet`), s => {
+        document.getElementById('displayBal').innerText = `GH₵ ${Number(s.val() || 0).toFixed(2)}`;
+    });
+
+    // Enable Pay button
+    const payBtn = document.getElementById('payBtn');
+    payBtn.disabled = false;
+    payBtn.addEventListener('click', initiatePayment);
 });
 
-// Fee calculation display (informational only)
+// Fee display (informational only)
 const input = document.getElementById('amtInput');
 input.addEventListener('input', () => {
     const val = parseFloat(input.value) || 0;
     const fee = val * 0.025;
     const total = val + fee;
-
     document.getElementById('subTotal').innerText = `GH₵ ${val.toFixed(2)}`;
     document.getElementById('feeTotal').innerText = `GH₵ ${fee.toFixed(2)}`;
     document.getElementById('totalPay').innerText = `GH₵ ${total.toFixed(2)}`;
 });
 
-// Initiate Paystack payment
+// Start payment securely
 function initiatePayment() {
-    const amtRequested = parseFloat(input.value);
-    if (amtRequested < 1 || isNaN(amtRequested)) return alert("Enter a valid amount (≥1)");
-
-    const payBtn = document.getElementById('payBtn');
-    payBtn.disabled = true;
-    payBtn.innerText = "CONNECTING...";
-
-    const fee = amtRequested * 0.025; // informational only
-    const totalToPay = Math.round((amtRequested + fee) * 100); // in pesewas
+    const amt = parseFloat(input.value);
+    if (amt < 1 || isNaN(amt)) return alert("Enter a valid amount ≥1");
 
     const handler = PaystackPop.setup({
         key: 'pk_live_faecdb3166144fadebd8269829343698dd43de63',
         email: currentUser.email,
-        amount: totalToPay,
-        currency: "GHS",
-        metadata: { uid: currentUser.uid }, // secure
-        callback: function(response) {
-            // ✅ Show modal; wallet credit handled securely in Cloud Function
-            document.getElementById('status-modal').style.display = 'flex';
+        amount: Math.round((amt*1.025)*100), // 2.5% fee included for payment
+        currency: 'GHS',
+        metadata: { uid: currentUser.uid },
+        callback: function(response){
+            // Wallet credit handled by secure webhook only
+            document.getElementById('status-modal').style.display='flex';
         },
-        onClose: function() {
-            payBtn.disabled=false;
-            payBtn.innerText="SECURE TOP-UP NOW";
+        onClose: function(){
+            document.getElementById('payBtn').disabled=false;
         }
     });
     handler.openIframe();
