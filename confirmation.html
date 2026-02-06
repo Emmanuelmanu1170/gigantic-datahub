@@ -7,14 +7,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { 
-            --primary: #6a5af9; --deep: #0a2a66; --bg: #f4f7ff; 
-            --card: #ffffff; --text: #0a2a66; --border: #f1f5f9;
-        }
-        [data-theme="dark"] {
-            --bg: #02040a; --card: #0d1117; --text: #f0f6fc;
-            --deep: #f0f6fc; --border: #30363d;
-        }
+        :root { --primary: #6a5af9; --deep: #0a2a66; --bg: #f4f7ff; --card: #ffffff; --text: #0a2a66; --border: #f1f5f9; }
+        [data-theme="dark"] { --bg: #02040a; --card: #0d1117; --text: #f0f6fc; --deep: #f0f6fc; --border: #30363d; }
         * { margin:0; padding:0; box-sizing:border-box; font-family:"Poppins", sans-serif; transition: background 0.3s, color 0.3s; }
         body { background: var(--bg); color: var(--text); padding-bottom: 50px; }
         header { background: #010409; color: #fff; padding: 15px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
@@ -24,11 +18,8 @@
         .summary-item span:last-child { font-weight: 700; color: var(--deep); }
         .price-focus { background: rgba(106, 90, 249, 0.05); border: 2px dashed var(--primary); border-radius: 15px; padding: 20px; text-align: center; margin: 20px 0; }
         .price-focus h2 { font-size: 2rem; color: #ff4500; }
-        .pay-btn { background: linear-gradient(135deg, var(--primary), #a855f7); color: #fff; border: none; width: 100%; padding: 18px; border-radius: 15px; font-weight: 700; font-size: 1.1rem; cursor: pointer; transition: transform 0.2s; }
-        .pay-btn:active { transform: scale(0.98); }
+        .pay-btn { background: linear-gradient(135deg, var(--primary), #a855f7); color: #fff; border: none; width: 100%; padding: 18px; border-radius: 15px; font-weight: 700; font-size: 1.1rem; cursor: pointer; }
         .pay-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
-        
-        /* Modal Styles */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
         .success-modal { background: var(--card); border-radius: 25px; padding: 30px; width: 100%; max-width: 350px; text-align: center; border: 1px solid var(--border); }
         .success-icon { width: 70px; height: 70px; background: #22c55e; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto 20px; }
@@ -44,16 +35,16 @@
 
 <div class="container">
     <div class="card" id="renderArea">
-        <p style="text-align:center; padding:20px;">Fetching order details...</p>
+        <p style="text-align:center; padding:20px;">Synchronizing wallet...</p>
     </div>
 </div>
 
 <div class="modal-overlay" id="modalOverlay">
     <div class="success-modal">
         <div class="success-icon"><i class="fas fa-check"></i></div>
-        <h3 style="margin-bottom: 10px; color: #22c55e;">Order Delivered!</h3>
-        <p id="apiStatus" style="font-size: 0.85rem; color: #64748b;">The data bundle has been sent to the recipient.</p>
-        <button onclick="window.location.replace('dashboard.html')" style="background:#22c55e; color:white; border:none; padding:12px; width:100%; border-radius:12px; margin-top:20px; font-weight:700; cursor:pointer;">Back to Home</button>
+        <h3 style="margin-bottom: 10px; color: #22c55e;">Payment Successful!</h3>
+        <p id="apiStatus" style="font-size: 0.85rem; color: #64748b;">Your data is being delivered.</p>
+        <button onclick="window.location.replace('order_history.html')" style="background:#22c55e; color:white; border:none; padding:12px; width:100%; border-radius:12px; margin-top:20px; font-weight:700;">View History</button>
     </div>
 </div>
 
@@ -62,13 +53,7 @@
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
     import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
-        authDomain: "gigantic-data.firebaseapp.com",
-        databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
-        projectId: "gigantic-data"
-    };
-
+    const firebaseConfig = { apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4", authDomain: "gigantic-data.firebaseapp.com", databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com", projectId: "gigantic-data" };
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
@@ -76,20 +61,12 @@
     const API_KEY = "tera_live_95abf76d96984f4612153a4869e43d3e";
     const API_URL = "https://idatagh.com/wp-json/custom/v1/place-order";
 
-    // IMPORTANT: Map your plans to the Vendor's package IDs
-    // Check your Vendor documentation for the exact IDs for each network
-    const PLAN_ID_MAP = {
-        "MTN": { "1GB": 101, "2GB": 102, "5GB": 105 }, // Replace with actual IDs
-        "AIRTELTIGO": { "1GB": 201, "2GB": 202 },
-        "TELECEL": { "10GB": 310 }
-    };
-
     onAuthStateChanged(auth, (user) => {
         if (!user) { window.location.href = "login.html"; return; }
 
         const order = JSON.parse(localStorage.getItem('pendingOrder'));
-        if (!order) {
-            document.getElementById('renderArea').innerHTML = "<p>No pending order found. Please go back.</p>";
+        if (!order || !order.data_id) {
+            document.getElementById('renderArea').innerHTML = "<p>Session expired or invalid package selected. Please go back.</p>";
             return;
         }
 
@@ -98,84 +75,58 @@
             const wallet = parseFloat(userData.wallet || 0);
             const cost = parseFloat(order.amount);
 
-            // Fetch the ID based on the network and plan name
-            const networkKey = order.network.toUpperCase();
-            const packageId = PLAN_ID_MAP[networkKey] ? PLAN_ID_MAP[networkKey][order.plan] : null;
-
             document.getElementById('renderArea').innerHTML = `
-                <div class="summary-item"><span>Network</span><span>${networkKey}</span></div>
+                <div class="summary-item"><span>Network</span><span>${order.network}</span></div>
                 <div class="summary-item"><span>Plan</span><span>${order.plan}</span></div>
                 <div class="summary-item"><span>Recipient</span><span>${order.recipient}</span></div>
-                <div class="summary-item"><span>Wallet Balance</span><span>GH₵ ${wallet.toFixed(2)}</span></div>
-                <div class="price-focus">
-                    <p style="font-size:0.7rem; color:var(--text); opacity:0.6;">TOTAL COST</p>
-                    <h2>GH₵ ${cost.toFixed(2)}</h2>
-                </div>
-                <button class="pay-btn" id="payBtn">COMPLETE PURCHASE</button>
+                <div class="summary-item"><span>Balance</span><span>GH₵ ${wallet.toFixed(2)}</span></div>
+                <div class="price-focus"><h2>GH₵ ${cost.toFixed(2)}</h2></div>
+                <button class="pay-btn" id="payBtn">AUTHORIZE & PAY</button>
             `;
 
             document.getElementById('payBtn').onclick = async () => {
-                if (wallet < cost) { alert("Insufficient wallet balance."); return; }
+                if (wallet < cost) { alert("Insufficient Balance!"); return; }
                 
-                // If ID is missing, we stop the process before the API fails
-                if (!packageId) {
-                    alert("Package configuration error. Please contact admin.");
-                    return;
-                }
-
-                const btn = document.getElementById('payBtn');
-                btn.disabled = true;
-                btn.innerText = "Processing Order...";
+                document.getElementById('payBtn').disabled = true;
+                document.getElementById('payBtn').innerText = "Processing Delivery...";
 
                 try {
                     const requestBody = {
                         "network": order.network.toLowerCase(),
                         "beneficiary": order.recipient,
-                        "pa_data-bundle-packages": packageId
+                        "pa_data-bundle-packages": Number(order.data_id) // Sending the numerical ID
                     };
 
                     const response = await fetch(API_URL, {
                         method: "POST",
-                        headers: {
-                            "Authorization": "Bearer " + API_KEY,
-                            "Content-Type": "application/json"
-                        },
+                        headers: { "Authorization": "Bearer " + API_KEY, "Content-Type": "application/json" },
                         body: JSON.stringify(requestBody)
                     });
 
                     const apiResult = await response.json();
 
                     if (!response.ok || apiResult.status === "error") {
-                        throw new Error(apiResult.message || "Provider error. Please try again later.");
+                        throw new Error(apiResult.message || "Provider error: Package unavailable.");
                     }
 
-                    // On Success: Update Firebase
-                    const orderId = "GID-" + Date.now().toString().slice(-6);
-                    const newBalance = (wallet - cost).toFixed(2);
-                    
+                    // Success Logic
+                    const orderId = "ORD-" + Math.floor(Math.random() * 900000 + 100000);
+                    const newBalance = parseFloat((wallet - cost).toFixed(2));
                     const updates = {};
-                    updates[`users/${user.uid}/wallet`] = parseFloat(newBalance);
+                    updates[`users/${user.uid}/wallet`] = newBalance;
                     
-                    const transactionData = {
-                        ...order,
-                        orderId: orderId,
-                        status: "Completed",
-                        vendor_ref: apiResult.order_id || "N/A",
-                        date: new Date().toISOString()
-                    };
-
-                    updates[`user_orders/${user.uid}/${orderId}`] = transactionData;
-                    updates[`all_orders/${orderId}`] = transactionData;
+                    const finalOrderData = { ...order, uid: user.uid, orderId: orderId, status: "Successful", timestamp: Date.now() };
+                    updates[`orders/${orderId}`] = finalOrderData;
+                    updates[`user_orders/${user.uid}/${orderId}`] = finalOrderData;
 
                     await update(ref(db), updates);
-                    
                     localStorage.removeItem('pendingOrder');
                     document.getElementById('modalOverlay').style.display = 'flex';
 
                 } catch (err) {
-                    alert("Error: " + err.message);
-                    btn.disabled = false;
-                    btn.innerText = "RETRY PAYMENT";
+                    alert("Order Aborted: " + err.message);
+                    document.getElementById('payBtn').disabled = false;
+                    document.getElementById('payBtn').innerText = "RETRY PAYMENT";
                 }
             };
         });
