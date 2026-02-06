@@ -35,16 +35,16 @@
 
 <div class="container">
     <div class="card" id="renderArea">
-        <p style="text-align:center; padding:20px;">Synchronizing wallet...</p>
+        <p style="text-align:center; padding:20px;">Verifying session...</p>
     </div>
 </div>
 
 <div class="modal-overlay" id="modalOverlay">
     <div class="success-modal">
         <div class="success-icon"><i class="fas fa-check"></i></div>
-        <h3 style="margin-bottom: 10px; color: #22c55e;">Payment Successful!</h3>
-        <p id="apiStatus" style="font-size: 0.85rem; color: #64748b;">Your data is being delivered.</p>
-        <button onclick="window.location.replace('order_history.html')" style="background:#22c55e; color:white; border:none; padding:12px; width:100%; border-radius:12px; margin-top:20px; font-weight:700;">View History</button>
+        <h3 style="margin-bottom: 10px; color: #22c55e;">Order Delivered!</h3>
+        <p id="apiStatus" style="font-size: 0.85rem; color: #64748b;">The bundle has been sent to the beneficiary.</p>
+        <button onclick="window.location.replace('dashboard.html')" style="background:#22c55e; color:white; border:none; padding:12px; width:100%; border-radius:12px; margin-top:20px; font-weight:700;">Finish</button>
     </div>
 </div>
 
@@ -65,9 +65,8 @@
         if (!user) { window.location.href = "login.html"; return; }
 
         const order = JSON.parse(localStorage.getItem('pendingOrder'));
-        
         if (!order || !order.data_id) {
-            document.getElementById('renderArea').innerHTML = "<p style='text-align:center; color:red;'>Error: No Package ID found. Please re-select the plan.</p>";
+            document.getElementById('renderArea').innerHTML = "<p>Invalid package selection. Please re-select your plan.</p>";
             return;
         }
 
@@ -82,27 +81,27 @@
                 <div class="summary-item"><span>Recipient</span><span>${order.recipient}</span></div>
                 <div class="summary-item"><span>Balance</span><span>GH₵ ${wallet.toFixed(2)}</span></div>
                 <div class="price-focus"><h2>GH₵ ${cost.toFixed(2)}</h2></div>
-                <button class="pay-btn" id="payBtn">AUTHORIZE & PAY</button>
+                <button class="pay-btn" id="payBtn">COMPLETE ORDER</button>
             `;
 
             document.getElementById('payBtn').onclick = async () => {
                 if (wallet < cost) { alert("Insufficient Balance!"); return; }
                 
                 document.getElementById('payBtn').disabled = true;
-                document.getElementById('payBtn').innerText = "Processing Delivery...";
+                document.getElementById('payBtn').innerText = "Processing...";
 
                 try {
-                    // PATCHED: Ensure lowercase network and integer package ID
+                    // RULES: network must be lowercase, data-bundle-packages must be a raw number
                     const requestBody = {
-                        "network": order.network.toLowerCase(), // Fixed: "mtn", "at", or "telecel"
-                        "beneficiary": order.recipient.toString().trim(), // Fixed: String format
-                        "pa_data-bundle-packages": Number(order.data_id) // Fixed: Raw number only
+                        "network": order.network.toLowerCase(),
+                        "beneficiary": order.recipient.toString().trim(),
+                        "pa_data-bundle-packages": Number(order.data_id) 
                     };
 
                     const response = await fetch(API_URL, {
                         method: "POST",
                         headers: { 
-                            "Authorization": "Bearer " + API_KEY,
+                            "Authorization": "Bearer " + API_KEY, 
                             "Content-Type": "application/json" 
                         },
                         body: JSON.stringify(requestBody)
@@ -111,25 +110,16 @@
                     const apiResult = await response.json();
 
                     if (!response.ok || apiResult.status === "error") {
-                        throw new Error(apiResult.message || "Package currently not available.");
+                        throw new Error(apiResult.message || "Provider error: Package currently not available.");
                     }
 
-                    // On API success, generate Order ID and update Firebase
+                    // On API success, update Firebase
                     const orderId = "ORD-" + Math.floor(Math.random() * 900000 + 100000);
                     const newBalance = parseFloat((wallet - cost).toFixed(2));
                     const updates = {};
-                    
                     updates[`users/${user.uid}/wallet`] = newBalance;
                     
-                    const finalOrderData = { 
-                        ...order, 
-                        uid: user.uid, 
-                        orderId: orderId, 
-                        status: "Successful", 
-                        vendor_ref: apiResult.order_id || "N/A",
-                        timestamp: Date.now() 
-                    };
-
+                    const finalOrderData = { ...order, uid: user.uid, orderId: orderId, status: "Successful", timestamp: Date.now() };
                     updates[`orders/${orderId}`] = finalOrderData;
                     updates[`user_orders/${user.uid}/${orderId}`] = finalOrderData;
 
