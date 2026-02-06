@@ -53,17 +53,12 @@
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
     import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-    const firebaseConfig = { 
-        apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4", 
-        authDomain: "gigantic-data.firebaseapp.com", 
-        databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com", 
-        projectId: "gigantic-data" 
-    };
-    
+    const firebaseConfig = { apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4", authDomain: "gigantic-data.firebaseapp.com", databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com", projectId: "gigantic-data" };
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
 
+    // Official API configuration from vendor documentation
     const API_KEY = "tera_live_95abf76d96984f4612153a4869e43d3e";
     const API_URL = "https://idatagh.com/wp-json/custom/v1/place-order";
 
@@ -72,8 +67,9 @@
 
         const order = JSON.parse(localStorage.getItem('pendingOrder'));
         
+        // Critical: Ensure the numerical data_id exists
         if (!order || !order.data_id) {
-            document.getElementById('renderArea').innerHTML = "<p style='text-align:center; color:red;'>Invalid package selection. Please re-select your plan.</p>";
+            document.getElementById('renderArea').innerHTML = "<p style='text-align:center; color:red;'>Error: No Package ID found. Please re-select the plan.</p>";
             return;
         }
 
@@ -86,7 +82,7 @@
                 <div class="summary-item"><span>Network</span><span>${order.network}</span></div>
                 <div class="summary-item"><span>Plan</span><span>${order.plan}</span></div>
                 <div class="summary-item"><span>Recipient</span><span>${order.recipient}</span></div>
-                <div class="summary-item"><span>Wallet Balance</span><span>GH₵ ${wallet.toFixed(2)}</span></div>
+                <div class="summary-item"><span>Balance</span><span>GH₵ ${wallet.toFixed(2)}</span></div>
                 <div class="price-focus"><h2>GH₵ ${cost.toFixed(2)}</h2></div>
                 <button class="pay-btn" id="payBtn">AUTHORIZE & PAY</button>
             `;
@@ -98,16 +94,17 @@
                 document.getElementById('payBtn').innerText = "Processing Delivery...";
 
                 try {
+                    // JSON structure exactly matching the idatagh.com "Request Body" rules
                     const requestBody = {
-                        "network": order.network.toLowerCase(),
-                        "beneficiary": order.recipient,
-                        "pa_data-bundle-packages": Number(order.data_id)
+                        "network": order.network.toLowerCase(), // Must be lowercase string
+                        "beneficiary": order.recipient,        // Recipient phone number string
+                        "pa_data-bundle-packages": Number(order.data_id) // MUST be an integer/number
                     };
 
                     const response = await fetch(API_URL, {
                         method: "POST",
                         headers: { 
-                            "Authorization": "Bearer " + API_KEY,
+                            "Authorization": "Bearer " + API_KEY, 
                             "Content-Type": "application/json" 
                         },
                         body: JSON.stringify(requestBody)
@@ -115,14 +112,15 @@
 
                     const apiResult = await response.json();
 
+                    // Check for standard error status or "Package not available" responses
                     if (!response.ok || apiResult.status === "error") {
-                        throw new Error(apiResult.message || "Provider error: Package currently not available.");
+                        throw new Error(apiResult.message || "Vendor rejected order: Package not available.");
                     }
 
+                    // Success logic: Deduct balance and record transaction
                     const orderId = "ORD-" + Math.floor(Math.random() * 900000 + 100000);
                     const newBalance = parseFloat((wallet - cost).toFixed(2));
                     const updates = {};
-                    
                     updates[`users/${user.uid}/wallet`] = newBalance;
                     
                     const finalOrderData = { 
