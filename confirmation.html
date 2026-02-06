@@ -58,7 +58,6 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    // Official API configuration from vendor documentation
     const API_KEY = "tera_live_95abf76d96984f4612153a4869e43d3e";
     const API_URL = "https://idatagh.com/wp-json/custom/v1/place-order";
 
@@ -67,7 +66,6 @@
 
         const order = JSON.parse(localStorage.getItem('pendingOrder'));
         
-        // Critical: Ensure the numerical data_id exists
         if (!order || !order.data_id) {
             document.getElementById('renderArea').innerHTML = "<p style='text-align:center; color:red;'>Error: No Package ID found. Please re-select the plan.</p>";
             return;
@@ -94,17 +92,17 @@
                 document.getElementById('payBtn').innerText = "Processing Delivery...";
 
                 try {
-                    // JSON structure exactly matching the idatagh.com "Request Body" rules
+                    // API RULE: Network must be lowercase, ID must be a Number
                     const requestBody = {
-                        "network": order.network.toLowerCase(), // Must be lowercase string
-                        "beneficiary": order.recipient,        // Recipient phone number string
-                        "pa_data-bundle-packages": Number(order.data_id) // MUST be an integer/number
+                        "network": order.network.toLowerCase(),
+                        "beneficiary": order.recipient.toString(),
+                        "pa_data-bundle-packages": parseInt(order.data_id)
                     };
 
                     const response = await fetch(API_URL, {
                         method: "POST",
                         headers: { 
-                            "Authorization": "Bearer " + API_KEY, 
+                            "Authorization": "Bearer " + API_KEY,
                             "Content-Type": "application/json" 
                         },
                         body: JSON.stringify(requestBody)
@@ -112,15 +110,14 @@
 
                     const apiResult = await response.json();
 
-                    // Check for standard error status or "Package not available" responses
                     if (!response.ok || apiResult.status === "error") {
-                        throw new Error(apiResult.message || "Vendor rejected order: Package not available.");
+                        throw new Error(apiResult.message || "Package currently not available.");
                     }
 
-                    // Success logic: Deduct balance and record transaction
                     const orderId = "ORD-" + Math.floor(Math.random() * 900000 + 100000);
                     const newBalance = parseFloat((wallet - cost).toFixed(2));
                     const updates = {};
+                    
                     updates[`users/${user.uid}/wallet`] = newBalance;
                     
                     const finalOrderData = { 
