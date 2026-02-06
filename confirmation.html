@@ -92,11 +92,11 @@
                 document.getElementById('payBtn').innerText = "Processing Delivery...";
 
                 try {
-                    // API RULE: Network must be lowercase, ID must be a Number
+                    // PATCHED: Ensure lowercase network and integer package ID
                     const requestBody = {
-                        "network": order.network.toLowerCase(),
-                        "beneficiary": order.recipient.toString(),
-                        "pa_data-bundle-packages": parseInt(order.data_id)
+                        "network": order.network.toLowerCase(), // Fixed: "mtn", "at", or "telecel"
+                        "beneficiary": order.recipient.toString().trim(), // Fixed: String format
+                        "pa_data-bundle-packages": Number(order.data_id) // Fixed: Raw number only
                     };
 
                     const response = await fetch(API_URL, {
@@ -114,6 +114,7 @@
                         throw new Error(apiResult.message || "Package currently not available.");
                     }
 
+                    // On API success, generate Order ID and update Firebase
                     const orderId = "ORD-" + Math.floor(Math.random() * 900000 + 100000);
                     const newBalance = parseFloat((wallet - cost).toFixed(2));
                     const updates = {};
