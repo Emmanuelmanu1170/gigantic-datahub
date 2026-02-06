@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head><title>Get My Data IDs</title></head>
+<body>
+    <button id="getIds" style="padding:20px; width:100%; font-size:18px;">CLICK TO SEE MY PACKAGE IDs</button>
+    <div id="results" style="margin-top:20px; font-family:monospace; white-space:pre-wrap; font-size:14px; background:#f4f4f4; padding:10px;"></div>
+
+    <script>
+        document.getElementById('getIds').onclick = async () => {
+            try {
+                const res = await fetch("https://idatagh.com/wp-json/custom/v1/get-packages", {
+                    headers: { "Authorization": "Bearer tera_live_95abf76d96984f4612153a4869e43d3e" }
+                });
+                const data = await res.json();
+                document.getElementById('results').innerText = JSON.stringify(data, null, 2);
+            } catch (err) {
+                document.getElementById('results').innerText = "Error fetching IDs: " + err.message;
+            }
+        };
+    </script>
+</body>
+</html>
