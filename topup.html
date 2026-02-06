@@ -8,66 +8,70 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --deep-blue: #0f172a;
+            --deep: #0f172a;
             --primary: #4f46e5;
             --success: #10b981;
-            --error: #ef4444;
             --white: #ffffff;
-            --glass: rgba(255, 255, 255, 0.9);
         }
 
-        body { margin: 0; font-family: 'Poppins', sans-serif; background: #f1f5f9; color: var(--deep-blue); }
-        .header { background: var(--deep-blue); color: white; padding: 20px; display: flex; align-items: center; gap: 15px; }
-        .container { padding: 20px; max-width: 480px; margin: auto; }
+        body { margin: 0; font-family: 'Poppins', sans-serif; background: #f8fafc; color: var(--deep); overflow-x: hidden; }
+        .header { background: var(--deep); color: white; padding: 20px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .container { padding: 20px; max-width: 450px; margin: auto; }
 
         .card {
-            background: var(--white); border-radius: 24px; padding: 25px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-bottom: 20px;
-            border: 1px solid #e2e8f0;
+            background: var(--white); border-radius: 28px; padding: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.05); margin-bottom: 20px;
+            border: 1px solid #e2e8f0; position: relative;
         }
 
-        .balance-box {
-            background: var(--deep-blue); color: white; padding: 15px;
-            border-radius: 18px; margin-bottom: 20px; text-align: center;
+        .balance-card {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white; padding: 22px; border-radius: 22px; margin-bottom: 25px;
+            text-align: center; border: 1px solid rgba(255,255,255,0.1);
         }
 
-        label { display: block; font-weight: 700; font-size: 13px; margin-bottom: 10px; color: #64748b; text-transform: uppercase; }
+        label { display: block; font-weight: 700; font-size: 12px; margin-bottom: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
         .input-group { position: relative; margin-bottom: 20px; }
-        .input-group span { position: absolute; left: 15px; top: 12px; font-weight: 800; color: var(--deep-blue); }
+        .input-group span { position: absolute; left: 18px; top: 14px; font-weight: 800; color: var(--deep); font-size: 1.1rem; }
+        
         input {
-            width: 100%; padding: 14px 14px 14px 55px; border: 2px solid #f1f5f9;
-            border-radius: 14px; font-size: 1.1rem; outline: none; transition: 0.3s;
+            width: 100%; padding: 16px 16px 16px 60px; border: 2px solid #f1f5f9;
+            border-radius: 18px; font-size: 1.2rem; outline: none; transition: 0.3s;
+            box-sizing: border-box; font-weight: 600;
         }
-        input:focus { border-color: var(--primary); }
+        input:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
 
-        .fee-info { background: #f8fafc; border-radius: 14px; padding: 15px; font-size: 0.85rem; border: 1px dashed #cbd5e1; }
-        .fee-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
-        .total-row { border-top: 2px solid #e2e8f0; padding-top: 10px; margin-top: 10px; font-weight: 800; color: var(--primary); font-size: 1rem; }
+        .fee-info { background: #f8fafc; border-radius: 18px; padding: 18px; font-size: 0.9rem; border: 1px dashed #cbd5e1; }
+        .fee-row { display: flex; justify-content: space-between; margin-bottom: 8px; color: #64748b; }
+        .total-row { border-top: 2px solid #e2e8f0; padding-top: 12px; margin-top: 12px; font-weight: 800; color: var(--primary); font-size: 1.1rem; }
 
         .pay-btn {
             width: 100%; background: var(--primary); color: white; border: none;
-            padding: 18px; border-radius: 16px; font-weight: 700; font-size: 1rem;
+            padding: 20px; border-radius: 20px; font-weight: 700; font-size: 1rem;
             margin-top: 25px; cursor: pointer; transition: 0.3s;
-            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.2);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+            text-transform: uppercase; letter-spacing: 1px;
         }
+        .pay-btn:disabled { background: #94a3b8; cursor: not-allowed; box-shadow: none; }
 
         .whatsapp-note {
-            background: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px;
-            border-radius: 16px; margin-top: 20px; font-size: 0.8rem;
-            display: flex; align-items: center; gap: 12px;
+            background: #f0fdf4; border: 1px solid #bbf7d0; padding: 18px;
+            border-radius: 20px; margin-top: 20px; font-size: 0.85rem;
+            display: flex; align-items: center; gap: 15px; line-height: 1.4;
         }
-        .wa-link { color: #16a34a; font-weight: 800; text-decoration: underline; cursor: pointer; }
 
-        /* Professional Success Popup */
+        /* Success Popup Styles */
         #status-modal {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.5); 
-            display: none; align-items: center; justify-content: center; z-index: 1000;
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); 
+            display: none; align-items: center; justify-content: center; z-index: 2000;
+            backdrop-filter: blur(8px);
         }
         .modal-content {
-            background: white; width: 90%; max-width: 350px; padding: 30px;
-            border-radius: 24px; text-align: center;
+            background: white; width: 85%; max-width: 380px; padding: 40px 30px;
+            border-radius: 32px; text-align: center; animation: slideUp 0.4s ease-out;
         }
-        .success-icon { font-size: 60px; color: var(--success); margin-bottom: 15px; }
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .success-icon { font-size: 70px; color: var(--success); margin-bottom: 20px; }
     </style>
 </head>
 <body>
@@ -75,8 +79,8 @@
     <div id="status-modal">
         <div class="modal-content">
             <i class="fas fa-check-circle success-icon"></i>
-            <h2 style="margin:0">Payment Recorded</h2>
-            <p style="color:#64748b; font-size: 13px;">Security verification is active. Your balance will be updated automatically in a few moments.</p>
+            <h2 style="margin:0; color: var(--deep);">Payment Received!</h2>
+            <p style="color:#64748b; font-size: 14px; margin: 20px 0;">Our automated security system is currently syncing your wallet. This takes 5-10 seconds.</p>
             <button class="pay-btn" onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
         </div>
     </div>
@@ -88,31 +92,31 @@
 
     <div class="container">
         <div class="card">
-            <div class="balance-box">
-                <p style="margin:0; font-size:0.7rem; opacity:0.8">WALLET BALANCE</p>
-                <h2 id="displayBal" style="margin:5px 0 0">GH₵ 0.00</h2>
+            <div class="balance-card">
+                <p style="margin:0; font-size:0.75rem; opacity:0.7; font-weight: 600;">AVAILABLE BALANCE</p>
+                <h1 id="displayBal" style="margin:8px 0 0; font-size: 2.2rem;">GH₵ 0.00</h1>
             </div>
 
-            <label>Amount to Deposit</label>
+            <label>Amount to Top-up</label>
             <div class="input-group">
                 <span>GH₵</span>
-                <input type="number" id="amtInput" placeholder="Minimum 1.00">
+                <input type="number" id="amtInput" placeholder="Min: 1.00" step="0.01">
             </div>
 
             <div class="fee-info">
                 <div class="fee-row"><span>Subtotal</span> <span id="subTotal">GH₵ 0.00</span></div>
-                <div class="fee-row"><span>Admin Fee (2.5%)</span> <span id="feeTotal">GH₵ 0.00</span></div>
+                <div class="fee-row"><span>Service Fee (2.5%)</span> <span id="feeTotal">GH₵ 0.00</span></div>
                 <div class="total-row"><span>Total Payable</span> <span id="totalPay">GH₵ 0.00</span></div>
             </div>
 
-            <button class="pay-btn" id="payBtn" onclick="initiatePayment()">AUTHENTIC TOP-UP</button>
+            <button class="pay-btn" id="payBtn" onclick="initiatePayment()">SECURE TOP-UP NOW</button>
         </div>
 
         <div class="whatsapp-note">
-            <i class="fab fa-whatsapp" style="font-size: 24px; color: #16a34a;"></i>
+            <i class="fab fa-whatsapp" style="font-size: 28px; color: #16a34a;"></i>
             <div>
-                <b>Account not credited?</b><br>
-                Chat Admin with receipt: <span class="wa-link" onclick="window.location.href='https://wa.me/233549055308'">0549055308</span>
+                <b style="color: #166534;">Payment Assistance</b><br>
+                If your account is not credited within 2 mins, contact us: <span class="wa-link" onclick="window.location.href='https://wa.me/233549055308'">0549055308</span>
             </div>
         </div>
     </div>
@@ -120,56 +124,75 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-        import { getDatabase, ref, onValue, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-        const firebaseConfig = { apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4", authDomain: "gigantic-data.firebaseapp.com", databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com", projectId: "gigantic-data" };
+        // Firebase Config (Keep these private in your real production)
+        const firebaseConfig = { 
+            apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4", 
+            authDomain: "gigantic-data.firebaseapp.com", 
+            databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com", 
+            projectId: "gigantic-data" 
+        };
+        
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        let userDetails = {};
+        let currentUser = null;
 
         onAuthStateChanged(auth, user => {
             if (user) {
-                userDetails = { uid: user.uid, email: user.email };
+                currentUser = user;
+                // Read Wallet Balance (Protected by Rules - Users can READ but not WRITE)
                 onValue(ref(db, `users/${user.uid}/wallet`), s => {
                     document.getElementById('displayBal').innerText = `GH₵ ${Number(s.val() || 0).toFixed(2)}`;
                 });
-            } else { window.location.href = "login.html"; }
+            } else { 
+                window.location.href = "login.html"; 
+            }
         });
 
         const input = document.getElementById('amtInput');
         input.addEventListener('input', () => {
             const val = parseFloat(input.value) || 0;
-            const fee = val * 0.025;
+            const fee = val * 0.025; // 2.5% Fee
+            const total = val + fee;
+            
             document.getElementById('subTotal').innerText = `GH₵ ${val.toFixed(2)}`;
             document.getElementById('feeTotal').innerText = `GH₵ ${fee.toFixed(2)}`;
-            document.getElementById('totalPay').innerText = `GH₵ ${(val + fee).toFixed(2)}`;
+            document.getElementById('totalPay').innerText = `GH₵ ${total.toFixed(2)}`;
         });
 
         window.initiatePayment = function() {
             const amtRequested = parseFloat(input.value);
-            if (amtRequested < 1 || isNaN(amtRequested)) return alert("Minimum GH₵ 1.00");
+            if (amtRequested < 1 || isNaN(amtRequested)) {
+                return alert("Please enter a valid amount (Minimum GH₵ 1.00)");
+            }
 
-            const finalAmt = Math.round((amtRequested * 1.025) * 100);
+            const payBtn = document.getElementById('payBtn');
+            payBtn.disabled = true;
+            payBtn.innerText = "CONNECTING TO SECURE GATEWAY...";
+
+            const finalAmtInPesewas = Math.round((amtRequested * 1.025) * 100);
 
             const handler = PaystackPop.setup({
                 key: 'pk_live_faecdb3166144fadebd8269829343698dd43de63',
-                email: userDetails.email,
-                amount: finalAmt,
+                email: currentUser.email,
+                amount: finalAmtInPesewas,
                 currency: "GHS",
-                callback: (res) => {
-                    // SECURE HANDSHAKE: Write proof of payment
-                    const proofRef = ref(db, `verified_payments/${res.reference}`);
-                    set(proofRef, {
-                        uid: userDetails.uid,
-                        email: userDetails.email,
-                        amount: amtRequested,
-                        timestamp: serverTimestamp(),
-                        status: "awaiting_sync"
-                    }).then(() => {
-                        document.getElementById('status-modal').style.display = 'flex';
-                    });
+                metadata: {
+                    custom_fields: [
+                        { display_name: "User ID", variable_name: "uid", value: currentUser.uid }
+                    ]
+                },
+                callback: (response) => {
+                    // WE DO NOT WRITE TO FIREBASE HERE!
+                    // Your Make.com Webhook will handle the crediting automatically.
+                    document.getElementById('status-modal').style.display = 'flex';
+                },
+                onClose: () => {
+                    payBtn.disabled = false;
+                    payBtn.innerText = "SECURE TOP-UP NOW";
                 }
             });
             handler.openIframe();
