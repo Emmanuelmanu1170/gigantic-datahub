@@ -199,8 +199,7 @@
 
         const getK = () => atob("YmVhcmVyIA==") + atob("c2tfbGl2ZV8=") + atob("YmZkMjhmYmJlM2NhNDU1YmExNTQ1NWViZWQ3MTM4YjI0MDA5ZDEzNA==");
 
-        // FIXED: Added numerical 'id' fields to all plans. 
-        // Replace these IDs with your vendor's specific ID numbers.
+        // DATA IDs must correspond to your vendor's numerical package IDs
         const agentPlans = {
             mtn:[{plan:"1GB",price:"4.45",id:"101"},{plan:"2GB",price:"8.85",id:"102"},{plan:"3GB",price:"13.25",id:"103"},{plan:"4GB",price:"17.65",id:"104"},{plan:"5GB",price:"22.05",id:"105"},{plan:"6GB",price:"26.55",id:"106"},{plan:"8GB",price:"36.39",id:"108"},{plan:"10GB",price:"42.25",id:"110"},{plan:"15GB",price:"62.05",id:"115"},{plan:"20GB",price:"82.05",id:"120"},{plan:"25GB",price:"103.05",id:"125"},{plan:"30GB",price:"123",id:"130"},{plan:"40GB",price:"160",id:"140"},{plan:"50GB",price:"199",id:"150"},{plan:"100GB",price:"380",id:"199"}],
             airteltigo:[{plan:"1GB",price:"4.3",id:"201"},{plan:"2GB",price:"8.56",id:"202"},{plan:"3GB",price:"12.84",id:"203"},{plan:"4GB",price:"17.12",id:"204"},{plan:"5GB",price:"21.4",id:"205"},{plan:"6GB",price:"25.6",id:"206"},{plan:"7GB",price:"29.96",id:"207"},{plan:"8GB",price:"35",id:"208"},{plan:"10GB",price:"44",id:"210"},{plan:"15GB",price:"65",id:"215"},{plan:"20GB",price:"76",id:"220"},{plan:"30GB",price:"87",id:"230"},{plan:"40GB",price:"100",id:"240"},{plan:"50GB",price:"115",id:"250"},{plan:"60GB",price:"150",id:"260"},{plan:"80GB",price:"183",id:"280"},{plan:"100GB",price:"200",id:"299"}],
@@ -230,19 +229,24 @@
                     }
 
                     if(window.selectedNet) {
-                        const select = document.getElementById('dataPlan');
-                        const currentVal = select.value;
-                        const plans = isAgent ? agentPlans[window.selectedNet] : normalPlans[window.selectedNet];
-                        select.innerHTML = '<option value="" disabled>-- Choose Plan --</option>';
-                        plans.forEach(p => { 
-                            // FIXED: Added data-id to ensure the ID is captured
-                            select.innerHTML += `<option value="${p.price}" data-plan="${p.plan}" data-id="${p.id}">${p.plan} - GH₵ ${p.price}</option>`; 
-                        });
-                        select.value = currentVal;
+                        updatePlanOptions();
                     }
                 });
             } else { window.location.href = "login.html"; }
         });
+
+        function updatePlanOptions() {
+            const select = document.getElementById('dataPlan');
+            const currentVal = select.value;
+            const plans = isAgent ? agentPlans[window.selectedNet] : normalPlans[window.selectedNet];
+            select.innerHTML = '<option value="" disabled selected>-- Choose Plan --</option>';
+            if(plans) {
+                plans.forEach(p => { 
+                    select.innerHTML += `<option value="${p.price}" data-plan="${p.plan}" data-id="${p.id}">${p.plan} - GH₵ ${p.price}</option>`; 
+                });
+            }
+            select.value = currentVal;
+        }
 
         window.setPurchaseMode = (mode) => {
             purchaseMode = mode;
@@ -256,13 +260,7 @@
             window.selectedNet = net;
             document.querySelectorAll('.network-option').forEach(o => o.classList.remove('selected'));
             el.classList.add('selected');
-            const select = document.getElementById('dataPlan');
-            select.innerHTML = '<option value="" selected disabled>-- Choose Plan --</option>';
-            const plans = isAgent ? agentPlans[net] : normalPlans[net];
-            plans.forEach(p => { 
-                // FIXED: Passed p.id into the data-id attribute
-                select.innerHTML += `<option value="${p.price}" data-plan="${p.plan}" data-id="${p.id}">${p.plan} - GH₵ ${p.price}</option>`; 
-            });
+            updatePlanOptions();
             document.getElementById('step2').classList.remove('disabled');
             document.getElementById('step2').classList.add('active-step');
         };
@@ -296,7 +294,8 @@
             const planSelect = document.getElementById('dataPlan');
             const selectedOption = planSelect.options[planSelect.selectedIndex];
             
-            if (!planSelect.value) { alert("Please select a plan"); return; }
+            if (!planSelect.value || planSelect.value === "") { alert("Please select a plan"); return; }
+            
             let recipients = [];
             if (purchaseMode === 'single') {
                 const num = document.getElementById('phoneNumber').value.trim();
@@ -315,7 +314,7 @@
             const order = {
                 network: window.selectedNet.toUpperCase(),
                 plan: selectedOption.getAttribute('data-plan'),
-                data_id: selectedOption.getAttribute('data-id'), // FIXED: Sending ID to confirmation page
+                data_id: selectedOption.getAttribute('data-id'), 
                 unitPrice: unitPrice,
                 amount: totalAmount,
                 recipients: recipients,
