@@ -15,13 +15,14 @@
         .summary-item span:last-child { font-weight: 700; color: var(--deep); }
         .price-focus { background: rgba(106, 90, 249, 0.05); border: 2px dashed var(--primary); border-radius: 15px; padding: 20px; text-align: center; margin: 20px 0; }
         .price-focus h2 { font-size: 2rem; color: #ff4500; }
-        .pay-btn { background: var(--primary); color: #fff; border: none; width: 100%; padding: 18px; border-radius: 15px; font-weight: 700; font-size: 1.1rem; cursor: pointer; }
+        .pay-btn { background: var(--primary); color: #fff; border: none; width: 100%; padding: 18px; border-radius: 15px; font-weight: 700; font-size: 1.1rem; cursor: pointer; width: 100%; }
+        .pay-btn:disabled { opacity: 0.6; cursor: not-allowed; }
     </style>
 </head>
 <body>
 
 <div class="card" id="renderArea">
-    <p style="text-align:center; padding:20px;">Synchronizing...</p>
+    <p style="text-align:center; padding:20px;">Synchronizing wallet...</p>
 </div>
 
 <script type="module">
@@ -29,7 +30,13 @@
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
     import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-    const firebaseConfig = { apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4", authDomain: "gigantic-data.firebaseapp.com", databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com", projectId: "gigantic-data" };
+    const firebaseConfig = { 
+        apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4", 
+        authDomain: "gigantic-data.firebaseapp.com", 
+        databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com", 
+        projectId: "gigantic-data" 
+    };
+    
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
@@ -38,11 +45,17 @@
     const API_URL = "https://idatagh.com/wp-json/custom/v1/place-order";
 
     onAuthStateChanged(auth, (user) => {
-        if (!user) return;
+        if (!user) { window.location.href = "login.html"; return; }
+
         const order = JSON.parse(localStorage.getItem('pendingOrder'));
+        if (!order) {
+            document.getElementById('renderArea').innerHTML = "No pending order found.";
+            return;
+        }
 
         onValue(ref(db, `users/${user.uid}`), (snapshot) => {
-            const wallet = parseFloat(snapshot.val().wallet || 0);
+            const userData = snapshot.val() || {};
+            const wallet = parseFloat(userData.wallet || 0);
             const cost = parseFloat(order.amount);
 
             document.getElementById('renderArea').innerHTML = `
@@ -56,10 +69,13 @@
 
             document.getElementById('payBtn').onclick = async () => {
                 if (wallet < cost) { alert("Insufficient Balance!"); return; }
-                document.getElementById('payBtn').innerText = "Processing...";
+                
+                const btn = document.getElementById('payBtn');
+                btn.disabled = true;
+                btn.innerText = "Processing Delivery...";
 
                 try {
-                    // API RULE: Small letters and Number ID
+                    // STEP 1: External API Call
                     const response = await fetch(API_URL, {
                         method: "POST",
                         headers: { 
@@ -67,31 +83,55 @@
                             "Content-Type": "application/json" 
                         },
                         body: JSON.stringify({
-                            "network": order.network.toLowerCase(), // Small letters
+                            "network": order.network.toLowerCase(),
                             "beneficiary": order.recipient.toString(), 
-                            "pa_data-bundle-packages": Number(order.data_id) // Number format
+                            "pa_data-bundle-packages": Number(order.data_id)
                         })
                     });
 
                     const res = await response.json();
-                    if (res.status === "error") throw new Error(res.message);
+                    if (!response.ok || res.status === "error") throw new Error(res.message || "Provider Error");
 
-                    // Success: Update Firebase
-                    const orderId = "ORD-" + Math.floor(Math.random() * 100000);
-                    await update(ref(db), {
-                        [`users/${user.uid}/wallet`]: (wallet - cost).toFixed(2),
-                        [`user_orders/${user.uid}/${orderId}`]: { ...order, status: "Successful", date: new Date().toISOString() }
-                    });
+                    // STEP 2: Database Multi-Path Update (Fixes Permission Denied)
+                    const orderId = "ORD-" + Math.floor(Math.random() * 1000000);
+                    const newBalance = Number((wallet - cost).toFixed(2));
 
+                    // This object contains ALL fields required by your Firebase Rules (.validate)
+                    const finalOrderData = {
+                        uid: user.uid,              // Required by Rule
+                        amount: cost,               // Required by Rule
+                        network: order.network,     // Required by Rule
+                        recipient: order.recipient, // Required by Rule
+                        status: "Successful",       // Required by Rule
+                        timestamp: Date.now(),      // Required by Rule
+                        plan: order.plan,
+                        api_ref: res.order_id || "N/A"
+                    };
+
+                    const updates = {};
+                    // Path 1: Deduct from user wallet
+                    updates[`users/${user.uid}/wallet`] = newBalance;
+                    
+                    // Path 2: Global Orders node (Must satisfy .validate)
+                    updates[`orders/${orderId}`] = finalOrderData;
+                    
+                    // Path 3: User specific history
+                    updates[`user_orders/${user.uid}/${orderId}`] = finalOrderData;
+
+                    // Execute all updates at once
+                    await update(ref(db), updates);
+
+                    localStorage.removeItem('pendingOrder');
                     alert("Data Purchase Successful!");
                     window.location.href = "dashboard.html";
 
                 } catch (err) {
                     alert("Order Aborted: " + err.message);
-                    document.getElementById('payBtn').innerText = "RETRY";
+                    btn.disabled = false;
+                    btn.innerText = "RETRY";
                 }
             };
-        });
+        }, { onlyOnce: false });
     });
 </script>
 </body>
