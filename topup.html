@@ -13,183 +13,51 @@
             --white: #ffffff;
             --bg: #f8fafc;
         }
-
         * { margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif; }
-
-        body { 
-            background: var(--bg); 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
-            color: #0f172a;
-        }
-
-        .card {
-            background: var(--white);
-            padding: 30px;
-            border-radius: 24px;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e2e8f0;
-        }
-
-        h2 {
-            text-align: center;
-            margin-bottom: 25px;
-            color: #1e3a8a;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-        }
-
-        .balance-preview {
-            background: var(--gradient);
-            color: white;
-            padding: 20px;
-            border-radius: 18px;
-            text-align: center;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2);
-        }
-
-        .label {
-            display: block;
-            font-size: 0.75rem;
-            font-weight: 700;
-            margin-bottom: 8px;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .input-group {
-            position: relative;
-            margin-bottom: 20px;
-        }
-
-        input {
-            width: 100%;
-            padding: 15px;
-            background: #f1f5f9;
-            border: 2px solid transparent;
-            border-radius: 12px;
-            font-size: 1rem;
-            outline: none;
-            transition: 0.3s;
-            color: #0f172a;
-            font-weight: 600;
-        }
-
-        input:focus {
-            border-color: #3b82f6;
-            background: white;
-        }
-
-        .fee-container {
-            background: #f8fafc;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 25px;
-            border: 1px dashed #cbd5e1;
-        }
-
-        .fee-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.9rem;
-            margin-bottom: 6px;
-            color: #475569;
-        }
-
-        .total-row {
-            display: flex;
-            justify-content: space-between;
-            font-weight: 800;
-            color: var(--primary);
-            border-top: 1px solid #e2e8f0;
-            margin-top: 10px;
-            padding-top: 10px;
-            font-size: 1rem;
-        }
-
-        button {
-            width: 100%;
-            padding: 16px;
-            background: var(--gradient);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(37, 99, 235, 0.3);
-        }
-
-        button:disabled {
-            background: #94a3b8;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        #modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.85);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            backdrop-filter: blur(8px);
-        }
-
-        .modal {
-            background: white;
-            padding: 40px 30px;
-            border-radius: 28px;
-            text-align: center;
-            max-width: 340px;
-            width: 90%;
-        }
+        body { background: var(--bg); display: flex; justify-content: center; align-items: center; height: 100vh; color: #0f172a; }
+        .card { background: var(--white); padding: 30px; border-radius: 24px; width: 100%; max-width: 400px; border: 1px solid #e2e8f0; }
+        h2 { text-align: center; margin-bottom: 25px; color: #1e3a8a; font-weight: 800; }
+        .balance-preview { background: var(--gradient); color: white; padding: 20px; border-radius: 18px; text-align: center; margin-bottom: 25px; }
+        .label { display: block; font-size: 0.75rem; font-weight: 700; margin-bottom: 8px; color: #64748b; text-transform: uppercase; }
+        input { width: 100%; padding: 15px; background: #f1f5f9; border: 2px solid transparent; border-radius: 12px; font-size: 1rem; outline: none; transition: 0.3s; color: #0f172a; font-weight: 600; margin-bottom: 20px; }
+        input:focus { border-color: #3b82f6; background: white; }
+        .fee-container { background: #f8fafc; border-radius: 12px; padding: 15px; margin-bottom: 25px; border: 1px dashed #cbd5e1; }
+        .fee-row { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 6px; color: #475569; }
+        .total-row { display: flex; justify-content: space-between; font-weight: 800; color: var(--primary); border-top: 1px solid #e2e8f0; margin-top: 10px; padding-top: 10px; }
+        button { width: 100%; padding: 16px; background: var(--gradient); color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.3s; }
+        button:disabled { background: #94a3b8; cursor: not-allowed; }
+        #modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(8px); }
+        .modal { background: white; padding: 40px 30px; border-radius: 28px; text-align: center; max-width: 340px; width: 90%; }
     </style>
 </head>
-
 <body>
 
 <div id="modal-overlay">
     <div class="modal">
         <i class="fas fa-check-circle" style="font-size: 55px; color: #10b981; margin-bottom: 20px;"></i>
-        <h3 style="margin-bottom: 12px; color: #0f172a;">Payment Verified</h3>
-        <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 25px; line-height: 1.5;">Your request has been received. Your wallet will update automatically once confirmed by the server.</p>
-        <button onclick="window.location.href='dashboard.html'" style="background: #0f172a;">Return to Dashboard</button>
+        <h3 style="margin-bottom: 12px;">Payment Initialized</h3>
+        <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 25px;">The server is verifying your payment. Your wallet will update automatically once confirmed.</p>
+        <button onclick="window.location.href='dashboard.html'" style="background: #0f172a;">Go to Dashboard</button>
     </div>
 </div>
 
 <div class="card">
     <h2>Fund Wallet</h2>
-
     <div class="balance-preview">
-        <p style="font-size: 0.7rem; opacity: 0.8; font-weight: 700; margin-bottom: 4px; letter-spacing: 0.5px;">AVAILABLE BALANCE</p>
+        <p style="font-size: 0.7rem; opacity: 0.8; font-weight: 700;">AVAILABLE BALANCE</p>
         <h1 id="wallDisplay">₵ 0.00</h1>
     </div>
 
-    <div class="input-group">
-        <span class="label">Top-up Amount (GHS)</span>
-        <input type="number" id="amtInput" placeholder="0.00" oninput="updateCalculations()">
-    </div>
+    <span class="label">Amount (GHS)</span>
+    <input type="number" id="amtInput" placeholder="0.00">
 
     <div class="fee-container">
         <div class="fee-row"><span>Subtotal</span> <span id="fAmt">₵ 0.00</span></div>
-        <div class="fee-row"><span>Service Fee (2.5%)</span> <span id="fFee">₵ 0.00</span></div>
-        <div class="total-row"><span>Total Payable</span> <span id="fTotal">₵ 0.00</span></div>
+        <div class="fee-row"><span>Fee (2.5%)</span> <span id="fFee">₵ 0.00</span></div>
+        <div class="total-row"><span>Total</span> <span id="fTotal">₵ 0.00</span></div>
     </div>
 
-    <button id="payBtn" onclick="payWithPaystack()" disabled>Proceed to Payment</button>
+    <button id="payBtn" disabled>Proceed to Payment</button>
 </div>
 
 <script type="module">
@@ -208,70 +76,66 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    let loggedInUser = null;
+    let userObj = null;
 
+    // Listen for Auth
     onAuthStateChanged(auth, user => {
-        if (!user) {
-            window.location.href = "login.html";
-            return;
-        }
-        loggedInUser = user;
+        if (!user) { window.location.href = "login.html"; return; }
+        userObj = user;
         
-        // Sync wallet from Firebase
-        onValue(ref(db, `users/${user.uid}/wallet`), (snapshot) => {
-            const balance = snapshot.val() || 0;
-            document.getElementById("wallDisplay").innerText = "₵ " + parseFloat(balance).toFixed(2);
+        onValue(ref(db, `users/${user.uid}/wallet`), (s) => {
+            document.getElementById("wallDisplay").innerText = "₵ " + Number(s.val() || 0).toFixed(2);
         });
 
         document.getElementById("payBtn").disabled = false;
     });
 
-    window.updateCalculations = () => {
-        const val = parseFloat(document.getElementById("amtInput").value) || 0;
-        const fee = val * 0.025; // 2.5% fee
-        document.getElementById("fAmt").innerText = `₵ ${val.toFixed(2)}`;
+    // Handle Fee Calculations
+    const amtInput = document.getElementById("amtInput");
+    amtInput.addEventListener('input', () => {
+        const v = parseFloat(amtInput.value) || 0;
+        const fee = v * 0.025;
+        document.getElementById("fAmt").innerText = `₵ ${v.toFixed(2)}`;
         document.getElementById("fFee").innerText = `₵ ${fee.toFixed(2)}`;
-        document.getElementById("fTotal").innerText = `₵ ${(val + fee).toFixed(2)}`;
-    };
+        document.getElementById("fTotal").innerText = `₵ ${(v + fee).toFixed(2)}`;
+    });
 
-    window.payWithPaystack = () => {
-        const amount = parseFloat(document.getElementById("amtInput").value);
-        if (!amount || amount < 1) return alert("Please enter a valid amount");
+    // Handle Payment Button (The Fix: Attaching Event Listener inside the Module)
+    document.getElementById("payBtn").addEventListener('click', () => {
+        const amount = parseFloat(amtInput.value);
+        if (!amount || amount < 1) { alert("Please enter a valid amount"); return; }
 
-        const btn = document.getElementById("payBtn");
-        btn.disabled = true;
-        btn.innerText = "Connecting...";
+        const payBtn = document.getElementById("payBtn");
+        payBtn.disabled = true;
+        payBtn.innerText = "Opening Secure Gateway...";
 
+        // Total in pesewas
         const totalPesewas = Math.round((amount * 1.025) * 100);
 
-        const handler = PaystackPop.setup({
+        const handler = window.PaystackPop.setup({
             key: "pk_live_faecdb3166144fadebd8269829343698dd43de63",
-            email: loggedInUser.email,
+            email: userObj.email,
             amount: totalPesewas,
             currency: "GHS",
-            metadata: {
-                uid: loggedInUser.uid,
-                requested_amount: amount
-            },
+            metadata: { uid: userObj.uid, real_amt: amount },
             callback: async (response) => {
-                // IMPORTANT: We only log the intention here.
-                // Your Firebase Cloud Function (Webhook) is what actually credits the wallet.
+                // Record intent for safety. 
+                // Wallet is NOT credited here. It's done by your Webhook.
                 await set(ref(db, `pending_deposits/${response.reference}`), {
-                    uid: loggedInUser.uid,
+                    uid: userObj.uid,
                     amount: amount,
-                    status: "waiting_for_confirmation",
+                    status: "waiting_for_webhook",
                     timestamp: Date.now()
                 });
-
                 document.getElementById("modal-overlay").style.display = "flex";
             },
             onClose: () => {
-                btn.disabled = false;
-                btn.innerText = "Proceed to Payment";
+                payBtn.disabled = false;
+                payBtn.innerText = "Proceed to Payment";
             }
         });
         handler.openIframe();
-    };
+    });
 </script>
 
 </body>
