@@ -258,7 +258,24 @@
         .nav-item.active { color: var(--accent-orange); }
 
     </style>
-   -link-text">Download Official App (v2.0)</span>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+</head>
+<body>
+
+    <div class="status-header">
+        <div class="status-dot"></div>
+        SYSTEM ONLINE: INSTANT DELIVERY ACTIVE
+    </div>
+
+    <div class="app-top-bar">
+        <a href="https://files.appsgeyser.com/Gigantic%20Data%20Hub_19462747.apk" class="app-link-box">
+            <i class="fab fa-google-play play-store-icon"></i>
+            <span class="app-link-text">Download Official App (v2.0)</span>
         </a>
     </div>
 
@@ -275,8 +292,64 @@
         <div class="sweet-words" id="sweetWords">Your reliable partner for affordable data.</div>
     </div>
 
-  
- -history"></i>
+    <div class="wallet-container">
+        <div class="wallet-card">
+            <div class="wallet-label">
+                <span>Main Balance</span>
+                <i class="fas fa-eye toggle-balance" id="toggleBalance" onclick="toggleBalanceVisibility()"></i>
+            </div>
+            <div class="balance" id="walletBalance">GH₵ 0.00</div>
+            <div style="display:flex; gap:10px;">
+                <a href="toppup.html" class="btn btn-white"><i class="fas fa-plus"></i> Top Up</a>
+                <a href="javascript:void(0)" onclick="navigateToOrder()" class="btn btn-orange"><i class="fas fa-wifi"></i> Buy Data</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="upgrade-card" id="agentUpgradeBox">
+        <h4><i class="fas fa-user-tie"></i> Agent Access</h4>
+        <p>Activate Agent pricing system for just <b>GH₵ 45.00</b> and save more on every data purchase.</p>
+        <button class="btn-upgrade" onclick="activateAgent()">Activate Agent Now</button>
+    </div>
+
+    <div class="insights-card">
+        <div class="insights-header">
+            <span class="insights-title">Usage Insights</span>
+            <span style="font-size: 10px; color: var(--online-status); font-weight: bold;">LAST 7 DAYS</span>
+        </div>
+        <div class="spending-bar-container">
+            <div class="spending-bar" style="height: 30%;"></div>
+            <div class="spending-bar" style="height: 50%;"></div>
+            <div class="spending-bar" style="height: 40%;"></div>
+            <div class="spending-bar active" style="height: 90%;"></div>
+            <div class="spending-bar" style="height: 60%;"></div>
+            <div class="spending-bar" style="height: 45%;"></div>
+            <div class="spending-bar" style="height: 70%;"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 9px; color: var(--text-gray);">
+            <span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span>
+        </div>
+    </div>
+
+    <a href="https://Giganticboost.shop" class="boost-service-btn">
+        <span class="new-badge">NEW</span>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div style="font-size: 24px; color: #1DA1F2;"><i class="fas fa-rocket"></i></div>
+            <div>
+                <b style="font-size: 15px;">Gigantic Social Boost</b>
+                <p style="font-size: 11px; color: var(--text-gray); margin: 2px 0;">Grow your TikTok, IG, & YouTube fast!</p>
+            </div>
+        </div>
+        <i class="fas fa-chevron-right" style="color: var(--accent-orange);"></i>
+    </a>
+
+    <div class="grid">
+        <a href="javascript:void(0)" onclick="navigateToOrder()" class="grid-item">
+            <i class="fas fa-mobile-alt"></i>
+            <b>Buy Data</b>
+        </a>
+        <a href="transaction.html" class="grid-item">
+            <i class="fas fa-history"></i>
             <b>History</b>
         </a>
         <a href="referral.html" class="grid-item">
@@ -299,157 +372,166 @@
             </div>
         </a>
     </div>
-     <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-    import { getDatabase, ref, onValue, runTransaction, update } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho",
-        authDomain: "gigantic-data.firebaseapp.com",
-        databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
-        projectId: "gigantic-data",
-        storageBucket: "gigantic-data.firebasestorage.app",
-        messagingSenderId: "727845403550",
-        appId: "1:727845403550:web:56d06c9389993153a9748f",
-        measurementId: "G-10F198VFE6"
-    };
+    <a href="https://chat.whatsapp.com/DyyaJcgZKBMHnO2nRScmZ2" target="_blank" class="btn btn-orange" style="margin: 0 18px; border-radius:15px; text-decoration: none;">
+        <i class="fab fa-whatsapp"></i> JOIN COMMUNITY
+    </a>
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
+    <nav class="bottom-nav">
+        <a href="dashboard.html" class="nav-item active"><i class="fas fa-home"></i>Home</a>
+        <a href="order_history.html" class="nav-item"><i class="fas fa-receipt"></i>Orders</a>
+        <a href="referral.html" class="nav-item"><i class="fas fa-users"></i>Referral</a>
+        <a href="profile.html" class="nav-item"><i class="fas fa-user-circle"></i>Profile</a>
+    </nav>
 
-    let rawBalance = 0;
-    let currentUserUID = null;
-    let isBalanceHidden = localStorage.getItem('balanceHidden') === 'true';
-    let userStatus = "Normal";
-    let isInitialLoad = true; // Added to prevent early redirect
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+        import { getDatabase, ref, onValue, runTransaction, update } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-    const themeBtn = document.getElementById('themeBtn');
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    themeBtn.className = savedTheme === 'light' ? 'fas fa-moon theme-toggle' : 'fas fa-sun theme-toggle';
+        // CONFIG INTEGRATED
+        const firebaseConfig = {
+            apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho",
+            authDomain: "gigantic-data.firebaseapp.com",
+            databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
+            projectId: "gigantic-data",
+            storageBucket: "gigantic-data.firebasestorage.app",
+            messagingSenderId: "727845403550",
+            appId: "1:727845403550:web:56d06c9389993153a9748f",
+            measurementId: "G-10F198VFE6"
+        };
 
-    window.toggleTheme = function() {
-        const doc = document.documentElement;
-        const currentTheme = doc.getAttribute('data-theme');
-        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-        doc.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-        themeBtn.className = newTheme === 'light' ? 'fas fa-moon theme-toggle' : 'fas fa-sun theme-toggle';
-    };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
 
-    window.toggleBalanceVisibility = function() {
-        isBalanceHidden = !isBalanceHidden;
-        localStorage.setItem('balanceHidden', isBalanceHidden);
-        renderBalance();
-    };
+        let rawBalance = 0;
+        let currentUserUID = null;
+        let isBalanceHidden = localStorage.getItem('balanceHidden') === 'true';
+        let userStatus = "Normal";
+        let authWaiting = true; // Guard variable
 
-    function renderBalance() {
-        const balanceEl = document.getElementById('walletBalance');
-        const iconEl = document.getElementById('toggleBalance');
-        if (isBalanceHidden) {
-            balanceEl.innerText = "GH₵ ****";
-            iconEl.className = "fas fa-eye-slash toggle-balance";
-        } else {
-            balanceEl.innerText = `GH₵ ${Number(rawBalance).toFixed(2)}`;
-            iconEl.className = "fas fa-eye toggle-balance";
-        }
-    }
+        const themeBtn = document.getElementById('themeBtn');
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        themeBtn.className = savedTheme === 'light' ? 'fas fa-moon theme-toggle' : 'fas fa-sun theme-toggle';
 
-    function updateGreeting(name) {
-        const hour = new Date().getHours();
-        const gText = document.getElementById('userGreeting');
-        if (hour < 12) { gText.innerText = `Good Morning, ${name} ☀️`; }
-        else if (hour < 17) { gText.innerText = `Good Afternoon, ${name} 🌤️`; }
-        else { gText.innerText = `Good Evening, ${name} 🌙`; }
-    }
+        window.toggleTheme = function() {
+            const doc = document.documentElement;
+            const currentTheme = doc.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            doc.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            themeBtn.className = newTheme === 'light' ? 'fas fa-moon theme-toggle' : 'fas fa-sun theme-toggle';
+        };
 
-    window.navigateToOrder = function() {
-        if (userStatus.toLowerCase() === 'agent') {
-            window.location.href = "agent_shop.html";
-        } else {
-            window.location.href = "order.html";
-        }
-    };
+        window.toggleBalanceVisibility = function() {
+            isBalanceHidden = !isBalanceHidden;
+            localStorage.setItem('balanceHidden', isBalanceHidden);
+            renderBalance();
+        };
 
-    // FIX: Added better handling for the initial auth check
-    onAuthStateChanged(auth, user => {
-        if (user) {
-            isInitialLoad = false;
-            currentUserUID = user.uid;
-            update(ref(db, 'users/' + user.uid), { lastActive: Date.now() });
-
-            onValue(ref(db, 'users/' + user.uid), (snapshot) => {
-                const data = snapshot.val() || {};
-                rawBalance = data.balance || data.wallet || 0; 
-                renderBalance();
-                updateGreeting(data.fullName ? data.fullName.split(' ')[0] : (data.username || 'Member'));
-
-                userStatus = data.userType || data.status || "Normal";
-                localStorage.setItem('currentUserStatus', userStatus);
-
-                if (userStatus.toLowerCase() === 'agent') {
-                    document.getElementById('agentUpgradeBox').style.display = 'none';
-                }
-            });
-
-            onValue(ref(db, 'adsList'), (snapshot) => {
-                const ads = snapshot.val();
-                if (ads) {
-                    const adsArray = Object.keys(ads).map(k => ({id: k, ...ads[k]}));
-                    if(adsArray.length > 0) {
-                        document.getElementById('sponsoredSlot').style.display = 'block';
-                        const ad = adsArray[Math.floor(Math.random() * adsArray.length)];
-                        document.getElementById('adTitle').innerText = ad.title;
-                        document.getElementById('adDesc').innerText = ad.description;
-                        document.getElementById('adLink').href = ad.link;
-                    }
-                }
-            });
-        } else {
-            // Only redirect if we are sure Firebase has finished checking and there is no user
-            if (!isInitialLoad || auth.currentUser === null) {
-                window.location.href = "login.html";
+        function renderBalance() {
+            const balanceEl = document.getElementById('walletBalance');
+            const iconEl = document.getElementById('toggleBalance');
+            if (isBalanceHidden) {
+                balanceEl.innerText = "GH₵ ****";
+                iconEl.className = "fas fa-eye-slash toggle-balance";
+            } else {
+                balanceEl.innerText = `GH₵ ${Number(rawBalance).toFixed(2)}`;
+                iconEl.className = "fas fa-eye toggle-balance";
             }
         }
-    });
 
-    window.activateAgent = function() {
-        if (!currentUserUID) return;
-        const cost = 45;
-        if (rawBalance < cost) {
-            alert("Insufficient Balance! You need at least GH₵ 45.00 to activate Agent access.");
-            return;
+        function updateGreeting(name) {
+            const hour = new Date().getHours();
+            const gText = document.getElementById('userGreeting');
+            if (hour < 12) { gText.innerText = `Good Morning, ${name} ☀️`; }
+            else if (hour < 17) { gText.innerText = `Good Afternoon, ${name} 🌤️`; }
+            else { gText.innerText = `Good Evening, ${name} 🌙`; }
         }
-        if (confirm("Are you sure you want to upgrade to Agent for GH₵ 45.00?")) {
-            const userRef = ref(db, 'users/' + currentUserUID);
-            runTransaction(userRef, (userData) => {
-                if (userData) {
-                    const currentVal = userData.balance || userData.wallet || 0;
-                    if (currentVal >= cost) {
-                        if(userData.balance !== undefined) userData.balance -= cost;
-                        else userData.wallet -= cost;
-                        userData.userType = 'agent';
-                    } else return;
+
+        window.navigateToOrder = function() {
+            if (userStatus.toLowerCase() === 'agent') {
+                window.location.href = "agent_shop.html";
+            } else {
+                window.location.href = "order.html";
+            }
+        };
+
+        onAuthStateChanged(auth, user => {
+            authWaiting = false; // Auth state has been determined
+            if (user) {
+                currentUserUID = user.uid;
+                update(ref(db, 'users/' + user.uid), { lastActive: Date.now() });
+
+                onValue(ref(db, 'users/' + user.uid), (snapshot) => {
+                    const data = snapshot.val() || {};
+                    rawBalance = data.balance || data.wallet || 0; 
+                    renderBalance();
+                    updateGreeting(data.fullName ? data.fullName.split(' ')[0] : (data.username || 'Member'));
+
+                    userStatus = data.userType || data.status || "Normal";
+                    localStorage.setItem('currentUserStatus', userStatus);
+
+                    if (userStatus.toLowerCase() === 'agent') {
+                        document.getElementById('agentUpgradeBox').style.display = 'none';
+                    }
+                });
+
+                onValue(ref(db, 'adsList'), (snapshot) => {
+                    const ads = snapshot.val();
+                    if (ads) {
+                        const adsArray = Object.keys(ads).map(k => ({id: k, ...ads[k]}));
+                        if(adsArray.length > 0) {
+                            document.getElementById('sponsoredSlot').style.display = 'block';
+                            const ad = adsArray[Math.floor(Math.random() * adsArray.length)];
+                            document.getElementById('adTitle').innerText = ad.title;
+                            document.getElementById('adDesc').innerText = ad.description;
+                            document.getElementById('adLink').href = ad.link;
+                        }
+                    }
+                });
+            } else {
+                // If not waiting and no user, only then redirect
+                if (!authWaiting) {
+                    window.location.href = "login.html";
                 }
-                return userData;
-            }).then((result) => {
-                if (result.committed) {
-                    alert("Congratulations! Agent Access Activated.");
-                    userStatus = 'agent';
-                } else alert("Upgrade failed.");
-            });
-        }
-    };
+            }
+        });
 
-    window.logoutUser = function() {
-        if(confirm("Are you sure you want to log out?")) {
-            signOut(auth).then(() => { 
-                localStorage.removeItem('currentUserStatus');
-                window.location.href = "login.html"; 
-            });
-        }
-    };
-</script>
+        window.activateAgent = function() {
+            if (!currentUserUID) return;
+            const cost = 45;
+            if (rawBalance < cost) {
+                alert("Insufficient Balance! You need at least GH₵ 45.00 to activate Agent access.");
+                return;
+            }
+            if (confirm("Are you sure you want to upgrade to Agent for GH₵ 45.00?")) {
+                const userRef = ref(db, 'users/' + currentUserUID);
+                runTransaction(userRef, (userData) => {
+                    if (userData) {
+                        const currentVal = userData.balance || userData.wallet || 0;
+                        if (currentVal >= cost) {
+                            if(userData.balance !== undefined) userData.balance -= cost;
+                            else userData.wallet -= cost;
+                            userData.userType = 'agent';
+                        } else return;
+                    }
+                    return userData;
+                }).then((result) => {
+                    if (result.committed) {
+                        alert("Congratulations! Agent Access Activated.");
+                        userStatus = 'agent';
+                    } else alert("Upgrade failed.");
+                });
+            }
+        };
+
+        window.logoutUser = function() {
+            if(confirm("Are you sure you want to log out?")) {
+                signOut(auth).then(() => { window.location.href = "login.html"; });
+            }
+        };
+    </script>
 </body>
 </html>
