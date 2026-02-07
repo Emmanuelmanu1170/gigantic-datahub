@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Permanent Ledger — GiganticDataHub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #003366;
+            --accent: #ff8c00;
+            --bg: #f8fafc;
+            --success: #10b981;
+            --danger: #ef4444;
+            --border: #e2e8f0;
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: #1e293b; padding-bottom: 40px; }
+
+        header { 
+            background: var(--primary); color: white; padding: 20px; 
+            display: flex; align-items: center; gap: 15px;
+            position: sticky; top: 0; z-index: 100;
+        }
+        
+        .container { padding: 20px; max-width: 600px; margin: auto; }
+
+        /* LEDGER STYLE */
+        .ledger-card {
+            background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px;
+            display: flex; align-items: center; gap: 15px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+
+        .icon-circle {
+            width: 45px; height: 45px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 18px;
+        }
+        .icon-in { background: #dcfce7; color: var(--success); }
+        .icon-out { background: #fee2e2; color: var(--danger); }
+
+        .details { flex: 1; }
+        .details b { display: block; font-size: 14px; color: var(--primary); }
+        .details span { font-size: 11px; color: #64748b; }
+        .ref-tag { font-family: monospace; font-size: 10px; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block; }
+
+        .amount-area { text-align: right; }
+        .amt { font-weight: 800; font-size: 15px; }
+        .bal-after { font-size: 10px; color: #94a3b8; font-weight: 600; display: block; }
+
+        .security-note {
+            text-align: center; font-size: 11px; color: #94a3b8; margin-top: 30px;
+            padding: 15px; border: 1px dashed #cbd5e1; border-radius: 12px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <a href="dashboard.html" style="color:white; text-decoration:none;"><i class="fas fa-arrow-left"></i></a>
+    <h3 style="font-size:16px;">System Audit Ledger</h3>
+</header>
+
+<div class="container">
+    <div id="ledgerList">
+        <p style="text-align:center; padding:50px; color:#94a3b8;"><i class="fas fa-sync fa-spin"></i> Loading records...</p>
+    </div>
+
+    <div class="security-note">
+        <i class="fas fa-shield-alt"></i> <b>IMUTABLE RECORD SYSTEM</b><br>
+        All transactions are locked. Records cannot be edited or deleted by users or agents for security and auditing purposes.
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+    import { getDatabase, ref, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho",
+        authDomain: "gigantic-data.firebaseapp.com",
+        databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
+        projectId: "gigantic-data",
+        storageBucket: "gigantic-data.firebasestorage.app",
+        messagingSenderId: "727845403550",
+        appId: "1:727845403550:web:56d06c9389993153a9748f",
+        measurementId: "G-10F198VFE6"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    let isAuthReady = false;
+
+    setPersistence(auth, browserLocalPersistence).then(() => {
+        onAuthStateChanged(auth, user => {
+            isAuthReady = true;
+            if (user) {
+                loadLedger(user.uid);
+            } else {
+                if(isAuthReady) window.location.replace("login.html");
+            }
+        });
+    });
+
+    function loadLedger(uid) {
+        // Query the 'transactions' node for this specific user
+        const txRef = query(ref(db, 'transactions'), orderByChild('uid'), equalTo(uid));
+        
+        onValue(txRef, (snapshot) => {
+            const container = document.getElementById('ledgerList');
+            container.innerHTML = "";
+            
+            if (!snapshot.exists()) {
+                container.innerHTML = `<div style="text-align:center; padding:50px; color:#94a3b8;"><i class="fas fa-folder-open fa-3x" style="opacity:0.2;"></i><p>No transactions recorded yet.</p></div>`;
+                return;
+            }
+
+            let logs = [];
+            snapshot.forEach(child => {
+                logs.push({ id: child.key, ...child.val() });
+            });
+
+            // Newest transactions first
+            logs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+            logs.forEach(log => {
+                const isCredit = log.type === "Credit" || log.action === "topup";
+                const date = new Date(log.timestamp).toLocaleString();
+                
+                const card = document.createElement('div');
+                card.className = "ledger-card";
+                card.innerHTML = `
+                    <div class="icon-circle ${isCredit ? 'icon-in' : 'icon-out'}">
+                        <i class="fas ${isCredit ? 'fa-arrow-down' : 'fa-arrow-up'}"></i>
+                    </div>
+                    <div class="details">
+                        <b>${log.description || (isCredit ? 'Wallet Top-up' : 'Data Purchase')}</b>
+                        <span>${date}</span><br>
+                        <div class="ref-tag">REF: ${log.id.toUpperCase()}</div>
+                    </div>
+                    <div class="amount-area">
+                        <div class="amt" style="color: ${isCredit ? 'var(--success)' : 'var(--danger)'}">
+                            ${isCredit ? '+' : '-'}₵${Number(log.amount).toFixed(2)}
+                        </div>
+                        <span class="bal-after">Bal: ₵${Number(log.newBalance || 0).toFixed(2)}</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        });
+    }
+</script>
+</body>
+</html>
