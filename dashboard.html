@@ -121,7 +121,7 @@
         .wallet-container { padding: 0 18px; display: grid; gap: 18px; margin-top: -15px; }
         
         .wallet-card {
-            background: linear-gradient(135deg, #003366) 0%, var(--primary-blue) 100%);
+            background: linear-gradient(135deg, #003366 0%, var(--primary-blue) 100%);
             border-radius: 24px;
             padding: 25px;
             color: white;
@@ -245,7 +245,6 @@
         }
         .grid-item:active { transform: translateY(-5px); border-color: var(--accent-orange); }
         .grid-item i { font-size: 28px; color: var(--accent-orange); margin-bottom: 10px; display: block; }
-        .grid-item.agent-only { display: none; border: 1.5px solid #fbbf24; }
 
         /* BOTTOM NAV */
         .bottom-nav {
@@ -260,6 +259,7 @@
 
     </style>
     <script>
+        // Apply theme immediately to root to prevent white flash
         (function() {
             const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
@@ -349,10 +349,6 @@
             <i class="fas fa-mobile-alt"></i>
             <b>Buy Data</b>
         </a>
-        <a href="javascript:void(0)" id="agentTerminalBtn" onclick="navigateToAgentShop()" class="grid-item agent-only">
-            <i class="fas fa-store-alt" style="color: #fbbf24;"></i>
-            <b>Agent Shop</b>
-        </a>
         <a href="transaction.html" class="grid-item">
             <i class="fas fa-history"></i>
             <b>History</b>
@@ -389,22 +385,16 @@
         <a href="profile.html" class="nav-item"><i class="fas fa-user-circle"></i>Profile</a>
     </nav>
 
-    
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
         import { getDatabase, ref, onValue, runTransaction, update } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho",
+            apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
             authDomain: "gigantic-data.firebaseapp.com",
             databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
-            projectId: "gigantic-data",
-            storageBucket: "gigantic-data.firebasestorage.app",
-            messagingSenderId: "727845403550",
-            appId: "1:727845403550:web:56d06c9389993153a9748f",
-            measurementId: "G-10F198VFE6"
+            projectId: "gigantic-data"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -415,21 +405,24 @@
         let currentUserUID = null;
         let isBalanceHidden = localStorage.getItem('balanceHidden') === 'true';
         let userStatus = "Normal";
-        let isAuthReady = false; // Gatekeeper
 
-        const themeBtn = document.getElementById('themeBtn');
+        // Set initial theme icon
         const savedTheme = localStorage.getItem('theme') || 'light';
+        const themeBtn = document.getElementById('themeBtn');
         themeBtn.className = savedTheme === 'light' ? 'fas fa-moon theme-toggle' : 'fas fa-sun theme-toggle';
 
+        // Theme Toggle Function
         window.toggleTheme = function() {
             const doc = document.documentElement;
             const currentTheme = doc.getAttribute('data-theme');
             const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
             doc.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
             themeBtn.className = newTheme === 'light' ? 'fas fa-moon theme-toggle' : 'fas fa-sun theme-toggle';
         };
 
+        // Balance Masking
         window.toggleBalanceVisibility = function() {
             isBalanceHidden = !isBalanceHidden;
             localStorage.setItem('balanceHidden', isBalanceHidden);
@@ -439,6 +432,7 @@
         function renderBalance() {
             const balanceEl = document.getElementById('walletBalance');
             const iconEl = document.getElementById('toggleBalance');
+            
             if (isBalanceHidden) {
                 balanceEl.innerText = "GH₵ ****";
                 iconEl.className = "fas fa-eye-slash toggle-balance";
@@ -456,6 +450,7 @@
             else { gText.innerText = `Good Evening, ${name} 🌙`; }
         }
 
+        // Logic to redirect based on status
         window.navigateToOrder = function() {
             if (userStatus.toLowerCase() === 'agent') {
                 window.location.href = "agent_shop.html";
@@ -464,88 +459,90 @@
             }
         };
 
-        window.navigateToAgentShop = function() {
-            if (userStatus.toLowerCase() === 'agent') {
-                window.location.href = "agent_shop.html";
-            } else {
-                alert("Restricted: This portal is only available to certified Agents.");
-            }
-        };
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                currentUserUID = user.uid;
+                
+                // --- ACTIVE CHECK LOGIC ---
+                update(ref(db, 'users/' + user.uid), { lastActive: Date.now() });
 
-        // --- AUTH LOCK SYSTEM ---
-        setPersistence(auth, browserLocalPersistence).then(() => {
-            onAuthStateChanged(auth, user => {
-                isAuthReady = true;
-                if (user) {
-                    currentUserUID = user.uid;
-                    update(ref(db, 'users/' + user.uid), { lastActive: Date.now() });
+                onValue(ref(db, 'users/' + user.uid), (snapshot) => {
+                    const data = snapshot.val() || {};
+                    rawBalance = data.wallet || 0;
+                    renderBalance();
+                    updateGreeting(data.fullName ? data.fullName.split(' ')[0] : 'Member');
 
-                    onValue(ref(db, 'users/' + user.uid), (snapshot) => {
-                        const data = snapshot.val() || {};
-                        rawBalance = data.wallet || 0; 
-                        renderBalance();
-                        updateGreeting(data.fullName ? data.fullName.split(' ')[0] : 'Member');
+                    // Set user status locally for navigation logic
+                    userStatus = data.userType || data.status || "Normal";
+                    localStorage.setItem('currentUserStatus', userStatus);
 
-                        userStatus = data.userType || data.status || "Normal";
-                        localStorage.setItem('currentUserStatus', userStatus);
+                    // Hide upgrade box if already an agent
+                    if (userStatus.toLowerCase() === 'agent') {
+                        document.getElementById('agentUpgradeBox').style.display = 'none';
+                    }
+                });
 
-                        const agentBtn = document.getElementById('agentTerminalBtn');
-                        if (userStatus.toLowerCase() === 'agent') {
-                            document.getElementById('agentUpgradeBox').style.display = 'none';
-                            if(agentBtn) agentBtn.style.display = 'block';
+                onValue(ref(db, 'adsList'), (snapshot) => {
+                    const ads = snapshot.val();
+                    if (ads) {
+                        const adsArray = Object.keys(ads).map(k => ({id: k, ...ads[k]}));
+                        if(adsArray.length > 0) {
+                            document.getElementById('sponsoredSlot').style.display = 'block';
+                            const ad = adsArray[Math.floor(Math.random() * adsArray.length)];
+                            document.getElementById('adTitle').innerText = ad.title;
+                            document.getElementById('adDesc').innerText = ad.description;
+                            document.getElementById('adLink').href = ad.link;
                         }
-                    });
-
-                    onValue(ref(db, 'adsList'), (snapshot) => {
-                        const ads = snapshot.val();
-                        if (ads) {
-                            const adsArray = Object.keys(ads).map(k => ({id: k, ...ads[k]}));
-                            if(adsArray.length > 0) {
-                                document.getElementById('sponsoredSlot').style.display = 'block';
-                                const ad = adsArray[Math.floor(Math.random() * adsArray.length)];
-                                document.getElementById('adTitle').innerText = ad.title;
-                                document.getElementById('adDesc').innerText = ad.description;
-                                document.getElementById('adLink').href = ad.link;
-                            }
-                        }
-                    });
-                } else {
-                    // Only redirect if auth handshake is complete and no user found
-                    if (isAuthReady) window.location.href = "login.html";
-                }
-            });
+                    }
+                });
+            } else { window.location.href = "login.html"; }
         });
 
+        // Agent Activation Logic
         window.activateAgent = function() {
             if (!currentUserUID) return;
             const cost = 45;
+
             if (rawBalance < cost) {
                 alert("Insufficient Balance! You need at least GH₵ 45.00 to activate Agent access.");
                 return;
             }
-            if (confirm("Are you sure you want to upgrade to Agent for GH₵ 45.00?")) {
+
+            if (confirm("Are you sure you want to upgrade to Agent for GH₵ 45.00? This will deduct from your wallet.")) {
                 const userRef = ref(db, 'users/' + currentUserUID);
+
                 runTransaction(userRef, (userData) => {
                     if (userData) {
                         if (userData.wallet >= cost) {
                             userData.wallet -= cost;
                             userData.userType = 'agent';
-                        } else return;
+                        } else {
+                            return;
+                        }
                     }
                     return userData;
                 }).then((result) => {
                     if (result.committed) {
                         alert("Congratulations! Agent Access Activated successfully.");
                         userStatus = 'agent';
+                        localStorage.setItem('currentUserStatus', 'agent');
+                    } else {
+                        alert("Upgrade failed. Please ensure you have sufficient balance.");
                     }
+                }).catch((error) => {
+                    console.error("Agent Activation Error:", error);
+                    alert("A technical error occurred during activation.");
                 });
             }
         };
 
+        // Global Logout Function
         window.logoutUser = function() {
             if(confirm("Are you sure you want to log out?")) {
                 signOut(auth).then(() => {
                     window.location.href = "login.html";
+                }).catch((error) => {
+                    console.error("Logout Error:", error);
                 });
             }
         };
