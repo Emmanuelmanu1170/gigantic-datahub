@@ -3,51 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Checkout - Gigantic Data Hub</title>
+    <title>Buy Data Bundle - GiganticDataHub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --accent: #6a5af9; --success: #10b981; --bg: #f8fafc; }
-        body { background-color: var(--bg); font-family: 'Inter', sans-serif; }
-        .order-card { background: white; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        .info-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
-        .price-box { background: #f5f3ff; border: 1px dashed var(--accent); border-radius: 16px; }
-        
-        #successOverlay {
-            display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95);
-            z-index: 1000; align-items: center; justify-content: center;
+        :root {
+            --primary-purple: #6a5af9; --secondary-purple: #a855f7; --bg-gray: #fcfdfe;
+            --card-bg: #ffffff; --border-color: #eef2f6; --text-main: #1e293b;
+            --text-muted: #94a3b8; --active-blue: #3b82f6; --success-green: #16a34a;
+            --light-green: #f0fdf4; --warning-amber: #f59e0b; --input-bg: #f8fafc;
         }
+        [data-theme="dark"] {
+            --bg-gray: #02040a; --card-bg: #0d1117; --border-color: #30363d;
+            --text-main: #f0f6fc; --text-muted: #8b949e; --input-bg: #161b22;
+            --light-green: #064e3b20;
+        }
+        * { box-sizing: border-box; font-family: -apple-system, sans-serif; transition: background 0.3s, border-color 0.3s, color 0.1s; }
+        body { background-color: var(--bg-gray); margin: 0; display: flex; justify-content: center; color: var(--text-main); }
+        .container { width: 100%; max-width: 480px; padding: 16px; min-height: 100vh; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .back-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-main); text-decoration: none;}
+        .balance-card {
+            background: linear-gradient(135deg, var(--primary-purple) 0%, var(--secondary-purple) 100%);
+            color: white; padding: 24px; border-radius: 20px; margin-bottom: 15px;
+            box-shadow: 0 10px 20px rgba(106, 90, 249, 0.2);
+        }
+        .balance-card h2 { margin: 8px 0 0; font-size: 1.75rem; font-weight: 800; }
+        .user-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; background: rgba(255,255,255,0.2); font-size: 0.65rem; font-weight: 700; margin-top: 10px; }
+        .step { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; margin-bottom: 16px; }
+        .active-step { border: 2px solid var(--primary-purple) !important; opacity: 1 !important; pointer-events: auto !important; }
+        .disabled { opacity: 0.5; pointer-events: none; filter: grayscale(1); }
+        .step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+        .step-number { background: #f1f5f9; color: var(--active-blue); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; }
+        .network-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .network-option { border: 1px solid var(--border-color); border-radius: 12px; padding: 12px 5px; text-align: center; cursor: pointer; }
+        .network-option.selected { border: 2px solid var(--primary-purple); background: #f5f3ff10; }
+        .logo-box { width: 35px; height: 35px; margin: 0 auto 8px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 900; color: white; }
+        .mtn { background: #ffcc00; color: #000; } .airtel { background: #ed1c24; } .telecel { background: #e60000; }
+        select, input { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--input-bg); outline: none; font-size: 0.9rem; margin-top: 10px; color: var(--text-main); }
+        .validation-card {
+            background-color: var(--light-green); border: 1px solid #dcfce7;
+            border-radius: 12px; padding: 12px; margin-top: 15px;
+            display: none; align-items: flex-start; gap: 12px;
+        }
+        .confirm-btn { width: 100%; padding: 16px; background: var(--primary-purple); color: white; border: none; border-radius: 14px; font-weight: 700; margin-top: 20px; cursor: pointer; }
+        .loading-dots:after { content: ' .'; animation: dots 1s steps(5, end) infinite;}
+        @keyframes dots { 0%, 20% { content: ' .'; } 40% { content: ' ..'; } 60% { content: ' ...'; } 80%, 100% { content: ''; } }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
+<body>
 
-    <div class="max-w-md w-full order-card p-8">
-        <div class="text-center mb-6">
-            <i class="fas fa-shield-check text-4xl text-indigo-500"></i>
-            <h2 class="text-2xl font-extrabold text-slate-800 mt-2">Confirm Order</h2>
+    <div class="container">
+        <header>
+            <a href="dashboard.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+            <h1 style="font-size: 1rem;">Buy Data Bundle</h1>
+            <i class="fas fa-moon theme-toggle" id="themeIcon" onclick="toggleTheme()"></i>
+        </header>
+
+        <div class="balance-card">
+            <p style="margin:0; font-size: 0.75rem; opacity: 0.8;">Wallet Balance</p>
+            <h2 id="walletBalance">GH₵ 0.00</h2>
+            <div class="user-badge" id="userTypeBadge">USER</div>
         </div>
 
-        <div class="space-y-1 mb-6" id="details">
-            <p class="text-center text-slate-400 animate-pulse">Syncing Order Details...</p>
+        <div class="step active-step" id="step1">
+            <div class="step-header">
+                <div class="step-number">1</div>
+                <div class="step-title"><h3>Select Network</h3></div>
+            </div>
+            <div class="network-grid">
+                <div class="network-option" onclick="selectNetwork(this, 'mtn')"><div class="logo-box mtn">MTN</div><p style="font-size:11px">MTN</p></div>
+                <div class="network-option" onclick="selectNetwork(this, 'airteltigo')"><div class="logo-box airtel">AT</div><p style="font-size:11px">AirtelTigo</p></div>
+                <div class="network-option" onclick="selectNetwork(this, 'telecel')"><div class="logo-box telecel">TEL</div><p style="font-size:11px">Telecel</p></div>
+            </div>
         </div>
 
-        <div id="priceArea" class="price-box p-6 text-center mb-6"></div>
-
-        <button id="confirmBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg active:scale-95">
-            CONFIRM & PAY NOW
-        </button>
-    </div>
-
-    <div id="successOverlay">
-        <div class="bg-white rounded-3xl p-10 max-w-xs w-full text-center shadow-2xl">
-            <div class="w-20 h-20 bg-emerald-500 text-white rounded-full flex items-center justify-center text-4xl mx-auto mb-6 shadow-lg shadow-emerald-200">
-                <i class="fas fa-check"></i>
+        <div class="step disabled" id="step2">
+            <div class="step-header">
+                <div class="step-number">2</div>
+                <div class="step-title"><h3>Choose Data Plan</h3></div>
             </div>
-            <h2 class="text-2xl font-black text-slate-800">Order Placed!</h2>
-            <p class="text-slate-500 mt-3 mb-8">Data details have been recorded. Delivery is in progress.</p>
-            <div class="flex items-center justify-center gap-2 text-emerald-600 font-bold text-sm">
-                <i class="fas fa-spinner fa-spin"></i> Moving to History...
+            <select id="dataPlan" onchange="unlockStep3()">
+                <option value="" selected disabled>-- Select Network First --</option>
+            </select>
+        </div>
+
+        <div class="step disabled" id="step3">
+            <div class="step-header">
+                <div class="step-number">3</div>
+                <div class="step-title"><h3>Recipient Details</h3></div>
             </div>
+            
+            <input type="tel" id="phoneNumber" placeholder="024XXXXXXX" maxlength="10">
+            <div class="validation-card" id="validationBox">
+                <i class="fas fa-check-circle" style="color: var(--success-green);"></i>
+                <div class="validation-text">
+                    <b style="font-size: 0.85rem; display: block;">Recipient Verified</b>
+                    <p style="font-size: 0.75rem; margin: 0;">Name: <span class="acc-name" id="displayAccName" style="color: var(--success-green); font-weight: 800;">Verifying...</span></p>
+                </div>
+            </div>
+
+            <button class="confirm-btn" id="confirmBtn" onclick="processToConfirmation()">Proceed to Confirm</button>
         </div>
     </div>
 
@@ -56,7 +111,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-        import { getDatabase, ref, onValue, update, push } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
         const firebaseConfig = { 
             apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho", 
@@ -69,114 +124,95 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        const API_KEY = "tera_live_95abf76d96984f4612153a4869e43d3e";
-        const API_URL = "https://idatagh.com/wp-json/custom/v1/place-order";
+        let isAgent = false;
+        let currentBalance = 0;
+        let authWaiting = true; 
+        window.selectedNet = "";
 
         // Admin Impersonation Support
         const impersonateUid = sessionStorage.getItem('impersonate_uid');
         const isImpersonating = sessionStorage.getItem('isAdminImpersonating');
+        let activeUid;
 
-        onAuthStateChanged(auth, (user) => {
-            if (!user) { window.location.href = "login.html"; return; }
+        onAuthStateChanged(auth, user => {
+            authWaiting = false; 
+            if (user) {
+                // Determine whose wallet data to load
+                activeUid = (isImpersonating === 'true' && impersonateUid) ? impersonateUid : user.uid;
 
-            const order = JSON.parse(localStorage.getItem('pendingOrder'));
-            if (!order) { window.location.href = "order.html"; return; }
-
-            // Decide whose wallet to use
-            const activeUid = (isImpersonating === 'true' && impersonateUid) ? impersonateUid : user.uid;
-
-            onValue(ref(db, `users/${activeUid}`), (snapshot) => {
-                const userData = snapshot.val() || {};
-                const wallet = parseFloat(userData.balance || userData.wallet || 0);
-                const cost = parseFloat(order.amount);
-
-                document.getElementById('details').innerHTML = `
-                    <div class="info-item"><span class="text-slate-500">Network</span><span class="font-bold text-indigo-600">${order.network}</span></div>
-                    <div class="info-item"><span class="text-slate-500">Plan</span><span class="font-bold">${order.plan}</span></div>
-                    <div class="info-item"><span class="text-slate-500">Recipient</span><span class="font-bold">${order.recipient}</span></div>
-                    <div class="info-item"><span class="text-slate-500">Wallet</span><span class="font-bold">₵${wallet.toFixed(2)}</span></div>
-                `;
-
-                document.getElementById('priceArea').innerHTML = `
-                    <p class="text-xs font-bold uppercase text-indigo-400">Total Charge</p>
-                    <h1 class="text-3xl font-black text-slate-800">GH₵ ${cost.toFixed(2)}</h1>
-                `;
-
-                document.getElementById('confirmBtn').onclick = async () => {
-                    if (wallet < cost) { alert("Insufficient Balance!"); return; }
-
-                    const btn = document.getElementById('confirmBtn');
-                    btn.disabled = true;
-                    btn.innerText = "Connecting to Gateway...";
-
-                    try {
-                        // 1. API Call to Provider
-                        const response = await fetch(API_URL, {
-                            method: "POST",
-                            headers: { "Authorization": "Bearer " + API_KEY, "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                                "network": order.network.toLowerCase().includes("mtn") ? "mtn" : (order.network.toLowerCase().includes("telecel") ? "telecel" : "at"),
-                                "beneficiary": order.recipient.toString().trim(),
-                                "pa_data-bundle-packages": order.plan 
-                            })
-                        });
-
-                        const res = await response.json();
-                        if (res.status === "error") throw new Error(res.message);
-
-                        // 2. Prepare Database Update (Unified Deduction)
-                        const orderId = "GID-" + Math.floor(Math.random() * 90000 + 10000);
-                        const newBalance = parseFloat((wallet - cost).toFixed(2));
-                        const txKey = push(ref(db, 'transactions')).key;
-
-                        const fullOrderRecord = {
-                            ...order,
-                            orderId: orderId,
-                            uid: activeUid,
-                            status: "Successful",
-                            provider_id: res.order_id || "N/A",
-                            timestamp: Date.now(),
-                            date: new Date().toLocaleString()
-                        };
-
-                        const updates = {};
-                        // Balance Deduction (Rules allow this because it's a decrease)
-                        updates[`users/${activeUid}/balance`] = newBalance;
-                        updates[`users/${activeUid}/wallet`] = newBalance; 
-                        
-                        // Order Logging
-                        updates[`orders/${orderId}`] = fullOrderRecord;
-                        updates[`user_orders/${activeUid}/${orderId}`] = fullOrderRecord;
-                        
-                        // Transaction Ledger
-                        updates[`transactions/${txKey}`] = {
-                            uid: activeUid,
-                            email: userData.email,
-                            amount: cost,
-                            type: "Deduct",
-                            description: `Data: ${order.network} ${order.plan} to ${order.recipient}`,
-                            timestamp: Date.now(),
-                            newBalance: newBalance,
-                            orderId: orderId
-                        };
-
-                        // Push all updates to Firebase
-                        await update(ref(db), updates);
-                        
-                        // 3. Clear and Redirect
-                        localStorage.removeItem('pendingOrder');
-                        document.getElementById('successOverlay').style.display = 'flex';
-                        setTimeout(() => window.location.href = "order_history.html", 3000);
-
-                    } catch (err) {
-                        console.error("GATEWAY_ERROR:", err);
-                        alert("Error: " + err.message);
-                        btn.disabled = false;
-                        btn.innerText = "CONFIRM & PAY NOW";
-                    }
-                };
-            }, { onlyOnce: true });
+                onValue(ref(db, 'users/' + activeUid), (snapshot) => {
+                    const data = snapshot.val() || {};
+                    isAgent = (data.userType === "agent" || data.status === "Agent");
+                    currentBalance = Number(data.balance || 0);
+                    
+                    document.getElementById('walletBalance').innerText = `GH₵ ${currentBalance.toFixed(2)}`;
+                    document.getElementById('userTypeBadge').innerText = isAgent ? "AGENT" : "NORMAL USER";
+                    
+                    if(window.selectedNet) updateDataPlans();
+                });
+            } else { if(!authWaiting) window.location.href = "login.html"; }
         });
+
+        // Exact Pricing as requested
+        const agentPlans = {
+            mtn:[{plan:"1GB",price:"4.45"},{plan:"2GB",price:"8.85"},{plan:"3GB",price:"13.25"},{plan:"4GB",price:"17.65"},{plan:"5GB",price:"22.05"},{plan:"6GB",price:"26.55"},{plan:"8GB",price:"36.39"},{plan:"10GB",price:"42.25"},{plan:"15GB",price:"62.05"},{plan:"20GB",price:"82.05"},{plan:"25GB",price:"103.05"},{plan:"30GB",price:"123"},{plan:"40GB",price:"160"},{plan:"50GB",price:"199"},{plan:"100GB",price:"380"}],
+            airteltigo:[{plan:"1GB",price:"4.3"},{plan:"2GB",price:"8.56"},{plan:"3GB",price:"12.84"},{plan:"4GB",price:"17.12"},{plan:"5GB",price:"21.4"},{plan:"6GB",price:"25.6"},{plan:"7GB",price:"29.96"},{plan:"8GB",price:"35"},{plan:"10GB",price:"44"},{plan:"15GB",price:"65"},{plan:"20GB",price:"76"},{plan:"30GB",price:"87"},{plan:"40GB",price:"100"},{plan:"50GB",price:"115"},{plan:"60GB",price:"150"},{plan:"80GB",price:"183"},{plan:"100GB",price:"200"}],
+            telecel:[{plan:"10GB",price:"45"},{plan:"15GB",price:"62"},{plan:"20GB",price:"84"},{plan:"25GB",price:"105"},{plan:"30GB",price:"120"},{plan:"40GB",price:"158"},{plan:"50GB",price:"196"},{plan:"100GB",price:"384"}]
+        };
+
+        const normalPlans = {
+            mtn:[{plan:"1GB",price:"4.6"},{plan:"2GB",price:"9.2"},{plan:"3GB",price:"13.8"},{plan:"4GB",price:"18"},{plan:"5GB",price:"22.2"},{plan:"6GB",price:"26.6"},{plan:"8GB",price:"36"},{plan:"10GB",price:"45.4"},{plan:"15GB",price:"66.8"},{plan:"20GB",price:"82.2"},{plan:"30GB",price:"125"},{plan:"40GB",price:"199"},{plan:"50GB",price:"210"},{plan:"100GB",price:"420"}],
+            airteltigo:[{plan:"1GB",price:"4.4"},{plan:"2GB",price:"8.6"},{plan:"3GB",price:"13"},{plan:"4GB",price:"18.1"},{plan:"5GB",price:"22.8"},{plan:"6GB",price:"26.9"},{plan:"7GB",price:"31.1"},{plan:"8GB",price:"35.4"},{plan:"10GB",price:"44.5"},{plan:"15GB",price:"67.9"},{plan:"20GB",price:"78.8"},{plan:"30GB",price:"89.7"},{plan:"40GB",price:"106"},{plan:"50GB",price:"121.5"},{plan:"60GB",price:"173"},{plan:"80GB",price:"194.5"},{plan:"100GB",price:"215.5"}],
+            telecel:[{plan:"10GB",price:"46.7"},{plan:"15GB",price:"63.3"},{plan:"20GB",price:"85.1"},{plan:"25GB",price:"106.5"},{plan:"30GB",price:"121.5"},{plan:"40GB",price:"159.5"},{plan:"50GB",price:"198.4"},{plan:"100GB",price:"386.7"}]
+        };
+
+        window.selectNetwork = (el, net) => {
+            window.selectedNet = net;
+            document.querySelectorAll('.network-option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+            updateDataPlans();
+            document.getElementById('step2').className = "step active-step";
+        };
+
+        function updateDataPlans() {
+            const select = document.getElementById('dataPlan');
+            select.innerHTML = '<option value="" selected disabled>-- Choose Plan --</option>';
+            const plans = isAgent ? agentPlans[window.selectedNet] : normalPlans[window.selectedNet];
+            plans.forEach(p => { 
+                select.innerHTML += `<option value="${p.price}" data-plan="${p.plan}">${p.plan} - GH₵ ${p.price}</option>`; 
+            });
+        }
+
+        window.unlockStep3 = () => { document.getElementById('step3').className = "step active-step"; };
+
+        document.getElementById('phoneNumber').addEventListener('input', async function(e) {
+            const num = e.target.value;
+            if (num.length === 10) {
+                document.getElementById('validationBox').style.display = "flex";
+                document.getElementById('displayAccName').innerText = "VERIFIED RECIPIENT";
+            } else { document.getElementById('validationBox').style.display = "none"; }
+        });
+
+        window.processToConfirmation = () => {
+            const planSelect = document.getElementById('dataPlan');
+            const num = document.getElementById('phoneNumber').value.trim();
+
+            if (!planSelect.value || num.length < 10) { alert("Check your inputs!"); return; }
+            const cost = parseFloat(planSelect.value);
+            if (currentBalance < cost) { alert("Insufficient Funds!"); return; }
+
+            const order = {
+                network: window.selectedNet.toUpperCase(),
+                plan: planSelect.options[planSelect.selectedIndex].getAttribute('data-plan'),
+                amount: cost,
+                recipient: num,
+                uid: activeUid
+            };
+
+            // Store pending order and move to confirmation
+            localStorage.setItem('pendingOrder', JSON.stringify(order));
+            window.location.href = "confirmation.html";
+        };
     </script>
 </body>
 </html>
