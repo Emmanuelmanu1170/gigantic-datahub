@@ -74,6 +74,7 @@
             padding: 16px; border-radius: 16px; font-weight: 700; cursor: pointer;
             transition: 0.2s;
         }
+        .done-btn:hover { opacity: 0.9; transform: translateY(-2px); }
     </style>
 </head>
 <body>
@@ -165,6 +166,7 @@ async function recordTransaction(paymentRef, amountPaid) {
     const newBalance = currentBalance + amountPaid;
 
     const updates = {};
+    
     updates[`transactions/${txId}`] = {
         uid: currentUser.uid,
         amount: amountPaid,
@@ -189,9 +191,10 @@ async function recordTransaction(paymentRef, amountPaid) {
         await update(ref(db), updates);
         document.getElementById('status-modal').style.display = 'flex';
     } catch (e) {
-        // --- NEW LIAR-PROOF LOGIC ---
+        // --- LIAR-PROOF INVESTIGATION LOGIC ---
         const reportRef = "T" + Math.floor(Math.random() * 1000000000000);
         
+        // Save to investigation node for admin to see on admin-verify.html
         await set(ref(db, `pending_manual_credits/${reportRef}`), {
             uid: currentUser.uid,
             userEmail: currentUser.email,
