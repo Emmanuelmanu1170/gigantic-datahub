@@ -17,6 +17,7 @@
         }
         body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding-bottom: 100px; color: var(--text-main); }
         
+        /* HEADER */
         .merchant-header {
             background: linear-gradient(135deg, var(--primary) 0%, #001a33 100%); 
             color: white; padding: 40px 20px 80px;
@@ -26,6 +27,7 @@
         .shop-title { font-size: 1.5rem; font-weight: 900; letter-spacing: -0.5px; }
         .badge-agent { background: var(--gold); color: #000; padding: 5px 15px; border-radius: 20px; font-size: 11px; font-weight: 900; display: inline-block; margin-top: 10px; }
 
+        /* STATS CARDS */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: -50px 20px 20px; }
         .stat-card {
             background: var(--white); padding: 22px 15px; border-radius: 24px;
@@ -35,6 +37,7 @@
         .stat-card b { display: block; font-size: 22px; color: var(--primary); margin-bottom: 4px; }
         .stat-card span { font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; }
 
+        /* PROFIT CALCULATOR */
         .profit-calculator {
             background: var(--white); margin: 0 20px 25px; padding: 20px; 
             border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.06);
@@ -51,6 +54,7 @@
         }
         .toggle-btn.active { background: var(--white); color: var(--primary); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
 
+        /* TOOLS GRID */
         .section { padding: 0 20px; margin-bottom: 30px; }
         .section-header { margin-bottom: 15px; font-size: 12px; font-weight: 900; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
         
@@ -65,12 +69,8 @@
         .tool-box b { font-size: 13px; }
 
         .order-card {
-            background: var(--white);
-            border-radius: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            padding: 20px;
-            border: 1px solid rgba(0,0,0,0.05);
+            background: var(--white); border-radius: 20px; margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 20px; border: 1px solid rgba(0,0,0,0.05);
         }
         .order-header {
             display: flex; justify-content: space-between; align-items: center;
@@ -179,12 +179,14 @@
     <a href="profile.html" class="nav-item"><i class="fas fa-user-tie"></i>Profile</a>
 </nav>
 
+
+
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
     import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-    // COMPLETE CONFIG INTEGRATION
+    // COMPLETE CONFIG INTEGRATED
     const firebaseConfig = {
         apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho",
         authDomain: "gigantic-data.firebaseapp.com",
@@ -204,7 +206,7 @@
     let todaySalesVolume = 0;
     let isAuthReady = false;
 
-    // Force Persistence Lock
+    // Force Persistence Lock to prevent "Kicking Out"
     setPersistence(auth, browserLocalPersistence).then(() => {
         onAuthStateChanged(auth, user => {
             isAuthReady = true;
