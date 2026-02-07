@@ -3,108 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Top Up Credits | Gigantic Hub</title>
+    <title>Add Credits | Gigantic Data Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://js.paystack.co/v1/inline.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         body {
-            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top left, #1e293b, #0f172a);
             min-height: 100vh;
-            color: white;
+            color: #f8fafc;
         }
-        .glass {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .accent-gradient {
+            background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
+        }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
+            -webkit-appearance: none; margin: 0;
         }
     </style>
 </head>
-<body class="flex items-center justify-center p-6">
+<body class="flex items-center justify-center p-4">
 
-    <div class="max-w-4xl w-full">
-        <div class="text-center mb-10">
-            <h1 class="text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-                Top Up Your Account
+    <div class="max-w-md w-full">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent accent-gradient">
+                Gigantic Data Hub
             </h1>
-            <p class="text-gray-400 mt-2">Select a package to add credits to your wallet instantly.</p>
+            <p class="text-slate-400 mt-2">Top up your wallet securely</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
-            <div class="glass p-8 rounded-2xl flex flex-col items-center hover:scale-105 transition-transform cursor-pointer border-transparent hover:border-blue-500">
-                <span class="text-sm font-semibold text-blue-400 uppercase">Basic</span>
-                <h2 class="text-3xl font-bold my-4">10 GHS</h2>
-                <p class="text-gray-400 mb-6">1,000 Credits</p>
-                <button onclick="payWithPaystack(10)" class="w-full py-3 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 font-bold hover:shadow-lg hover:shadow-blue-500/30">Select</button>
+        <div class="glass-card rounded-3xl p-8">
+            <label class="block text-sm font-medium text-slate-300 mb-2">Enter Amount (GHS)</label>
+            <div class="relative mb-6">
+                <span class="absolute left-4 top-3.5 text-slate-400 font-bold">₵</span>
+                <input type="number" id="amountInput" placeholder="0.00" 
+                    class="w-full bg-slate-900/50 border border-slate-700 rounded-xl py-4 pl-10 pr-4 text-xl font-bold focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    oninput="calculateTotal()">
             </div>
 
-            <div class="glass p-8 rounded-2xl flex flex-col items-center scale-110 border-blue-500 border-2 relative overflow-hidden bg-white/10">
-                <div class="absolute top-0 right-0 bg-blue-500 text-xs px-3 py-1 rounded-bl-lg font-bold">POPULAR</div>
-                <span class="text-sm font-semibold text-blue-300 uppercase">Pro</span>
-                <h2 class="text-3xl font-bold my-4">50 GHS</h2>
-                <p class="text-gray-400 mb-6">6,000 Credits</p>
-                <button onclick="payWithPaystack(50)" class="w-full py-3 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 font-bold hover:shadow-lg hover:shadow-purple-500/30">Select</button>
+            <div class="space-y-3 border-t border-slate-700 pt-6 mb-8 text-sm">
+                <div class="flex justify-between">
+                    <span class="text-slate-400">Credits to Add</span>
+                    <span class="font-semibold text-emerald-400" id="creditPreview">0.00</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-400">Processing Fee (2.5%)</span>
+                    <span class="font-semibold text-rose-400" id="feePreview">0.00</span>
+                </div>
+                <div class="flex justify-between text-lg font-bold border-t border-slate-700 pt-3">
+                    <span>Total to Pay</span>
+                    <span class="text-blue-400" id="totalPreview">₵ 0.00</span>
+                </div>
             </div>
 
-            <div class="glass p-8 rounded-2xl flex flex-col items-center hover:scale-105 transition-transform cursor-pointer border-transparent hover:border-purple-500">
-                <span class="text-sm font-semibold text-purple-400 uppercase">Premium</span>
-                <h2 class="text-3xl font-bold my-4">100 GHS</h2>
-                <p class="text-gray-400 mb-6">15,000 Credits</p>
-                <button onclick="payWithPaystack(100)" class="w-full py-3 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-700 font-bold hover:shadow-lg hover:shadow-indigo-500/30">Select</button>
-            </div>
-
+            <button onclick="startPayment()" id="payBtn" disabled 
+                class="w-full py-4 rounded-xl accent-gradient text-white font-extrabold text-lg opacity-50 cursor-not-allowed transform transition hover:scale-[1.02] active:scale-95 shadow-lg">
+                Pay Securely
+            </button>
         </div>
 
-        <div class="mt-12 text-center text-gray-500 text-sm">
-            Secured by Paystack. Your credits will be added automatically.
+        <div class="mt-6 flex items-center justify-center gap-2 text-slate-500 text-xs uppercase tracking-widest">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/2/29/Paystack_Logo.png" alt="Paystack" class="h-4 opacity-50">
+            <span>Secure Encryption</span>
         </div>
     </div>
 
     <script>
+        const FEE_RATE = 0.025; // 2.5%
         const paystackPublicKey = 'pk_live_faecdb3166144fadebd8269829343698dd43de63';
 
-        function payWithPaystack(amount) {
-            // In a real app, get the user's email from Firebase Auth
-            const userEmail = "customer@example.com"; 
+        function calculateTotal() {
+            const amount = parseFloat(document.getElementById('amountInput').value) || 0;
+            const fee = amount * FEE_RATE;
+            const total = amount + fee;
+            const payBtn = document.getElementById('payBtn');
+
+            document.getElementById('creditPreview').innerText = amount.toFixed(2);
+            document.getElementById('feePreview').innerText = fee.toFixed(2);
+            document.getElementById('totalPreview').innerText = '₵ ' + total.toFixed(2);
+
+            if (amount >= 1) { // Minimum 1 GHS
+                payBtn.disabled = false;
+                payBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                payBtn.disabled = true;
+                payBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function startPayment() {
+            const amount = parseFloat(document.getElementById('amountInput').value);
+            const totalToPay = amount * (1 + FEE_RATE);
+            const userEmail = "customer@example.com"; // Replace with real auth email
 
             let handler = PaystackPop.setup({
                 key: paystackPublicKey,
                 email: userEmail,
-                amount: amount * 100, // Paystack uses kobo/pesewas
+                amount: (totalToPay * 100).toFixed(0), // Amount in Pesewas
                 currency: 'GHS',
-                ref: 'GH-' + Math.floor((Math.random() * 1000000000) + 1),
-                onClose: function() {
-                    alert('Transaction cancelled.');
-                },
-                callback: function(response) {
-                    // This runs after successful payment
-                    verifyTransactionOnServer(response.reference);
+                ref: 'GH-' + Date.now(),
+                onClose: () => alert('Transaction Cancelled'),
+                callback: (response) => {
+                    // Send original 'amount' and 'reference' to server
+                    verifyOnServer(response.reference, amount);
                 }
             });
-
             handler.openIframe();
         }
 
-        async function verifyTransactionOnServer(reference) {
-            console.log("Verifying reference:", reference);
-            
-            // Call your Firebase Cloud Function here
+        async function verifyOnServer(reference, creditedAmount) {
+            const btn = document.getElementById('payBtn');
+            btn.innerText = "Verifying...";
+            btn.disabled = true;
+
             try {
                 const response = await fetch('YOUR_FIREBASE_FUNCTION_URL', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ reference: reference })
+                    body: JSON.stringify({ 
+                        reference: reference,
+                        amount: creditedAmount // The value to actually add to wallet
+                    })
                 });
 
                 const result = await response.json();
                 if(result.success) {
-                    alert("Credits added successfully!");
+                    alert("Success! Wallet credited.");
                     window.location.reload();
                 } else {
-                    alert("Verification failed. Please contact support.");
+                    alert("Verification failed.");
                 }
-            } catch (error) {
-                console.error("Error:", error);
+            } catch (e) {
+                console.error(e);
+                alert("Server error. Please contact support.");
             }
         }
     </script>
