@@ -3,35 +3,113 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Secure Wallet Top-Up</title>
+<title>Wallet Top-Up | Gigantic Data</title>
 <script src="https://js.paystack.co/v1/inline.js"></script>
 
 <style>
-body { font-family:Poppins,sans-serif; background:#f8fafc; padding:20px; }
-.card { background:white; padding:25px; border-radius:20px; box-shadow:0 10px 25px rgba(0,0,0,.1); max-width:420px; margin:auto; }
-button { width:100%; padding:15px; background:#4f46e5; color:white; border:none; border-radius:12px; font-weight:bold; }
-input { width:100%; padding:14px; border-radius:12px; border:1px solid #ccc; font-size:16px; }
-#modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); align-items:center; justify-content:center; }
-.modal-box { background:white; padding:30px; border-radius:20px; text-align:center; width:300px; }
+body {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg,#4f46e5,#06b6d4);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  margin:0;
+}
+
+.card {
+  background:white;
+  width:420px;
+  padding:30px;
+  border-radius:20px;
+  box-shadow:0 20px 40px rgba(0,0,0,.2);
+}
+
+h2 {
+  text-align:center;
+  color:#111827;
+  margin-bottom:10px;
+}
+
+p {
+  text-align:center;
+  color:#6b7280;
+  font-size:14px;
+}
+
+input {
+  width:100%;
+  padding:14px;
+  border-radius:12px;
+  border:1px solid #d1d5db;
+  font-size:16px;
+  margin-top:15px;
+}
+
+button {
+  width:100%;
+  padding:15px;
+  background:#4f46e5;
+  color:white;
+  border:none;
+  border-radius:14px;
+  font-size:16px;
+  font-weight:bold;
+  margin-top:20px;
+  cursor:pointer;
+}
+
+button:hover {
+  background:#4338ca;
+}
+
+#status {
+  margin-top:15px;
+  font-size:14px;
+  text-align:center;
+  color:#16a34a;
+}
+
+#modal {
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.modal-box {
+  background:white;
+  padding:25px;
+  border-radius:18px;
+  width:320px;
+  text-align:center;
+  box-shadow:0 10px 30px rgba(0,0,0,.3);
+}
 </style>
 </head>
 
 <body>
 
 <div class="card">
-<h3>Top-Up Wallet</h3>
+<h2>💰 Wallet Top-Up</h2>
+<p>Enter amount. Paystack fees will be added automatically.</p>
+
 <input type="number" id="amount" placeholder="Enter Amount (GHS)">
-<br><br>
 <button id="payBtn">Pay Securely</button>
+<div id="status"></div>
 </div>
 
 <div id="modal">
   <div class="modal-box">
-    <h3>Payment Received</h3>
-    <p>Wallet will be credited automatically.</p>
+    <h3>✅ Payment Received</h3>
+    <p>Your wallet will be credited automatically after verification.</p>
     <button onclick="location.href='dashboard.html'">Go Dashboard</button>
   </div>
 </div>
+
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
@@ -58,11 +136,12 @@ onAuthStateChanged(auth, u => {
   user = u;
 });
 
-// PAYSTACK PAYMENT
+// PAY BUTTON
 document.getElementById("payBtn").onclick = () => {
   const amt = parseFloat(document.getElementById("amount").value);
   if(!amt || amt < 1) return alert("Enter valid amount");
 
+  // Paystack fee 2.5%
   const fee = amt * 0.025;
   const total = Math.round((amt + fee) * 100);
 
@@ -74,26 +153,28 @@ document.getElementById("payBtn").onclick = () => {
 
     metadata: {
       uid: user.uid,
-      expected_amount: amt
+      real_amount: amt
     },
 
     callback: async (res) => {
       const refCode = res.reference;
+      document.getElementById("status").innerHTML = "Verifying payment...";
 
-      // Save reference for server verification
+      // Save pending payment
       await set(ref(db, `pending_topups/${refCode}`), {
         uid: user.uid,
         email: user.email,
         amount: amt,
+        total_paid: total/100,
         timestamp: Date.now(),
-        status: "waiting"
+        status: "pending"
       });
 
-      // Show success UI
-      document.getElementById("modal").style.display = "flex";
+      // Show UI
+      document.getElementById("modal").style.display="flex";
 
-      // AUTO CHECK CREDIT AFTER 30 SECONDS
-      setTimeout(() => checkCredit(refCode), 30000);
+      // Check credit after 30s
+      setTimeout(()=>checkCredit(refCode),30000);
     }
   });
 
@@ -101,12 +182,12 @@ document.getElementById("payBtn").onclick = () => {
 };
 
 
-// 🔍 CHECK IF WALLET CREDITED
-async function checkCredit(refCode) {
+// CHECK CREDIT STATUS
+async function checkCredit(refCode){
   const snap = await get(ref(db, `verified_payments/${refCode}`));
 
-  if (!snap.exists()) {
-    // REPORT TO ADMIN (AUTO FRAUD REPORT)
+  if(!snap.exists()){
+    // Auto report admin
     await set(ref(db, `admin_reports/${refCode}`), {
       uid: user.uid,
       email: user.email,
@@ -115,9 +196,12 @@ async function checkCredit(refCode) {
       timestamp: Date.now()
     });
 
-    alert("Payment detected but not credited yet. Admin notified automatically.");
+    alert("⚠ Payment not credited yet. Admin notified.");
+  } else {
+    document.getElementById("status").innerHTML = "✅ Wallet credited successfully!";
   }
 }
 </script>
+
 </body>
 </html>
