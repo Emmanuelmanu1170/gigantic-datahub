@@ -16,159 +16,88 @@
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter', sans-serif; }
         body { background: var(--bg); color: var(--dark); display: flex; justify-content: center; min-height: 100vh; padding: 20px; }
         
-        .payment-card {
+        .card {
             background: white; width: 100%; max-width: 400px; border-radius: 28px;
             padding: 30px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
             border: 1px solid #e2e8f0; height: fit-content;
         }
 
-        .header { text-align: center; margin-bottom: 30px; }
-        .header i { font-size: 40px; color: var(--primary); margin-bottom: 15px; }
+        .header { text-align: center; margin-bottom: 25px; }
+        .header i { font-size: 40px; color: var(--primary); margin-bottom: 10px; }
         .header h2 { font-size: 1.5rem; font-weight: 800; }
-
-        .balance-display {
-            background: var(--dark); color: white; border-radius: 20px;
-            padding: 20px; text-align: center; margin-bottom: 25px;
-        }
-        .balance-display span { font-size: 0.75rem; opacity: 0.7; letter-spacing: 1px; }
-        .balance-display h1 { font-size: 2rem; margin-top: 5px; }
 
         .input-group { margin-bottom: 20px; }
         label { display: block; font-size: 0.75rem; font-weight: 700; color: #64748b; margin-bottom: 8px; text-transform: uppercase; }
         .input-wrapper { position: relative; }
-        .input-wrapper span { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); font-weight: 800; color: var(--dark); }
+        .input-wrapper span { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); font-weight: 800; }
         input { 
-            width: 100%; padding: 15px 15px 15px 45px; border: 2px solid #f1f5f9; 
+            width: 100%; padding: 15px 15px 15px 40px; border: 2px solid #f1f5f9; 
             border-radius: 12px; font-size: 1.1rem; font-weight: 600; outline: none; transition: 0.3s;
         }
         input:focus { border-color: var(--primary); background: #fff; }
-
-        .fee-table { background: #f8fafc; border-radius: 15px; padding: 15px; font-size: 0.85rem; margin-bottom: 25px; border: 1px dashed #cbd5e1; }
-        .fee-row { display: flex; justify-content: space-between; margin-bottom: 8px; color: #64748b; }
-        .total-row { border-top: 1px solid #e2e8f0; padding-top: 10px; margin-top: 10px; font-weight: 800; color: var(--primary); font-size: 1rem; }
 
         .pay-btn {
             width: 100%; background: var(--primary); color: white; border: none;
             padding: 18px; border-radius: 15px; font-weight: 700; cursor: pointer;
             box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4); transition: 0.3s;
+            margin-bottom: 15px;
         }
-        .pay-btn:active { transform: scale(0.98); }
-        .pay-btn:disabled { background: #94a3b8; cursor: not-allowed; box-shadow: none; }
 
-        /* Modal */
-        #status-modal { position: fixed; inset: 0; background: rgba(15,23,42,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; }
-        .modal-body { background: white; width: 90%; max-width: 350px; border-radius: 30px; padding: 40px 25px; text-align: center; }
-        .modal-body i { font-size: 50px; color: var(--success); margin-bottom: 20px; }
+        .whatsapp-btn {
+            width: 100%; background: #25D366; color: white; border: none;
+            padding: 15px; border-radius: 15px; font-weight: 700; cursor: pointer;
+            text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
     </style>
 </head>
 <body>
 
-<div class="payment-card">
+<div class="card">
     <div class="header">
-        <i class="fas fa-shield-alt"></i>
+        <i class="fas fa-wallet"></i>
         <h2>Fund Wallet</h2>
     </div>
 
-    <div class="balance-display">
-        <span>CURRENT BALANCE</span>
-        <h1 id="wallDisplay">₵ 0.00</h1>
-    </div>
-
     <div class="input-group">
-        <label>Amount to deposit</label>
+        <label>Amount to deposit (GHS)</label>
         <div class="input-wrapper">
             <span>₵</span>
-            <input type="number" id="amtInput" placeholder="0.00" oninput="calcFee()">
+            <input type="number" id="amount" placeholder="0.00">
         </div>
     </div>
 
-    <div class="fee-table">
-        <div class="fee-row"><span>Deposit Amount</span> <span id="fAmt">₵ 0.00</span></div>
-        <div class="fee-row"><span>Fee (2.5%)</span> <span id="fFee">₵ 0.00</span></div>
-        <div class="total-row"><span>You Pay</span> <span id="fTotal">₵ 0.00</span></div>
-    </div>
+    <button class="pay-btn" onclick="payWithPaystack()">SECURE TOP-UP</button>
 
-    <button class="pay-btn" id="payBtn" onclick="initiatePayment()">SECURE TOP-UP</button>
-</div>
-
-<div id="status-modal">
-    <div class="modal-body">
-        <i class="fas fa-check-circle"></i>
-        <h3>Payment Verification</h3>
-        <p style="color:#64748b; font-size:0.9rem; margin:15px 0 25px;">Finalizing your credit. Your wallet will update automatically once Paystack confirms.</p>
-        <button onclick="location.replace('dashboard.html')" style="width:100%; padding:15px; border-radius:12px; border:none; background:var(--dark); color:white; font-weight:700;">CONTINUE</button>
-    </div>
+    <a href="https://wa.me/233549055308?text=Hello%20Admin,%20I%20need%20help%20with%20my%20topup." class="whatsapp-btn">
+        <i class="fab fa-whatsapp"></i> Contact Admin for Help
+    </a>
 </div>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-    import { getDatabase, ref, onValue, set, get } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+    // Import your Firebase config here
+    import { auth } from './firebase-config.js'; // Adjust path accordingly
 
-    const firebaseConfig = { apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4", authDomain: "gigantic-data.firebaseapp.com", databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com", projectId: "gigantic-data" };
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const auth = getAuth(app);
+    window.payWithPaystack = () => {
+        const amount = document.getElementById('amount').value;
+        const user = auth.currentUser;
 
-    let userObj = null;
-
-    onAuthStateChanged(auth, user => {
-        if (!user) return location.href = "login.html";
-        userObj = user;
-        onValue(ref(db, `users/${user.uid}/wallet`), s => {
-            document.getElementById('wallDisplay').innerText = "₵ " + Number(s.val() || 0).toFixed(2);
-        });
-    });
-
-    window.calcFee = () => {
-        const v = Number(document.getElementById('amtInput').value || 0);
-        const fee = v * 0.025;
-        document.getElementById('fAmt').innerText = `₵ ${v.toFixed(2)}`;
-        document.getElementById('fFee').innerText = `₵ ${fee.toFixed(2)}`;
-        document.getElementById('fTotal').innerText = `₵ ${(v + fee).toFixed(2)}`;
-    };
-
-    window.initiatePayment = () => {
-        const amt = Number(document.getElementById('amtInput').value);
-        if (amt < 1 || isNaN(amt)) return alert("Please enter a valid amount (Min GH₵ 1.00)");
-
-        // SAFETY: Check if Paystack script is actually loaded
-        if (typeof PaystackPop === 'undefined') {
-            alert("Payment gateway is still loading. Please wait a second and try again.");
-            return;
-        }
+        if (!user) return alert("Please login first");
+        if (amount < 1) return alert("Min GH₵ 1.00");
 
         const handler = PaystackPop.setup({
             key: 'pk_live_faecdb3166144fadebd8269829343698dd43de63',
-            email: userObj.email,
-            amount: Math.round((amt * 1.025) * 100), // Total including fee in pesewas
+            email: user.email,
+            amount: Math.round(amount * 100), // GHS to Pesewas
             currency: 'GHS',
             metadata: { 
-                custom_fields: [
-                    { display_name: "User ID", variable_name: "uid", value: userObj.uid },
-                    { display_name: "Real Amount", variable_name: "real_amt", value: amt }
-                ]
+                uid: user.uid,
+                real_amount: amount 
             },
-            callback: async (res) => {
-                // HACKER PROTECTION:
-                // We only log the intent. Wallet is updated by the Cloud Function Webhook.
-                try {
-                    await set(ref(db, `pending_topups/${res.reference}`), {
-                        uid: userObj.uid,
-                        amount: amt,
-                        status: "waiting_for_webhook",
-                        time: Date.now()
-                    });
-                    document.getElementById('status-modal').style.display = 'flex';
-                } catch (e) {
-                    console.error("Firebase Log Error", e);
-                }
-            },
-            onClose: () => {
-                alert("Transaction cancelled.");
+            callback: (response) => {
+                alert("Payment received! Your wallet will be updated in a moment.");
+                location.reload();
             }
         });
-        
         handler.openIframe();
     };
 </script>
