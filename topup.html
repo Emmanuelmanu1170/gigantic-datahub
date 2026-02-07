@@ -1,240 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fund Wallet - GiganticDataHub</title>
-    <script src="https://js.paystack.co/v1/inline.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        :root {
-            --deep: #0f172a;
-            --primary: #4f46e5;
-            --success: #10b981;
-            --white: #ffffff;
-            --slate: #64748b;
-        }
-        body { margin:0; font-family:'Poppins', sans-serif; background:#f8fafc; color:var(--deep); overflow-x:hidden; }
-        .header { background:var(--deep); color:white; padding:20px; display:flex; align-items:center; gap:15px; box-shadow:0 4px 12px rgba(0,0,0,0.1);}
-        .container { padding:20px; max-width:450px; margin:auto; }
-        .card { background:var(--white); border-radius:28px; padding:25px; box-shadow:0 15px 35px rgba(0,0,0,0.05); margin-bottom:20px; border:1px solid #e2e8f0; position:relative; }
-        
-        .balance-card { 
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); 
-            color: white; padding: 22px; border-radius: 22px; margin-bottom: 25px; 
-            text-align: center; border: 1px solid rgba(255,255,255,0.1);
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Secure Wallet Top-Up</title>
+<script src="https://js.paystack.co/v1/inline.js"></script>
 
-        label { display:block; font-weight:700; font-size:12px; margin-bottom:10px; color:var(--slate); text-transform:uppercase; letter-spacing:1px; }
-        .input-group { position:relative; margin-bottom:20px; }
-        .input-group span { position:absolute; left:18px; top:14px; font-weight:800; color:var(--deep); font-size:1.1rem; }
-        
-        input { 
-            width:100%; padding:16px 16px 16px 60px; border:2px solid #f1f5f9; 
-            border-radius:18px; font-size:1.2rem; outline:none; transition:0.3s; 
-            box-sizing:border-box; font-weight:600; 
-        }
-        input:focus { border-color:var(--primary); background:#fff; box-shadow:0 0 0 4px rgba(79,70,229,0.1); }
-
-        .fee-info { background:#f8fafc; border-radius:18px; padding:18px; font-size:0.9rem; border:1px dashed #cbd5e1; margin-bottom:15px; }
-        .fee-row { display:flex; justify-content:space-between; margin-bottom:8px; color:var(--slate); }
-        .total-row { border-top:2px solid #e2e8f0; padding-top:12px; margin-top:12px; font-weight:800; color:var(--primary); font-size:1.1rem; }
-
-        .pay-btn { 
-            width:100%; background:var(--primary); color:white; border:none; padding:20px; 
-            border-radius:20px; font-weight:700; font-size:1rem; margin-top:25px; 
-            cursor:pointer; transition:0.3s; box-shadow:0 10px 25px rgba(79,70,229,0.3); 
-            text-transform:uppercase; letter-spacing:1px;
-        }
-        .pay-btn:disabled { background:#94a3b8; cursor:not-allowed; box-shadow:none; }
-
-        #status-modal { 
-            position:fixed; inset:0; background:rgba(15,23,42,0.85); 
-            display:none; align-items:center; justify-content:center; 
-            z-index:2000; backdrop-filter:blur(10px);
-        }
-        .modal-content { 
-            background:white; width:85%; max-width:380px; padding:40px 30px; 
-            border-radius:32px; text-align:center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            animation:modalEntry 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); 
-        }
-        @keyframes modalEntry { from { transform:scale(0.8) translateY(30px); opacity:0; } to { transform:scale(1) translateY(0); opacity:1; } }
-        
-        .success-icon-wrapper {
-            width: 80px; height: 80px; background: #f0fdf4; color: var(--success);
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 40px; margin: 0 auto 20px; border: 2px solid #dcfce7;
-        }
-
-        .modal-title { font-size: 1.5rem; font-weight: 800; color: var(--deep); margin-bottom: 8px; }
-        .modal-text { color: var(--slate); font-size: 0.95rem; line-height: 1.5; margin-bottom: 25px; }
-        
-        .done-btn {
-            width: 100%; background: var(--deep); color: white; border: none;
-            padding: 16px; border-radius: 16px; font-weight: 700; cursor: pointer;
-            transition: 0.2s;
-        }
-        .done-btn:hover { opacity: 0.9; transform: translateY(-2px); }
-    </style>
+<style>
+body { font-family:Poppins,sans-serif; background:#f8fafc; padding:20px; }
+.card { background:white; padding:25px; border-radius:20px; box-shadow:0 10px 25px rgba(0,0,0,.1); max-width:420px; margin:auto; }
+button { width:100%; padding:15px; background:#4f46e5; color:white; border:none; border-radius:12px; font-weight:bold; }
+input { width:100%; padding:14px; border-radius:12px; border:1px solid #ccc; font-size:16px; }
+#modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); align-items:center; justify-content:center; }
+.modal-box { background:white; padding:30px; border-radius:20px; text-align:center; width:300px; }
+</style>
 </head>
+
 <body>
 
-<div id="status-modal">
-    <div class="modal-content">
-        <div class="success-icon-wrapper">
-            <i class="fas fa-check"></i>
-        </div>
-        <div class="modal-title">Top-up Successful</div>
-        <div class="modal-text">Great news! Your payment has been verified and your wallet has been credited.</div>
-        <button class="done-btn" onclick="window.location.href='dashboard.html'">Return to Dashboard</button>
-    </div>
+<div class="card">
+<h3>Top-Up Wallet</h3>
+<input type="number" id="amount" placeholder="Enter Amount (GHS)">
+<br><br>
+<button id="payBtn">Pay Securely</button>
 </div>
 
-<div class="header">
-    <a href="dashboard.html" style="color:white;"><i class="fas fa-arrow-left"></i></a>
-    <b style="letter-spacing:1px;">FUND WALLET</b>
-</div>
-
-<div class="container">
-    <div class="card">
-        <div class="balance-card">
-            <p style="margin:0; font-size:0.75rem; opacity:0.7; font-weight:600;">AVAILABLE BALANCE</p>
-            <h1 id="displayBal" style="margin:8px 0 0; font-size:2.2rem;">GH₵ 0.00</h1>
-        </div>
-
-        <label>Amount to Top-up</label>
-        <div class="input-group">
-            <span>GH₵</span>
-            <input type="number" id="amtInput" placeholder="Min: 1.00" step="0.01" min="1">
-        </div>
-
-        <div class="fee-info">
-            <div class="fee-row"><span>Subtotal</span> <span id="subTotal">GH₵ 0.00</span></div>
-            <div class="fee-row"><span>Service Fee (2.5%)</span> <span id="feeTotal">GH₵ 0.00</span></div>
-            <div class="total-row"><span>Total Payable</span> <span id="totalPay">GH₵ 0.00</span></div>
-        </div>
-
-        <button class="pay-btn" id="payBtn" disabled>SECURE TOP-UP NOW</button>
-    </div>
+<div id="modal">
+  <div class="modal-box">
+    <h3>Payment Received</h3>
+    <p>Wallet will be credited automatically.</p>
+    <button onclick="location.href='dashboard.html'">Go Dashboard</button>
+  </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-import { getDatabase, ref, onValue, update, set } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
+// 🔥 Firebase Config
 const firebaseConfig = {
-    apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
-    authDomain: "gigantic-data.firebaseapp.com",
-    databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
-    projectId: "gigantic-data"
+ apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
+ authDomain: "gigantic-data.firebaseapp.com",
+ databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
+ projectId: "gigantic-data"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
-let currentUser = null;
-let currentBalance = 0;
 
-onAuthStateChanged(auth, user => {
-    if (!user) return window.location.href = "login.html";
-    currentUser = user;
+let user = null;
 
-    onValue(ref(db, `users/${user.uid}/wallet`), s => {
-        currentBalance = Number(s.val() || 0);
-        document.getElementById('displayBal').innerText = `GH₵ ${currentBalance.toFixed(2)}`;
-    });
-
-    const payBtn = document.getElementById('payBtn');
-    payBtn.disabled = false;
-    payBtn.onclick = initiatePayment;
+// Ensure login
+onAuthStateChanged(auth, u => {
+  if(!u) location.href="login.html";
+  user = u;
 });
 
-const input = document.getElementById('amtInput');
-input.addEventListener('input', () => {
-    const val = parseFloat(input.value) || 0;
-    const fee = val * 0.025;
-    const total = val + fee;
-    document.getElementById('subTotal').innerText = `GH₵ ${val.toFixed(2)}`;
-    document.getElementById('feeTotal').innerText = `GH₵ ${fee.toFixed(2)}`;
-    document.getElementById('totalPay').innerText = `GH₵ ${total.toFixed(2)}`;
-});
+// PAYSTACK PAYMENT
+document.getElementById("payBtn").onclick = () => {
+  const amt = parseFloat(document.getElementById("amount").value);
+  if(!amt || amt < 1) return alert("Enter valid amount");
 
-async function recordTransaction(paymentRef, amountPaid) {
-    const txId = "TOP-" + Math.floor(Math.random() * 899999 + 100000);
-    const timestamp = Date.now();
-    const newBalance = currentBalance + amountPaid;
+  const fee = amt * 0.025;
+  const total = Math.round((amt + fee) * 100);
 
-    const updates = {};
-    
-    updates[`transactions/${txId}`] = {
-        uid: currentUser.uid,
-        amount: amountPaid,
-        type: "Credit",
-        category: "topup",
-        date: timestamp,
-        newBalance: newBalance,
-        reference: paymentRef
-    };
+  const handler = PaystackPop.setup({
+    key: "pk_live_faecdb3166144fadebd8269829343698dd43de63",
+    email: user.email,
+    amount: total,
+    currency: "GHS",
 
-    updates[`topupNotes/${currentUser.uid}/${txId}`] = {
-        amount: amountPaid,
-        timestamp: timestamp,
-        status: "Successful",
-        method: "Paystack",
-        reference: paymentRef
-    };
+    metadata: {
+      uid: user.uid,
+      expected_amount: amt
+    },
 
-    updates[`users/${currentUser.uid}/wallet`] = newBalance;
+    callback: async (res) => {
+      const refCode = res.reference;
 
-    try {
-        await update(ref(db), updates);
-        document.getElementById('status-modal').style.display = 'flex';
-    } catch (e) {
-        // --- LIAR-PROOF INVESTIGATION LOGIC ---
-        const reportRef = "T" + Math.floor(Math.random() * 1000000000000);
-        
-        // Save to investigation node for admin to see on admin-verify.html
-        await set(ref(db, `pending_manual_credits/${reportRef}`), {
-            uid: currentUser.uid,
-            userEmail: currentUser.email,
-            amount: amountPaid,
-            paystackReference: paymentRef,
-            timestamp: Date.now(),
-            status: "pending"
-        });
+      // Save reference for server verification
+      await set(ref(db, `pending_topups/${refCode}`), {
+        uid: user.uid,
+        email: user.email,
+        amount: amt,
+        timestamp: Date.now(),
+        status: "waiting"
+      });
 
-        alert("Wallet update error. Please contact support with reference: " + reportRef);
+      // Show success UI
+      document.getElementById("modal").style.display = "flex";
+
+      // AUTO CHECK CREDIT AFTER 30 SECONDS
+      setTimeout(() => checkCredit(refCode), 30000);
     }
-}
+  });
 
-function initiatePayment() {
-    const amt = parseFloat(input.value);
-    if (amt < 1 || isNaN(amt)) return alert("Enter a valid amount ≥1");
+  handler.openIframe();
+};
 
-    const payBtn = document.getElementById('payBtn');
-    payBtn.disabled = true;
-    payBtn.innerText = "OPENING SECURE GATEWAY...";
 
-    const handler = PaystackPop.setup({
-        key: 'pk_live_faecdb3166144fadebd8269829343698dd43de63',
-        email: currentUser.email,
-        amount: Math.round((amt * 1.025) * 100),
-        currency: 'GHS',
-        metadata: { 
-            custom_fields: [
-                { display_name: "User ID", variable_name: "uid", value: currentUser.uid }
-            ] 
-        },
-        callback: function(response){
-            recordTransaction(response.reference, amt);
-        },
-        onClose: function(){
-            payBtn.disabled = false;
-            payBtn.innerText = "SECURE TOP-UP NOW";
-        }
+// 🔍 CHECK IF WALLET CREDITED
+async function checkCredit(refCode) {
+  const snap = await get(ref(db, `verified_payments/${refCode}`));
+
+  if (!snap.exists()) {
+    // REPORT TO ADMIN (AUTO FRAUD REPORT)
+    await set(ref(db, `admin_reports/${refCode}`), {
+      uid: user.uid,
+      email: user.email,
+      reference: refCode,
+      reason: "Payment received but not credited",
+      timestamp: Date.now()
     });
-    handler.openIframe();
+
+    alert("Payment detected but not credited yet. Admin notified automatically.");
+  }
 }
 </script>
 </body>
