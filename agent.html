@@ -19,7 +19,6 @@
         * { margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', -apple-system, sans-serif; }
         body { background: var(--bg); color: var(--text-main); padding-bottom: 50px; }
 
-        /* HEADER */
         header { 
             background: var(--primary); color: white; padding: 25px 20px; 
             text-align: center; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px;
@@ -43,7 +42,6 @@
 
         .container { padding: 0 20px; }
 
-        /* AGENT CARD */
         .agent-card {
             background: var(--white);
             border-radius: 20px;
@@ -56,16 +54,10 @@
             transition: 0.3s;
         }
         .agent-avatar {
-            width: 60px;
-            height: 60px;
-            background: #eef2ff;
-            color: var(--primary);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            font-weight: 800;
+            width: 60px; height: 60px;
+            background: #eef2ff; color: var(--primary);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; font-weight: 800;
         }
         .agent-info { flex: 1; }
         .agent-info h3 { font-size: 1rem; color: var(--primary); margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
@@ -73,21 +65,14 @@
         .agent-info p { font-size: 0.8rem; color: var(--text-gray); }
 
         .contact-btn {
-            background: #25d366;
-            color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            font-size: 1.2rem;
+            background: #25d366; color: white; width: 40px; height: 40px;
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            text-decoration: none; font-size: 1.2rem;
             box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3);
         }
 
-        .empty-state { text-align: center; padding: 100px 20px; color: var(--text-gray); }
         .loader { text-align: center; padding: 50px; color: var(--primary); }
+        .empty-state { text-align: center; padding: 100px 20px; color: var(--text-gray); }
 
         .back-nav { padding: 15px 20px; display: flex; align-items: center; gap: 10px; color: white; text-decoration: none; font-size: 0.9rem; font-weight: 600; }
     </style>
@@ -115,13 +100,18 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
     import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
+    // COMPLETE CONFIG INTEGRATION
     const firebaseConfig = {
-        apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
+        apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho",
         authDomain: "gigantic-data.firebaseapp.com",
         databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
-        projectId: "gigantic-data"
+        projectId: "gigantic-data",
+        storageBucket: "gigantic-data.firebasestorage.app",
+        messagingSenderId: "727845403550",
+        appId: "1:727845403550:web:56d06c9389993153a9748f",
+        measurementId: "G-10F198VFE6"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -130,38 +120,45 @@
 
     let allAgents = [];
     let loggedInUserEmail = "";
+    let authWaiting = true; // The Guard variable
 
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            loggedInUserEmail = user.email;
-        } else {
-            window.location.href = "login.html";
-        }
+    // Ensure session is remembered across pages
+    setPersistence(auth, browserLocalPersistence).then(() => {
+        onAuthStateChanged(auth, (user) => {
+            authWaiting = false; // Firebase has finished checking the session
+            if (user) {
+                loggedInUserEmail = user.email;
+                loadAgents();
+            } else {
+                // Only redirect if Firebase confirmed no user is found
+                window.location.replace("login.html");
+            }
+        });
     });
 
-    onValue(ref(db, 'users'), (snapshot) => {
-        const loader = document.getElementById('loader');
-        const listDiv = document.getElementById('agentList');
-        loader.style.display = 'none';
-        
-        const data = snapshot.val();
-        if (!data) {
-            listDiv.innerHTML = `<div class="empty-state"><p>No agents found.</p></div>`;
-            return;
-        }
+    function loadAgents() {
+        onValue(ref(db, 'users'), (snapshot) => {
+            const loader = document.getElementById('loader');
+            const listDiv = document.getElementById('agentList');
+            if (loader) loader.style.display = 'none';
+            
+            const data = snapshot.val();
+            if (!data) {
+                listDiv.innerHTML = `<div class="empty-state"><p>No agents found.</p></div>`;
+                return;
+            }
 
-        // IMPROVED FILTER: Captures anyone with 'agent' status regardless of capitalization
-        // Checks both status and userType fields to ensure self-activated users show up.
-        allAgents = Object.entries(data)
-            .filter(([id, u]) => {
-                const s = (u.status || "").toLowerCase();
-                const t = (u.userType || "").toLowerCase();
-                return s === 'agent' || t === 'agent';
-            })
-            .map(([id, u]) => ({ id, ...u }));
+            allAgents = Object.entries(data)
+                .filter(([id, u]) => {
+                    const s = (u.status || "").toLowerCase();
+                    const t = (u.userType || "").toLowerCase();
+                    return s === 'agent' || t === 'agent';
+                })
+                .map(([id, u]) => ({ id, ...u }));
 
-        renderAgents(allAgents);
-    });
+            renderAgents(allAgents);
+        });
+    }
 
     function renderAgents(agents) {
         const listDiv = document.getElementById('agentList');
@@ -173,8 +170,8 @@
         }
 
         agents.forEach(agent => {
-            const initial = (agent.fullname || agent.fullName || agent.fullName || "U").charAt(0).toUpperCase();
             const name = agent.fullname || agent.fullName || "Certified Agent";
+            const initial = name.charAt(0).toUpperCase();
             const email = agent.email || "Contact for details";
             const phone = agent.phone || "";
             
@@ -200,14 +197,9 @@
     window.filterAgents = () => {
         const query = document.getElementById('agentSearch').value.toLowerCase();
         const cards = document.querySelectorAll('.agent-card');
-        
         cards.forEach(card => {
             const name = card.getAttribute('data-name');
-            if (name.includes(query)) {
-                card.style.display = "flex";
-            } else {
-                card.style.display = "none";
-            }
+            card.style.display = name.includes(query) ? "flex" : "none";
         });
     }
 </script>
