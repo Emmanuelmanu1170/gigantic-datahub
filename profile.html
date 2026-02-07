@@ -25,7 +25,6 @@
             padding-bottom: 80px;
         }
 
-        /* TOP HEADER */
         .top-header {
             background: white;
             padding: 12px 15px;
@@ -49,7 +48,6 @@
             cursor: pointer;
         }
 
-        /* PROFILE CARD */
         .container {
             flex: 1;
             display: flex;
@@ -84,7 +82,6 @@
         h2 { margin: 0; font-size: 22px; color: var(--deep-blue); font-weight: 800; }
         p.subtitle { margin: 5px 0 25px; font-size: 12px; color: var(--text-gray); }
 
-        /* FORM */
         .form-group { text-align: left; margin-bottom: 18px; }
         label { display: block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--deep-blue); text-transform: uppercase; letter-spacing: 0.5px; }
         
@@ -127,10 +124,8 @@
             justify-content: center;
             gap: 10px;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(255, 140, 0, 0.3);
         }
 
-        /* NAVIGATION */
         .bottom-nav {
             position: fixed;
             bottom: 0; width: 100%;
@@ -205,14 +200,16 @@
         import { getAuth, onAuthStateChanged, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
         import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
+        // COMPLETE CONFIG INTEGRATED
         const firebaseConfig = {
-            apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
+            apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho",
             authDomain: "gigantic-data.firebaseapp.com",
             databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
             projectId: "gigantic-data",
             storageBucket: "gigantic-data.firebasestorage.app",
             messagingSenderId: "727845403550",
-            appId: "1:727845403550:web:e3c3a40ce615aaaca9748f"
+            appId: "1:727845403550:web:56d06c9389993153a9748f",
+            measurementId: "G-10F198VFE6"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -220,13 +217,14 @@
         const db = getDatabase(app);
 
         let userUID = null;
+        let authWaiting = true; // The Guard
 
         onAuthStateChanged(auth, user => {
+            authWaiting = false; // Auth check has finished
             if (user) {
                 userUID = user.uid;
                 document.getElementById('emailAddr').value = user.email;
                 
-                // Fetch current name from Database
                 onValue(ref(db, 'users/' + user.uid), (snapshot) => {
                     const data = snapshot.val();
                     if (data && data.fullName) {
@@ -235,7 +233,10 @@
                     }
                 });
             } else {
-                window.location.href = "login.html";
+                // Only kick the user out if we are SURE they aren't logged in
+                if (!authWaiting) {
+                    window.location.href = "login.html";
+                }
             }
         });
 
@@ -250,22 +251,21 @@
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
                 btn.disabled = true;
 
-                // 1. Update Name in Database
                 await update(ref(db, 'users/' + userUID), {
                     fullName: newName
                 });
 
-                // 2. Update Password if provided
                 if (newPass && newPass.length >= 6) {
                     await updatePassword(auth.currentUser, newPass);
+                    alert("Profile and Password updated!");
                 } else if (newPass && newPass.length < 6) {
-                    alert("Password must be at least 6 characters.");
+                    alert("Name saved, but password must be 6+ chars.");
+                } else {
+                    alert("Profile updated successfully!");
                 }
-
-                alert("Profile updated successfully!");
+                
                 document.getElementById('newPassword').value = "";
             } catch (error) {
-                console.error(error);
                 alert("Error: " + error.message);
             } finally {
                 btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
