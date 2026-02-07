@@ -136,28 +136,34 @@ onAuthStateChanged(auth, user => {
 });
 
 function loadData(uid) {
+    // 1. Listen for standard transactions (Purchases & Referral Bonuses)
     const txRef = query(ref(db, 'transactions'), orderByChild('uid'), equalTo(uid));
+    
+    // 2. Listen for Topup Notes (Paystack Deposits)
     const topupRef = ref(db, `topupNotes/${uid}`);
 
     let txData = [], topData = [];
 
     onValue(txRef, (snap) => {
         txData = snap.exists() ? Object.entries(snap.val()).map(([id, v]) => {
-            // DETECT AGENT ACTIVATION: If amount is 45 and it's a deduction
-            let isAgent = parseFloat(v.amount) === 45 && v.type === "Deduct";
-            return { id, ...v, ts: v.date, src: isAgent ? 'agent' : 'purchase' };
+            // Detect if this transaction was an Agent Upgrade (Costing 45)
+            let isAgent = (parseFloat(v.amount) === 45 && v.type === "Deduct") || v.category === "agent";
+            return { id, ...v, ts: v.date || v.timestamp, src: isAgent ? 'agent' : 'purchase' };
         }) : [];
         combineAndRender(txData, topData);
     });
 
     onValue(topupRef, (snap) => {
-        topData = snap.exists() ? Object.entries(snap.val()).map(([id, v]) => ({ id, ...v, ts: v.timestamp, src: 'topup' })) : [];
+        topData = snap.exists() ? Object.entries(snap.val()).map(([id, v]) => ({ 
+            id, ...v, ts: v.timestamp || v.date, src: 'topup' 
+        })) : [];
         combineAndRender(txData, topData);
     });
 }
 
 function combineAndRender(txs, tops) {
-    masterLogs = [...txs, ...tops].sort((a, b) => b.ts - a.ts);
+    // Merge both sources and sort by timestamp (newest first)
+    masterLogs = [...txs, ...tops].sort((a, b) => (b.ts || 0) - (a.ts || 0));
     render(masterLogs);
 }
 
@@ -168,7 +174,7 @@ function render(logs) {
     listDiv.innerHTML = "";
 
     if (logs.length === 0) {
-        listDiv.innerHTML = `<div class="empty-state"><i class="fas fa-folder-open"></i><p>No activity records</p></div>`;
+        listDiv.innerHTML = `<div class="empty-state"><i class="fas fa-folder-open"></i><p>No activity records found</p></div>`;
         return;
     }
 
@@ -193,7 +199,8 @@ function render(logs) {
 
         const isPurchase = log.src === 'purchase';
         const isAgent = log.src === 'agent';
-        const isCredit = log.type === "Credit";
+        const isTopup = log.src === 'topup';
+        const isCredit = log.type === "Credit" || isTopup;
         const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
         const card = document.createElement('div');
@@ -201,19 +208,19 @@ function render(logs) {
         
         let icon = 'fa-wallet';
         let iconClass = 'icon-topup';
-        let title = 'Wallet Top-up';
-        let amountColor = varToHex('--info');
+        let title = 'Wallet Deposit';
+        let amountColor = '#3b82f6'; // Info Blue
 
         if(isAgent){
             icon = 'fa-user-tie';
             iconClass = 'icon-agent';
-            title = 'Agent Access Activation';
-            amountColor = varToHex('--purple');
+            title = 'Agent Upgrade';
+            amountColor = '#a855f7'; // Purple
         } else if(isPurchase){
             icon = isCredit ? 'fa-gift' : 'fa-bolt';
             iconClass = isCredit ? 'icon-bonus' : 'icon-purchase';
-            title = isCredit ? 'Referral Bonus' : 'Data Bundle';
-            amountColor = isCredit ? varToHex('--success') : varToHex('--danger');
+            title = isCredit ? 'Referral Bonus' : (log.plan ? log.plan + ' Data' : 'Data Bundle');
+            amountColor = isCredit ? '#10b981' : '#ef4444'; // Success vs Danger
         }
 
         card.innerHTML = `
@@ -223,20 +230,12 @@ function render(logs) {
                 <p>${time} • <span class="tx-ref" onclick="copyRef('${log.id}')">${log.id.substring(0,8)}...</span></p>
             </div>
             <div class="tx-amount">
-                <span class="amount-val" style="color: ${amountColor}">${log.src === 'topup' || isCredit ? '+' : '-'}₵${parseFloat(log.amount).toFixed(2)}</span>
+                <span class="amount-val" style="color: ${amountColor}">${isCredit ? '+' : '-'}₵${parseFloat(log.amount).toFixed(2)}</span>
                 <span class="bal-val">${log.newBalance ? 'Bal: ₵'+parseFloat(log.newBalance).toFixed(2) : 'Successful'}</span>
             </div>
         `;
         listDiv.appendChild(card);
     });
-}
-
-function varToHex(v) {
-    if(v === '--success') return '#10b981';
-    if(v === '--danger') return '#ef4444';
-    if(v === '--info') return '#3b82f6';
-    if(v === '--purple') return '#a855f7';
-    return '#000';
 }
 
 window.filterLogs = (type, btn) => {
