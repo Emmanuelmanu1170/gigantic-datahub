@@ -13,6 +13,7 @@
         .table-container { background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         .badge-credit { background: #dcfce7; color: #15803d; }
         .badge-debit { background: #fee2e2; color: #b91c1c; }
+        .badge-order { background: #e0f2fe; color: #0369a1; }
         tr:hover { background-color: #f1f5f9; }
     </style>
 </head>
@@ -30,16 +31,16 @@
 
     <main class="max-w-7xl mx-auto p-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-                <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">Total Volume</p>
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 text-center">
+                <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">Total Transaction Flow</p>
                 <h2 class="text-3xl font-black text-slate-800 mt-2" id="totalVol">₵ 0.00</h2>
             </div>
-            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-                <p class="text-slate-500 text-xs font-bold uppercase tracking-widest text-emerald-500">Total Credits</p>
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 text-center">
+                <p class="text-slate-500 text-xs font-bold uppercase tracking-widest text-emerald-500">Total Credits (Top-ups)</p>
                 <h2 class="text-3xl font-black text-emerald-600 mt-2" id="totalCredits">₵ 0.00</h2>
             </div>
-            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-                <p class="text-slate-500 text-xs font-bold uppercase tracking-widest text-rose-500">Total Debits</p>
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 text-center">
+                <p class="text-slate-500 text-xs font-bold uppercase tracking-widest text-rose-500">Total Orders (Sales)</p>
                 <h2 class="text-3xl font-black text-rose-600 mt-2" id="totalDebits">₵ 0.00</h2>
             </div>
         </div>
@@ -47,10 +48,10 @@
         <div class="mb-6 flex flex-wrap gap-4 items-center justify-between">
             <div class="relative w-full max-w-md">
                 <i class="fas fa-search absolute left-4 top-3.5 text-slate-400"></i>
-                <input type="text" id="logSearch" placeholder="Search Email, UID, or Description..." 
+                <input type="text" id="logSearch" placeholder="Search Email, Reference ID, or Network..." 
                     class="w-full pl-12 pr-4 py-3 rounded-2xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 transition">
             </div>
-            <button onclick="exportToCSV()" class="bg-slate-800 text-white px-6 py-3 rounded-2xl font-bold hover:bg-black transition flex items-center gap-2">
+            <button onclick="exportToCSV()" class="bg-slate-800 text-white px-6 py-3 rounded-2xl font-bold hover:bg-black transition flex items-center gap-2 shadow-lg">
                 <i class="fas fa-file-export"></i> Export CSV
             </button>
         </div>
@@ -59,32 +60,30 @@
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="bg-slate-50 text-slate-400 text-xs uppercase tracking-tighter">
-                            <th class="p-5">Date/Time</th>
-                            <th class="p-5">User Account</th>
-                            <th class="p-5">Type</th>
-                            <th class="p-5">Description</th>
+                        <tr class="bg-slate-50 text-slate-400 text-[10px] uppercase tracking-widest">
+                            <th class="p-5">Timestamp</th>
+                            <th class="p-5">User</th>
+                            <th class="p-5">Category</th>
+                            <th class="p-5">Reference & Details</th>
                             <th class="p-5 text-right">Amount</th>
-                            <th class="p-5 text-right">Balance After</th>
+                            <th class="p-5 text-right">Result Balance</th>
                         </tr>
                     </thead>
-                    <tbody id="ledgerBody" class="text-sm text-slate-700 font-medium">
+                    <tbody id="ledgerBody" class="text-sm text-slate-700 font-medium divide-y divide-slate-50">
                         </tbody>
                 </table>
             </div>
             <div id="loader" class="p-20 text-center text-slate-400">
-                <i class="fas fa-circle-notch fa-spin text-3xl mb-4"></i>
-                <p>Synchronizing with Firebase Transaction Streams...</p>
+                <i class="fas fa-sync fa-spin text-3xl mb-4 text-indigo-500"></i>
+                <p class="font-bold">Merging Financial Streams...</p>
             </div>
         </div>
     </main>
 
-    
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+        import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
         const firebaseConfig = { 
             apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho", 
@@ -98,45 +97,63 @@
         const db = getDatabase(app);
 
         const ADMIN_EMAIL = "alenacloft0@gmail.com";
-        let allLogs = [];
+        let masterHistory = [];
+        let userDataCache = {};
 
         onAuthStateChanged(auth, (user) => {
             if (!user || user.email !== ADMIN_EMAIL) {
                 window.location.href = "admin_login.html";
                 return;
             }
-            document.getElementById('adminEmail').innerText = `Logged in as: ${user.email}`;
-            loadMasterLedger();
+            document.getElementById('adminEmail').innerText = `Admin: ${user.email}`;
+            loadFullHistory();
         });
 
-        function loadMasterLedger() {
-            // Unified path: reading from the global transactions node
-            onValue(ref(db, 'transactions'), (snapshot) => {
-                const data = snapshot.val();
-                if (!data) {
-                    document.getElementById('loader').innerHTML = "No transactions found in system.";
-                    return;
-                }
+        async function loadFullHistory() {
+            // 1. Fetch User Data to map UIDs to Emails
+            const usersSnap = await get(ref(db, 'users'));
+            userDataCache = usersSnap.val() || {};
 
-                document.getElementById('loader').style.display = 'none';
-                
-                // Convert to array and sort by time descending
-                allLogs = Object.entries(data).map(([id, val]) => ({
-                    id, ...val
-                })).sort((a, b) => b.timestamp - a.timestamp);
+            // 2. Load Transactions and Orders simultaneously
+            onValue(ref(db, 'transactions'), (txSnap) => {
+                onValue(ref(db, 'orders'), (orderSnap) => {
+                    const txData = txSnap.val() || {};
+                    const orderData = orderSnap.val() || {};
+                    
+                    document.getElementById('loader').style.display = 'none';
+                    
+                    // Format Transactions (Credits/Manual adjustments)
+                    const txList = Object.entries(txData).map(([id, val]) => ({
+                        id, ...val, 
+                        isOrder: false, 
+                        category: val.type || "System"
+                    }));
 
-                renderLedger();
-                calculateStats();
+                    // Format Orders (Data purchases)
+                    const orderList = Object.entries(orderData).map(([id, val]) => ({
+                        id, ...val, 
+                        isOrder: true, 
+                        category: "Order",
+                        type: "Deduct", // Orders are always deductions
+                        description: `${val.network} ${val.plan} → ${val.recipient}`
+                    }));
+
+                    // Merge and Sort
+                    masterHistory = [...txList, ...orderList].sort((a, b) => b.timestamp - a.timestamp);
+
+                    renderLedger();
+                    calculateStats();
+                });
             });
         }
 
         function calculateStats() {
             let credits = 0;
             let debits = 0;
-            allLogs.forEach(log => {
+            masterHistory.forEach(log => {
                 const amt = parseFloat(log.amount || 0);
                 if (log.type === "Credit") credits += amt;
-                else debits += amt;
+                else debits += amt; // Deduct and Order both count as debits
             });
 
             document.getElementById('totalCredits').innerText = `₵ ${credits.toFixed(2)}`;
@@ -149,29 +166,36 @@
             const search = document.getElementById('logSearch').value.toLowerCase();
             body.innerHTML = "";
 
-            const filtered = allLogs.filter(log => 
-                (log.uid && log.uid.toLowerCase().includes(search)) ||
-                (log.description && log.description.toLowerCase().includes(search)) ||
-                (log.email && log.email.toLowerCase().includes(search))
-            );
+            const filtered = masterHistory.filter(log => {
+                const email = (log.email || userDataCache[log.uid]?.email || "").toLowerCase();
+                const desc = (log.description || "").toLowerCase();
+                const id = (log.id || "").toLowerCase();
+                return email.includes(search) || desc.includes(search) || id.includes(search);
+            });
 
             filtered.forEach(log => {
                 const date = new Date(log.timestamp).toLocaleString();
+                const email = log.email || userDataCache[log.uid]?.email || 'N/A';
                 const isCredit = log.type === "Credit";
                 
+                const badgeStyle = log.category === "Order" ? "badge-order" : (isCredit ? "badge-credit" : "badge-debit");
+
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="p-5 text-slate-400 text-xs">${date}</td>
+                    <td class="p-5 text-slate-400 text-[11px] font-mono">${date}</td>
                     <td class="p-5">
-                        <span class="block text-slate-800">${log.email || 'System User'}</span>
-                        <span class="text-[10px] text-slate-400 font-mono">${log.uid || '---'}</span>
+                        <span class="block text-slate-800 text-xs font-bold">${email}</span>
+                        <span class="text-[9px] text-slate-400 font-mono">${log.uid ? log.uid.substring(0,8) : '---'}...</span>
                     </td>
                     <td class="p-5">
-                        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase ${isCredit ? 'badge-credit' : 'badge-debit'}">
-                            ${log.type}
+                        <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase ${badgeStyle}">
+                            ${log.category}
                         </span>
                     </td>
-                    <td class="p-5 text-slate-500 italic">${log.description || 'No description'}</td>
+                    <td class="p-5">
+                        <div class="text-[11px] text-slate-800 font-bold">${log.description || 'System Adjustment'}</div>
+                        <div class="text-[9px] text-slate-400 font-mono italic">Ref: ${log.id}</div>
+                    </td>
                     <td class="p-5 text-right font-black ${isCredit ? 'text-emerald-500' : 'text-rose-500'}">
                         ${isCredit ? '+' : '-'} ₵${parseFloat(log.amount).toFixed(2)}
                     </td>
@@ -186,19 +210,17 @@
         document.getElementById('logSearch').addEventListener('input', renderLedger);
 
         window.exportToCSV = () => {
-            let csv = "Date,User,UID,Type,Description,Amount,BalanceAfter\n";
-            allLogs.forEach(l => {
-                csv += `${new Date(l.timestamp).toLocaleString()},${l.email},${l.uid},${l.type},"${l.description}",${l.amount},${l.newBalance}\n`;
+            let csv = "Date,User,Category,Description,Amount,BalanceAfter\n";
+            masterHistory.forEach(l => {
+                const email = l.email || userDataCache[l.uid]?.email || 'N/A';
+                csv += `${new Date(l.timestamp).toLocaleString()},${email},${l.category},"${l.description}",${l.amount},${l.newBalance}\n`;
             });
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.setAttribute('hidden', '');
-            a.setAttribute('href', url);
-            a.setAttribute('download', 'Gigantic_Master_Ledger.csv');
-            document.body.appendChild(a);
+            a.href = url;
+            a.download = 'Gigantic_Master_History.csv';
             a.click();
-            document.body.removeChild(a);
         };
     </script>
 </body>
