@@ -99,6 +99,7 @@
             font-weight: 700;
             font-size: 1rem;
             cursor: pointer;
+            transition: 0.3s;
         }
 
         #status-modal {
@@ -119,7 +120,7 @@
         <i class="fas fa-check-circle" style="font-size: 50px; color: #10b981; margin-bottom: 20px;"></i>
         <h3 style="margin-bottom: 10px;">Payment Received</h3>
         <p style="font-size: 13px; color: var(--text-gray); margin-bottom: 25px;">
-            Your wallet will be updated automatically once confirmed by the server.
+            Your wallet will be updated automatically once confirmed by our secure server.
         </p>
         <button onclick="window.location.href='dashboard.html'" class="pay-btn">Back to Dashboard</button>
     </div>
@@ -140,11 +141,11 @@
 
     <div class="fee-details">
         <div class="fee-row"><span>Subtotal</span> <span id="fAmt">₵ 0.00</span></div>
-        <div class="fee-row"><span>Paystack Fee (2.5%)</span> <span id="fFee">₵ 0.00</span></div>
+        <div class="fee-row"><span>Service Fee (2.5%)</span> <span id="fFee">₵ 0.00</span></div>
         <div class="total-row"><span>Total Payable</span> <span id="fTotal">₵ 0.00</span></div>
     </div>
 
-    <button id="payBtn" class="pay-btn">Proceed to Payment</button>
+    <button id="payBtn" class="pay-btn" disabled>Proceed to Secure Payment</button>
 </div>
 
 
@@ -167,6 +168,10 @@
 
     let userObj = null;
 
+    // Apply saved theme
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+
     onAuthStateChanged(auth, user => {
         if (!user) { window.location.href = "login.html"; return; }
         userObj = user;
@@ -176,6 +181,8 @@
             const balance = snapshot.val() || 0;
             document.getElementById("wallDisplay").innerText = "₵ " + Number(balance).toFixed(2);
         });
+
+        document.getElementById("payBtn").disabled = false;
     });
 
     const amtInput = document.getElementById("amtInput");
@@ -183,14 +190,14 @@
     // Auto Calculate Fee
     amtInput.addEventListener('input', () => {
         const v = parseFloat(amtInput.value) || 0;
-        const fee = v * 0.025; // Matching your 2.5% request
+        const fee = v * 0.025; 
         const total = v + fee;
         document.getElementById("fAmt").innerText = `₵ ${v.toFixed(2)}`;
         document.getElementById("fFee").innerText = `₵ ${fee.toFixed(2)}`;
         document.getElementById("fTotal").innerText = `₵ ${total.toFixed(2)}`;
     });
 
-    // Fix: Attach click event directly inside module to avoid "Function not found" error
+    // Handle Payment Button
     document.getElementById("payBtn").addEventListener('click', () => {
         const amount = parseFloat(amtInput.value);
         if (!amount || amount < 1) {
@@ -198,17 +205,24 @@
             return;
         }
 
+        const payBtn = document.getElementById("payBtn");
+        payBtn.disabled = true;
+        payBtn.innerText = "Opening Gateway...";
+
         const totalPesewas = Math.round((amount * 1.025) * 100);
 
         const handler = window.PaystackPop.setup({
             key: "pk_live_faecdb3166144fadebd8269829343698dd43de63",
-            email: userObj.email, // Automatically use logged-in email
+            email: userObj.email, // Automatically loads logged-in user email
             amount: totalPesewas,
             currency: "GHS",
-            metadata: { uid: userObj.uid, real_amt: amount },
+            metadata: { 
+                uid: userObj.uid, 
+                real_amt: amount 
+            },
             callback: async (response) => {
-                // SECURITY: Log intent, but don't credit in browser.
-                // Webhook will handle the actual wallet increase.
+                // SECURITY: We only log the intent here.
+                // The wallet is updated by the Cloud Function Webhook for security.
                 await set(ref(db, `pending_deposits/${response.reference}`), {
                     uid: userObj.uid,
                     amount: amount,
@@ -219,7 +233,8 @@
                 document.getElementById("status-modal").style.display = "flex";
             },
             onClose: () => {
-                alert("Payment cancelled");
+                payBtn.disabled = false;
+                payBtn.innerText = "Proceed to Secure Payment";
             }
         });
         handler.openIframe();
