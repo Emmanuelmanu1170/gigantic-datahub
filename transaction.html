@@ -112,11 +112,16 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebas
 import { getDatabase, ref, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
+// COMPLETE CONFIG INTEGRATION
 const firebaseConfig = {
-  apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
-  authDomain: "gigantic-data.firebaseapp.com",
-  databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
-  projectId: "gigantic-data"
+    apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho",
+    authDomain: "gigantic-data.firebaseapp.com",
+    databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
+    projectId: "gigantic-data",
+    storageBucket: "gigantic-data.firebasestorage.app",
+    messagingSenderId: "727845403550",
+    appId: "1:727845403550:web:56d06c9389993153a9748f",
+    measurementId: "G-10F198VFE6"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -125,36 +130,34 @@ const auth = getAuth(app);
 
 let currentUserId = null;
 let masterLogs = [];
+let authWaiting = true; // Guard variable to prevent early redirect
 
 onAuthStateChanged(auth, user => {
+    authWaiting = false; // Auth check complete
     if (user) {
         currentUserId = user.uid;
         loadData(user.uid);
     } else {
-        window.location.href = "login.html";
+        if (!authWaiting) {
+            window.location.href = "login.html";
+        }
     }
 });
 
 function loadData(uid) {
-    // 1. Listen for standard transactions (Purchases & Referral Bonuses)
     const txRef = query(ref(db, 'transactions'), orderByChild('uid'), equalTo(uid));
-    
-    // 2. Listen for Topup Notes (Deposits recorded in your Fund Wallet page)
     const topupRef = ref(db, `topupNotes/${uid}`);
 
     let txData = [], topData = [];
 
-    // Sync from 'transactions' node
     onValue(txRef, (snap) => {
         txData = snap.exists() ? Object.entries(snap.val()).map(([id, v]) => {
-            // Detect if this transaction was an Agent Upgrade
             let isAgent = (parseFloat(v.amount) === 45 && v.type === "Deduct") || v.category === "agent";
             return { id, ...v, ts: v.date || v.timestamp, src: isAgent ? 'agent' : 'purchase' };
         }) : [];
         combineAndRender(txData, topData);
     });
 
-    // Sync from 'topupNotes' node
     onValue(topupRef, (snap) => {
         topData = snap.exists() ? Object.entries(snap.val()).map(([id, v]) => ({ 
             id, ...v, ts: v.timestamp || v.date, src: 'topup' 
@@ -164,7 +167,6 @@ function loadData(uid) {
 }
 
 function combineAndRender(txs, tops) {
-    // Merge both sources and sort by timestamp (newest first)
     masterLogs = [...txs, ...tops].sort((a, b) => (Number(b.ts) || 0) - (Number(a.ts) || 0));
     render(masterLogs);
 }
@@ -172,7 +174,7 @@ function combineAndRender(txs, tops) {
 function render(logs) {
     const listDiv = document.getElementById('historyList');
     const loader = document.getElementById('loader');
-    loader.style.display = 'none';
+    if (loader) loader.style.display = 'none';
     listDiv.innerHTML = "";
 
     if (logs.length === 0) {
@@ -211,18 +213,18 @@ function render(logs) {
         let icon = 'fa-wallet';
         let iconClass = 'icon-topup';
         let title = 'Wallet Deposit';
-        let amountColor = '#3b82f6'; // Info Blue
+        let amountColor = '#3b82f6';
 
         if(isAgent){
             icon = 'fa-user-tie';
             iconClass = 'icon-agent';
             title = 'Agent Upgrade';
-            amountColor = '#a855f7'; // Purple
+            amountColor = '#a855f7';
         } else if(isPurchase){
             icon = isCredit ? 'fa-gift' : 'fa-bolt';
             iconClass = isCredit ? 'icon-bonus' : 'icon-purchase';
             title = isCredit ? 'Referral Bonus' : (log.plan ? log.plan + ' Data' : 'Data Bundle');
-            amountColor = isCredit ? '#10b981' : '#ef4444'; // Success vs Danger
+            amountColor = isCredit ? '#10b981' : '#ef4444';
         }
 
         card.innerHTML = `
