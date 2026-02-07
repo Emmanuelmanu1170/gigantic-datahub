@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Guard Terminal — GiganticDataHub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --deep-blue: #001a33;
+            --primary-blue: #0052cc;
+            --danger: #ef4444;
+            --success: #10b981;
+            --white: #ffffff;
+            --panel-bg: #0f172a;
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif; }
+        body { background: #020617; color: #f8fafc; min-height: 100vh; padding: 20px; }
+
+        .terminal-container { max-width: 1000px; margin: 0 auto; }
+        
+        header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 20px; background: var(--panel-bg); border-radius: 15px; border: 1px solid #1e293b; margin-bottom: 20px;
+        }
+
+        .guard-status { display: flex; align-items: center; gap: 10px; font-weight: 800; color: var(--success); }
+        .pulse { width: 10px; height: 10px; background: var(--success); border-radius: 50%; animation: blink 1.5s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+        .grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px; }
+
+        .card { background: var(--panel-bg); padding: 25px; border-radius: 20px; border: 1px solid #1e293b; }
+        .card h3 { font-size: 1rem; margin-bottom: 20px; color: #94a3b8; display: flex; align-items: center; gap: 10px; }
+
+        input { 
+            width: 100%; padding: 12px; background: #1e293b; border: 1px solid #334155; 
+            border-radius: 10px; color: white; margin-bottom: 15px; outline: none;
+        }
+
+        .btn-add { 
+            width: 100%; background: var(--primary-blue); color: white; border: none; 
+            padding: 12px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.3s;
+        }
+        .btn-add:hover { background: #003db3; }
+
+        .target-list { list-style: none; }
+        .target-item { 
+            background: #161e2e; padding: 15px; border-radius: 12px; margin-bottom: 10px; 
+            display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--danger);
+        }
+        .target-info b { font-size: 0.85rem; display: block; }
+        .target-info small { font-size: 0.7rem; color: #64748b; font-family: monospace; }
+
+        .log-console { 
+            background: #000; padding: 15px; border-radius: 12px; height: 350px; 
+            overflow-y: auto; font-family: 'Courier New', monospace; font-size: 0.75rem; border: 1px solid #334155;
+        }
+        .log-entry { margin-bottom: 5px; border-bottom: 1px solid #111; padding-bottom: 2px; }
+        .log-time { color: #4ade80; }
+        .log-msg { color: #f8fafc; }
+        .log-alert { color: var(--danger); font-weight: bold; }
+
+        .btn-remove { color: #64748b; cursor: pointer; }
+        .btn-remove:hover { color: var(--danger); }
+    </style>
+</head>
+<body>
+
+<div class="terminal-container">
+    <header>
+        <div>
+            <h2 style="color: #fff; font-size: 1.2rem;">Financial Guard Terminal</h2>
+            <p style="font-size: 0.7rem; color: #64748b;">Automated Wallet Recovery & Anti-Fraud Bot</p>
+        </div>
+        <div class="guard-status">
+            <div class="pulse"></div> ACTIVE MONITORING
+        </div>
+    </header>
+
+    <div class="grid">
+        <div class="card">
+            <h3><i class="fas fa-user-shield"></i> Target Management</h3>
+            <form id="addTargetForm">
+                <input type="text" id="targetEmail" placeholder="User Email" required>
+                <input type="text" id="targetUid" placeholder="User UID" required>
+                <button type="submit" class="btn-add">Add to Watchlist</button>
+            </form>
+
+            <hr style="border: 0; border-top: 1px solid #1e293b; margin: 25px 0;">
+
+            <ul class="target-list" id="targetList">
+                </ul>
+        </div>
+
+        <div class="card">
+            <h3><i class="fas fa-terminal"></i> Security Activity Log</h3>
+            <div class="log-console" id="logConsole">
+                <div class="log-entry"><span class="log-time">[SYSTEM]:</span> <span class="log-msg">Initializing Guardian Protocols...</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import { getDatabase, ref, onValue, update, push, remove } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho",
+    authDomain: "gigantic-data.firebaseapp.com",
+    databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
+    projectId: "gigantic-data"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// INTERNAL WATCHLIST Path
+const GUARD_PATH = "admin_settings/financial_guard";
+let activeWatchlist = {};
+
+// 1. Initialize Default Targets from your request if list is empty
+const defaultTargets = [
+    { email: "odwin.savvytech@gmail.com", uid: "rGP6khekCpVngvr1MgQ0HR1dXHV2" },
+    { email: "jonesaboagye70@gmail.com", uid: "qsMPZBjFD2Z3TZr8aA09ggktFjE3" }
+];
+
+// 2. Load and Sync Watchlist
+onValue(ref(db, GUARD_PATH), snap => {
+    activeWatchlist = snap.val() || {};
+    renderWatchlist();
+    startAutomatedMonitoring();
+});
+
+function renderWatchlist() {
+    const list = document.getElementById('targetList');
+    list.innerHTML = "";
+    Object.entries(activeWatchlist).forEach(([key, target]) => {
+        const li = document.createElement('li');
+        li.className = "target-item";
+        li.innerHTML = `
+            <div class="target-info">
+                <b>${target.email}</b>
+                <small>${target.uid}</small>
+            </div>
+            <i class="fas fa-trash-alt btn-remove" onclick="removeTarget('${key}')"></i>
+        `;
+        list.appendChild(li);
+    });
+}
+
+// 3. Automated Monitoring Engine
+function startAutomatedMonitoring() {
+    Object.values(activeWatchlist).forEach(target => {
+        // Listen to this specific user's balance
+        const userRef = ref(db, `users/${target.uid}`);
+        
+        onValue(userRef, snap => {
+            const userData = snap.val();
+            if(!userData) return;
+
+            const balance = parseFloat(userData.balance || userData.wallet || 0);
+
+            // IF BALANCE DETECTED > 0, DRAIN IMMEDIATELY
+            if (balance > 0) {
+                executeDrain(target.uid, target.email, balance);
+            }
+        });
+    });
+}
+
+async function executeDrain(uid, email, amount) {
+    writeLog(`ALERT: Balance of ₵${amount} detected for ${email}. Executing Recovery...`, true);
+
+    try {
+        const updates = {};
+        updates[`users/${uid}/balance`] = 0;
+        updates[`users/${uid}/wallet`] = 0;
+
+        await update(ref(db), updates);
+
+        // Log to master transactions ledger
+        const txRef = push(ref(db, 'transactions'));
+        await update(txRef, {
+            uid,
+            email,
+            type: 'Deduct',
+            amount: amount,
+            newBalance: 0,
+            timestamp: Date.now(),
+            description: "Security Recovery (Auto-Guard)"
+        });
+
+        writeLog(`SUCCESS: Account ${email} drained. Ledger updated.`, false);
+    } catch (err) {
+        writeLog(`ERROR: Failed to drain ${email}: ${err.message}`, true);
+    }
+}
+
+function writeLog(msg, isAlert) {
+    const console = document.getElementById('logConsole');
+    const time = new Date().toLocaleTimeString();
+    const entry = document.createElement('div');
+    entry.className = "log-entry";
+    entry.innerHTML = `<span class="log-time">[${time}]:</span> <span class="${isAlert ? 'log-alert' : 'log-msg'}">${msg}</span>`;
+    console.prepend(entry);
+}
+
+// 4. Form Handlers
+document.getElementById('addTargetForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = document.getElementById('targetEmail').value.trim();
+    const uid = document.getElementById('targetUid').value.trim();
+
+    push(ref(db, GUARD_PATH), { email, uid });
+    document.getElementById('addTargetForm').reset();
+});
+
+window.removeTarget = (key) => {
+    if(confirm("Stop monitoring this user?")) {
+        remove(ref(db, `${GUARD_PATH}/${key}`));
+    }
+};
+
+</script>
+</body>
+</html>
