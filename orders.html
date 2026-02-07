@@ -17,23 +17,21 @@
         .back-btn { background: rgba(255,255,255,0.15); color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 0.8rem; font-weight: 700; }
         .container { padding: 30px 5%; }
         .api-banner { background: #0f172a; color: #4ade80; padding: 10px 5%; font-family: monospace; font-size: 11px; display: flex; justify-content: space-between; align-items: center; }
-        .pulse { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; display: inline-block; margin-right: 5px; animation: blink 1s infinite; }
+        .pulse { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; display: inline-block; margin-right: 5px; animation: blink 1.5s infinite; }
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        
         .table-card { background: white; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; min-width: 1000px; }
         th { background: #f8fafc; color: #64748b; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; padding: 15px; text-align: left; }
         td { padding: 15px; font-size: 0.85rem; border-bottom: 1px solid #f1f5f9; }
+        
         .status-badge { font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; border: 1px solid transparent; }
         .status-Pending { background: #fffbeb; color: #b45309; border-color: #fde68a; }
         .status-Completed { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
         .status-Flagged { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
         .status-Processing { background: #eff6ff; color: #1e40af; border-color: #bfdbfe; }
-        .action-btn { border:none; background:none; cursor:pointer; color:#94a3b8; margin-left: 10px; transition: 0.2s; }
-        .action-btn:hover { color: var(--primary-blue); }
-        .retry-btn { color: var(--warning); font-size: 14px; }
         
         .log-card { background: #1e293b; color: #94a3b8; padding: 20px; border-radius: 15px; font-family: monospace; font-size: 12px; height: 200px; overflow-y: auto; }
-        .log-card h3 { color: white; margin-bottom: 10px; font-size: 14px; }
         .log-entry { border-bottom: 1px solid #334155; padding: 5px 0; }
         .log-err { color: #ef4444; }
     </style>
@@ -41,12 +39,12 @@
 <body>
 
 <div class="api-banner">
-    <div><span class="pulse"></span> GIGANTIC SECURITY & API AUTO-DISPATCH ACTIVE</div>
+    <div><span class="pulse"></span> iDataGH AUTO-FULFILLMENT ENGINE ACTIVE</div>
     <div id="apiClock">00:00:00</div>
 </div>
 
 <header>
-    <h1><i class="fas fa-shield-alt"></i> ORDER COMMAND CENTER</h1>
+    <h1><i class="fas fa-robot"></i> API MASTER CONTROL</h1>
     <a href="admin_dashboard.html" class="back-btn"><i class="fas fa-arrow-left"></i> Dashboard</a>
 </header>
 
@@ -66,17 +64,18 @@
                     </tr>
                 </thead>
                 <tbody id="orderTbody">
-                    <tr><td colspan="7" style="text-align:center; padding:50px;">Initializing Security & Proxy Nodes...</td></tr>
+                    <tr><td colspan="7" style="text-align:center; padding:50px;">Syncing Firebase Data...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
     <div class="log-card" id="logConsole">
-        <h3><i class="fas fa-terminal"></i> Live Security & API Logs</h3>
         <div id="logEntries"></div>
     </div>
 </div>
+
+
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -94,17 +93,17 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-// API CREDENTIALS
+// API CREDENTIALS (Synced with your Checkout Page)
 const API_KEY = "tera_live_1191f4118022d549ec1419d8d6ab249c";
 const API_URL = "https://idatagh.com/wp-json/custom/v1/place-order";
-const PROXY = "https://corsproxy.io/?";
+const PROXY = "https://corsproxy.io/?"; // Critical to stop browser blocks
 
 let allOrders = [];
 let userEmailMap = {};
 
 onAuthStateChanged(auth, user => {
     if(user && user.email === "alenacloft0@gmail.com"){
-        writeLog("Admin Authenticated. Starting Monitor...");
+        writeLog("Master Admin Authenticated. Monitoring for orders...");
         startEngine();
     } else { window.location.href = "login.html"; }
 });
@@ -112,8 +111,7 @@ onAuthStateChanged(auth, user => {
 function writeLog(msg, isError = false) {
     const logDiv = document.getElementById("logEntries");
     const time = new Date().toLocaleTimeString();
-    const entry = `<div class="log-entry ${isError ? 'log-err' : ''}">[${time}] ${msg}</div>`;
-    logDiv.innerHTML = entry + logDiv.innerHTML;
+    logDiv.innerHTML = `<div class="log-entry ${isError ? 'log-err' : ''}">[${time}] ${msg}</div>` + logDiv.innerHTML;
 }
 
 async function startEngine() {
@@ -129,31 +127,38 @@ async function startEngine() {
             Object.entries(orders).forEach(([id, order]) => {
                 const orderObj = { id, uid, ...order, email: userEmailMap[uid] || order.email };
                 allOrders.push(orderObj);
-                if (order.status === "Pending") securityAudit(orderObj);
+                
+                // AUTOMATED FULFILLMENT TRIGGER
+                if (order.status === "Pending") {
+                    securityAudit(orderObj);
+                }
             });
         });
         renderTable();
     });
 }
 
+// SECURITY LAYER (Hacker Defense)
 async function securityAudit(order) {
     try {
-        const historySnap = await get(ref(db, `user_orders/${order.uid}`));
-        const recent = Object.values(historySnap.val() || {}).filter(o => (Date.now() - o.timestamp) < 60000);
+        const userSnap = await get(ref(db, `users/${order.uid}`));
+        const userData = userSnap.val();
         
-        if (recent.length > 2) {
-            handleFlag(order, "Hacker: Velocity Attack (Too many orders)");
+        // 1. Check for Negative Balance Exploit
+        const balance = parseFloat(userData.wallet || userData.balance || 0);
+        if (balance < 0) {
+            handleFlag(order, "Security Alert: Negative Balance Bypass");
             return;
         }
 
-        const userSnap = await get(ref(db, `users/${order.uid}`));
-        const userData = userSnap.val();
-        if (parseFloat(userData.wallet || userData.balance || 0) < 0) {
-            handleFlag(order, "Hacker: Negative Balance Exploit");
+        // 2. Velocity Check (Spam Prevention)
+        const historySnap = await get(ref(db, `user_orders/${order.uid}`));
+        const recent = Object.values(historySnap.val() || {}).filter(o => (Date.now() - o.timestamp) < 60000);
+        if (recent.length > 2) {
+            handleFlag(order, "Security Alert: Velocity Attack");
             return;
         }
-        
-        writeLog(`Audit Passed for #${order.id.slice(-6)}. Sending to API...`);
+
         fulfillOrder(order);
     } catch (e) { writeLog("Audit Error: " + e.message, true); }
 }
@@ -167,41 +172,46 @@ async function handleFlag(order, reason) {
     push(ref(db, "admin_settings/financial_guard"), { email: order.email, uid: order.uid, reason: reason, date: Date.now() });
 }
 
+// FULFILLMENT ENGINE (Matching Checkout Route)
 async function fulfillOrder(order) {
+    // Lock order
     await update(ref(db, `user_orders/${order.uid}/${order.id}`), { status: "Processing" });
+    writeLog(`Fulfilling #${order.id.slice(-6)} via API...`);
 
-    let net = order.network.toLowerCase();
-    if (net.includes("mtn")) net = "mtn";
-    else if (net.includes("at") || net.includes("airtel")) net = "at";
-    else if (net.includes("telecel") || net.includes("vod")) net = "telecel";
-
-    const planID = parseInt(order.plan.replace(/[^0-9]/g, '')) || 5;
+    // Format Network (Matching Checkout Logic)
+    let networkID = order.network.toLowerCase();
+    if (networkID.includes("airtel") || networkID.includes("at")) networkID = "at";
+    else if (networkID.includes("telecel") || networkID.includes("vod")) networkID = "telecel";
+    else networkID = "mtn";
 
     const payload = {
-        "network": net,
+        "network": networkID,
         "beneficiary": order.recipient.toString().trim(),
-        "pa_data-bundle-packages": planID
+        "pa_data-bundle-packages": order.plan // Passing the exact Plan string/ID from your checkout
     };
 
     try {
         const response = await fetch(PROXY + encodeURIComponent(API_URL), {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
+            headers: { 
+                'Authorization': `Bearer ${API_KEY}`,
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify(payload)
         });
 
         const result = await response.json();
 
         if (result.status === "success" || response.ok) {
-            writeLog(`SUCCESS: Order #${order.id.slice(-6)} completed by API.`);
+            writeLog(`SUCCESS: #${order.id.slice(-6)} delivered.`);
             updateStatus(order, "Completed");
         } else {
-            writeLog(`REJECTED: API says "${result.message || 'Unknown Error'}"`, true);
-            updateStatus(order, "Failed: " + (result.message || "Provider Rejected"));
+            writeLog(`API REJECTED: ${result.message || 'Unknown Error'}`, true);
+            updateStatus(order, "Failed: " + (result.message || "Error"));
         }
     } catch (err) {
-        writeLog(`PROXY ERROR: Check Internet or Proxy URL`, true);
-        updateStatus(order, "Proxy/Network Error");
+        writeLog(`PROXY/NETWORK ERROR. Order #${order.id.slice(-6)} set back to Pending.`, true);
+        updateStatus(order, "Pending");
     }
 }
 
@@ -217,29 +227,20 @@ function renderTable() {
     tbody.innerHTML = "";
     allOrders.sort((a,b) => b.timestamp - a.timestamp).forEach(o => {
         const tr = document.createElement("tr");
-        const statusClass = o.status.replace(" ", "-");
+        const sClass = o.status.replace(" ", "-");
         tr.innerHTML = `
             <td><b>#${o.id.slice(-6)}</b><br><small>${new Date(o.timestamp).toLocaleString()}</small></td>
             <td><b>${o.network.toUpperCase()}</b><br><span>${o.plan}</span></td>
             <td>₵${parseFloat(o.amount).toFixed(2)}</td>
             <td>${o.recipient}</td>
             <td style="font-size:11px; font-weight:700;">${o.email}</td>
-            <td><span class="status-badge status-${statusClass}">${o.status}</span></td>
+            <td><span class="status-badge status-${sClass}">${o.status}</span></td>
             <td style="text-align:right">
-                ${o.status.includes('Failed') ? `<button class="action-btn retry-btn" title="Retry API" onclick="manualRetry('${o.id}')"><i class="fas fa-redo"></i></button>` : ''}
-                <button class="action-btn" onclick="delRec('${o.id}','${o.uid}')"><i class="fas fa-trash"></i></button>
+                <button onclick="delRec('${o.id}','${o.uid}')" style="border:none; background:none; cursor:pointer; color:#94a3b8;"><i class="fas fa-trash"></i></button>
             </td>
         `;
         tbody.appendChild(tr);
     });
-}
-
-window.manualRetry = function(orderId) {
-    const order = allOrders.find(o => o.id === orderId);
-    if(order) {
-        writeLog(`Manual Retry Initiated for #${orderId.slice(-6)}`);
-        securityAudit(order);
-    }
 }
 
 window.delRec = (id, uid) => {
