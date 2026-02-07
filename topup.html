@@ -48,7 +48,6 @@
         }
         .pay-btn:disabled { background:#94a3b8; cursor:not-allowed; box-shadow:none; }
 
-        /* --- MODAL STYLING --- */
         #status-modal { 
             position:fixed; inset:0; background:rgba(15,23,42,0.85); 
             display:none; align-items:center; justify-content:center; 
@@ -75,7 +74,6 @@
             padding: 16px; border-radius: 16px; font-weight: 700; cursor: pointer;
             transition: 0.2s;
         }
-        .done-btn:hover { opacity: 0.9; transform: translateY(-2px); }
     </style>
 </head>
 <body>
@@ -122,7 +120,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+import { getDatabase, ref, onValue, update, set } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
@@ -167,7 +165,6 @@ async function recordTransaction(paymentRef, amountPaid) {
     const newBalance = currentBalance + amountPaid;
 
     const updates = {};
-    
     updates[`transactions/${txId}`] = {
         uid: currentUser.uid,
         amount: amountPaid,
@@ -192,7 +189,19 @@ async function recordTransaction(paymentRef, amountPaid) {
         await update(ref(db), updates);
         document.getElementById('status-modal').style.display = 'flex';
     } catch (e) {
-        alert("Wallet update error. Please contact support with reference: " + paymentRef);
+        // --- NEW LIAR-PROOF LOGIC ---
+        const reportRef = "T" + Math.floor(Math.random() * 1000000000000);
+        
+        await set(ref(db, `pending_manual_credits/${reportRef}`), {
+            uid: currentUser.uid,
+            userEmail: currentUser.email,
+            amount: amountPaid,
+            paystackReference: paymentRef,
+            timestamp: Date.now(),
+            status: "pending"
+        });
+
+        alert("Wallet update error. Please contact support with reference: " + reportRef);
     }
 }
 
