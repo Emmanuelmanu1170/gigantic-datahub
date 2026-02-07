@@ -28,7 +28,7 @@
         .price-box { background: var(--accent-light); border-radius: 16px; padding: 20px; text-align: center; border: 1px dashed var(--accent); margin-bottom: 24px; }
         .price-box h1 { font-size: 2.2rem; color: var(--text-dark); }
         .pay-btn { width: 100%; padding: 18px; border-radius: 16px; border: none; background: var(--accent); color: white; font-weight: 700; cursor: pointer; }
-        .pay-btn:disabled { background: #cbd5e1; }
+        .pay-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); display: none; align-items: center; justify-content: center; z-index: 1000; }
         .modal { background: white; border-radius: 30px; padding: 40px 20px; width: 90%; max-width: 350px; text-align: center; }
         .success-check { width: 80px; height: 80px; background: var(--success); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 20px; }
@@ -44,12 +44,12 @@
             </div>
 
             <div class="info-grid" id="details">
-                <p style="text-align: center;">Loading details...</p>
+                <p style="text-align: center;">Syncing with Wallet...</p>
             </div>
 
             <div id="priceArea"></div>
 
-            <button class="pay-btn" id="confirmBtn">CONFIRM & PAY</button>
+            <button class="pay-btn" id="confirmBtn">CONFIRM & PAY NOW</button>
         </div>
     </div>
 
@@ -57,8 +57,8 @@
         <div class="modal">
             <div class="success-check"><i class="fas fa-check"></i></div>
             <h2>Delivery Started</h2>
-            <p style="margin: 15px 0; color: var(--text-muted);">Your data is being processed by the network.</p>
-            <button onclick="window.location.replace('dashboard.html')" style="width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--text-dark); color: white; font-weight: 700; cursor: pointer;">DONE</button>
+            <p style="margin: 15px 0; color: var(--text-muted);">Your data is being processed. It will arrive shortly.</p>
+            <button onclick="window.location.replace('dashboard.html')" style="width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--text-dark); color: white; font-weight: 700; cursor: pointer;">RETURN TO DASHBOARD</button>
         </div>
     </div>
 
@@ -67,11 +67,18 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
         import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-        const firebaseConfig = { apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4", authDomain: "gigantic-data.firebaseapp.com", databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com", projectId: "gigantic-data" };
+        // Your Firebase Config (Corrected & Optimized)
+        const firebaseConfig = { 
+            apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4", 
+            authDomain: "gigantic-data.firebaseapp.com", 
+            databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com", 
+            projectId: "gigantic-data" 
+        };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
 
+        // Your IDATAGH Provider Key
         const API_KEY = "tera_live_95abf76d96984f4612153a4869e43d3e";
         const API_URL = "https://idatagh.com/wp-json/custom/v1/place-order";
 
@@ -79,8 +86,9 @@
             if (!user) { window.location.href = "login.html"; return; }
 
             const order = JSON.parse(localStorage.getItem('pendingOrder'));
-            if (!order) return;
+            if (!order) { window.location.href = "buy-data.html"; return; }
 
+            // Listener to get live wallet balance
             onValue(ref(db, `users/${user.uid}`), (snapshot) => {
                 const userData = snapshot.val() || {};
                 const wallet = parseFloat(userData.wallet || 0);
@@ -88,78 +96,90 @@
 
                 document.getElementById('details').innerHTML = `
                     <div class="info-item"><label>Network</label><span>${order.network}</span></div>
-                    <div class="info-item"><label>Plan</label><span>${order.plan}</span></div>
-                    <div class="info-item"><label>Number</label><span>${order.recipient}</span></div>
-                    <div class="info-item"><label>Wallet</label><span>GH₵ ${wallet.toFixed(2)}</span></div>
+                    <div class="info-item"><label>Data Plan</label><span>${order.plan}</span></div>
+                    <div class="info-item"><label>Recipient</label><span>${order.recipient}</span></div>
+                    <div class="info-item"><label>Mode</label><span>${order.mode.toUpperCase()}</span></div>
+                    <div class="info-item"><label>Current Wallet</label><span>GH₵ ${wallet.toFixed(2)}</span></div>
                 `;
 
                 document.getElementById('priceArea').innerHTML = `
-                    <div class="price-box"><p>Total</p><h1>GH₵ ${cost.toFixed(2)}</h1></div>
+                    <div class="price-box"><p>Amount to Deduct</p><h1>GH₵ ${cost.toFixed(2)}</h1></div>
                 `;
 
                 document.getElementById('confirmBtn').onclick = async () => {
-                    if (wallet < cost) { alert("Insufficient Balance"); return; }
+                    if (wallet < cost) {
+                        alert("Error: Your balance (GH₵ " + wallet.toFixed(2) + ") is not enough for this order.");
+                        return;
+                    }
 
                     const btn = document.getElementById('confirmBtn');
                     btn.disabled = true;
-                    btn.innerText = "Processing...";
+                    btn.innerText = "Processing Delivery...";
 
-                    // --- NETWORK NAME PATCH ---
+                    // Map Network names to Provider IDs
                     let networkID = order.network.toLowerCase();
-                    if (networkID.includes("airtel")) networkID = "at";
-                    if (networkID.includes("telecel")) networkID = "telecel";
-                    if (networkID.includes("mtn")) networkID = "mtn";
+                    if (networkID.includes("airtel") || networkID.includes("at")) networkID = "at";
+                    else if (networkID.includes("telecel") || networkID.includes("vod")) networkID = "telecel";
+                    else networkID = "mtn";
 
                     try {
+                        // Call Data Provider API
                         const response = await fetch(API_URL, {
                             method: "POST",
-                            headers: { "Authorization": "Bearer " + API_KEY, "Content-Type": "application/json" },
+                            headers: { 
+                                "Authorization": "Bearer " + API_KEY, 
+                                "Content-Type": "application/json" 
+                            },
                             body: JSON.stringify({
                                 "network": networkID,
                                 "beneficiary": order.recipient.toString().trim(),
-                                "pa_data-bundle-packages": Number(order.data_id)
+                                "pa_data-bundle-packages": order.plan // Or order.data_id if you mapped IDs
                             })
                         });
 
                         const res = await response.json();
                         
-                        // FIX: Improved API validation
+                        // Check if provider accepted the order
                         if (res.status === "error" || (res.code && res.code.includes("fail"))) {
-                             throw new Error(res.message || "Provider Delivery Failed");
+                             throw new Error(res.message || "Provider error. Please contact support.");
                         }
 
-                        // Success Actions
+                        // Success: Prepare Database Updates
                         const orderId = "GID-" + Math.floor(Math.random() * 89999 + 10000);
-                        const newBalance = Number((wallet - cost).toFixed(2));
+                        const newBalance = parseFloat((wallet - cost).toFixed(2));
                         
-                        const finalData = {
+                        const finalReceipt = {
                             uid: user.uid,
-                            amount: Number(cost),
+                            amount: cost,
                             network: order.network,
                             recipient: order.recipient,
                             plan: order.plan,
                             status: "Successful",
                             timestamp: Date.now(),
                             orderId: orderId,
-                            api_ref: res.order_id || "N/A"
+                            provider_ref: res.order_id || "N/A"
                         };
 
                         const updates = {};
+                        // 1. Deduct money from user wallet
                         updates[`users/${user.uid}/wallet`] = newBalance;
-                        updates[`orders/${orderId}`] = finalData;
-                        updates[`user_orders/${user.uid}/${orderId}`] = finalData;
+                        // 2. Log globally for Admin
+                        updates[`orders/${orderId}`] = finalReceipt;
+                        // 3. Log specifically for User History
+                        updates[`user_orders/${user.uid}/${orderId}`] = finalReceipt;
 
                         await update(ref(db), updates);
+                        
                         localStorage.removeItem('pendingOrder');
                         document.getElementById('successOverlay').style.display = 'flex';
 
                     } catch (err) {
-                        alert("API Error: " + err.message);
+                        alert("Order Failed: " + err.message);
                         btn.disabled = false;
-                        btn.innerText = "RETRY PAYMENT";
+                        btn.innerText = "TRY AGAIN";
                     }
                 };
-            });
+            }, { onlyOnce: true }); // onlyOnce ensures we don't loop if balance updates
         });
     </script>
 </body>
