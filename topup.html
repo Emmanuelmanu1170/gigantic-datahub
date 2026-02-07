@@ -8,27 +8,27 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --primary: #2563eb;
-            --gradient: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            --primary: #1e40af;
+            --gradient: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
             --white: #ffffff;
-            --text-slate: #64748b;
+            --bg: #f8fafc;
         }
-        
-        * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        
+
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif; }
+
         body { 
-            background: #f1f5f9; 
+            background: var(--bg); 
             display: flex; 
             justify-content: center; 
             align-items: center; 
             height: 100vh; 
-            color: #1e293b;
+            color: #0f172a;
         }
 
-        .container {
+        .card {
             background: var(--white);
             padding: 30px;
-            border-radius: 20px;
+            border-radius: 24px;
             width: 100%;
             max-width: 400px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
@@ -40,24 +40,27 @@
             margin-bottom: 25px;
             color: #1e3a8a;
             font-weight: 800;
+            letter-spacing: -0.5px;
         }
 
         .balance-preview {
             background: var(--gradient);
             color: white;
             padding: 20px;
-            border-radius: 15px;
+            border-radius: 18px;
             text-align: center;
             margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2);
         }
 
-        label {
+        .label {
             display: block;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 700;
             margin-bottom: 8px;
-            color: var(--text-slate);
+            color: #64748b;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .input-group {
@@ -68,8 +71,8 @@
         input {
             width: 100%;
             padding: 15px;
-            background: #f8fafc;
-            border: 2px solid #e2e8f0;
+            background: #f1f5f9;
+            border: 2px solid transparent;
             border-radius: 12px;
             font-size: 1rem;
             outline: none;
@@ -79,15 +82,15 @@
         }
 
         input:focus {
-            border-color: var(--primary);
+            border-color: #3b82f6;
             background: white;
         }
 
-        .fee-box {
+        .fee-container {
             background: #f8fafc;
             border-radius: 12px;
             padding: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             border: 1px dashed #cbd5e1;
         }
 
@@ -95,8 +98,8 @@
             display: flex;
             justify-content: space-between;
             font-size: 0.9rem;
-            margin-bottom: 5px;
-            color: var(--text-slate);
+            margin-bottom: 6px;
+            color: #475569;
         }
 
         .total-row {
@@ -107,11 +110,12 @@
             border-top: 1px solid #e2e8f0;
             margin-top: 10px;
             padding-top: 10px;
+            font-size: 1rem;
         }
 
         button {
             width: 100%;
-            padding: 18px;
+            padding: 16px;
             background: var(--gradient);
             color: white;
             border: none;
@@ -120,7 +124,6 @@
             font-size: 1rem;
             cursor: pointer;
             transition: 0.3s;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
         }
 
         button:hover {
@@ -134,58 +137,59 @@
             transform: none;
         }
 
-        #status-modal {
+        #modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(15, 23, 42, 0.8);
+            background: rgba(15, 23, 42, 0.85);
             display: none;
             align-items: center;
             justify-content: center;
             z-index: 1000;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(8px);
         }
 
-        .modal-content {
+        .modal {
             background: white;
-            padding: 35px;
-            border-radius: 25px;
+            padding: 40px 30px;
+            border-radius: 28px;
             text-align: center;
-            max-width: 320px;
+            max-width: 340px;
+            width: 90%;
         }
     </style>
 </head>
 
 <body>
 
-<div id="status-modal">
-    <div class="modal-content">
-        <i class="fas fa-check-circle" style="font-size: 50px; color: #10b981; margin-bottom: 20px;"></i>
-        <h3 style="margin-bottom: 10px;">Payment Processed</h3>
-        <p style="font-size: 0.9rem; color: var(--text-slate); margin-bottom: 25px;">Your wallet will update automatically once verified by our secure server.</p>
-        <button onclick="window.location.href='dashboard.html'" style="background: #0f172a;">Return Home</button>
+<div id="modal-overlay">
+    <div class="modal">
+        <i class="fas fa-check-circle" style="font-size: 55px; color: #10b981; margin-bottom: 20px;"></i>
+        <h3 style="margin-bottom: 12px; color: #0f172a;">Payment Verified</h3>
+        <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 25px; line-height: 1.5;">Your request has been received. Your wallet will update automatically once confirmed by the server.</p>
+        <button onclick="window.location.href='dashboard.html'" style="background: #0f172a;">Return to Dashboard</button>
     </div>
 </div>
 
-<div class="container">
+<div class="card">
     <h2>Fund Wallet</h2>
 
     <div class="balance-preview">
-        <p style="font-size: 0.75rem; opacity: 0.8; font-weight: 600; margin-bottom: 5px;">CURRENT BALANCE</p>
+        <p style="font-size: 0.7rem; opacity: 0.8; font-weight: 700; margin-bottom: 4px; letter-spacing: 0.5px;">AVAILABLE BALANCE</p>
         <h1 id="wallDisplay">₵ 0.00</h1>
     </div>
 
-    <label>Amount (GHS)</label>
     <div class="input-group">
-        <input type="number" id="amtInput" placeholder="0.00" oninput="calculateFee()">
+        <span class="label">Top-up Amount (GHS)</span>
+        <input type="number" id="amtInput" placeholder="0.00" oninput="updateCalculations()">
     </div>
 
-    <div class="fee-box">
+    <div class="fee-container">
         <div class="fee-row"><span>Subtotal</span> <span id="fAmt">₵ 0.00</span></div>
-        <div class="fee-row"><span>Paystack Fee (2.5%)</span> <span id="fFee">₵ 0.00</span></div>
+        <div class="fee-row"><span>Service Fee (2.5%)</span> <span id="fFee">₵ 0.00</span></div>
         <div class="total-row"><span>Total Payable</span> <span id="fTotal">₵ 0.00</span></div>
     </div>
 
-    <button id="payBtn" onclick="payWithPaystack()" disabled>Initiate Secure Top-up</button>
+    <button id="payBtn" onclick="payWithPaystack()" disabled>Proceed to Payment</button>
 </div>
 
 <script type="module">
@@ -204,64 +208,66 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    let userObj = null;
+    let loggedInUser = null;
 
     onAuthStateChanged(auth, user => {
         if (!user) {
             window.location.href = "login.html";
             return;
         }
-        userObj = user;
+        loggedInUser = user;
         
-        // Sync real-time wallet balance
-        onValue(ref(db, `users/${user.uid}/wallet`), (s) => {
-            document.getElementById("wallDisplay").innerText = "₵ " + Number(s.val() || 0).toFixed(2);
+        // Sync wallet from Firebase
+        onValue(ref(db, `users/${user.uid}/wallet`), (snapshot) => {
+            const balance = snapshot.val() || 0;
+            document.getElementById("wallDisplay").innerText = "₵ " + parseFloat(balance).toFixed(2);
         });
 
         document.getElementById("payBtn").disabled = false;
     });
 
-    window.calculateFee = () => {
-        const v = parseFloat(document.getElementById("amtInput").value) || 0;
-        const fee = v * 0.025; // 2.5%
-        document.getElementById("fAmt").innerText = `₵ ${v.toFixed(2)}`;
+    window.updateCalculations = () => {
+        const val = parseFloat(document.getElementById("amtInput").value) || 0;
+        const fee = val * 0.025; // 2.5% fee
+        document.getElementById("fAmt").innerText = `₵ ${val.toFixed(2)}`;
         document.getElementById("fFee").innerText = `₵ ${fee.toFixed(2)}`;
-        document.getElementById("fTotal").innerText = `₵ ${(v + fee).toFixed(2)}`;
+        document.getElementById("fTotal").innerText = `₵ ${(val + fee).toFixed(2)}`;
     };
 
     window.payWithPaystack = () => {
-        const amt = parseFloat(document.getElementById("amtInput").value);
-        if (!amt || amt < 1) return alert("Please enter a valid amount");
+        const amount = parseFloat(document.getElementById("amtInput").value);
+        if (!amount || amount < 1) return alert("Please enter a valid amount");
 
-        const payBtn = document.getElementById("payBtn");
-        payBtn.disabled = true;
-        payBtn.innerText = "Connecting...";
+        const btn = document.getElementById("payBtn");
+        btn.disabled = true;
+        btn.innerText = "Connecting...";
+
+        const totalPesewas = Math.round((amount * 1.025) * 100);
 
         const handler = PaystackPop.setup({
             key: "pk_live_faecdb3166144fadebd8269829343698dd43de63",
-            email: userObj.email,
-            amount: Math.round((amt * 1.025) * 100), // Total amount in pesewas
+            email: loggedInUser.email,
+            amount: totalPesewas,
             currency: "GHS",
             metadata: {
-                uid: userObj.uid,
-                real_amt: amt
+                uid: loggedInUser.uid,
+                requested_amount: amount
             },
-            callback: async (res) => {
-                // Record the intent/reference in Firebase.
-                // WE DO NOT CREDIT THE USER HERE. 
-                // The wallet is updated by the Firebase Cloud Function Webhook for security.
-                await set(ref(db, `pending_topups/${res.reference}`), {
-                    uid: userObj.uid,
-                    amount: amt,
-                    status: "waiting_for_webhook",
-                    time: Date.now()
+            callback: async (response) => {
+                // IMPORTANT: We only log the intention here.
+                // Your Firebase Cloud Function (Webhook) is what actually credits the wallet.
+                await set(ref(db, `pending_deposits/${response.reference}`), {
+                    uid: loggedInUser.uid,
+                    amount: amount,
+                    status: "waiting_for_confirmation",
+                    timestamp: Date.now()
                 });
 
-                document.getElementById("status-modal").style.display = "flex";
+                document.getElementById("modal-overlay").style.display = "flex";
             },
             onClose: () => {
-                payBtn.disabled = false;
-                payBtn.innerText = "Initiate Secure Top-up";
+                btn.disabled = false;
+                btn.innerText = "Proceed to Payment";
             }
         });
         handler.openIframe();
