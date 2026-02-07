@@ -62,12 +62,14 @@
         </div>
     </div>
 
+    
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-        import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+        import { getDatabase, ref, onValue, update, push } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-        // COMPLETE CONFIG INTEGRATION
+        // CONFIG INTEGRATION
         const firebaseConfig = { 
             apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho", 
             authDomain: "gigantic-data.firebaseapp.com", 
@@ -83,29 +85,22 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // API Configuration
         const API_KEY = "tera_live_95abf76d96984f4612153a4869e43d3e";
         const API_URL = "https://idatagh.com/wp-json/custom/v1/place-order";
 
-        let authProcessed = false; // Prevents premature redirect
+        let authProcessed = false;
 
         onAuthStateChanged(auth, (user) => {
             authProcessed = true;
-            if (!user) { 
-                window.location.href = "login.html"; 
-                return; 
-            }
+            if (!user) { window.location.href = "login.html"; return; }
 
             const order = JSON.parse(localStorage.getItem('pendingOrder'));
-            if (!order) { 
-                window.location.href = "order.html"; 
-                return; 
-            }
+            if (!order) { window.location.href = "order.html"; return; }
 
-            // Wallet Listener
+            // UNIFIED PATH: Listening to 'balance'
             onValue(ref(db, `users/${user.uid}`), (snapshot) => {
                 const userData = snapshot.val() || {};
-                const wallet = parseFloat(userData.wallet || userData.balance || 0);
+                const wallet = parseFloat(userData.balance || userData.wallet || 0);
                 const cost = parseFloat(order.amount);
 
                 document.getElementById('details').innerHTML = `
@@ -113,7 +108,7 @@
                     <div class="info-item"><label>Data Plan</label><span>${order.plan}</span></div>
                     <div class="info-item"><label>Recipient</label><span>${order.recipient}</span></div>
                     <div class="info-item"><label>Mode</label><span>${order.mode.toUpperCase()}</span></div>
-                    <div class="info-item"><label>Current Wallet</label><span>GH₵ ${wallet.toFixed(2)}</span></div>
+                    <div class="info-item"><label>Current Balance</label><span>GH₵ ${wallet.toFixed(2)}</span></div>
                 `;
 
                 document.getElementById('priceArea').innerHTML = `
@@ -170,11 +165,23 @@
                             provider_ref: res.order_id || "N/A"
                         };
 
+                        // Atomic Transaction Log for Ledger
+                        const txKey = push(ref(db, 'transactions')).key;
+                        const txLog = {
+                            uid: user.uid,
+                            amount: cost,
+                            type: "Debit",
+                            description: `Data Purchase (${order.plan})`,
+                            timestamp: Date.now(),
+                            newBalance: newBalance
+                        };
+
                         const updates = {};
-                        updates[`users/${user.uid}/wallet`] = newBalance;
                         updates[`users/${user.uid}/balance`] = newBalance;
+                        updates[`users/${user.uid}/wallet`] = newBalance; // Safety sync
                         updates[`orders/${orderId}`] = finalReceipt;
                         updates[`user_orders/${user.uid}/${orderId}`] = finalReceipt;
+                        updates[`transactions/${txKey}`] = txLog;
 
                         await update(ref(db), updates);
                         
@@ -190,7 +197,6 @@
             }, { onlyOnce: true });
         });
 
-        // Safety fallback: Redirect after 5 seconds if auth never responds
         setTimeout(() => {
             if (!authProcessed && !auth.currentUser) {
                 window.location.href = "login.html";
