@@ -3,126 +3,217 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Confirm Order - Gigantic Data Hub</title>
+    <title>Secure Checkout - Gigantic Data Hub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #6a5af9; --deep: #0a2a66; --bg: #f4f7ff; --card: #ffffff; --text: #0a2a66; --border: #f1f5f9; }
-        * { margin:0; padding:0; box-sizing:border-box; font-family:"Poppins", sans-serif; transition: background 0.3s, color 0.3s; }
-        body { background: var(--bg); color: var(--text); padding: 20px; display: flex; justify-content: center; }
-        .card { background: var(--card); width: 100%; max-width: 400px; border-radius: 20px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid var(--border); }
-        .summary-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
-        .summary-item span:last-child { font-weight: 700; color: var(--deep); }
-        .price-focus { background: rgba(106, 90, 249, 0.05); border: 2px dashed var(--primary); border-radius: 15px; padding: 20px; text-align: center; margin: 20px 0; }
-        .price-focus h2 { font-size: 2rem; color: #ff4500; }
-        .pay-btn { background: var(--primary); color: #fff; border: none; width: 100%; padding: 18px; border-radius: 15px; font-weight: 700; font-size: 1.1rem; cursor: pointer; width: 100%; }
-        .pay-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        :root {
+            --accent: #6a5af9;
+            --accent-light: #f5f3ff;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --bg: #f8fafc;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+        body { background-color: var(--bg); color: var(--text-dark); display: flex; justify-content: center; min-height: 100vh; padding: 20px; }
+
+        .checkout-container { width: 100%; max-width: 450px; }
+        
+        .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; }
+        .back-btn { color: var(--text-dark); text-decoration: none; font-size: 1.2rem; }
+
+        .order-card {
+            background: #ffffff; border-radius: 24px; padding: 24px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        .receipt-header { text-align: center; margin-bottom: 20px; }
+        .receipt-header i { font-size: 40px; color: var(--accent); margin-bottom: 10px; }
+        .receipt-header h2 { font-size: 1.25rem; font-weight: 700; }
+
+        .info-grid { display: grid; gap: 16px; margin-bottom: 24px; }
+        .info-item { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid #f1f5f9; }
+        .info-item:last-child { border-bottom: none; }
+        .info-item label { color: var(--text-muted); font-size: 0.85rem; font-weight: 500; }
+        .info-item span { font-weight: 600; font-size: 0.95rem; }
+
+        .price-box {
+            background: var(--accent-light); border-radius: 16px; padding: 20px;
+            text-align: center; border: 1px dashed var(--accent); margin-bottom: 24px;
+        }
+        .price-box p { font-size: 0.75rem; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .price-box h1 { font-size: 2.2rem; color: var(--text-dark); margin-top: 5px; }
+
+        .status-badge {
+            display: flex; align-items: center; gap: 8px; font-size: 0.8rem;
+            padding: 8px 12px; border-radius: 20px; background: #f1f5f9; width: fit-content; margin: 0 auto 20px;
+        }
+
+        .pay-btn {
+            width: 100%; padding: 18px; border-radius: 16px; border: none;
+            background: var(--accent); color: white; font-size: 1rem; font-weight: 700;
+            cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .pay-btn:active { transform: scale(0.98); }
+        .pay-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+        .loader { width: 18px; height: 18px; border: 3px solid #ffffff60; border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Success Overlay */
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 1000; }
+        .modal { background: white; border-radius: 30px; padding: 40px 20px; width: 100%; max-width: 350px; text-align: center; }
+        .success-check { width: 80px; height: 80px; background: var(--success); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 20px; }
     </style>
 </head>
 <body>
 
-<div class="card" id="renderArea">
-    <p style="text-align:center; padding:20px;">Synchronizing...</p>
-</div>
+    <div class="checkout-container">
+        <header class="header">
+            <a href="order.html" class="back-btn"><i class="fas fa-chevron-left"></i></a>
+            <h3 style="font-size: 1rem;">Confirm Transaction</h3>
+            <div style="width: 24px;"></div>
+        </header>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-    import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+        <div class="order-card">
+            <div class="receipt-header">
+                <i class="fas fa-shield-check"></i>
+                <h2>Review Order</h2>
+            </div>
 
-    const firebaseConfig = { apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4", authDomain: "gigantic-data.firebaseapp.com", databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com", projectId: "gigantic-data" };
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
+            <div class="status-badge">
+                <i class="fas fa-lock" style="color: var(--success)"></i> Secure 256-bit Encryption
+            </div>
 
-    const API_KEY = "tera_live_95abf76d96984f4612153a4869e43d3e";
-    const API_URL = "https://idatagh.com/wp-json/custom/v1/place-order";
+            <div class="info-grid" id="details">
+                <p style="text-align: center; color: var(--text-muted);">Fetching details...</p>
+            </div>
 
-    onAuthStateChanged(auth, (user) => {
-        if (!user) { window.location.href = "login.html"; return; }
-        const order = JSON.parse(localStorage.getItem('pendingOrder'));
-        if (!order) return;
+            <div class="price-focus" id="priceArea"></div>
 
-        onValue(ref(db, `users/${user.uid}`), (snapshot) => {
-            const data = snapshot.val() || {};
-            const wallet = parseFloat(data.wallet || 0);
-            const cost = parseFloat(order.amount);
+            <button class="pay-btn" id="confirmBtn">
+                <span class="loader" id="btnLoader"></span>
+                <span id="btnText">PAY & DELIVER NOW</span>
+            </button>
+        </div>
+    </div>
 
-            document.getElementById('renderArea').innerHTML = `
-                <div class="summary-item"><span>Network</span><span>${order.network}</span></div>
-                <div class="summary-item"><span>Plan</span><span>${order.plan}</span></div>
-                <div class="summary-item"><span>Recipient</span><span>${order.recipient}</span></div>
-                <div class="summary-item"><span>Balance</span><span>GH₵ ${wallet.toFixed(2)}</span></div>
-                <div class="price-focus"><h2>GH₵ ${cost.toFixed(2)}</h2></div>
-                <button class="pay-btn" id="payBtn">AUTHORIZE & PAY</button>
-            `;
+    <div class="overlay" id="successOverlay">
+        <div class="modal">
+            <div class="success-check"><i class="fas fa-check"></i></div>
+            <h2 style="margin-bottom: 10px;">Success!</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 25px;">Your data bundle has been processed and sent successfully.</p>
+            <button onclick="window.location.replace('dashboard.html')" style="width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--text-dark); color: white; font-weight: 700; cursor: pointer;">RETURN HOME</button>
+        </div>
+    </div>
 
-            document.getElementById('payBtn').onclick = async () => {
-                if (wallet < cost) { alert("Insufficient Balance!"); return; }
-                
-                const btn = document.getElementById('payBtn');
-                btn.innerText = "Processing...";
-                btn.disabled = true;
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+        import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-                try {
-                    // 1. API CALL
-                    const response = await fetch(API_URL, {
-                        method: "POST",
-                        headers: { 
-                            "Authorization": "Bearer " + API_KEY, 
-                            "Content-Type": "application/json" 
-                        },
-                        body: JSON.stringify({
-                            "network": order.network.toLowerCase(),
-                            "beneficiary": order.recipient.toString(), 
-                            "pa_data-bundle-packages": Number(order.data_id)
-                        })
-                    });
+        const firebaseConfig = { apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4", authDomain: "gigantic-data.firebaseapp.com", databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com", projectId: "gigantic-data" };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
 
-                    const res = await response.json();
-                    if (res.status === "error") throw new Error(res.message);
+        const API_KEY = "tera_live_95abf76d96984f4612153a4869e43d3e";
+        const API_URL = "https://idatagh.com/wp-json/custom/v1/place-order";
 
-                    // 2. FIREBASE UPDATE (Optimized for your Rules)
-                    const orderId = "ORD-" + Math.floor(Math.random() * 1000000);
-                    const newBalance = Number((wallet - cost).toFixed(2)); // MUST be a Number for rules
-                    const timestamp = Date.now(); // Required by your rules
+        onAuthStateChanged(auth, (user) => {
+            if (!user) { window.location.href = "login.html"; return; }
 
-                    // Prepare object with ALL required rule fields
-                    const finalOrderData = {
-                        uid: user.uid,              // Required
-                        amount: Number(cost),       // Required
-                        network: order.network,     // Required
-                        recipient: order.recipient, // Required
-                        status: "Successful",       // Required
-                        timestamp: timestamp,       // Required
-                        plan: order.plan,
-                        orderId: orderId
-                    };
+            const order = JSON.parse(localStorage.getItem('pendingOrder'));
+            if (!order || !order.data_id) {
+                document.getElementById('details').innerHTML = `<p style="color:red; text-align:center;">Session expired. Please start over.</p>`;
+                return;
+            }
 
-                    const updates = {};
-                    // Path 1: User Balance
-                    updates[`users/${user.uid}/wallet`] = newBalance;
-                    
-                    // Path 2: User specific history
-                    updates[`user_orders/${user.uid}/${orderId}`] = finalOrderData;
-                    
-                    // Path 3: Global admin orders
-                    updates[`orders/${orderId}`] = finalOrderData;
+            onValue(ref(db, `users/${user.uid}`), (snapshot) => {
+                const userData = snapshot.val() || {};
+                const wallet = parseFloat(userData.wallet || 0);
+                const cost = parseFloat(order.amount);
 
-                    await update(ref(db), updates);
+                document.getElementById('details').innerHTML = `
+                    <div class="info-item"><label>Service</label><span>${order.network} DATA</span></div>
+                    <div class="info-item"><label>Package</label><span>${order.plan}</span></div>
+                    <div class="info-item"><label>Recipient</label><span>${order.recipient}</span></div>
+                    <div class="info-item"><label>Current Wallet</label><span>GH₵ ${wallet.toFixed(2)}</span></div>
+                `;
 
-                    localStorage.removeItem('pendingOrder');
-                    alert("Data Purchase Successful!");
-                    window.location.href = "dashboard.html";
+                document.getElementById('priceArea').innerHTML = `
+                    <div class="price-box">
+                        <p>Total Payable</p>
+                        <h1>GH₵ ${cost.toFixed(2)}</h1>
+                    </div>
+                `;
 
-                } catch (err) {
-                    alert("Order Aborted: " + err.message);
-                    btn.innerText = "RETRY";
-                    btn.disabled = false;
-                }
-            };
-        }, { onlyOnce: false });
-    });
-</script>
+                document.getElementById('confirmBtn').onclick = async () => {
+                    if (wallet < cost) { alert("Balance too low for this purchase."); return; }
+
+                    const btn = document.getElementById('confirmBtn');
+                    const loader = document.getElementById('btnLoader');
+                    const txt = document.getElementById('btnText');
+
+                    btn.disabled = true;
+                    loader.style.display = "block";
+                    txt.innerText = "VERIFYING...";
+
+                    try {
+                        // 1. External API Call (Lowercase Net + Numerical ID)
+                        const response = await fetch(API_URL, {
+                            method: "POST",
+                            headers: { "Authorization": "Bearer " + API_KEY, "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                "network": order.network.toLowerCase(),
+                                "beneficiary": order.recipient.toString().trim(),
+                                "pa_data-bundle-packages": Number(order.data_id)
+                            })
+                        });
+
+                        const res = await response.json();
+                        if (res.status === "error") throw new Error(res.message);
+
+                        // 2. Prepare Data for Firebase (Matches your rules exactly)
+                        const orderId = "GID-" + Math.floor(Math.random() * 89999 + 10000);
+                        const newBalance = Number((wallet - cost).toFixed(2));
+                        const timestamp = Date.now();
+
+                        const finalData = {
+                            uid: user.uid,
+                            amount: Number(cost),
+                            network: order.network,
+                            recipient: order.recipient,
+                            plan: order.plan,
+                            status: "Successful",
+                            timestamp: timestamp,
+                            orderId: orderId,
+                            api_ref: res.order_id || "N/A"
+                        };
+
+                        const updates = {};
+                        updates[`users/${user.uid}/wallet`] = newBalance;
+                        updates[`orders/${orderId}`] = finalData;
+                        updates[`user_orders/${user.uid}/${orderId}`] = finalData;
+
+                        // 3. Multi-path Atomic Update
+                        await update(ref(db), updates);
+
+                        localStorage.removeItem('pendingOrder');
+                        document.getElementById('successOverlay').style.display = 'flex';
+
+                    } catch (err) {
+                        alert("Error: " + err.message);
+                        btn.disabled = false;
+                        loader.style.display = "none";
+                        txt.innerText = "RETRY PAYMENT";
+                    }
+                };
+            });
+        });
+    </script>
 </body>
 </html>
