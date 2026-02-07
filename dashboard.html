@@ -1,9 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>
+        // Theme Persistence Script
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+
     <meta charset="UTF-8">
-    <title>GiganticDataHub Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GiganticDataHub Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
@@ -258,12 +266,6 @@
         .nav-item.active { color: var(--accent-orange); }
 
     </style>
-    <script>
-        (function() {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-        })();
-    </script>
 </head>
 <body>
 
@@ -384,12 +386,13 @@
         <a href="profile.html" class="nav-item"><i class="fas fa-user-circle"></i>Profile</a>
     </nav>
 
+    
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
         import { getDatabase, ref, onValue, runTransaction, update } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-        // CONFIG INTEGRATED
         const firebaseConfig = {
             apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho",
             authDomain: "gigantic-data.firebaseapp.com",
@@ -409,7 +412,7 @@
         let currentUserUID = null;
         let isBalanceHidden = localStorage.getItem('balanceHidden') === 'true';
         let userStatus = "Normal";
-        let authWaiting = true; // Guard variable
+        let isAuthReady = false;
 
         const themeBtn = document.getElementById('themeBtn');
         const savedTheme = localStorage.getItem('theme') || 'light';
@@ -450,53 +453,53 @@
             else { gText.innerText = `Good Evening, ${name} 🌙`; }
         }
 
+        // Updated Navigation Logic
         window.navigateToOrder = function() {
             if (userStatus.toLowerCase() === 'agent') {
-                window.location.href = "agent_shop.html";
+                window.location.href = "agent.html";
             } else {
                 window.location.href = "order.html";
             }
         };
 
-        onAuthStateChanged(auth, user => {
-            authWaiting = false; // Auth state has been determined
-            if (user) {
-                currentUserUID = user.uid;
-                update(ref(db, 'users/' + user.uid), { lastActive: Date.now() });
+        setPersistence(auth, browserLocalPersistence).then(() => {
+            onAuthStateChanged(auth, user => {
+                isAuthReady = true;
+                if (user) {
+                    currentUserUID = user.uid;
+                    update(ref(db, 'users/' + user.uid), { lastActive: Date.now() });
 
-                onValue(ref(db, 'users/' + user.uid), (snapshot) => {
-                    const data = snapshot.val() || {};
-                    rawBalance = data.balance || data.wallet || 0; 
-                    renderBalance();
-                    updateGreeting(data.fullName ? data.fullName.split(' ')[0] : (data.username || 'Member'));
+                    onValue(ref(db, 'users/' + user.uid), (snapshot) => {
+                        const data = snapshot.val() || {};
+                        rawBalance = data.balance || data.wallet || 0; 
+                        renderBalance();
+                        updateGreeting(data.fullName ? data.fullName.split(' ')[0] : (data.username || 'Member'));
 
-                    userStatus = data.userType || data.status || "Normal";
-                    localStorage.setItem('currentUserStatus', userStatus);
+                        userStatus = data.userType || data.status || "Normal";
+                        localStorage.setItem('currentUserStatus', userStatus);
 
-                    if (userStatus.toLowerCase() === 'agent') {
-                        document.getElementById('agentUpgradeBox').style.display = 'none';
-                    }
-                });
-
-                onValue(ref(db, 'adsList'), (snapshot) => {
-                    const ads = snapshot.val();
-                    if (ads) {
-                        const adsArray = Object.keys(ads).map(k => ({id: k, ...ads[k]}));
-                        if(adsArray.length > 0) {
-                            document.getElementById('sponsoredSlot').style.display = 'block';
-                            const ad = adsArray[Math.floor(Math.random() * adsArray.length)];
-                            document.getElementById('adTitle').innerText = ad.title;
-                            document.getElementById('adDesc').innerText = ad.description;
-                            document.getElementById('adLink').href = ad.link;
+                        if (userStatus.toLowerCase() === 'agent') {
+                            document.getElementById('agentUpgradeBox').style.display = 'none';
                         }
-                    }
-                });
-            } else {
-                // If not waiting and no user, only then redirect
-                if (!authWaiting) {
-                    window.location.href = "login.html";
+                    });
+
+                    onValue(ref(db, 'adsList'), (snapshot) => {
+                        const ads = snapshot.val();
+                        if (ads) {
+                            const adsArray = Object.keys(ads).map(k => ({id: k, ...ads[k]}));
+                            if(adsArray.length > 0) {
+                                document.getElementById('sponsoredSlot').style.display = 'block';
+                                const ad = adsArray[Math.floor(Math.random() * adsArray.length)];
+                                document.getElementById('adTitle').innerText = ad.title;
+                                document.getElementById('adDesc').innerText = ad.description;
+                                document.getElementById('adLink').href = ad.link;
+                            }
+                        }
+                    });
+                } else {
+                    if (isAuthReady) window.location.replace("login.html");
                 }
-            }
+            });
         });
 
         window.activateAgent = function() {
@@ -529,7 +532,7 @@
 
         window.logoutUser = function() {
             if(confirm("Are you sure you want to log out?")) {
-                signOut(auth).then(() => { window.location.href = "login.html"; });
+                signOut(auth).then(() => { window.location.replace("login.html"); });
             }
         };
     </script>
