@@ -197,7 +197,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signOut, updatePassword, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
         import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
         // COMPLETE CONFIG INTEGRATED
@@ -217,28 +217,33 @@
         const db = getDatabase(app);
 
         let userUID = null;
-        let authWaiting = true; // The Guard
+        let isAuthVerified = false; // The Guard
 
-        onAuthStateChanged(auth, user => {
-            authWaiting = false; // Auth check has finished
-            if (user) {
-                userUID = user.uid;
-                document.getElementById('emailAddr').value = user.email;
-                
-                onValue(ref(db, 'users/' + user.uid), (snapshot) => {
-                    const data = snapshot.val();
-                    if (data && data.fullName) {
-                        document.getElementById('fullName').value = data.fullName;
-                        document.getElementById('displayTitle').innerText = data.fullName.split(' ')[0] + "'s Profile";
+        // Force Persistence to prevent random logouts
+        setPersistence(auth, browserLocalPersistence)
+            .then(() => {
+                onAuthStateChanged(auth, user => {
+                    isAuthVerified = true; // Auth has responded
+                    if (user) {
+                        userUID = user.uid;
+                        document.getElementById('emailAddr').value = user.email;
+                        
+                        onValue(ref(db, 'users/' + user.uid), (snapshot) => {
+                            const data = snapshot.val();
+                            if (data && data.fullName) {
+                                document.getElementById('fullName').value = data.fullName;
+                                document.getElementById('displayTitle').innerText = data.fullName.split(' ')[0] + "'s Profile";
+                            }
+                        });
+                    } else {
+                        // Only kick out if we are 100% sure the user is null
+                        if (isAuthVerified) {
+                            window.location.replace("login.html");
+                        }
                     }
                 });
-            } else {
-                // Only kick the user out if we are SURE they aren't logged in
-                if (!authWaiting) {
-                    window.location.href = "login.html";
-                }
-            }
-        });
+            })
+            .catch((error) => console.error("Persistence failed:", error));
 
         window.saveProfile = async function() {
             const newName = document.getElementById('fullName').value.trim();
@@ -259,7 +264,7 @@
                     await updatePassword(auth.currentUser, newPass);
                     alert("Profile and Password updated!");
                 } else if (newPass && newPass.length < 6) {
-                    alert("Name saved, but password must be 6+ chars.");
+                    alert("Name saved, but password must be 6+ characters.");
                 } else {
                     alert("Profile updated successfully!");
                 }
@@ -274,9 +279,11 @@
         };
 
         window.logoutUser = function() {
-            signOut(auth).then(() => {
-                window.location.href = "login.html";
-            });
+            if(confirm("Are you sure you want to logout?")) {
+                signOut(auth).then(() => {
+                    window.location.replace("login.html");
+                });
+            }
         };
     </script>
 </body>
