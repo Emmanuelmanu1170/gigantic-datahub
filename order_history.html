@@ -13,231 +13,117 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order History - Gigantic Data Hub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
-            --deep-blue: #003366;
-            --primary-blue: #0052cc;
-            --bg-light: #f4f7fe;
-            --text-main: #1e293b;
-            --text-gray: #64748b;
-            --accent-orange: #f06529;
-            --success-green: #22c55e;
-            --card-white: #ffffff;
+            --deep-blue: #003366; --primary-blue: #0052cc; --bg-light: #f4f7fe;
+            --text-main: #1e293b; --text-gray: #64748b; --accent-orange: #f06529;
+            --success-green: #22c55e; --card-white: #ffffff;
         }
 
         [data-theme="dark"] {
-            --bg-light: #02040a;
-            --card-white: #0d1117;
-            --text-main: #f0f6fc;
-            --text-gray: #8b949e;
-            --deep-blue: #010409;
+            --bg-light: #02040a; --card-white: #0d1117; --text-main: #f0f6fc;
+            --text-gray: #8b949e; --deep-blue: #010409;
         }
 
-        body {
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg-light);
-            color: var(--text-main);
-            padding-bottom: 30px;
-        }
+        body { margin: 0; font-family: -apple-system, sans-serif; background-color: var(--bg-light); color: var(--text-main); padding-bottom: 30px; }
 
-        /* HEADER */
-        .header {
-            background-color: var(--deep-blue);
-            color: white;
-            padding: 18px 20px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
+        /* Impersonation Banner */
+        .admin-banner { background: #6366f1; color: white; padding: 10px; text-align: center; font-size: 12px; font-weight: bold; position: sticky; top: 0; z-index: 2000; display: none; }
+        .btn-exit-admin { background: white; color: #6366f1; border: none; padding: 4px 10px; border-radius: 5px; margin-left: 10px; cursor: pointer; font-weight: 800; }
 
+        .header { background-color: var(--deep-blue); color: white; padding: 18px 20px; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; }
         .header a { color: white; text-decoration: none; font-size: 18px; }
         .header h1 { font-size: 16px; margin: 0; font-weight: 700; }
 
-        .download-banner {
-            background: var(--accent-orange);
-            padding: 12px;
-            text-align: center;
-        }
-
-        .download-btn {
-            background: white;
-            color: var(--accent-orange);
-            text-decoration: none;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-weight: 800;
-            font-size: 13px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-
         .container { padding: 15px; max-width: 500px; margin: 0 auto; }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 25px;
-        }
-
-        .stat-box {
-            background: var(--card-white);
-            padding: 15px 10px;
-            border-radius: 16px;
-            text-align: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
-        }
-
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 25px; margin-top: 15px; }
+        .stat-box { background: var(--card-white); padding: 15px 10px; border-radius: 16px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
         .stat-box small { display: block; font-size: 10px; color: var(--text-gray); font-weight: 800; margin-bottom: 5px; text-transform: uppercase; }
         .stat-box b { font-size: 14px; color: var(--primary-blue); }
-        .stat-box.highlight b { color: var(--accent-orange); }
 
-        .order-card {
-            background: var(--card-white);
-            border-radius: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            position: relative;
-            padding: 20px;
-            border: 1px solid rgba(0,0,0,0.05);
-        }
+        .order-card { background: var(--card-white); border-radius: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 20px; border: 1px solid rgba(0,0,0,0.05); }
+        .order-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px dashed #e2e8f0; padding-bottom: 15px; margin-bottom: 15px; }
+        .network-icon { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; color: white; }
+        .mtn-bg { background: #FFCC00; color: #000; } .tel-bg { background: #E60000; } .air-bg { background: #0052CC; }
 
-        .order-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1.5px dashed #e2e8f0;
-            padding-bottom: 15px;
-            margin-bottom: 15px;
-        }
-
-        .network-icon {
-            width: 45px;
-            height: 45px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 900;
-            font-size: 14px;
-            color: white;
-        }
-
-        .mtn-bg { background: #FFCC00; color: #000; }
-        .tel-bg { background: #E60000; }
-        .air-bg { background: #0052CC; }
-
-        .order-id { font-family: monospace; font-size: 11px; color: var(--text-gray); }
-
-        .order-details {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
+        .order-details { display: flex; flex-direction: column; gap: 8px; }
         .detail-row { display: flex; justify-content: space-between; align-items: center; }
         .detail-row span { font-size: 12px; color: var(--text-gray); }
         .detail-row b { font-size: 13px; color: var(--text-main); }
 
-        .order-footer {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1.5px dashed #e2e8f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .paid-label { font-size: 11px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; }
+        .order-footer { margin-top: 15px; padding-top: 15px; border-top: 1.5px dashed #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
         .amount-paid { font-size: 18px; font-weight: 900; color: var(--primary-blue); }
-
-        .status-pill {
-            font-size: 10px;
-            font-weight: 800;
-            padding: 4px 12px;
-            border-radius: 30px;
-            text-transform: uppercase;
-        }
-
-        .status-completed { background: #ecfdf5; color: #047857; }
+        .status-pill { font-size: 10px; font-weight: 800; padding: 4px 12px; border-radius: 30px; text-transform: uppercase; }
+        .status-successful { background: #ecfdf5; color: #047857; }
         .status-pending { background: #fffbeb; color: #b45309; }
         .status-failed { background: #fef2f2; color: #b91c1c; }
-        .status-in-progress { background: #eff6ff; color: #1e40af; }
 
         .empty-state { text-align: center; padding: 60px 20px; color: var(--text-gray); }
     </style>
 </head>
 <body>
 
+    <div id="adminBanner" class="admin-banner">
+        VIEWING USER ORDER HISTORY <button class="btn-exit-admin" onclick="exitImpersonation()">EXIT TO ADMIN</button>
+    </div>
+
     <div class="header">
         <a href="dashboard.html"><i class="fas fa-chevron-left"></i></a>
         <h1>My Order History</h1>
     </div>
 
-    <div class="download-banner">
-        <a href="https://files.appsgeyser.com/Gigantic%20Data%20Hub_19462747.apk" class="download-btn">
-            <i class="fab fa-google-play"></i> DOWNLOAD OFFICIAL APP
-        </a>
-    </div>
-
     <div class="container">
         <div class="stats-grid">
-            <div class="stat-box">
-                <small>Purchases</small>
-                <b id="totalOrders">0</b>
-            </div>
-            <div class="stat-box">
-                <small>Total Spent</small>
-                <b id="totalSales">₵0.00</b>
-            </div>
-            <div class="stat-box highlight">
-                <small>Today</small>
-                <b id="spentToday">₵0.00</b>
-            </div>
+            <div class="stat-box"><small>Purchases</small><b id="totalOrders">0</b></div>
+            <div class="stat-box"><small>Total Spent</small><b id="totalSales">₵0.00</b></div>
+            <div class="stat-box"><small>Today</small><b id="spentToday" style="color:var(--accent-orange)">₵0.00</b></div>
         </div>
 
         <div id="orderList">
-            <div class="empty-state">
-                <i class="fas fa-spinner fa-spin"></i>
-                <p>Syncing transactions...</p>
-            </div>
+            <div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Syncing transactions...</p></div>
         </div>
     </div>
+
+    
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-        // COMPLETE CONFIG INTEGRATION
         const firebaseConfig = {
             apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho",
             authDomain: "gigantic-data.firebaseapp.com",
             databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
-            projectId: "gigantic-data",
-            storageBucket: "gigantic-data.firebasestorage.app",
-            messagingSenderId: "727845403550",
-            appId: "1:727845403550:web:56d06c9389993153a9748f",
-            measurementId: "G-10F198VFE6"
+            projectId: "gigantic-data"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        let authWaiting = true; // The Guard
+        // --- MASTER UID BRIDGE ---
+        const impersonateUid = sessionStorage.getItem('impersonate_uid');
+        const isImpersonating = sessionStorage.getItem('isAdminImpersonating');
+        let activeUid;
+
+        window.exitImpersonation = function() {
+            sessionStorage.clear();
+            window.location.href = "admin_user_audit.html";
+        };
 
         onAuthStateChanged(auth, user => {
-            authWaiting = false; // Auth check responded
             if (user) {
-                const loggedInEmail = user.email;
-                const orderRef = ref(db, `user_orders/${user.uid}`);
+                // Determine whose history to load
+                activeUid = (isImpersonating === 'true' && impersonateUid) ? impersonateUid : user.uid;
+                
+                if (isImpersonating === 'true') {
+                    document.getElementById('adminBanner').style.display = 'block';
+                }
+
+                const orderRef = ref(db, `user_orders/${activeUid}`);
                 
                 onValue(orderRef, (snapshot) => {
                     const container = document.getElementById('orderList');
@@ -245,6 +131,9 @@
 
                     if (!data) {
                         container.innerHTML = `<div class="empty-state"><i class="fas fa-receipt fa-3x" style="opacity:0.2;"></i><p>No transactions yet</p></div>`;
+                        document.getElementById('totalOrders').innerText = "0";
+                        document.getElementById('totalSales').innerText = "₵0.00";
+                        document.getElementById('spentToday').innerText = "₵0.00";
                         return;
                     }
 
@@ -260,7 +149,6 @@
                     entries.forEach(([id, order]) => {
                         const amount = parseFloat(order.amount || 0);
                         const ts = order.timestamp || Date.now();
-                        const dateObj = new Date(ts);
                         
                         totalSpentSum += amount;
                         if (ts >= startOfToday) spentTodaySum += amount;
@@ -271,27 +159,23 @@
                         if(network.includes('AT') || network.includes('AIRTEL')) netClass = 'air-bg';
 
                         const status = order.status || 'Pending';
-                        const statusClass = `status-${status.toLowerCase().replace(" ", "-")}`;
+                        const statusClass = `status-${status.toLowerCase()}`;
 
                         html += `
                             <div class="order-card">
                                 <div class="order-header">
                                     <div class="network-icon ${netClass}">${network.substring(0,3)}</div>
                                     <div style="text-align:right">
-                                        <div class="order-id">#${id.slice(-8)}</div>
-                                        <div style="font-size:10px; color:#94a3b8;">${dateObj.toLocaleString()}</div>
+                                        <div style="font-family:monospace; font-size:11px; color:#94a3b8;">#${id.slice(-8)}</div>
+                                        <div style="font-size:10px; color:#94a3b8;">${new Date(ts).toLocaleString()}</div>
                                     </div>
                                 </div>
                                 <div class="order-details">
-                                    <div class="detail-row"><span>Data Bundle</span><b>${order.plan || 'N/A'}</b></div>
+                                    <div class="detail-row"><span>Plan</span><b>${order.plan || 'N/A'}</b></div>
                                     <div class="detail-row"><span>Recipient</span><b>${order.recipient || 'N/A'}</b></div>
-                                    <div class="detail-row"><span>Log Email</span><b style="font-size:11px; color:var(--primary-blue);">${loggedInEmail}</b></div>
                                 </div>
                                 <div class="order-footer">
-                                    <div>
-                                        <div class="paid-label">Amount Paid</div>
-                                        <div class="amount-paid">₵${amount.toFixed(2)}</div>
-                                    </div>
+                                    <div class="amount-paid">₵${amount.toFixed(2)}</div>
                                     <span class="status-pill ${statusClass}">${status}</span>
                                 </div>
                             </div>
@@ -304,10 +188,7 @@
                     container.innerHTML = html;
                 });
             } else {
-                // Wait for the auth handshake to finish before redirecting
-                if (!authWaiting) {
-                    window.location.href = "login.html";
-                }
+                window.location.href = "login.html";
             }
         });
     </script>
