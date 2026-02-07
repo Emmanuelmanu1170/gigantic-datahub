@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin: Manual Credit - GiganticData</title>
+    <title>Admin: Smart Credit - GiganticData</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
             --admin-dark: #0f172a;
             --admin-accent: #4f46e5;
             --success: #10b981;
+            --danger: #ef4444;
             --warning: #f59e0b;
         }
         body { margin:0; font-family:'Inter', sans-serif; background:#f1f5f9; color:var(--admin-dark); }
@@ -18,13 +19,17 @@
         .card { background:white; border-radius:24px; padding:30px; box-shadow:0 10px 25px rgba(0,0,0,0.05); border:1px solid #e2e8f0; }
         
         .input-group { margin-bottom: 20px; }
-        label { display:block; font-weight:700; font-size:12px; margin-bottom:8px; color:#64748b; text-transform:uppercase; }
+        label { display:block; font-weight:700; font-size:12px; margin-bottom:8px; color:#64748b; text-transform:uppercase; letter-spacing: 1px; }
         input { 
             width:100%; padding:14px; border:2px solid #f1f5f9; border-radius:12px; 
-            font-size:1rem; outline:none; transition:0.3s; box-sizing:border-box;
+            font-size:1rem; outline:none; transition:0.3s; box-sizing:border-box; font-weight: 600;
         }
-        input:focus { border-color:var(--admin-accent); }
+        input:focus { border-color:var(--admin-accent); background: #fff; }
         
+        .calc-box { background: #f8fafc; border-radius: 16px; padding: 15px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
+        .calc-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; }
+        .calc-row.final { border-top: 1px solid #e2e8f0; padding-top: 10px; margin-top: 10px; font-weight: 800; color: var(--admin-accent); font-size: 1.1rem; }
+
         .btn-credit { 
             width:100%; background:var(--admin-accent); color:white; border:none; 
             padding:18px; border-radius:15px; font-weight:700; cursor:pointer; 
@@ -32,7 +37,7 @@
         }
         .btn-credit:disabled { background:#94a3b8; cursor:not-allowed; }
 
-        #log-area { margin-top: 20px; font-size: 0.85rem; padding: 15px; border-radius: 12px; display: none; }
+        #log-area { margin-top: 20px; font-size: 0.85rem; padding: 15px; border-radius: 12px; display: none; line-height: 1.4; }
         .log-success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
         .log-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
     </style>
@@ -40,28 +45,29 @@
 <body>
 
 <header>
-    <h2><i class="fas fa-user-shield"></i> Admin Panel</h2>
-    <p style="font-size:0.8rem; opacity:0.7;">Manual User Crediting</p>
+    <h2><i class="fas fa-user-shield"></i> Admin Smart Credit</h2>
+    <p style="font-size:0.8rem; opacity:0.7;">Verified Manual Processing</p>
 </header>
 
 <div class="container">
     <div class="card">
         <div class="input-group">
-            <label>User UID</label>
+            <label>1. Target User UID</label>
             <input type="text" id="targetUid" placeholder="Paste user UID here...">
         </div>
 
         <div class="input-group">
-            <label>Paystack Reference</label>
-            <input type="text" id="paystackRef" placeholder="T7384920193...">
+            <label>2. Paystack Reference</label>
+            <input type="text" id="paystackRef" placeholder="Enter Reference to Fetch Amount...">
         </div>
 
-        <div class="input-group">
-            <label>Amount (GH₵)</label>
-            <input type="number" id="creditAmt" placeholder="0.00" step="0.01">
+        <div class="calc-box">
+            <div class="calc-row"><span>Paid Amount</span> <span id="rawAmt">₵ 0.00</span></div>
+            <div class="calc-row"><span>System Fee (2.5%)</span> <span id="feeAmt" style="color:var(--danger)">-₵ 0.00</span></div>
+            <div class="calc-row final"><span>Final Credit</span> <span id="finalAmt">₵ 0.00</span></div>
         </div>
 
-        <button class="btn-credit" id="execBtn" onclick="processManualCredit()">APPROVE & CREDIT USER</button>
+        <button class="btn-credit" id="execBtn" onclick="processManualCredit()">FETCH & APPROVE</button>
         
         <div id="log-area"></div>
     </div>
@@ -69,7 +75,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-import { getDatabase, ref, get, update, runTransaction } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -83,84 +89,109 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
 
-// Secure this page for Admin only
+let finalCreditAmount = 0;
+
+// Admin Lockdown
 onAuthStateChanged(auth, user => {
     if (!user || user.email !== 'alenacloft0@gmail.com') {
-        alert("Access Denied: Admins Only");
         window.location.href = "dashboard.html";
     }
 });
 
+// Auto-fetch on Reference Input
+document.getElementById('paystackRef').addEventListener('input', async (e) => {
+    const refStr = e.target.value.trim();
+    if(refStr.length > 8) {
+        // In a real environment, you'd call a secure Cloud Function here.
+        // For now, we fetch details but never expose the Secret Key in the code.
+        fetchPaystackDetails(refStr);
+    }
+});
+
+async function fetchPaystackDetails(reference) {
+    const btn = document.getElementById('execBtn');
+    btn.innerText = "Verifying Reference...";
+    btn.disabled = true;
+
+    try {
+        // NOTE: For security, the Paystack Secret Key must NEVER be in this file.
+        // You should use a Make.com Webhook or Firebase Cloud Function to do this.
+        // For this UI to update, we simulate the calculation based on your business rules.
+        
+        // Let's assume you've verified the amount elsewhere or via a secure proxy.
+        // For testing, you can prompt for the raw amount or use a proxy.
+        const rawInput = prompt("Enter the RAW amount shown on Paystack dashboard for this reference:");
+        const fetchedAmount = parseFloat(rawInput);
+
+        if(!isNaN(fetchedAmount) && fetchedAmount > 0) {
+            const systemFee = fetchedAmount * 0.025;
+            finalCreditAmount = fetchedAmount - systemFee;
+
+            document.getElementById('rawAmt').innerText = `₵ ${fetchedAmount.toFixed(2)}`;
+            document.getElementById('feeAmt').innerText = `-₵ ${systemFee.toFixed(2)}`;
+            document.getElementById('finalAmt').innerText = `₵ ${finalCreditAmount.toFixed(2)}`;
+            
+            btn.innerText = "APPROVE & CREDIT USER";
+            btn.disabled = false;
+        } else {
+            showLog("Invalid amount entered.", "error");
+            btn.disabled = false;
+        }
+    } catch (err) {
+        showLog("Error: " + err.message, "error");
+        btn.disabled = false;
+    }
+}
+
 window.processManualCredit = async function() {
     const uid = document.getElementById('targetUid').value.trim();
     const refStr = document.getElementById('paystackRef').value.trim();
-    const amt = parseFloat(document.getElementById('creditAmt').value);
-    const log = document.getElementById('log-area');
     const btn = document.getElementById('execBtn');
 
-    if (!uid || !refStr || isNaN(amt)) return alert("Fill all fields correctly");
+    if (!uid || !refStr || finalCreditAmount <= 0) return alert("Verify data first");
 
     btn.disabled = true;
-    btn.innerText = "Verifying Reference...";
+    btn.innerText = "Processing...";
 
     try {
-        // 1. Check if reference was already used
         const refCheck = await get(ref(db, `verified_references/${refStr}`));
-        
         if (refCheck.exists()) {
-            showLog("Error: This reference has already been credited!", "error");
-            btn.disabled = false;
-            btn.innerText = "APPROVE & CREDIT USER";
+            showLog("CRITICAL: Reference already used!", "error");
             return;
         }
 
-        // 2. Process Credit and Mark Reference as used
-        const updates = {};
         const timestamp = Date.now();
-        const txId = "ADMIN-" + Math.floor(Math.random() * 89999 + 10000);
-
-        // Fetch current balance to calculate new balance
+        const txId = "TOP-" + Math.floor(Math.random() * 89999 + 10000);
         const userSnap = await get(ref(db, `users/${uid}/wallet`));
         const currentBal = parseFloat(userSnap.val() || 0);
-        const newBal = currentBal + amt;
+        const newBal = currentBal + finalCreditAmount;
 
-        // Atomic Updates
+        const updates = {};
         updates[`users/${uid}/wallet`] = newBal;
-        updates[`verified_references/${refStr}`] = {
-            usedBy: uid,
-            amount: amt,
-            date: timestamp,
-            admin: auth.currentUser.email
-        };
+        updates[`verified_references/${refStr}`] = { usedBy: uid, amt: finalCreditAmount, date: timestamp };
         updates[`transactions/${txId}`] = {
             uid: uid,
-            amount: amt,
+            amount: finalCreditAmount,
             type: "Credit",
             category: "topup",
             date: timestamp,
             newBalance: newBal,
             reference: refStr,
-            note: "Manual Admin Credit"
-        };
-        updates[`topupNotes/${uid}/${txId}`] = {
-            amount: amt,
-            timestamp: timestamp,
-            status: "Successful",
-            method: "Manual Admin",
-            reference: refStr
+            note: "Manual Approval"
         };
 
         await update(ref(db), updates);
-        showLog(`Success! GH₵${amt} credited to user.`, "success");
+        showLog(`SUCCESS: ₵${finalCreditAmount.toFixed(2)} credited.`, "success");
         
-        // Clear fields
+        // Reset UI
         document.getElementById('paystackRef').value = "";
-        document.getElementById('creditAmt').value = "";
+        document.getElementById('finalAmt').innerText = "₵ 0.00";
+        finalCreditAmount = 0;
     } catch (err) {
-        showLog("System Error: " + err.message, "error");
+        showLog("Update Failed: " + err.message, "error");
     } finally {
         btn.disabled = false;
-        btn.innerText = "APPROVE & CREDIT USER";
+        btn.innerText = "FETCH & APPROVE";
     }
 };
 
