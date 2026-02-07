@@ -139,20 +139,22 @@ function loadData(uid) {
     // 1. Listen for standard transactions (Purchases & Referral Bonuses)
     const txRef = query(ref(db, 'transactions'), orderByChild('uid'), equalTo(uid));
     
-    // 2. Listen for Topup Notes (Paystack Deposits)
+    // 2. Listen for Topup Notes (Deposits recorded in your Fund Wallet page)
     const topupRef = ref(db, `topupNotes/${uid}`);
 
     let txData = [], topData = [];
 
+    // Sync from 'transactions' node
     onValue(txRef, (snap) => {
         txData = snap.exists() ? Object.entries(snap.val()).map(([id, v]) => {
-            // Detect if this transaction was an Agent Upgrade (Costing 45)
+            // Detect if this transaction was an Agent Upgrade
             let isAgent = (parseFloat(v.amount) === 45 && v.type === "Deduct") || v.category === "agent";
             return { id, ...v, ts: v.date || v.timestamp, src: isAgent ? 'agent' : 'purchase' };
         }) : [];
         combineAndRender(txData, topData);
     });
 
+    // Sync from 'topupNotes' node
     onValue(topupRef, (snap) => {
         topData = snap.exists() ? Object.entries(snap.val()).map(([id, v]) => ({ 
             id, ...v, ts: v.timestamp || v.date, src: 'topup' 
@@ -163,7 +165,7 @@ function loadData(uid) {
 
 function combineAndRender(txs, tops) {
     // Merge both sources and sort by timestamp (newest first)
-    masterLogs = [...txs, ...tops].sort((a, b) => (b.ts || 0) - (a.ts || 0));
+    masterLogs = [...txs, ...tops].sort((a, b) => (Number(b.ts) || 0) - (Number(a.ts) || 0));
     render(masterLogs);
 }
 
