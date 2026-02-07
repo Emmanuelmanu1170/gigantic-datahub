@@ -30,12 +30,7 @@
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
     import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-    const firebaseConfig = { 
-        apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4", 
-        authDomain: "gigantic-data.firebaseapp.com", 
-        databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com", 
-        projectId: "gigantic-data" 
-    };
+    const firebaseConfig = { apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4", authDomain: "gigantic-data.firebaseapp.com", databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com", projectId: "gigantic-data" };
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
@@ -46,10 +41,11 @@
     onAuthStateChanged(auth, (user) => {
         if (!user) { window.location.href = "login.html"; return; }
         const order = JSON.parse(localStorage.getItem('pendingOrder'));
+        if (!order) return;
 
         onValue(ref(db, `users/${user.uid}`), (snapshot) => {
-            const userData = snapshot.val() || {};
-            const wallet = parseFloat(userData.wallet || 0);
+            const data = snapshot.val() || {};
+            const wallet = parseFloat(data.wallet || 0);
             const cost = parseFloat(order.amount);
 
             document.getElementById('renderArea').innerHTML = `
@@ -63,12 +59,13 @@
 
             document.getElementById('payBtn').onclick = async () => {
                 if (wallet < cost) { alert("Insufficient Balance!"); return; }
-                const payBtn = document.getElementById('payBtn');
-                payBtn.innerText = "Processing...";
-                payBtn.disabled = true;
+                
+                const btn = document.getElementById('payBtn');
+                btn.innerText = "Processing...";
+                btn.disabled = true;
 
                 try {
-                    // 1. CALL VENDOR API
+                    // 1. API CALL
                     const response = await fetch(API_URL, {
                         method: "POST",
                         headers: { 
@@ -85,30 +82,33 @@
                     const res = await response.json();
                     if (res.status === "error") throw new Error(res.message);
 
-                    // 2. PREPARE DATA FOR FIREBASE (Must match Rules validation)
+                    // 2. FIREBASE UPDATE (Optimized for your Rules)
                     const orderId = "ORD-" + Math.floor(Math.random() * 1000000);
-                    const newBalance = Number((wallet - cost).toFixed(2)); // Ensure it's a Number
+                    const newBalance = Number((wallet - cost).toFixed(2)); // MUST be a Number for rules
+                    const timestamp = Date.now(); // Required by your rules
 
+                    // Prepare object with ALL required rule fields
                     const finalOrderData = {
-                        uid: user.uid,              // Required by rules
-                        amount: cost,               // Required by rules
-                        network: order.network,     // Required by rules
-                        recipient: order.recipient, // Required by rules
-                        status: "Successful",       // Required by rules
-                        timestamp: Date.now(),      // Required by rules
+                        uid: user.uid,              // Required
+                        amount: Number(cost),       // Required
+                        network: order.network,     // Required
+                        recipient: order.recipient, // Required
+                        status: "Successful",       // Required
+                        timestamp: timestamp,       // Required
                         plan: order.plan,
-                        api_id: order.data_id
+                        orderId: orderId
                     };
 
                     const updates = {};
-                    // Update user wallet
+                    // Path 1: User Balance
                     updates[`users/${user.uid}/wallet`] = newBalance;
-                    // Log in global orders
-                    updates[`orders/${orderId}`] = finalOrderData;
-                    // Log in user specific orders
+                    
+                    // Path 2: User specific history
                     updates[`user_orders/${user.uid}/${orderId}`] = finalOrderData;
+                    
+                    // Path 3: Global admin orders
+                    updates[`orders/${orderId}`] = finalOrderData;
 
-                    // 3. EXECUTE MULTI-PATH UPDATE
                     await update(ref(db), updates);
 
                     localStorage.removeItem('pendingOrder');
@@ -117,11 +117,11 @@
 
                 } catch (err) {
                     alert("Order Aborted: " + err.message);
-                    payBtn.innerText = "RETRY";
-                    payBtn.disabled = false;
+                    btn.innerText = "RETRY";
+                    btn.disabled = false;
                 }
             };
-        });
+        }, { onlyOnce: false });
     });
 </script>
 </body>
