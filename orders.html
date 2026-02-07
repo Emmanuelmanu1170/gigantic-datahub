@@ -3,157 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin — All User Orders</title>
+    <title>Admin — Auto-API Order Control</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --deep-blue: #003366;
-            --primary-blue: #0052cc;
-            --orange-gradient: linear-gradient(135deg, #ff8c00 0%, #ff4500 100%);
-            --light-bg: #f4f7fe;
-            --white: #ffffff;
-            --text-main: #1e293b;
-            --success: #10b981;
-            --pending: #f59e0b;
-            --info: #3b82f6;
-            --danger: #ef4444;
+            --deep-blue: #003366; --primary-blue: #0052cc; --orange-gradient: linear-gradient(135deg, #ff8c00 0%, #ff4500 100%);
+            --light-bg: #f4f7fe; --white: #ffffff; --text-main: #1e293b; --success: #10b981;
+            --pending: #f59e0b; --info: #3b82f6; --danger: #ef4444;
         }
-
-        * { margin:0; padding:0; box-sizing:border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        
+        * { margin:0; padding:0; box-sizing:border-box; font-family: -apple-system, sans-serif; }
         body { background: var(--light-bg); color: var(--text-main); min-height: 100vh; }
-
-        header {
-            background: var(--deep-blue);
-            color: white;
-            padding: 15px 5%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        header h1 { font-size: 1.1rem; font-weight: 800; letter-spacing: 0.5px; }
-
-        .back-btn {
-            background: rgba(255,255,255,0.15);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-size: 0.8rem;
-            font-weight: 700;
-            transition: 0.3s;
-        }
-
+        header { background: var(--deep-blue); color: white; padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .back-btn { background: rgba(255,255,255,0.15); color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 0.8rem; font-weight: 700; }
         .container { padding: 30px 5%; }
+        
+        /* API Status Banner */
+        .api-banner { background: #0f172a; color: #4ade80; padding: 10px 5%; font-family: monospace; font-size: 11px; display: flex; justify-content: space-between; align-items: center; }
+        .pulse { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; display: inline-block; margin-right: 5px; animation: blink 1s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
-        .controls-card {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            margin-bottom: 25px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            align-items: end;
-        }
-
+        .controls-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end; }
         .control-group { display: flex; flex-direction: column; gap: 8px; }
-        label { font-size: 0.7rem; font-weight: 800; color: var(--deep-blue); text-transform: uppercase; letter-spacing: 0.5px; }
+        label { font-size: 0.7rem; font-weight: 800; color: var(--deep-blue); text-transform: uppercase; }
+        input, select { padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 0.85rem; outline: none; }
 
-        input, select {
-            padding: 12px;
-            border-radius: 10px;
-            border: 1px solid #e2e8f0;
-            font-size: 0.85rem;
-            outline: none;
-        }
-
-        .table-card {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            overflow: hidden;
-        }
-
+        .table-card { background: white; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: hidden; }
         table { width: 100%; border-collapse: collapse; min-width: 1000px; }
-
-        th {
-            background: #f8fafc;
-            color: #64748b;
-            font-size: 0.65rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            padding: 15px;
-            text-align: left;
-        }
-
-        td { padding: 15px; font-size: 0.85rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
-
-        .order-meta b { color: var(--deep-blue); display: block; font-size: 0.9rem; }
-        .order-meta span { font-size: 11px; color: #94a3b8; }
-
-        .status-badge {
-            font-size: 10px;
-            font-weight: 800;
-            padding: 4px 10px;
-            border-radius: 20px;
-            text-transform: uppercase;
-        }
-
-        .status-Pending { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
-        .status-Completed { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
-        .status-Canceled { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
-        .status-In-Progress { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
-
-        .status-updater {
-            padding: 6px;
-            border-radius: 8px;
-            font-size: 0.75rem;
-            border: 1px solid #cbd5e1;
-            background: #f8fafc;
-            cursor: pointer;
-            width: 130px;
-        }
-
-        .delete-btn {
-            background: #fff;
-            color: #94a3b8;
-            border: 1px solid #e2e8f0;
-            padding: 8px 10px;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        .delete-btn:hover { color: var(--danger); border-color: var(--danger); background: #fef2f2; }
+        th { background: #f8fafc; color: #64748b; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; padding: 15px; text-align: left; }
+        td { padding: 15px; font-size: 0.85rem; border-bottom: 1px solid #f1f5f9; }
+        .status-badge { font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; border: 1px solid transparent; }
+        .status-Pending { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+        .status-Completed { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+        .status-Flagged { background: #fef2f2; color: #b91c1c; border-color: #fecaca; font-weight: 900; }
+        .status-Processing { background: #eff6ff; color: #1e40af; border-color: #bfdbfe; }
+        .delete-btn { color: #94a3b8; border: 1px solid #e2e8f0; padding: 8px 10px; border-radius: 8px; cursor: pointer; }
     </style>
 </head>
 <body>
 
+<div class="api-banner">
+    <div><span class="pulse"></span> IDATAGH API AUTO-FULFILLMENT ACTIVE</div>
+    <div id="apiClock">00:00:00</div>
+</div>
+
 <header>
-    <h1><i class="fas fa-tasks"></i> ADMIN ORDER CONTROL</h1>
+    <h1><i class="fas fa-robot"></i> API ORDER CONTROL</h1>
     <a href="admin_dashboard.html" class="back-btn"><i class="fas fa-arrow-left"></i> Dashboard</a>
 </header>
 
 <div class="container">
     <div class="controls-card">
-        <div class="control-group">
-            <label>Search Users/Orders</label>
-            <input type="text" id="searchInput" placeholder="Search Email, ID or Recipient...">
-        </div>
+        <div class="control-group"><label>Search Orders</label><input type="text" id="searchInput" placeholder="Email or Recipient..."></div>
         <div class="control-group">
             <label>Filter Status</label>
             <select id="statusFilter">
                 <option value="all">All Statuses</option>
                 <option value="Pending">Pending</option>
-                <option value="In-Progress">In-Progress</option>
                 <option value="Completed">Completed</option>
-                <option value="Canceled">Canceled</option>
+                <option value="Flagged">Flagged (Hackers)</option>
             </select>
         </div>
     </div>
@@ -163,17 +70,17 @@
             <table id="ordersTable">
                 <thead>
                     <tr>
-                        <th>Order ID & Date</th>
+                        <th>Order ID</th>
                         <th>Network/Plan</th>
                         <th>Amount</th>
                         <th>Recipient</th>
-                        <th>Customer Email</th>
+                        <th>User Email</th>
                         <th>Status</th>
                         <th style="text-align:right">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr><td colspan="7" style="text-align:center; padding:50px;">Syncing Order Database...</td></tr>
+                <tbody id="orderTbody">
+                    <tr><td colspan="7" style="text-align:center; padding:50px;">Initializing Security Nodes...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -183,160 +90,182 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-import { getDatabase, ref, onValue, update, get } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+import { getDatabase, ref, onValue, update, get, push } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
-  authDomain: "gigantic-data.firebaseapp.com",
-  databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
-  projectId: "gigantic-data",
-  storageBucket: "gigantic-data.firebasestorage.app",
-  messagingSenderId: "727845403550",
-  appId: "1:727845403550:web:e3c3a40ce615aaaca9748f"
+    apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
+    authDomain: "gigantic-data.firebaseapp.com",
+    databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
+    projectId: "gigantic-data"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-const tbody = document.querySelector("#ordersTable tbody");
-const searchInput = document.getElementById("searchInput");
-const statusFilter = document.getElementById("statusFilter");
+// API SETTINGS
+const API_KEY = "Tera_live_95abf76d96984f4612153a4869e43d3e";
+const API_URL = "https://idatagh.com/wp-json/custom/v1/place-order";
 
 let allOrders = [];
-let userEmailMap = {}; // Local cache for UID -> Email mapping
+let userEmailMap = {};
 
 onAuthStateChanged(auth, user => {
-  if(user && user.email === "alenacloft0@gmail.com"){
-    loadUsersAndOrders();
-  } else {
-    window.location.href = "login.html";
-  }
+    if(user && user.email === "alenacloft0@gmail.com"){
+        startEngine();
+    } else { window.location.href = "login.html"; }
 });
 
-// Step 1: Map UIDs to Emails to ensure customer identification is accurate
-async function loadUsersAndOrders() {
-    const usersRef = ref(db, "users");
-    onValue(usersRef, (snapshot) => {
-        const usersData = snapshot.val() || {};
-        userEmailMap = {};
-        Object.entries(usersData).forEach(([uid, info]) => {
-            userEmailMap[uid] = info.email || "No Email";
-        });
-        listenAllOrders();
+async function startEngine() {
+    // 1. Map Users
+    onValue(ref(db, "users"), snap => {
+        const data = snap.val() || {};
+        Object.entries(data).forEach(([uid, info]) => { userEmailMap[uid] = info.email; });
     });
-}
 
-// Step 2: Listen to orders and apply email logic
-function listenAllOrders(){
-  const ordersRef = ref(db, "user_orders");
-  onValue(ordersRef, snapshot => {
-    const data = snapshot.val() || {};
-    allOrders = [];
-
-    Object.entries(data).forEach(([uid, userOrders])=>{
-      Object.entries(userOrders).forEach(([orderId, order])=>{
-            let displayStatus = order.status || "Pending";
-            if(displayStatus.toLowerCase() === "in progress") displayStatus = "In-Progress";
-
-            // Email Logic: 1. Check order data, 2. Check user map, 3. Fallback
-            const customerEmail = order.userEmail || order.email || userEmailMap[uid] || "Guest/Unknown";
-
-            allOrders.push({
-                network: order.network || "N/A",
-                plan: order.plan || "N/A",
-                amount: order.amount || 0,
-                recipient: order.recipient || "N/A",
-                email: customerEmail, 
-                status: displayStatus,
-                timestamp: order.timestamp || Date.now(),
-                id: orderId,
-                uid: uid
+    // 2. Listen for Orders
+    onValue(ref(db, "user_orders"), snapshot => {
+        const data = snapshot.val() || {};
+        allOrders = [];
+        Object.entries(data).forEach(([uid, orders]) => {
+            Object.entries(orders).forEach(([id, order]) => {
+                const orderObj = { id, uid, ...order, email: userEmailMap[uid] || order.email };
+                allOrders.push(orderObj);
+                
+                // 3. AUTOMATION TRIGGER
+                if (order.status === "Pending") {
+                    securityAudit(orderObj);
+                }
             });
-      });
+        });
+        renderTable();
     });
-    renderTable();
-  });
 }
 
-function renderTable(){
-  let entries = [...allOrders];
-  const statusVal = statusFilter.value;
-  const searchText = searchInput.value.toLowerCase();
+// HACKER SECURITY SHIELD
+async function securityAudit(order) {
+    console.log("🛡️ Auditing Order:", order.id);
 
-  if(statusVal !== "all") entries = entries.filter(o => o.status === statusVal);
+    try {
+        // A. Velocity Check (Spam Prevention)
+        const historySnap = await get(ref(db, `user_orders/${order.uid}`));
+        const history = Object.values(historySnap.val() || {});
+        const recent = history.filter(o => (Date.now() - o.timestamp) < 60000);
 
-  if(searchText) {
-    entries = entries.filter(o => 
-        o.email.toLowerCase().includes(searchText) || 
-        o.recipient.toLowerCase().includes(searchText) ||
-        o.id.toLowerCase().includes(searchText)
-    );
-  }
+        if (recent.length > 2) {
+            handleFlag(order, "Hacker Check: Too many orders in 60s");
+            return;
+        }
 
-  entries.sort((a,b)=> b.timestamp - a.timestamp);
-  tbody.innerHTML = "";
+        // B. Balance Manipulation Check
+        const userSnap = await get(ref(db, `users/${order.uid}`));
+        const userData = userSnap.val();
+        if (userData.balance < 0) {
+            handleFlag(order, "Hacker Check: Negative balance bypass");
+            return;
+        }
 
-  if(entries.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px;">No matching records found.</td></tr>`;
-      return;
-  }
+        // C. Passed Audit -> Proceed to API
+        fulfillOrder(order);
 
-  entries.forEach(order=>{
-    const dateObj = new Date(order.timestamp);
-    const dateStr = dateObj.toLocaleDateString();
-    const timeStr = dateObj.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-    const statusClass = order.status.replace(" ", "-");
-
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td class="order-meta"><b>#${order.id.slice(-6)}</b> <span>${dateStr} ${timeStr}</span></td>
-      <td class="order-meta"><b>${order.network}</b> <span>${order.plan}</span></td>
-      <td style="font-weight:700;">₵${parseFloat(order.amount).toFixed(2)}</td>
-      <td>${order.recipient}</td>
-      <td style="font-size:12px; font-weight:700; color:var(--deep-blue);">${order.email}</td>
-      <td><span class="status-badge status-${statusClass}">${order.status}</span></td>
-      <td style="text-align:right">
-        <div style="display:flex; gap:5px; justify-content:flex-end;">
-            <select class="status-updater" onchange="updateOrderStatus('${order.id}', this.value, '${order.uid}')">
-                <option value="" disabled selected>Update</option>
-                <option value="Pending">Pending</option>
-                <option value="In-Progress">In-Progress</option>
-                <option value="Completed">Completed</option>
-                <option value="Canceled">Canceled</option>
-            </select>
-            <button class="delete-btn" onclick="deleteOrderRecord('${order.id}','${order.uid}')">
-                <i class="fas fa-trash-alt"></i>
-            </button>
-        </div>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
+    } catch (e) { console.error("Audit Fail", e); }
 }
 
-window.updateOrderStatus = function(orderId, newStatus, uid){
+async function handleFlag(order, reason) {
     const updates = {};
-    updates[`user_orders/${uid}/${orderId}/status`] = newStatus;
-    updates[`orders/${orderId}/status`] = newStatus; // Updates global tracker if used
+    updates[`user_orders/${order.uid}/${order.id}/status`] = "Flagged";
+    updates[`orders/${order.id}/status`] = "Flagged";
+    await update(ref(db), updates);
 
-    update(ref(db), updates)
-    .then(() => console.log("Success"))
-    .catch((err) => alert("Update Error: " + err.message));
-};
+    // Auto-Add to Financial Guard (Hackers page)
+    push(ref(db, "admin_settings/financial_guard"), {
+        email: order.email,
+        uid: order.uid,
+        reason: reason
+    });
+}
 
-window.deleteOrderRecord = function(orderId, uid){
-  if(confirm("Permanently delete this order record?")){
+async function fulfillOrder(order) {
+    // Set Status to Processing so it doesn't trigger again
+    const processUpdate = {};
+    processUpdate[`user_orders/${order.uid}/${order.id}/status`] = "Processing";
+    await update(ref(db), processUpdate);
+
+    // API Payload per idatagh documentation
+    const payload = {
+        network: order.network.toLowerCase(),
+        beneficiary: order.recipient,
+        "pa_data-bundle-packages": parseInt(order.plan) || 5 // Defaulting if plan string doesn't parse
+    };
+
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (result.status === "success" || response.ok) {
+            updateStatus(order, "Completed");
+        } else {
+            updateStatus(order, "Failed: " + (result.message || "Provider Error"));
+        }
+    } catch (err) {
+        updateStatus(order, "API Offline");
+    }
+}
+
+function updateStatus(order, status) {
     const updates = {};
-    updates[`user_orders/${uid}/${orderId}`] = null;
-    updates[`orders/${orderId}`] = null;
+    updates[`user_orders/${order.uid}/${order.id}/status`] = status;
+    updates[`orders/${order.id}/status`] = status;
     update(ref(db), updates);
-  }
-};
+}
 
-searchInput.addEventListener("input", renderTable);
-statusFilter.addEventListener("change", renderTable);
+function renderTable() {
+    const tbody = document.getElementById("orderTbody");
+    const search = document.getElementById("searchInput").value.toLowerCase();
+    const filter = document.getElementById("statusFilter").value;
+    
+    let entries = allOrders.sort((a,b) => b.timestamp - a.timestamp);
+    if(filter !== 'all') entries = entries.filter(o => o.status === filter);
+    if(search) entries = entries.filter(o => o.email.toLowerCase().includes(search) || o.recipient.includes(search));
+
+    tbody.innerHTML = "";
+    entries.forEach(o => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td><b>#${o.id.slice(-6)}</b><br><small>${new Date(o.timestamp).toLocaleString()}</small></td>
+            <td><b>${o.network}</b><br><span>${o.plan}</span></td>
+            <td style="font-weight:700;">₵${parseFloat(o.amount).toFixed(2)}</td>
+            <td>${o.recipient}</td>
+            <td style="font-size:11px; font-weight:700;">${o.email}</td>
+            <td><span class="status-badge status-${o.status}">${o.status}</span></td>
+            <td style="text-align:right">
+                <button class="delete-btn" onclick="deleteRec('${o.id}','${o.uid}')"><i class="fas fa-trash"></i></button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+window.deleteRec = (id, uid) => {
+    if(confirm("Delete record?")){
+        const up = {};
+        up[`user_orders/${uid}/${id}`] = null;
+        up[`orders/${id}`] = null;
+        update(ref(db), up);
+    }
+}
+
+setInterval(() => { document.getElementById('apiClock').innerText = new Date().toLocaleTimeString(); }, 1000);
+document.getElementById('searchInput').addEventListener('input', renderTable);
+document.getElementById('statusFilter').addEventListener('change', renderTable);
 </script>
-
 </body>
 </html>
