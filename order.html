@@ -171,6 +171,8 @@
         </div>
     </div>
 
+    
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
@@ -195,7 +197,7 @@
         let purchaseMode = 'single';
         let currentBalance = 0;
         let userReferrer = null;
-        let authWaiting = true; // Guard variable to prevent early redirect
+        let authWaiting = true; 
         window.selectedNet = "";
 
         // Theme Logic
@@ -226,13 +228,14 @@
         };
 
         onAuthStateChanged(auth, user => {
-            authWaiting = false; // Auth check complete
+            authWaiting = false; 
             if (user) {
                 onValue(ref(db, 'users/' + user.uid), (snapshot) => {
                     const data = snapshot.val() || {};
                     
                     isAgent = (data.status === "Agent" || data.userType === "agent" || localStorage.getItem('currentUserStatus') === 'agent');
                     
+                    // UNIFIED PATH: Always use balance to sync with index.js
                     currentBalance = Number(data.balance || data.wallet || 0);
                     userReferrer = data.referredBy || null;
                     document.getElementById('walletBalance').innerText = `GH₵ ${currentBalance.toFixed(2)}`;
