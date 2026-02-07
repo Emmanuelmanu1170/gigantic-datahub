@@ -67,12 +67,16 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
         import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-        // CONFIG INTEGRATED
+        // COMPLETE CONFIG INTEGRATION
         const firebaseConfig = { 
             apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho", 
             authDomain: "gigantic-data.firebaseapp.com", 
             databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com", 
-            projectId: "gigantic-data" 
+            projectId: "gigantic-data",
+            storageBucket: "gigantic-data.firebasestorage.app",
+            messagingSenderId: "727845403550",
+            appId: "1:727845403550:web:56d06c9389993153a9748f",
+            measurementId: "G-10F198VFE6"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -83,19 +87,24 @@
         const API_KEY = "tera_live_95abf76d96984f4612153a4869e43d3e";
         const API_URL = "https://idatagh.com/wp-json/custom/v1/place-order";
 
-        let authWaiting = true; // Guard variable
+        let authProcessed = false; // Prevents premature redirect
 
         onAuthStateChanged(auth, (user) => {
-            authWaiting = false;
-            if (!user) { window.location.href = "login.html"; return; }
+            authProcessed = true;
+            if (!user) { 
+                window.location.href = "login.html"; 
+                return; 
+            }
 
             const order = JSON.parse(localStorage.getItem('pendingOrder'));
-            if (!order) { window.location.href = "order.html"; return; }
+            if (!order) { 
+                window.location.href = "order.html"; 
+                return; 
+            }
 
-            // Listener to get live wallet balance
+            // Wallet Listener
             onValue(ref(db, `users/${user.uid}`), (snapshot) => {
                 const userData = snapshot.val() || {};
-                // Synchronized with Realtime Database key 'wallet'
                 const wallet = parseFloat(userData.wallet || userData.balance || 0);
                 const cost = parseFloat(order.amount);
 
@@ -113,15 +122,14 @@
 
                 document.getElementById('confirmBtn').onclick = async () => {
                     if (wallet < cost) {
-                        alert("Error: Your balance (GH₵ " + wallet.toFixed(2) + ") is not enough for this order.");
+                        alert("Error: Your balance (GH₵ " + wallet.toFixed(2) + ") is insufficient.");
                         return;
                     }
 
                     const btn = document.getElementById('confirmBtn');
                     btn.disabled = true;
-                    btn.innerText = "Processing Delivery...";
+                    btn.innerText = "Processing...";
 
-                    // Map Network names
                     let networkID = order.network.toLowerCase();
                     if (networkID.includes("airtel") || networkID.includes("at")) networkID = "at";
                     else if (networkID.includes("telecel") || networkID.includes("vod")) networkID = "telecel";
@@ -144,10 +152,9 @@
                         const res = await response.json();
                         
                         if (res.status === "error" || (res.code && res.code.includes("fail"))) {
-                             throw new Error(res.message || "Provider error. Please contact support.");
+                             throw new Error(res.message || "Provider error.");
                         }
 
-                        // Prepare Database Updates
                         const orderId = "GID-" + Math.floor(Math.random() * 89999 + 10000);
                         const newBalance = parseFloat((wallet - cost).toFixed(2));
                         
@@ -165,7 +172,7 @@
 
                         const updates = {};
                         updates[`users/${user.uid}/wallet`] = newBalance;
-                        updates[`users/${user.uid}/balance`] = newBalance; // Backup key sync
+                        updates[`users/${user.uid}/balance`] = newBalance;
                         updates[`orders/${orderId}`] = finalReceipt;
                         updates[`user_orders/${user.uid}/${orderId}`] = finalReceipt;
 
@@ -182,6 +189,13 @@
                 };
             }, { onlyOnce: true });
         });
+
+        // Safety fallback: Redirect after 5 seconds if auth never responds
+        setTimeout(() => {
+            if (!authProcessed && !auth.currentUser) {
+                window.location.href = "login.html";
+            }
+        }, 5000);
     </script>
 </body>
 </html>
