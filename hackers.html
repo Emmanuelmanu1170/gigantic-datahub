@@ -72,7 +72,7 @@
     <header>
         <div>
             <h2 style="color: #fff; font-size: 1.2rem;">Financial Guard Terminal</h2>
-            <p style="font-size: 0.7rem; color: #64748b;">Automated Wallet Recovery & Anti-Fraud Bot</p>
+            <p style="font-size: 0.7rem; color: #64748b;">Admin Session: <span id="adminEmail" style="color:var(--primary-blue); font-weight:800;">Authenticating...</span></p>
         </div>
         <div class="guard-status">
             <div class="pulse"></div> ACTIVE MONITORING
@@ -108,6 +108,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import { getDatabase, ref, onValue, update, push, remove } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho",
@@ -118,23 +119,32 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+const auth = getAuth(app);
 
-// INTERNAL WATCHLIST Path
+const ADMIN_EMAIL = "alenacloft0@gmail.com";
 const GUARD_PATH = "admin_settings/financial_guard";
 let activeWatchlist = {};
 
-// 1. Initialize Default Targets from your request if list is empty
-const defaultTargets = [
-    { email: "odwin.savvytech@gmail.com", uid: "rGP6khekCpVngvr1MgQ0HR1dXHV2" },
-    { email: "jonesaboagye70@gmail.com", uid: "qsMPZBjFD2Z3TZr8aA09ggktFjE3" }
-];
-
-// 2. Load and Sync Watchlist
-onValue(ref(db, GUARD_PATH), snap => {
-    activeWatchlist = snap.val() || {};
-    renderWatchlist();
-    startAutomatedMonitoring();
+// Security Check & Initialization
+onAuthStateChanged(auth, user => {
+    if (user && user.email === ADMIN_EMAIL) {
+        document.getElementById('adminEmail').textContent = user.email;
+        writeLog("Master Admin Authenticated. Monitoring Engine Engaged.", false);
+        initializeGuard();
+    } else {
+        alert("Access Denied: Admin privileges required.");
+        window.location.href = "admin_login.html";
+    }
 });
+
+function initializeGuard() {
+    // Load and Sync Watchlist
+    onValue(ref(db, GUARD_PATH), snap => {
+        activeWatchlist = snap.val() || {};
+        renderWatchlist();
+        startAutomatedMonitoring();
+    });
+}
 
 function renderWatchlist() {
     const list = document.getElementById('targetList');
@@ -153,7 +163,6 @@ function renderWatchlist() {
     });
 }
 
-// 3. Automated Monitoring Engine
 function startAutomatedMonitoring() {
     Object.values(activeWatchlist).forEach(target => {
         // Listen to this specific user's balance
@@ -210,7 +219,6 @@ function writeLog(msg, isAlert) {
     console.prepend(entry);
 }
 
-// 4. Form Handlers
 document.getElementById('addTargetForm').addEventListener('submit', (e) => {
     e.preventDefault();
     const email = document.getElementById('targetEmail').value.trim();
