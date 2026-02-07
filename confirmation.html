@@ -22,7 +22,7 @@
 <body>
 
 <div class="card" id="renderArea">
-    <p style="text-align:center; padding:20px;">Synchronizing wallet...</p>
+    <p style="text-align:center; padding:20px;">Synchronizing...</p>
 </div>
 
 <script type="module">
@@ -36,7 +36,6 @@
         databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com", 
         projectId: "gigantic-data" 
     };
-    
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
@@ -46,12 +45,7 @@
 
     onAuthStateChanged(auth, (user) => {
         if (!user) { window.location.href = "login.html"; return; }
-
         const order = JSON.parse(localStorage.getItem('pendingOrder'));
-        if (!order) {
-            document.getElementById('renderArea').innerHTML = "No pending order found.";
-            return;
-        }
 
         onValue(ref(db, `users/${user.uid}`), (snapshot) => {
             const userData = snapshot.val() || {};
@@ -69,13 +63,12 @@
 
             document.getElementById('payBtn').onclick = async () => {
                 if (wallet < cost) { alert("Insufficient Balance!"); return; }
-                
-                const btn = document.getElementById('payBtn');
-                btn.disabled = true;
-                btn.innerText = "Processing Delivery...";
+                const payBtn = document.getElementById('payBtn');
+                payBtn.innerText = "Processing...";
+                payBtn.disabled = true;
 
                 try {
-                    // STEP 1: External API Call
+                    // 1. CALL VENDOR API
                     const response = await fetch(API_URL, {
                         method: "POST",
                         headers: { 
@@ -90,35 +83,32 @@
                     });
 
                     const res = await response.json();
-                    if (!response.ok || res.status === "error") throw new Error(res.message || "Provider Error");
+                    if (res.status === "error") throw new Error(res.message);
 
-                    // STEP 2: Database Multi-Path Update (Fixes Permission Denied)
+                    // 2. PREPARE DATA FOR FIREBASE (Must match Rules validation)
                     const orderId = "ORD-" + Math.floor(Math.random() * 1000000);
-                    const newBalance = Number((wallet - cost).toFixed(2));
+                    const newBalance = Number((wallet - cost).toFixed(2)); // Ensure it's a Number
 
-                    // This object contains ALL fields required by your Firebase Rules (.validate)
                     const finalOrderData = {
-                        uid: user.uid,              // Required by Rule
-                        amount: cost,               // Required by Rule
-                        network: order.network,     // Required by Rule
-                        recipient: order.recipient, // Required by Rule
-                        status: "Successful",       // Required by Rule
-                        timestamp: Date.now(),      // Required by Rule
+                        uid: user.uid,              // Required by rules
+                        amount: cost,               // Required by rules
+                        network: order.network,     // Required by rules
+                        recipient: order.recipient, // Required by rules
+                        status: "Successful",       // Required by rules
+                        timestamp: Date.now(),      // Required by rules
                         plan: order.plan,
-                        api_ref: res.order_id || "N/A"
+                        api_id: order.data_id
                     };
 
                     const updates = {};
-                    // Path 1: Deduct from user wallet
+                    // Update user wallet
                     updates[`users/${user.uid}/wallet`] = newBalance;
-                    
-                    // Path 2: Global Orders node (Must satisfy .validate)
+                    // Log in global orders
                     updates[`orders/${orderId}`] = finalOrderData;
-                    
-                    // Path 3: User specific history
+                    // Log in user specific orders
                     updates[`user_orders/${user.uid}/${orderId}`] = finalOrderData;
 
-                    // Execute all updates at once
+                    // 3. EXECUTE MULTI-PATH UPDATE
                     await update(ref(db), updates);
 
                     localStorage.removeItem('pendingOrder');
@@ -127,11 +117,11 @@
 
                 } catch (err) {
                     alert("Order Aborted: " + err.message);
-                    btn.disabled = false;
-                    btn.innerText = "RETRY";
+                    payBtn.innerText = "RETRY";
+                    payBtn.disabled = false;
                 }
             };
-        }, { onlyOnce: false });
+        });
     });
 </script>
 </body>
