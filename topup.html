@@ -8,56 +8,249 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --primary: #1e40af;
-            --gradient: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-            --white: #ffffff;
-            --bg: #f8fafc;
+            --bg-body: #f4f7fe;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-gray: #64748b;
+            --header-bg: #003366;
+            --primary-blue: #0052cc;
+            --accent-orange: #f06529;
+            --blue-gradient: linear-gradient(135deg, #003366 0%, #0052cc 100%);
+            --border-color: #e2e8f0;
         }
-        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg); display: flex; justify-content: center; align-items: center; height: 100vh; color: #0f172a; }
-        .card { background: var(--white); padding: 30px; border-radius: 24px; width: 100%; max-width: 400px; border: 1px solid #e2e8f0; }
-        h2 { text-align: center; margin-bottom: 25px; color: #1e3a8a; font-weight: 800; }
-        .balance-preview { background: var(--gradient); color: white; padding: 20px; border-radius: 18px; text-align: center; margin-bottom: 25px; }
-        .label { display: block; font-size: 0.75rem; font-weight: 700; margin-bottom: 8px; color: #64748b; text-transform: uppercase; }
-        input { width: 100%; padding: 15px; background: #f1f5f9; border: 2px solid transparent; border-radius: 12px; font-size: 1rem; outline: none; transition: 0.3s; color: #0f172a; font-weight: 600; margin-bottom: 20px; }
-        input:focus { border-color: #3b82f6; background: white; }
-        .fee-container { background: #f8fafc; border-radius: 12px; padding: 15px; margin-bottom: 25px; border: 1px dashed #cbd5e1; }
-        .fee-row { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 6px; color: #475569; }
-        .total-row { display: flex; justify-content: space-between; font-weight: 800; color: var(--primary); border-top: 1px solid #e2e8f0; margin-top: 10px; padding-top: 10px; }
-        button { width: 100%; padding: 16px; background: var(--gradient); color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.3s; }
-        button:disabled { background: #94a3b8; cursor: not-allowed; }
-        #modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(8px); }
-        .modal { background: white; padding: 40px 30px; border-radius: 28px; text-align: center; max-width: 340px; width: 90%; }
+
+        /* Dark Mode Support */
+        [data-theme="dark"] {
+            --bg-body: #02040a;
+            --bg-card: #0d1117;
+            --text-main: #f0f6fc;
+            --text-gray: #8b949e;
+            --header-bg: #010409;
+            --border-color: #30363d;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            transition: background 0.3s;
+        }
+
+        .checkout-card {
+            background: var(--bg-card);
+            width: 100%;
+            max-width: 420px;
+            border-radius: 28px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+        }
+
+        .header-area {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .header-area h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--header-bg);
+            margin: 0;
+        }
+
+        /* Matches Dashboard Wallet Style */
+        .balance-preview {
+            background: var(--blue-gradient);
+            color: white;
+            padding: 22px;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 16px rgba(0, 51, 102, 0.2);
+        }
+
+        .balance-preview p {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .balance-preview h1 {
+            font-size: 2rem;
+            font-weight: 900;
+            margin: 0;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-gray);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper span {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        input {
+            width: 100%;
+            padding: 16px 16px 16px 45px;
+            background: var(--bg-body);
+            border: 2px solid var(--border-color);
+            border-radius: 14px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-main);
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input:focus {
+            border-color: var(--primary-blue);
+            background: var(--bg-card);
+        }
+
+        .fee-details {
+            background: var(--bg-body);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 25px;
+            border: 1px dashed var(--text-gray);
+        }
+
+        .fee-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 8px;
+            color: var(--text-gray);
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 800;
+            color: var(--primary-blue);
+            border-top: 1px solid var(--border-color);
+            margin-top: 12px;
+            padding-top: 12px;
+            font-size: 1.1rem;
+        }
+
+        .pay-btn {
+            width: 100%;
+            padding: 18px;
+            background: var(--blue-gradient);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 8px 15px rgba(0, 82, 204, 0.2);
+        }
+
+        .pay-btn:active {
+            transform: scale(0.98);
+        }
+
+        .pay-btn:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Verification Modal */
+        #status-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(8px);
+        }
+
+        .modal-box {
+            background: var(--bg-card);
+            padding: 40px 30px;
+            border-radius: 30px;
+            text-align: center;
+            max-width: 340px;
+            width: 90%;
+            border: 1px solid var(--border-color);
+        }
+
+        .modal-box i {
+            font-size: 60px;
+            color: #10b981;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
 
-<div id="modal-overlay">
-    <div class="modal">
-        <i class="fas fa-check-circle" style="font-size: 55px; color: #10b981; margin-bottom: 20px;"></i>
-        <h3 style="margin-bottom: 12px;">Payment Initialized</h3>
-        <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 25px;">The server is verifying your payment. Your wallet will update automatically once confirmed.</p>
-        <button onclick="window.location.href='dashboard.html'" style="background: #0f172a;">Go to Dashboard</button>
+<div id="status-modal">
+    <div class="modal-box">
+        <i class="fas fa-check-circle"></i>
+        <h3 style="margin-bottom: 10px;">Payment Verified</h3>
+        <p style="font-size: 13px; color: var(--text-gray); line-height: 1.6; margin-bottom: 25px;">
+            Your payment signal has been received. Your wallet will be updated automatically once the server completes the audit.
+        </p>
+        <button onclick="window.location.href='dashboard.html'" class="pay-btn" style="box-shadow:none;">Return to Dashboard</button>
     </div>
 </div>
 
-<div class="card">
-    <h2>Fund Wallet</h2>
+<div class="checkout-card">
+    <div class="header-area">
+        <h2>Fund Wallet</h2>
+    </div>
+
     <div class="balance-preview">
-        <p style="font-size: 0.7rem; opacity: 0.8; font-weight: 700;">AVAILABLE BALANCE</p>
+        <p>Current Balance</p>
         <h1 id="wallDisplay">₵ 0.00</h1>
     </div>
 
-    <span class="label">Amount (GHS)</span>
-    <input type="number" id="amtInput" placeholder="0.00">
-
-    <div class="fee-container">
-        <div class="fee-row"><span>Subtotal</span> <span id="fAmt">₵ 0.00</span></div>
-        <div class="fee-row"><span>Fee (2.5%)</span> <span id="fFee">₵ 0.00</span></div>
-        <div class="total-row"><span>Total</span> <span id="fTotal">₵ 0.00</span></div>
+    <div class="input-group">
+        <label>Top-up Amount (GHS)</label>
+        <div class="input-wrapper">
+            <span>₵</span>
+            <input type="number" id="amtInput" placeholder="0.00">
+        </div>
     </div>
 
-    <button id="payBtn" disabled>Proceed to Payment</button>
+    <div class="fee-details">
+        <div class="fee-row"><span>Subtotal</span> <span id="fAmt">₵ 0.00</span></div>
+        <div class="fee-row"><span>Service Fee (2.5%)</span> <span id="fFee">₵ 0.00</span></div>
+        <div class="total-row"><span>Total Payable</span> <span id="fTotal">₵ 0.00</span></div>
+    </div>
+
+    <button id="payBtn" class="pay-btn" disabled>Proceed to Secure Payment</button>
 </div>
 
 <script type="module">
@@ -65,6 +258,7 @@
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
     import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
+    // Same config as your dashboard
     const firebaseConfig = {
         apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
         authDomain: "gigantic-data.firebaseapp.com",
@@ -78,38 +272,50 @@
 
     let userObj = null;
 
-    // Listen for Auth
+    // Apply saved theme
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+
     onAuthStateChanged(auth, user => {
-        if (!user) { window.location.href = "login.html"; return; }
+        if (!user) {
+            window.location.href = "login.html";
+            return;
+        }
         userObj = user;
-        
-        onValue(ref(db, `users/${user.uid}/wallet`), (s) => {
-            document.getElementById("wallDisplay").innerText = "₵ " + Number(s.val() || 0).toFixed(2);
+
+        // Sync real-time wallet balance from your users node
+        onValue(ref(db, `users/${user.uid}/wallet`), (snapshot) => {
+            const balance = snapshot.val() || 0;
+            document.getElementById("wallDisplay").innerText = "₵ " + Number(balance).toFixed(2);
         });
 
         document.getElementById("payBtn").disabled = false;
     });
 
-    // Handle Fee Calculations
+    // Fee Calculations
     const amtInput = document.getElementById("amtInput");
     amtInput.addEventListener('input', () => {
         const v = parseFloat(amtInput.value) || 0;
-        const fee = v * 0.025;
+        const fee = v * 0.025; // 2.5%
+        const total = v + fee;
         document.getElementById("fAmt").innerText = `₵ ${v.toFixed(2)}`;
         document.getElementById("fFee").innerText = `₵ ${fee.toFixed(2)}`;
-        document.getElementById("fTotal").innerText = `₵ ${(v + fee).toFixed(2)}`;
+        document.getElementById("fTotal").innerText = `₵ ${total.toFixed(2)}`;
     });
 
-    // Handle Payment Button (The Fix: Attaching Event Listener inside the Module)
+    // Paystack Logic
     document.getElementById("payBtn").addEventListener('click', () => {
         const amount = parseFloat(amtInput.value);
-        if (!amount || amount < 1) { alert("Please enter a valid amount"); return; }
+        if (!amount || amount < 1) {
+            alert("Please enter a valid amount (Minimum ₵1.00)");
+            return;
+        }
 
         const payBtn = document.getElementById("payBtn");
         payBtn.disabled = true;
         payBtn.innerText = "Opening Secure Gateway...";
 
-        // Total in pesewas
+        // Calculate amount in pesewas for Paystack
         const totalPesewas = Math.round((amount * 1.025) * 100);
 
         const handler = window.PaystackPop.setup({
@@ -117,21 +323,26 @@
             email: userObj.email,
             amount: totalPesewas,
             currency: "GHS",
-            metadata: { uid: userObj.uid, real_amt: amount },
+            metadata: { 
+                uid: userObj.uid, 
+                real_amt: amount 
+            },
             callback: async (response) => {
-                // Record intent for safety. 
-                // Wallet is NOT credited here. It's done by your Webhook.
+                // SECURITY: We only log the intent here.
+                // The actual money is added by the CLOUD FUNCTION WEBHOOK.
+                // If a hacker triggers this manually, they get no money.
                 await set(ref(db, `pending_deposits/${response.reference}`), {
                     uid: userObj.uid,
                     amount: amount,
-                    status: "waiting_for_webhook",
+                    status: "awaiting_webhook_confirmation",
                     timestamp: Date.now()
                 });
-                document.getElementById("modal-overlay").style.display = "flex";
+                
+                document.getElementById("status-modal").style.display = "flex";
             },
             onClose: () => {
                 payBtn.disabled = false;
-                payBtn.innerText = "Proceed to Payment";
+                payBtn.innerText = "Proceed to Secure Payment";
             }
         });
         handler.openIframe();
