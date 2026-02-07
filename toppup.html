@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Credits | Gigantic Data Hub</title>
-    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-auth-compat.js"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://js.paystack.co/v1/inline.js"></script>
@@ -78,9 +79,21 @@
     </div>
 
     <script>
-        // --- Firebase Configuration ---
-        // Ensure your firebase.initializeApp({...}) code is here if not handled elsewhere
-        
+        // --- Firebase Initialization ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho",
+            authDomain: "gigantic-data.firebaseapp.com",
+            databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
+            projectId: "gigantic-data",
+            storageBucket: "gigantic-data.firebasestorage.app",
+            messagingSenderId: "727845403550",
+            appId: "1:727845403550:web:56d06c9389993153a9748f",
+            measurementId: "G-10F198VFE6"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
         const FEE_RATE = 0.025; 
         const paystackPublicKey = 'pk_live_faecdb3166144fadebd8269829343698dd43de63';
 
@@ -104,10 +117,10 @@
         }
 
         function startPayment() {
-            // Get current logged-in user from Firebase Auth
-            const user = firebase.auth().currentUser; 
+            const user = auth.currentUser; 
             if (!user) {
-                alert("Please log in first!");
+                alert("Please log in to your Gigantic Data account first!");
+                // Optionally: window.location.href = "login.html";
                 return;
             }
 
@@ -122,7 +135,6 @@
                 ref: 'GH-' + Date.now(),
                 onClose: () => alert('Transaction Cancelled'),
                 callback: (response) => {
-                    // Send reference, amount, and userId to server
                     verifyOnServer(response.reference, amount, user.uid);
                 }
             });
@@ -147,16 +159,16 @@
 
                 const result = await response.json();
                 if(result.success) {
-                    alert("Success! Wallet credited.");
+                    alert("Success! Your wallet has been credited.");
                     window.location.reload();
                 } else {
-                    alert("Verification failed: " + (result.message || "Unknown error"));
+                    alert("Verification failed: " + (result.message || "Please check your network."));
                     btn.innerText = "Pay Securely";
                     btn.disabled = false;
                 }
             } catch (e) {
                 console.error(e);
-                alert("Server error. Please contact support.");
+                alert("Server error. Transaction log created.");
                 btn.innerText = "Pay Securely";
                 btn.disabled = false;
             }
