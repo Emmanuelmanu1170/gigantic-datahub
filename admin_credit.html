@@ -3,79 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin: Smart Credit - GiganticData</title>
+    <title>Admin: Audit & Credit - GiganticData</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --admin-dark: #0f172a;
-            --admin-accent: #4f46e5;
+            --primary: #4f46e5;
+            --dark: #0f172a;
             --success: #10b981;
             --danger: #ef4444;
-            --warning: #f59e0b;
+            --bg: #f1f5f9;
         }
-        body { margin:0; font-family:'Inter', sans-serif; background:#f1f5f9; color:var(--admin-dark); }
-        header { background:var(--admin-dark); color:white; padding:20px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
-        .container { padding:20px; max-width:500px; margin:auto; }
-        .card { background:white; border-radius:24px; padding:30px; box-shadow:0 10px 25px rgba(0,0,0,0.05); border:1px solid #e2e8f0; }
+        body { margin:0; font-family:'Inter', sans-serif; background:var(--bg); color:var(--dark); }
+        .wrapper { max-width: 1200px; margin: auto; padding: 20px; display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
         
-        .input-group { margin-bottom: 20px; }
-        label { display:block; font-weight:700; font-size:12px; margin-bottom:8px; color:#64748b; text-transform:uppercase; letter-spacing: 1px; }
+        .card { background:white; border-radius:20px; padding:25px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
+        h3 { margin-top: 0; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 20px;}
+
+        /* Input Styles */
+        .input-group { margin-bottom: 15px; position: relative; }
+        label { display:block; font-weight:700; font-size:11px; color:#64748b; margin-bottom: 5px; }
         input { 
-            width:100%; padding:14px; border:2px solid #f1f5f9; border-radius:12px; 
-            font-size:1rem; outline:none; transition:0.3s; box-sizing:border-box; font-weight: 600;
+            width:100%; padding:12px; border:2px solid #f1f5f9; border-radius:10px; 
+            font-size:0.9rem; outline:none; box-sizing:border-box; transition: 0.3s;
         }
-        input:focus { border-color:var(--admin-accent); background: #fff; }
+        input:focus { border-color:var(--primary); }
         
-        .calc-box { background: #f8fafc; border-radius: 16px; padding: 15px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
-        .calc-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; }
-        .calc-row.final { border-top: 1px solid #e2e8f0; padding-top: 10px; margin-top: 10px; font-weight: 800; color: var(--admin-accent); font-size: 1.1rem; }
-
-        .btn-credit { 
-            width:100%; background:var(--admin-accent); color:white; border:none; 
-            padding:18px; border-radius:15px; font-weight:700; cursor:pointer; 
-            font-size:1rem; transition: 0.3s;
+        /* Reference Checker Badge */
+        .ref-status { position: absolute; right: 10px; top: 32px; font-size: 0.7rem; font-weight: 800; padding: 4px 8px; border-radius: 6px; display: none;}
+        
+        .user-info { background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid var(--primary); display: none; }
+        
+        .btn-exec { 
+            width:100%; background:var(--primary); color:white; border:none; 
+            padding:16px; border-radius:12px; font-weight:700; cursor:pointer; 
         }
-        .btn-credit:disabled { background:#94a3b8; cursor:not-allowed; }
 
-        #log-area { margin-top: 20px; font-size: 0.85rem; padding: 15px; border-radius: 12px; display: none; line-height: 1.4; }
-        .log-success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
-        .log-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+        /* Audit Table */
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        th { text-align: left; padding: 12px; background: #f8fafc; color: #64748b; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
+        
+        .bal-pill { font-family: monospace; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: #eee; }
+        .text-success { color: var(--success); }
+        .text-danger { color: var(--danger); }
+
+        @media (max-width: 900px) { .wrapper { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
-<header>
-    <h2><i class="fas fa-user-shield"></i> Admin Smart Credit</h2>
-    <p style="font-size:0.8rem; opacity:0.7;">Verified Manual Processing</p>
-</header>
-
-<div class="container">
+<div class="wrapper">
     <div class="card">
-        <div class="input-group">
-            <label>1. Target User UID</label>
-            <input type="text" id="targetUid" placeholder="Paste user UID here...">
-        </div>
-
-        <div class="input-group">
-            <label>2. Paystack Reference</label>
-            <input type="text" id="paystackRef" placeholder="Enter Reference to Fetch Amount...">
-        </div>
-
-        <div class="calc-box">
-            <div class="calc-row"><span>Paid Amount</span> <span id="rawAmt">₵ 0.00</span></div>
-            <div class="calc-row"><span>System Fee (2.5%)</span> <span id="feeAmt" style="color:var(--danger)">-₵ 0.00</span></div>
-            <div class="calc-row final"><span>Final Credit</span> <span id="finalAmt">₵ 0.00</span></div>
-        </div>
-
-        <button class="btn-credit" id="execBtn" onclick="processManualCredit()">FETCH & APPROVE</button>
+        <h3><i class="fas fa-plus-circle"></i> Smart Credit</h3>
         
-        <div id="log-area"></div>
+        <div class="input-group">
+            <label>User UID</label>
+            <input type="text" id="targetUid" placeholder="Paste UID..." oninput="checkUser(this.value)">
+        </div>
+
+        <div id="userBox" class="user-info">
+            <div style="font-weight: 800;" id="uName">---</div>
+            <div style="font-size: 0.8rem; opacity: 0.7;">Current Wallet: <span id="uWall">₵0.00</span></div>
+        </div>
+
+        <div class="input-group">
+            <label>Paystack Reference</label>
+            <input type="text" id="payRef" placeholder="T123456789..." oninput="verifyRef(this.value)">
+            <span id="refBadge" class="ref-status"></span>
+        </div>
+
+        <div class="input-group">
+            <label>Amount to Credit (₵)</label>
+            <input type="number" id="amt" placeholder="0.00" step="0.01">
+        </div>
+
+        <button class="btn-exec" id="execBtn" onclick="runCredit()">APPROVE & UPDATE WALLET</button>
+    </div>
+
+    <div class="card">
+        <h3><i class="fas fa-list-check"></i> Audit Trail (Manual Credits)</h3>
+        
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>User & Reference</th>
+                        <th>Before</th>
+                        <th>Credit</th>
+                        <th>After</th>
+                    </tr>
+                </thead>
+                <tbody id="auditBody">
+                    <tr><td colspan="5" style="text-align:center">Loading audit logs...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+import { getDatabase, ref, get, update, query, limitToLast, onValue } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -89,118 +119,130 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
 
-let finalCreditAmount = 0;
-
-// Admin Lockdown
 onAuthStateChanged(auth, user => {
     if (!user || user.email !== 'alenacloft0@gmail.com') {
         window.location.href = "dashboard.html";
+    } else {
+        loadAuditTrail();
     }
 });
 
-// Auto-fetch on Reference Input
-document.getElementById('paystackRef').addEventListener('input', async (e) => {
-    const refStr = e.target.value.trim();
-    if(refStr.length > 8) {
-        // In a real environment, you'd call a secure Cloud Function here.
-        // For now, we fetch details but never expose the Secret Key in the code.
-        fetchPaystackDetails(refStr);
-    }
-});
-
-async function fetchPaystackDetails(reference) {
-    const btn = document.getElementById('execBtn');
-    btn.innerText = "Verifying Reference...";
-    btn.disabled = true;
-
-    try {
-        // NOTE: For security, the Paystack Secret Key must NEVER be in this file.
-        // You should use a Make.com Webhook or Firebase Cloud Function to do this.
-        // For this UI to update, we simulate the calculation based on your business rules.
-        
-        // Let's assume you've verified the amount elsewhere or via a secure proxy.
-        // For testing, you can prompt for the raw amount or use a proxy.
-        const rawInput = prompt("Enter the RAW amount shown on Paystack dashboard for this reference:");
-        const fetchedAmount = parseFloat(rawInput);
-
-        if(!isNaN(fetchedAmount) && fetchedAmount > 0) {
-            const systemFee = fetchedAmount * 0.025;
-            finalCreditAmount = fetchedAmount - systemFee;
-
-            document.getElementById('rawAmt').innerText = `₵ ${fetchedAmount.toFixed(2)}`;
-            document.getElementById('feeAmt').innerText = `-₵ ${systemFee.toFixed(2)}`;
-            document.getElementById('finalAmt').innerText = `₵ ${finalCreditAmount.toFixed(2)}`;
-            
-            btn.innerText = "APPROVE & CREDIT USER";
-            btn.disabled = false;
-        } else {
-            showLog("Invalid amount entered.", "error");
-            btn.disabled = false;
-        }
-    } catch (err) {
-        showLog("Error: " + err.message, "error");
-        btn.disabled = false;
-    }
-}
-
-window.processManualCredit = async function() {
-    const uid = document.getElementById('targetUid').value.trim();
-    const refStr = document.getElementById('paystackRef').value.trim();
-    const btn = document.getElementById('execBtn');
-
-    if (!uid || !refStr || finalCreditAmount <= 0) return alert("Verify data first");
-
-    btn.disabled = true;
-    btn.innerText = "Processing...";
-
-    try {
-        const refCheck = await get(ref(db, `verified_references/${refStr}`));
-        if (refCheck.exists()) {
-            showLog("CRITICAL: Reference already used!", "error");
-            return;
-        }
-
-        const timestamp = Date.now();
-        const txId = "TOP-" + Math.floor(Math.random() * 89999 + 10000);
-        const userSnap = await get(ref(db, `users/${uid}/wallet`));
-        const currentBal = parseFloat(userSnap.val() || 0);
-        const newBal = currentBal + finalCreditAmount;
-
-        const updates = {};
-        updates[`users/${uid}/wallet`] = newBal;
-        updates[`verified_references/${refStr}`] = { usedBy: uid, amt: finalCreditAmount, date: timestamp };
-        updates[`transactions/${txId}`] = {
-            uid: uid,
-            amount: finalCreditAmount,
-            type: "Credit",
-            category: "topup",
-            date: timestamp,
-            newBalance: newBal,
-            reference: refStr,
-            note: "Manual Approval"
-        };
-
-        await update(ref(db), updates);
-        showLog(`SUCCESS: ₵${finalCreditAmount.toFixed(2)} credited.`, "success");
-        
-        // Reset UI
-        document.getElementById('paystackRef').value = "";
-        document.getElementById('finalAmt').innerText = "₵ 0.00";
-        finalCreditAmount = 0;
-    } catch (err) {
-        showLog("Update Failed: " + err.message, "error");
-    } finally {
-        btn.disabled = false;
-        btn.innerText = "FETCH & APPROVE";
+// FEATURE: REAL-TIME REFERENCE CHECKER
+window.verifyRef = async function(refStr) {
+    const badge = document.getElementById('refBadge');
+    if (refStr.length < 5) { badge.style.display = "none"; return; }
+    
+    const snap = await get(ref(db, `verified_references/${refStr}`));
+    badge.style.display = "block";
+    if (snap.exists()) {
+        badge.innerText = "ALREADY USED";
+        badge.style.background = "#fef2f2";
+        badge.style.color = "#991b1b";
+    } else {
+        badge.innerText = "AVAILABLE";
+        badge.style.background = "#ecfdf5";
+        badge.style.color = "#065f46";
     }
 };
 
-function showLog(msg, type) {
-    const log = document.getElementById('log-area');
-    log.style.display = "block";
-    log.innerText = msg;
-    log.className = type === "success" ? "log-success" : "log-error";
+// FEATURE: USER INFO PREVIEW
+window.checkUser = async function(uid) {
+    if (uid.length < 10) return;
+    const snap = await get(ref(db, `users/${uid}`));
+    const box = document.getElementById('userBox');
+    if (snap.exists()) {
+        const u = snap.val();
+        document.getElementById('uName').innerText = u.name || u.email;
+        document.getElementById('uWall').innerText = "₵" + (parseFloat(u.wallet) || 0).toFixed(2);
+        box.style.display = "block";
+    } else {
+        box.style.display = "none";
+    }
+};
+
+// FEATURE: AUDIT LOG WITH BEFORE/AFTER BALANCE
+function loadAuditTrail() {
+    const auditRef = query(ref(db, 'admin_deposit_logs'), limitToLast(20));
+    onValue(auditRef, (snapshot) => {
+        const tbody = document.getElementById('auditBody');
+        tbody.innerHTML = "";
+        if (snapshot.exists()) {
+            const logs = [];
+            snapshot.forEach(child => { logs.push(child.val()); });
+            logs.reverse().forEach(log => {
+                const date = new Date(log.date).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+                tbody.innerHTML += `
+                    <tr>
+                        <td><small>${date}</small></td>
+                        <td>
+                            <b>${log.user_email || 'User'}</b><br>
+                            <small style="color:#64748b">${log.ref}</small>
+                        </td>
+                        <td><span class="bal-pill">₵${log.oldBal.toFixed(2)}</span></td>
+                        <td><b class="text-success">+₵${log.amt.toFixed(2)}</b></td>
+                        <td><span class="bal-pill" style="background:var(--primary); color:white">₵${log.newBal.toFixed(2)}</span></td>
+                    </tr>
+                `;
+            });
+        }
+    });
 }
+
+window.runCredit = async function() {
+    const uid = document.getElementById('targetUid').value.trim();
+    const refStr = document.getElementById('payRef').value.trim();
+    const amount = parseFloat(document.getElementById('amt').value);
+
+    if (!uid || !refStr || isNaN(amount) || amount <= 0) return alert("Fill all fields correctly");
+
+    const btn = document.getElementById('execBtn');
+    btn.disabled = true;
+
+    try {
+        // Final Security Check
+        const refSnap = await get(ref(db, `verified_references/${refStr}`));
+        if (refSnap.exists()) throw new Error("Reference already used!");
+
+        const userSnap = await get(ref(db, `users/${uid}`));
+        if (!userSnap.exists()) throw new Error("User not found!");
+
+        const userData = userSnap.val();
+        const oldBalance = parseFloat(userData.wallet || 0);
+        const newBalance = oldBalance + amount;
+        const timestamp = Date.now();
+        const txId = "MANUAL-" + timestamp;
+
+        const updates = {};
+        updates[`users/${uid}/wallet`] = newBalance;
+        updates[`verified_references/${refStr}`] = { uid, amount, date: timestamp };
+        
+        // Comprehensive Audit Record
+        updates[`admin_deposit_logs/${txId}`] = {
+            uid,
+            user_email: userData.email || "N/A",
+            amt: amount,
+            ref: refStr,
+            oldBal: oldBalance,
+            newBal: newBalance,
+            date: timestamp,
+            admin: auth.currentUser.email
+        };
+
+        await update(ref(db), updates);
+        alert(`Successfully Credited! Wallet moved from ₵${oldBalance.toFixed(2)} to ₵${newBalance.toFixed(2)}`);
+        
+        // Reset UI
+        document.getElementById('targetUid').value = "";
+        document.getElementById('payRef').value = "";
+        document.getElementById('amt').value = "";
+        document.getElementById('userBox').style.display = "none";
+
+    } catch (err) {
+        alert(err.message);
+    } finally {
+        btn.disabled = false;
+    }
+};
 </script>
 </body>
 </html>
