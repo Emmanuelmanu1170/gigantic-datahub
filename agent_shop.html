@@ -17,7 +17,6 @@
         }
         body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding-bottom: 100px; color: var(--text-main); }
         
-        /* HEADER */
         .merchant-header {
             background: linear-gradient(135deg, var(--primary) 0%, #001a33 100%); 
             color: white; padding: 40px 20px 80px;
@@ -27,7 +26,6 @@
         .shop-title { font-size: 1.5rem; font-weight: 900; letter-spacing: -0.5px; }
         .badge-agent { background: var(--gold); color: #000; padding: 5px 15px; border-radius: 20px; font-size: 11px; font-weight: 900; display: inline-block; margin-top: 10px; }
 
-        /* STATS CARDS */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: -50px 20px 20px; }
         .stat-card {
             background: var(--white); padding: 22px 15px; border-radius: 24px;
@@ -37,7 +35,6 @@
         .stat-card b { display: block; font-size: 22px; color: var(--primary); margin-bottom: 4px; }
         .stat-card span { font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; }
 
-        /* PROFIT CALCULATOR */
         .profit-calculator {
             background: var(--white); margin: 0 20px 25px; padding: 20px; 
             border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.06);
@@ -54,7 +51,6 @@
         }
         .toggle-btn.active { background: var(--white); color: var(--primary); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
 
-        /* TOOLS GRID */
         .section { padding: 0 20px; margin-bottom: 30px; }
         .section-header { margin-bottom: 15px; font-size: 12px; font-weight: 900; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
         
@@ -68,7 +64,6 @@
         .tool-box i { font-size: 24px; margin-bottom: 10px; display: block; }
         .tool-box b { font-size: 13px; }
 
-        /* RECEIPT CARDS FOR HISTORY */
         .order-card {
             background: var(--white);
             border-radius: 20px;
@@ -107,7 +102,6 @@
         .status-completed { background: #ecfdf5; color: #047857; }
         .status-pending { background: #fffbeb; color: #b45309; }
 
-        /* NAV */
         .bottom-nav {
             position: fixed; bottom: 0; width: 100%; background: var(--white);
             display: flex; justify-content: space-around; padding: 15px 0;
@@ -187,14 +181,19 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
     import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-    const firebaseConfig = { 
-        apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4", 
-        authDomain: "gigantic-data.firebaseapp.com", 
-        databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com", 
-        projectId: "gigantic-data" 
+    // COMPLETE CONFIG INTEGRATION
+    const firebaseConfig = {
+        apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho",
+        authDomain: "gigantic-data.firebaseapp.com",
+        databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
+        projectId: "gigantic-data",
+        storageBucket: "gigantic-data.firebasestorage.app",
+        messagingSenderId: "727845403550",
+        appId: "1:727845403550:web:56d06c9389993153a9748f",
+        measurementId: "G-10F198VFE6"
     };
     
     const app = initializeApp(firebaseConfig);
@@ -203,84 +202,72 @@
 
     let currentMargin = 0.4;
     let todaySalesVolume = 0;
+    let isAuthReady = false;
 
-    onAuthStateChanged(auth, user => {
-        if (user) {
-            // 1. Sync Wallet & Status
-            onValue(ref(db, `users/${user.uid}`), snap => {
-                const data = snap.val() || {};
-                document.getElementById('agentWallet').innerText = "₵" + Number(data.wallet || 0).toFixed(2);
-                if(data.status !== 'Agent' && data.userType !== 'agent') window.location.href = "dashboard.html";
-            });
-
-            // 2. Sync Correct Order History Path
-            const orderRef = ref(db, `user_orders/${user.uid}`);
-            onValue(orderRef, (snapshot) => {
-                const container = document.getElementById('historyContainer');
-                const data = snapshot.val();
-
-                if (!data) {
-                    container.innerHTML = `<div style="text-align:center; padding:30px; color:#94a3b8;"><i class="fas fa-receipt fa-2x" style="opacity:0.2;"></i><p>No transactions yet</p></div>`;
-                    document.getElementById('lifetimeSales').innerText = "0";
-                    document.getElementById('profitDisplay').innerText = "₵0.00";
-                    return;
-                }
-
-                let html = "";
-                let totalOrdersCount = 0;
-                let todayCost = 0;
-                const startOfToday = new Date().setHours(0,0,0,0);
-
-                // Sort and Process Data
-                const entries = Object.entries(data).sort((a,b) => b[1].timestamp - a[1].timestamp);
-                totalOrdersCount = entries.length;
-
-                entries.forEach(([id, order]) => {
-                    const amount = parseFloat(order.amount || 0);
-                    const ts = order.timestamp || Date.now();
-                    const dateObj = new Date(ts);
-                    
-                    if (ts >= startOfToday) todayCost += amount;
-
-                    const network = (order.network || 'MTN').toUpperCase();
-                    let netClass = 'mtn-bg';
-                    if(network.includes('TELECEL')) netClass = 'tel-bg';
-                    if(network.includes('AT') || network.includes('AIRTEL')) netClass = 'air-bg';
-
-                    const status = order.status || 'Completed';
-                    const statusClass = `status-${status.toLowerCase().replace(" ", "-")}`;
-
-                    // Build Receipt Card HTML
-                    html += `
-                        <div class="order-card">
-                            <div class="order-header">
-                                <div class="network-icon ${netClass}">${network.substring(0,3)}</div>
-                                <div style="text-align:right">
-                                    <div style="font-size:10px; font-family:monospace; color:var(--text-gray);">#${id.slice(-8)}</div>
-                                    <div style="font-size:9px; color:#94a3b8;">${dateObj.toLocaleString()}</div>
-                                </div>
-                            </div>
-                            <div class="order-details">
-                                <div class="detail-row"><span>Data Plan</span><b>${order.plan || 'N/A'}</b></div>
-                                <div class="detail-row"><span>Recipient</span><b>${order.recipient || 'N/A'}</b></div>
-                            </div>
-                            <div class="order-footer">
-                                <div class="amount-paid">₵${amount.toFixed(2)}</div>
-                                <span class="status-pill ${statusClass}">${status}</span>
-                            </div>
-                        </div>
-                    `;
+    // Force Persistence Lock
+    setPersistence(auth, browserLocalPersistence).then(() => {
+        onAuthStateChanged(auth, user => {
+            isAuthReady = true;
+            if (user) {
+                // Sync Wallet & Merchant Status
+                onValue(ref(db, `users/${user.uid}`), snap => {
+                    const data = snap.val() || {};
+                    document.getElementById('agentWallet').innerText = "₵" + Number(data.wallet || data.balance || 0).toFixed(2);
+                    const status = (data.status || data.userType || "").toLowerCase();
+                    if(status !== 'agent') window.location.replace("dashboard.html");
                 });
 
-                // Update Dashboard Metrics
-                document.getElementById('lifetimeSales').innerText = totalOrdersCount;
-                todaySalesVolume = todayCost;
-                updateProfitDisplay();
-                container.innerHTML = html;
-            });
-        } else {
-            window.location.href = "login.html";
-        }
+                // Sync Order History
+                onValue(ref(db, `user_orders/${user.uid}`), (snapshot) => {
+                    const container = document.getElementById('historyContainer');
+                    const data = snapshot.val();
+                    if (!data) {
+                        container.innerHTML = `<div style="text-align:center; padding:30px; color:#94a3b8;"><p>No transactions yet</p></div>`;
+                        return;
+                    }
+
+                    let html = "";
+                    let todayCost = 0;
+                    const startOfToday = new Date().setHours(0,0,0,0);
+                    const entries = Object.entries(data).sort((a,b) => b[1].timestamp - a[1].timestamp);
+
+                    entries.forEach(([id, order]) => {
+                        const amount = parseFloat(order.amount || 0);
+                        const ts = order.timestamp || Date.now();
+                        if (ts >= startOfToday) todayCost += amount;
+
+                        const network = (order.network || 'MTN').toUpperCase();
+                        let netClass = network.includes('TELECEL') ? 'tel-bg' : (network.includes('AT') ? 'air-bg' : 'mtn-bg');
+                        const status = order.status || 'Completed';
+
+                        html += `
+                            <div class="order-card">
+                                <div class="order-header">
+                                    <div class="network-icon ${netClass}">${network.substring(0,3)}</div>
+                                    <div style="text-align:right">
+                                        <div style="font-size:10px; color:var(--text-gray);">#${id.slice(-8)}</div>
+                                    </div>
+                                </div>
+                                <div class="order-details">
+                                    <div class="detail-row"><span>Plan</span><b>${order.plan}</b></div>
+                                    <div class="detail-row"><span>Recipient</span><b>${order.recipient}</b></div>
+                                </div>
+                                <div class="order-footer">
+                                    <div class="amount-paid">₵${amount.toFixed(2)}</div>
+                                    <span class="status-pill status-${status.toLowerCase()}">${status}</span>
+                                </div>
+                            </div>`;
+                    });
+
+                    document.getElementById('lifetimeSales').innerText = entries.length;
+                    todaySalesVolume = todayCost;
+                    updateProfitDisplay();
+                    container.innerHTML = html;
+                });
+            } else {
+                if (isAuthReady) window.location.replace("login.html");
+            }
+        });
     });
 
     window.setProfitMargin = (val, el) => {
@@ -291,13 +278,12 @@
     };
 
     function updateProfitDisplay() {
-        // Profit = Sales Volume * Selected Percentage
         const profit = todaySalesVolume * currentMargin;
         document.getElementById('profitDisplay').innerText = "₵" + profit.toFixed(2);
     }
 
     window.shareMarketingKit = () => {
-        const msg = `🚀 *GIGANTIC DATA MERCHANT* 🚀\n\nOfficial agent dashboard active. Buy cheap data instantly!\n\nDM me now to save money! ⚡`;
+        const msg = `🚀 *GIGANTIC DATA MERCHANT* 🚀\nOfficial agent dashboard active. Buy cheap data instantly!\nDM me now to save money! ⚡`;
         window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
     };
 </script>
