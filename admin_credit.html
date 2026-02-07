@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin: Manual Credit - GiganticData</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --admin-dark: #0f172a;
+            --admin-accent: #4f46e5;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+        body { margin:0; font-family:'Inter', sans-serif; background:#f1f5f9; color:var(--admin-dark); }
+        header { background:var(--admin-dark); color:white; padding:20px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
+        .container { padding:20px; max-width:500px; margin:auto; }
+        .card { background:white; border-radius:24px; padding:30px; box-shadow:0 10px 25px rgba(0,0,0,0.05); border:1px solid #e2e8f0; }
+        
+        .input-group { margin-bottom: 20px; }
+        label { display:block; font-weight:700; font-size:12px; margin-bottom:8px; color:#64748b; text-transform:uppercase; }
+        input { 
+            width:100%; padding:14px; border:2px solid #f1f5f9; border-radius:12px; 
+            font-size:1rem; outline:none; transition:0.3s; box-sizing:border-box;
+        }
+        input:focus { border-color:var(--admin-accent); }
+        
+        .btn-credit { 
+            width:100%; background:var(--admin-accent); color:white; border:none; 
+            padding:18px; border-radius:15px; font-weight:700; cursor:pointer; 
+            font-size:1rem; transition: 0.3s;
+        }
+        .btn-credit:disabled { background:#94a3b8; cursor:not-allowed; }
+
+        #log-area { margin-top: 20px; font-size: 0.85rem; padding: 15px; border-radius: 12px; display: none; }
+        .log-success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+        .log-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h2><i class="fas fa-user-shield"></i> Admin Panel</h2>
+    <p style="font-size:0.8rem; opacity:0.7;">Manual User Crediting</p>
+</header>
+
+<div class="container">
+    <div class="card">
+        <div class="input-group">
+            <label>User UID</label>
+            <input type="text" id="targetUid" placeholder="Paste user UID here...">
+        </div>
+
+        <div class="input-group">
+            <label>Paystack Reference</label>
+            <input type="text" id="paystackRef" placeholder="T7384920193...">
+        </div>
+
+        <div class="input-group">
+            <label>Amount (GH₵)</label>
+            <input type="number" id="creditAmt" placeholder="0.00" step="0.01">
+        </div>
+
+        <button class="btn-credit" id="execBtn" onclick="processManualCredit()">APPROVE & CREDIT USER</button>
+        
+        <div id="log-area"></div>
+    </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+import { getDatabase, ref, get, update, runTransaction } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
+    authDomain: "gigantic-data.firebaseapp.com",
+    databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
+    projectId: "gigantic-data"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const auth = getAuth(app);
+
+// Secure this page for Admin only
+onAuthStateChanged(auth, user => {
+    if (!user || user.email !== 'alenacloft0@gmail.com') {
+        alert("Access Denied: Admins Only");
+        window.location.href = "dashboard.html";
+    }
+});
+
+window.processManualCredit = async function() {
+    const uid = document.getElementById('targetUid').value.trim();
+    const refStr = document.getElementById('paystackRef').value.trim();
+    const amt = parseFloat(document.getElementById('creditAmt').value);
+    const log = document.getElementById('log-area');
+    const btn = document.getElementById('execBtn');
+
+    if (!uid || !refStr || isNaN(amt)) return alert("Fill all fields correctly");
+
+    btn.disabled = true;
+    btn.innerText = "Verifying Reference...";
+
+    try {
+        // 1. Check if reference was already used
+        const refCheck = await get(ref(db, `verified_references/${refStr}`));
+        
+        if (refCheck.exists()) {
+            showLog("Error: This reference has already been credited!", "error");
+            btn.disabled = false;
+            btn.innerText = "APPROVE & CREDIT USER";
+            return;
+        }
+
+        // 2. Process Credit and Mark Reference as used
+        const updates = {};
+        const timestamp = Date.now();
+        const txId = "ADMIN-" + Math.floor(Math.random() * 89999 + 10000);
+
+        // Fetch current balance to calculate new balance
+        const userSnap = await get(ref(db, `users/${uid}/wallet`));
+        const currentBal = parseFloat(userSnap.val() || 0);
+        const newBal = currentBal + amt;
+
+        // Atomic Updates
+        updates[`users/${uid}/wallet`] = newBal;
+        updates[`verified_references/${refStr}`] = {
+            usedBy: uid,
+            amount: amt,
+            date: timestamp,
+            admin: auth.currentUser.email
+        };
+        updates[`transactions/${txId}`] = {
+            uid: uid,
+            amount: amt,
+            type: "Credit",
+            category: "topup",
+            date: timestamp,
+            newBalance: newBal,
+            reference: refStr,
+            note: "Manual Admin Credit"
+        };
+        updates[`topupNotes/${uid}/${txId}`] = {
+            amount: amt,
+            timestamp: timestamp,
+            status: "Successful",
+            method: "Manual Admin",
+            reference: refStr
+        };
+
+        await update(ref(db), updates);
+        showLog(`Success! GH₵${amt} credited to user.`, "success");
+        
+        // Clear fields
+        document.getElementById('paystackRef').value = "";
+        document.getElementById('creditAmt').value = "";
+    } catch (err) {
+        showLog("System Error: " + err.message, "error");
+    } finally {
+        btn.disabled = false;
+        btn.innerText = "APPROVE & CREDIT USER";
+    }
+};
+
+function showLog(msg, type) {
+    const log = document.getElementById('log-area');
+    log.style.display = "block";
+    log.innerText = msg;
+    log.className = type === "success" ? "log-success" : "log-error";
+}
+</script>
+</body>
+</html>
