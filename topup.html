@@ -1,41 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fund Wallet - GiganticDataHub</title>
-<script src="https://js.paystack.co/v1/inline.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<style>
-:root {
-    --deep: #0f172a;
-    --primary: #4f46e5;
-    --success: #10b981;
-    --white: #ffffff;
-}
-body { margin:0; font-family:'Poppins', sans-serif; background:#f8fafc; color:var(--deep); overflow-x:hidden; }
-.header { background:var(--deep); color:white; padding:20px; display:flex; align-items:center; gap:15px; box-shadow:0 4px 12px rgba(0,0,0,0.1);}
-.container { padding:20px; max-width:450px; margin:auto; }
-.card { background:var(--white); border-radius:28px; padding:25px; box-shadow:0 15px 35px rgba(0,0,0,0.05); margin-bottom:20px; border:1px solid #e2e8f0; position:relative; }
-.balance-card { background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%); color:white; padding:22px; border-radius:22px; margin-bottom:25px; text-align:center; border:1px solid rgba(255,255,255,0.1);}
-label { display:block; font-weight:700; font-size:12px; margin-bottom:10px; color:#64748b; text-transform:uppercase; letter-spacing:1px; }
-.input-group { position:relative; margin-bottom:20px; }
-.input-group span { position:absolute; left:18px; top:14px; font-weight:800; color:var(--deep); font-size:1.1rem; }
-input { width:100%; padding:16px 16px 16px 60px; border:2px solid #f1f5f9; border-radius:18px; font-size:1.2rem; outline:none; transition:0.3s; box-sizing:border-box; font-weight:600; }
-input:focus { border-color:var(--primary); background:#fff; box-shadow:0 0 0 4px rgba(79,70,229,0.1); }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fund Wallet - GiganticDataHub</title>
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --deep: #0f172a;
+            --primary: #4f46e5;
+            --success: #10b981;
+            --white: #ffffff;
+        }
+        body { margin:0; font-family:'Poppins', sans-serif; background:#f8fafc; color:var(--deep); overflow-x:hidden; }
+        .header { background:var(--deep); color:white; padding:20px; display:flex; align-items:center; gap:15px; box-shadow:0 4px 12px rgba(0,0,0,0.1);}
+        .container { padding:20px; max-width:450px; margin:auto; }
+        .card { background:var(--white); border-radius:28px; padding:25px; box-shadow:0 15px 35px rgba(0,0,0,0.05); margin-bottom:20px; border:1px solid #e2e8f0; position:relative; }
+        .balance-card { background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%); color:white; padding:22px; border-radius:22px; margin-bottom:25px; text-align:center; border:1px solid rgba(255,255,255,0.1);}
+        label { display:block; font-weight:700; font-size:12px; margin-bottom:10px; color:#64748b; text-transform:uppercase; letter-spacing:1px; }
+        .input-group { position:relative; margin-bottom:20px; }
+        .input-group span { position:absolute; left:18px; top:14px; font-weight:800; color:var(--deep); font-size:1.1rem; }
+        input { width:100%; padding:16px 16px 16px 60px; border:2px solid #f1f5f9; border-radius:18px; font-size:1.2rem; outline:none; transition:0.3s; box-sizing:border-box; font-weight:600; }
+        input:focus { border-color:var(--primary); background:#fff; box-shadow:0 0 0 4px rgba(79,70,229,0.1); }
 
-.fee-info { background:#f8fafc; border-radius:18px; padding:18px; font-size:0.9rem; border:1px dashed #cbd5e1; margin-bottom:15px; }
-.fee-row { display:flex; justify-content:space-between; margin-bottom:8px; color:#64748b; }
-.total-row { border-top:2px solid #e2e8f0; padding-top:12px; margin-top:12px; font-weight:800; color:var(--primary); font-size:1.1rem; }
+        .fee-info { background:#f8fafc; border-radius:18px; padding:18px; font-size:0.9rem; border:1px dashed #cbd5e1; margin-bottom:15px; }
+        .fee-row { display:flex; justify-content:space-between; margin-bottom:8px; color:#64748b; }
+        .total-row { border-top:2px solid #e2e8f0; padding-top:12px; margin-top:12px; font-weight:800; color:var(--primary); font-size:1.1rem; }
 
-.pay-btn { width:100%; background:var(--primary); color:white; border:none; padding:20px; border-radius:20px; font-weight:700; font-size:1rem; margin-top:25px; cursor:pointer; transition:0.3s; box-shadow:0 10px 25px rgba(79,70,229,0.3); text-transform:uppercase; letter-spacing:1px;}
-.pay-btn:disabled { background:#94a3b8; cursor:not-allowed; box-shadow:none; }
+        .pay-btn { width:100%; background:var(--primary); color:white; border:none; padding:20px; border-radius:20px; font-weight:700; font-size:1rem; margin-top:25px; cursor:pointer; transition:0.3s; box-shadow:0 10px 25px rgba(79,70,229,0.3); text-transform:uppercase; letter-spacing:1px;}
+        .pay-btn:disabled { background:#94a3b8; cursor:not-allowed; box-shadow:none; }
 
-#status-modal { position:fixed; inset:0; background:rgba(15,23,42,0.9); display:none; align-items:center; justify-content:center; z-index:2000; backdrop-filter:blur(8px);}
-.modal-content { background:white; width:85%; max-width:380px; padding:40px 30px; border-radius:32px; text-align:center; animation:slideUp 0.4s ease-out; }
-@keyframes slideUp { from { transform:translateY(50px); opacity:0; } to { transform:translateY(0); opacity:1; } }
-.success-icon { font-size:70px; color:var(--success); margin-bottom:20px; }
-</style>
+        #status-modal { position:fixed; inset:0; background:rgba(15,23,42,0.9); display:none; align-items:center; justify-content:center; z-index:2000; backdrop-filter:blur(8px);}
+        .modal-content { background:white; width:85%; max-width:380px; padding:40px 30px; border-radius:32px; text-align:center; animation:slideUp 0.4s ease-out; }
+        @keyframes slideUp { from { transform:translateY(50px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+        .success-icon { font-size:70px; color:var(--success); margin-bottom:20px; }
+    </style>
 </head>
 <body>
 
@@ -43,7 +43,7 @@ input:focus { border-color:var(--primary); background:#fff; box-shadow:0 0 0 4px
     <div class="modal-content">
         <i class="fas fa-check-circle success-icon"></i>
         <h2 style="margin:0; color: var(--deep);">Payment Successful!</h2>
-        <p style="color:#64748b; font-size:14px; margin:20px 0;">Wallet will update automatically.</p>
+        <p style="color:#64748b; font-size:14px; margin:20px 0;">Your wallet has been credited successfully.</p>
         <button class="pay-btn" onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
     </div>
 </div>
@@ -79,9 +79,8 @@ input:focus { border-color:var(--primary); background:#fff; box-shadow:0 0 0 4px
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+import { getDatabase, ref, onValue, update, get } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-// Firebase config
 const firebaseConfig = {
     apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
     authDomain: "gigantic-data.firebaseapp.com",
@@ -93,24 +92,22 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 let currentUser = null;
+let currentBalance = 0;
 
-// Auth check
 onAuthStateChanged(auth, user => {
     if (!user) return window.location.href = "login.html";
     currentUser = user;
 
-    // Listen to wallet changes (realtime)
     onValue(ref(db, `users/${user.uid}/wallet`), s => {
-        document.getElementById('displayBal').innerText = `GH₵ ${Number(s.val() || 0).toFixed(2)}`;
+        currentBalance = Number(s.val() || 0);
+        document.getElementById('displayBal').innerText = `GH₵ ${currentBalance.toFixed(2)}`;
     });
 
-    // Enable Pay button
     const payBtn = document.getElementById('payBtn');
     payBtn.disabled = false;
-    payBtn.addEventListener('click', initiatePayment);
+    payBtn.onclick = initiatePayment;
 });
 
-// Fee display (informational only)
 const input = document.getElementById('amtInput');
 input.addEventListener('input', () => {
     const val = parseFloat(input.value) || 0;
@@ -121,23 +118,69 @@ input.addEventListener('input', () => {
     document.getElementById('totalPay').innerText = `GH₵ ${total.toFixed(2)}`;
 });
 
-// Start payment securely
+async function recordTransaction(paymentRef, amountPaid) {
+    const txId = "TOP-" + Math.floor(Math.random() * 899999 + 100000);
+    const timestamp = Date.now();
+    const newBalance = currentBalance + amountPaid;
+
+    const updates = {};
+    
+    // 1. Create entry in transactions (General History)
+    updates[`transactions/${txId}`] = {
+        uid: currentUser.uid,
+        amount: amountPaid,
+        type: "Credit",
+        category: "topup",
+        date: timestamp,
+        newBalance: newBalance,
+        reference: paymentRef
+    };
+
+    // 2. Create entry in topupNotes (Deposit Filter)
+    updates[`topupNotes/${currentUser.uid}/${txId}`] = {
+        amount: amountPaid,
+        timestamp: timestamp,
+        status: "Successful",
+        method: "Paystack",
+        reference: paymentRef
+    };
+
+    // 3. Update the wallet balance
+    updates[`users/${currentUser.uid}/wallet`] = newBalance;
+
+    try {
+        await update(ref(db), updates);
+        document.getElementById('status-modal').style.display = 'flex';
+    } catch (e) {
+        alert("Wallet update error. Please contact support with reference: " + paymentRef);
+    }
+}
+
 function initiatePayment() {
     const amt = parseFloat(input.value);
     if (amt < 1 || isNaN(amt)) return alert("Enter a valid amount ≥1");
 
+    const payBtn = document.getElementById('payBtn');
+    payBtn.disabled = true;
+    payBtn.innerText = "OPENING SECURE GATEWAY...";
+
     const handler = PaystackPop.setup({
         key: 'pk_live_faecdb3166144fadebd8269829343698dd43de63',
         email: currentUser.email,
-        amount: Math.round((amt*1.025)*100), // 2.5% fee included for payment
+        amount: Math.round((amt * 1.025) * 100),
         currency: 'GHS',
-        metadata: { uid: currentUser.uid },
+        metadata: { 
+            custom_fields: [
+                { display_name: "User ID", variable_name: "uid", value: currentUser.uid }
+            ] 
+        },
         callback: function(response){
-            // Wallet credit handled by secure webhook only
-            document.getElementById('status-modal').style.display='flex';
+            // Pass the transaction to the database logger
+            recordTransaction(response.reference, amt);
         },
         onClose: function(){
-            document.getElementById('payBtn').disabled=false;
+            payBtn.disabled = false;
+            payBtn.innerText = "SECURE TOP-UP NOW";
         }
     });
     handler.openIframe();
