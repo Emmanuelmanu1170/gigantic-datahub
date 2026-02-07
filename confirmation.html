@@ -43,15 +43,13 @@
             <div class="w-20 h-20 bg-emerald-500 text-white rounded-full flex items-center justify-center text-4xl mx-auto mb-6 shadow-lg shadow-emerald-200">
                 <i class="fas fa-check"></i>
             </div>
-            <h2 class="text-2xl font-black text-slate-800">Order Placed!</h2>
-            <p class="text-slate-500 mt-3 mb-8">Your data bundle is being processed automatically.</p>
+            <h2 class="text-2xl font-black text-slate-800">Order Successful!</h2>
+            <p class="text-slate-500 mt-3 mb-8">Your data has been sent. Check your balance in a moment.</p>
             <div class="flex items-center justify-center gap-2 text-emerald-600 font-bold text-sm">
-                <i class="fas fa-spinner fa-spin"></i> Redirecting to History...
+                <i class="fas fa-spinner fa-spin"></i> Moving to History...
             </div>
         </div>
     </div>
-
-    
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
@@ -86,11 +84,11 @@
                 document.getElementById('details').innerHTML = `
                     <div class="info-item"><span class="text-slate-500">Network</span><span class="font-bold">${order.network}</span></div>
                     <div class="info-item"><span class="text-slate-500">Recipient</span><span class="font-bold">${order.recipient}</span></div>
-                    <div class="info-item"><span class="text-slate-500">Balance</span><span class="font-bold">₵${wallet.toFixed(2)}</span></div>
+                    <div class="info-item"><span class="text-slate-500">My Balance</span><span class="font-bold">₵${wallet.toFixed(2)}</span></div>
                 `;
 
                 document.getElementById('priceArea').innerHTML = `
-                    <p class="text-xs font-bold uppercase text-indigo-400">Total Deducted</p>
+                    <p class="text-xs font-bold uppercase text-indigo-400">Total Price</p>
                     <h1 class="text-3xl font-black text-slate-800">GH₵ ${cost.toFixed(2)}</h1>
                 `;
 
@@ -99,10 +97,10 @@
 
                     const btn = document.getElementById('confirmBtn');
                     btn.disabled = true;
-                    btn.innerText = "Processing Order...";
+                    btn.innerText = "Processing Transaction...";
 
                     try {
-                        // 1. Send Order to Provider
+                        // 1. Send Order to Provider FIRST
                         const response = await fetch(API_URL, {
                             method: "POST",
                             headers: { "Authorization": "Bearer " + API_KEY, "Content-Type": "application/json" },
@@ -114,9 +112,10 @@
                         });
 
                         const res = await response.json();
+                        // If provider fails, we stop here and don't deduct money
                         if (res.status === "error") throw new Error(res.message);
 
-                        // 2. Prepare Database Updates
+                        // 2. Provider Succeeded, now update Firebase
                         const orderId = "GID-" + Math.floor(Math.random() * 90000 + 10000);
                         const newBalance = parseFloat((wallet - cost).toFixed(2));
                         const txKey = push(ref(db, 'transactions')).key;
@@ -133,13 +132,14 @@
 
                         await update(ref(db), updates);
                         
-                        // 3. Success UI and Redirect
+                        // 3. Clear storage and show Success
                         localStorage.removeItem('pendingOrder');
                         document.getElementById('successOverlay').style.display = 'flex';
-                        setTimeout(() => window.location.href = "order_history.html", 3000);
+                        setTimeout(() => window.location.href = "order_history.html", 2500);
 
                     } catch (err) {
-                        alert("Order Failed: " + err.message);
+                        console.error("ORDER_ERROR:", err);
+                        alert("Error: " + err.message);
                         btn.disabled = false;
                         btn.innerText = "CONFIRM & PAY NOW";
                     }
