@@ -34,7 +34,6 @@
 
         .container { padding: 20px; max-width: 500px; margin: auto; }
 
-        /* Referral Card */
         .referral-card {
             background: linear-gradient(135deg, var(--primary) 0%, #0052cc 100%);
             border-radius: 24px; padding: 25px; color: white; text-align: center;
@@ -45,7 +44,6 @@
         .ref-bal-label { font-size: 10px; text-transform: uppercase; opacity: 0.8; letter-spacing: 1px; margin-bottom: 5px; display: block;}
         .stat-value { font-size: 22px; font-weight: 900; }
 
-        /* Link Box */
         .link-section {
             background: var(--card-white); border-radius: 20px; padding: 20px;
             margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center;
@@ -62,13 +60,11 @@
         }
         .copy-btn:active { transform: scale(0.98); }
 
-        /* Info Note */
         .info-note {
             background: rgba(255, 140, 0, 0.1); border-left: 4px solid var(--accent);
             padding: 15px; border-radius: 12px; margin-bottom: 25px; font-size: 13px; line-height: 1.5;
         }
 
-        /* Leaderboard */
         .section-title { font-weight: 800; font-size: 15px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
         .leader-card { background: var(--card-white); border-radius: 20px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         
@@ -91,7 +87,6 @@
 
         .ref-count { font-weight: 800; color: var(--success); font-size: 14px; }
 
-        /* Bottom Nav */
         .bottom-nav {
             position: fixed; bottom: 0; width: 100%; background: white;
             display: flex; justify-content: space-around; padding: 15px 0;
@@ -136,7 +131,6 @@
         <i class="fas fa-award" style="color: var(--accent);"></i>
         <b>Monthly Reward:</b> The <b>Rank #1</b> Referrer earns an extra <b>GH₵ 20.00</b> monthly bonus. 
         <br>Note: Monthly bonuses are sent directly to the winner's <b>registered email address</b>.
-        <br><small>*next month, there will be increase in referal bonuses rewards .</small>
     </div>
 
     <div class="section-title">
@@ -158,10 +152,9 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
     import { getDatabase, ref, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-    // COMPLETE CONFIG INTEGRATION
     const firebaseConfig = {
         apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho",
         authDomain: "gigantic-data.firebaseapp.com",
@@ -177,67 +170,59 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    let authWaiting = true; // Guard variable
+    // FIX: Force persistence to prevent logout on refresh
+    setPersistence(auth, browserLocalPersistence).then(() => {
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                const baseUrl = window.location.origin;
+                const fullLink = `${baseUrl}/register.html?ref=${user.uid}`;
+                document.getElementById('referralLink').innerText = fullLink;
 
-    onAuthStateChanged(auth, user => {
-        authWaiting = false; // Auth check has responded
-        if (user) {
-            const baseUrl = window.location.origin;
-            const fullLink = `${baseUrl}/register.html?ref=${user.uid}`;
-            document.getElementById('referralLink').innerText = fullLink;
-
-            onValue(ref(db, 'users/' + user.uid), (snap) => {
-                const data = snap.val() || {};
-                document.getElementById('refCountDisplay').innerText = data.referralCount || 0;
-                const approvedEarnings = Number(data.referralBonus || 0);
-                document.getElementById('refBalanceDisplay').innerText = `₵${approvedEarnings.toFixed(2)}`;
-            });
-
-            const topQuery = query(ref(db, 'users'), orderByChild('referralCount'), limitToLast(20));
-            onValue(topQuery, (snap) => {
-                const board = document.getElementById('leaderboardList');
-                board.innerHTML = "";
-                let users = [];
-                snap.forEach(child => { 
-                    const userData = child.val();
-                    if(userData.referralCount > 0) {
-                        users.push(userData); 
-                    }
+                onValue(ref(db, 'users/' + user.uid), (snap) => {
+                    const data = snap.val() || {};
+                    document.getElementById('refCountDisplay').innerText = data.referralCount || 0;
+                    const approvedEarnings = Number(data.referralBonus || 0);
+                    document.getElementById('refBalanceDisplay').innerText = `₵${approvedEarnings.toFixed(2)}`;
                 });
-                
-                users.sort((a,b) => (b.referralCount || 0) - (a.referralCount || 0));
-                const top5 = users.slice(0, 5);
 
-                if(top5.length === 0) {
-                    board.innerHTML = '<div style="text-align: center; padding: 20px; color: #94a3b8;">No approved referrals yet.</div>';
-                    return;
-                }
-
-                top5.forEach((u, i) => {
-                    const rank = i + 1;
-                    const rankClass = rank <= 3 ? `rank-${rank}` : '';
-                    const name = (u.fullName || "User").split(' ')[0];
+                const topQuery = query(ref(db, 'users'), orderByChild('referralCount'), limitToLast(5));
+                onValue(topQuery, (snap) => {
+                    const board = document.getElementById('leaderboardList');
+                    board.innerHTML = "";
+                    let users = [];
+                    snap.forEach(child => { 
+                        const userData = child.val();
+                        if(userData.referralCount > 0) users.push(userData); 
+                    });
                     
-                    board.innerHTML += `
-                        <div class="leader-item">
-                            <div style="display:flex; align-items:center; gap:12px;">
-                                <div class="rank-box ${rankClass}">${rank}</div>
-                                <div class="name-box">
-                                    <b>${name}***</b>
-                                    <span>Joined Member</span>
-                                </div>
-                            </div>
-                            <div class="ref-count">${u.referralCount || 0} Refs</div>
-                        </div>`;
-                });
-            });
+                    users.sort((a,b) => (b.referralCount || 0) - (a.referralCount || 0));
 
-        } else { 
-            // Only redirect if Firebase has confirmed there is no user session
-            if (!authWaiting) {
-                window.location.href = "login.html"; 
+                    if(users.length === 0) {
+                        board.innerHTML = '<div style="text-align: center; padding: 20px; color: #94a3b8;">No approved referrals yet.</div>';
+                        return;
+                    }
+
+                    users.forEach((u, i) => {
+                        const rank = i + 1;
+                        const rankClass = rank <= 3 ? `rank-${rank}` : '';
+                        const name = (u.fullName || "User").split(' ')[0];
+                        board.innerHTML += `
+                            <div class="leader-item">
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    <div class="rank-box ${rankClass}">${rank}</div>
+                                    <div class="name-box">
+                                        <b>${name}***</b>
+                                        <span>Joined Member</span>
+                                    </div>
+                                </div>
+                                <div class="ref-count">${u.referralCount || 0} Refs</div>
+                            </div>`;
+                    });
+                });
+            } else {
+                window.location.href = "login.html";
             }
-        }
+        });
     });
 
     window.copyLink = function() {
@@ -245,9 +230,7 @@
         navigator.clipboard.writeText(linkText).then(() => {
             const btn = document.querySelector('.copy-btn');
             btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-            setTimeout(() => {
-                btn.innerHTML = '<i class="fas fa-copy"></i> Copy Link';
-            }, 2000);
+            setTimeout(() => { btn.innerHTML = '<i class="fas fa-copy"></i> Copy Link'; }, 2000);
         });
     };
 </script>
