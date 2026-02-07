@@ -40,14 +40,8 @@
         .logo-box { width: 35px; height: 35px; margin: 0 auto 8px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 900; color: white; }
         .mtn { background: #ffcc00; color: #000; } .airtel { background: #ed1c24; } .telecel { background: #e60000; }
         select, input { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--input-bg); outline: none; font-size: 0.9rem; margin-top: 10px; color: var(--text-main); }
-        .validation-card {
-            background-color: var(--light-green); border: 1px solid #dcfce7;
-            border-radius: 12px; padding: 12px; margin-top: 15px;
-            display: none; align-items: flex-start; gap: 12px;
-        }
         .confirm-btn { width: 100%; padding: 16px; background: var(--primary-purple); color: white; border: none; border-radius: 14px; font-weight: 700; margin-top: 20px; cursor: pointer; }
-        .loading-dots:after { content: ' .'; animation: dots 1s steps(5, end) infinite;}
-        @keyframes dots { 0%, 20% { content: ' .'; } 40% { content: ' ..'; } 60% { content: ' ...'; } 80%, 100% { content: ''; } }
+        .confirm-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -56,7 +50,6 @@
         <header>
             <a href="dashboard.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
             <h1 style="font-size: 1rem;">Buy Data Bundle</h1>
-            <i class="fas fa-moon theme-toggle" id="themeIcon" onclick="toggleTheme()"></i>
         </header>
 
         <div class="balance-card">
@@ -92,17 +85,8 @@
                 <div class="step-number">3</div>
                 <div class="step-title"><h3>Recipient Details</h3></div>
             </div>
-            
             <input type="tel" id="phoneNumber" placeholder="024XXXXXXX" maxlength="10">
-            <div class="validation-card" id="validationBox">
-                <i class="fas fa-check-circle" style="color: var(--success-green);"></i>
-                <div class="validation-text">
-                    <b style="font-size: 0.85rem; display: block;">Recipient Verified</b>
-                    <p style="font-size: 0.75rem; margin: 0;">Name: <span class="acc-name" id="displayAccName" style="color: var(--success-green); font-weight: 800;">Verifying...</span></p>
-                </div>
-            </div>
-
-            <button class="confirm-btn" id="confirmBtn" onclick="processToConfirmation()">Proceed to Confirm</button>
+            <button class="confirm-btn" id="confirmBtn" onclick="processOrder()">PAY NOW & ACTIVATE</button>
         </div>
     </div>
 
@@ -111,7 +95,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+        import { getDatabase, ref, onValue, update, push } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
         const firebaseConfig = { 
             apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho", 
@@ -126,34 +110,28 @@
 
         let isAgent = false;
         let currentBalance = 0;
-        let authWaiting = true; 
+        let userEmail = "";
         window.selectedNet = "";
 
-        // Admin Impersonation Support
         const impersonateUid = sessionStorage.getItem('impersonate_uid');
         const isImpersonating = sessionStorage.getItem('isAdminImpersonating');
         let activeUid;
 
         onAuthStateChanged(auth, user => {
-            authWaiting = false; 
             if (user) {
-                // Determine whose wallet data to load
                 activeUid = (isImpersonating === 'true' && impersonateUid) ? impersonateUid : user.uid;
-
                 onValue(ref(db, 'users/' + activeUid), (snapshot) => {
                     const data = snapshot.val() || {};
                     isAgent = (data.userType === "agent" || data.status === "Agent");
                     currentBalance = Number(data.balance || 0);
-                    
+                    userEmail = data.email || "";
                     document.getElementById('walletBalance').innerText = `GH₵ ${currentBalance.toFixed(2)}`;
                     document.getElementById('userTypeBadge').innerText = isAgent ? "AGENT" : "NORMAL USER";
-                    
                     if(window.selectedNet) updateDataPlans();
                 });
-            } else { if(!authWaiting) window.location.href = "login.html"; }
+            } else { window.location.href = "login.html"; }
         });
 
-        // Exact Pricing as requested
         const agentPlans = {
             mtn:[{plan:"1GB",price:"4.45"},{plan:"2GB",price:"8.85"},{plan:"3GB",price:"13.25"},{plan:"4GB",price:"17.65"},{plan:"5GB",price:"22.05"},{plan:"6GB",price:"26.55"},{plan:"8GB",price:"36.39"},{plan:"10GB",price:"42.25"},{plan:"15GB",price:"62.05"},{plan:"20GB",price:"82.05"},{plan:"25GB",price:"103.05"},{plan:"30GB",price:"123"},{plan:"40GB",price:"160"},{plan:"50GB",price:"199"},{plan:"100GB",price:"380"}],
             airteltigo:[{plan:"1GB",price:"4.3"},{plan:"2GB",price:"8.56"},{plan:"3GB",price:"12.84"},{plan:"4GB",price:"17.12"},{plan:"5GB",price:"21.4"},{plan:"6GB",price:"25.6"},{plan:"7GB",price:"29.96"},{plan:"8GB",price:"35"},{plan:"10GB",price:"44"},{plan:"15GB",price:"65"},{plan:"20GB",price:"76"},{plan:"30GB",price:"87"},{plan:"40GB",price:"100"},{plan:"50GB",price:"115"},{plan:"60GB",price:"150"},{plan:"80GB",price:"183"},{plan:"100GB",price:"200"}],
@@ -185,33 +163,45 @@
 
         window.unlockStep3 = () => { document.getElementById('step3').className = "step active-step"; };
 
-        document.getElementById('phoneNumber').addEventListener('input', async function(e) {
-            const num = e.target.value;
-            if (num.length === 10) {
-                document.getElementById('validationBox').style.display = "flex";
-                document.getElementById('displayAccName').innerText = "VERIFIED RECIPIENT";
-            } else { document.getElementById('validationBox').style.display = "none"; }
-        });
-
-        window.processToConfirmation = () => {
+        window.processOrder = async () => {
             const planSelect = document.getElementById('dataPlan');
             const num = document.getElementById('phoneNumber').value.trim();
-
             if (!planSelect.value || num.length < 10) { alert("Check your inputs!"); return; }
+            
             const cost = parseFloat(planSelect.value);
             if (currentBalance < cost) { alert("Insufficient Funds!"); return; }
 
-            const order = {
-                network: window.selectedNet.toUpperCase(),
-                plan: planSelect.options[planSelect.selectedIndex].getAttribute('data-plan'),
-                amount: cost,
-                recipient: num,
-                uid: activeUid
-            };
+            const btn = document.getElementById('confirmBtn');
+            btn.disabled = true;
+            btn.innerText = "PROCESSING...";
 
-            // Store pending order and move to confirmation
-            localStorage.setItem('pendingOrder', JSON.stringify(order));
-            window.location.href = "confirmation.html";
+            try {
+                const orderId = "GID-" + Math.floor(Math.random() * 90000 + 10000);
+                const newBalance = parseFloat((currentBalance - cost).toFixed(2));
+                const txKey = push(ref(db, 'transactions')).key;
+                const planName = planSelect.options[planSelect.selectedIndex].getAttribute('data-plan');
+
+                const updates = {};
+                updates[`users/${activeUid}/balance`] = newBalance;
+                updates[`orders/${orderId}`] = {
+                    uid: activeUid, email: userEmail, amount: cost, network: window.selectedNet.toUpperCase(),
+                    plan: planName, recipient: num, status: "Successful", timestamp: Date.now()
+                };
+                updates[`user_orders/${activeUid}/${orderId}`] = updates[`orders/${orderId}`];
+                updates[`transactions/${txKey}`] = {
+                    uid: activeUid, email: userEmail, amount: cost, type: "Deduct",
+                    description: `Data: ${window.selectedNet.toUpperCase()} ${planName} to ${num}`,
+                    timestamp: Date.now(), newBalance: newBalance, orderId: orderId
+                };
+
+                await update(ref(db), updates);
+                alert("Order Placed Successfully!");
+                window.location.href = "order_history.html";
+            } catch (err) {
+                alert("Error: " + err.message);
+                btn.disabled = false;
+                btn.innerText = "PAY NOW & ACTIVATE";
+            }
         };
     </script>
 </body>
