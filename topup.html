@@ -39,7 +39,7 @@
     <div class="modal-box">
         <i class="fas fa-check-circle" style="font-size: 50px; color: #10b981; margin-bottom: 20px;"></i>
         <h3>Payment Verification</h3>
-        <p style="font-size: 13px; color: var(--text-gray); margin-bottom: 25px;">Signal received! Your wallet will be updated automatically once the payment is confirmed by the gateway.</p>
+        <p style="font-size: 13px; color: var(--text-gray); margin-bottom: 25px;">Signal received! Your wallet will be updated automatically once confirmed.</p>
         <button onclick="window.location.href='dashboard.html'">Return to Dashboard</button>
     </div>
 </div>
@@ -52,7 +52,7 @@
     </div>
 
     <label class="label">Amount (GHS)</label>
-    <input type="number" id="amtInput" placeholder="0.00" oninput="calculateFee()">
+    <input type="number" id="amtInput" placeholder="0.00">
 
     <div class="fee-box">
         <div class="fee-row"><span>Subtotal</span> <span id="fAmt">₵ 0.00</span></div>
@@ -62,8 +62,6 @@
 
     <button id="payBtn" disabled>Proceed to Secure Payment</button>
 </div>
-
-
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
@@ -83,10 +81,6 @@
 
     let loggedInUser = null;
 
-    // Detect theme from Dashboard
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-
     onAuthStateChanged(auth, user => {
         if (!user) { window.location.href = "login.html"; return; }
         loggedInUser = user;
@@ -96,35 +90,33 @@
         document.getElementById("payBtn").disabled = false;
     });
 
-    window.calculateFee = () => {
-        const v = parseFloat(document.getElementById("amtInput").value) || 0;
+    const amtInput = document.getElementById("amtInput");
+    amtInput.addEventListener('input', () => {
+        const v = parseFloat(amtInput.value) || 0;
         const fee = v * 0.025;
         document.getElementById("fAmt").innerText = `₵ ${v.toFixed(2)}`;
         document.getElementById("fFee").innerText = `₵ ${fee.toFixed(2)}`;
         document.getElementById("fTotal").innerText = `₵ ${(v + fee).toFixed(2)}`;
-    };
+    });
 
     document.getElementById("payBtn").addEventListener('click', function() {
-        const amt = parseFloat(document.getElementById("amtInput").value);
-        if (!amt || amt < 1) return alert("Please enter an amount of at least 1 GHS");
+        const amt = parseFloat(amtInput.value);
+        if (!amt || amt < 1) return alert("Min GH₵ 1.00");
 
-        // SAFETY: Use window.PaystackPop to ensure scope within Module
-        if (typeof window.PaystackPop === 'undefined') {
-            return alert("Payment gateway is loading. Please check your internet connection.");
-        }
+        this.disabled = true;
+        this.innerText = "Initializing...";
 
+        // Force call on window object to ensure script access
         const handler = window.PaystackPop.setup({
             key: "pk_live_faecdb3166144fadebd8269829343698dd43de63",
             email: loggedInUser.email,
-            amount: Math.round((amt * 1.025) * 100), // Amount in pesewas
+            amount: Math.round((amt * 1.025) * 100),
             currency: "GHS",
             metadata: { 
                 uid: loggedInUser.uid, 
                 real_amt: amt 
             },
             callback: async (res) => {
-                // HACKER PROOF: Browser does NOT credit money. 
-                // Only your Cloud Function (Webhook) can do that.
                 await set(ref(db, `pending_deposits/${res.reference}`), {
                     uid: loggedInUser.uid,
                     amount: amt,
@@ -139,8 +131,6 @@
             }
         });
         
-        this.disabled = true;
-        this.innerText = "Connecting...";
         handler.openIframe();
     });
 </script>
