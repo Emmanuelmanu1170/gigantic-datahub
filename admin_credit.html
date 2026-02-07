@@ -16,27 +16,31 @@
         body { margin:0; font-family:'Inter', sans-serif; background:var(--bg); color:var(--dark); }
         .container { padding: 30px; max-width: 1200px; margin: auto; }
         
-        /* Header & Filters */
-        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 20px; }
+        
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid #e2e8f0; }
+        .stat-card label { font-size: 0.7rem; text-transform: uppercase; color: #64748b; font-weight: 700; display: block; margin-bottom: 5px; }
+        .stat-card h2 { font-size: 1.5rem; margin: 0; color: var(--dark); }
+
         .filter-bar { display: flex; gap: 10px; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .filter-btn { padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.8rem; background: #f1f5f9; color: #64748b; transition: 0.3s; }
         .filter-btn.active { background: var(--primary); color: white; }
 
-        /* Ledger Table */
-        .ledger-card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 15px; background: #f8fafc; color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
-        td { padding: 15px; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; }
+        .ledger-card { background: white; border-radius: 20px; padding: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; overflow: hidden; }
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th { text-align: left; padding: 15px; background: #f8fafc; color: #64748b; font-size: 0.75rem; text-transform: uppercase; border-bottom: 2px solid #f1f5f9; }
+        td { padding: 15px; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; vertical-align: middle; }
         
-        /* Badges */
         .type-pill { padding: 4px 8px; border-radius: 6px; font-weight: 800; font-size: 0.7rem; text-transform: uppercase; }
         .type-credit { background: #dcfce7; color: #166534; }
         .type-debit { background: #fee2e2; color: #991b1b; }
         
-        .uid-link { color: var(--primary); font-family: monospace; cursor: pointer; text-decoration: none; }
-        .uid-link:hover { text-decoration: underline; }
+        .uid-link { color: var(--primary); font-family: 'Courier New', monospace; font-weight: bold; cursor: pointer; text-decoration: none; background: #f1f5f9; padding: 2px 5px; border-radius: 4px; }
         
-        .empty-state { text-align: center; padding: 50px; color: #94a3b8; }
+        .empty-state { text-align: center; padding: 80px; color: #94a3b8; }
+        .loader { text-align: center; padding: 50px; color: var(--primary); }
     </style>
 </head>
 <body>
@@ -45,42 +49,56 @@
     <div class="page-header">
         <div>
             <h1 style="font-size: 1.5rem; margin-bottom: 5px;">Master Transaction Ledger</h1>
-            <p style="color: #64748b; font-size: 0.9rem;">Real-time monitoring of all user financial activity</p>
+            <p style="color: #64748b; font-size: 0.9rem;">Global monitoring of all user financial records</p>
         </div>
         <div class="filter-bar">
-            <button class="filter-btn active" onclick="filterLedger('all', this)">All</button>
-            <button class="filter-btn" onclick="filterLedger('topup', this)">Top-ups</button>
+            <button class="filter-btn active" onclick="filterLedger('all', this)">All Activity</button>
+            <button class="filter-btn" onclick="filterLedger('topup', this)">Deposits</button>
             <button class="filter-btn" onclick="filterLedger('data', this)">Data Purchases</button>
+        </div>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card">
+            <label>Total Transactions</label>
+            <h2 id="statCount">0</h2>
+        </div>
+        <div class="stat-card">
+            <label>Total Volume (Credit)</label>
+            <h2 id="statVolume" style="color: var(--success);">₵0.00</h2>
         </div>
     </div>
 
     <div class="ledger-card">
         
-        <table id="ledgerTable">
-            <thead>
-                <tr>
-                    <th>Timestamp</th>
-                    <th>User ID</th>
-                    <th>Type</th>
-                    <th>Amount</th>
-                    <th>Reference / Plan</th>
-                    <th>Note</th>
-                </tr>
-            </thead>
-            <tbody id="ledgerBody">
+        <div class="table-wrapper">
+            <table id="ledgerTable">
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>User UID</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Service Details</th>
+                        <th>Category</th>
+                    </tr>
+                </thead>
+                <tbody id="ledgerBody">
+                    <tr><td colspan="6" class="loader"><i class="fas fa-spinner fa-spin fa-2x"></i></td></tr>
                 </tbody>
-        </table>
+            </table>
+        </div>
         <div id="emptyMsg" class="empty-state" style="display: none;">
-            <i class="fas fa-search-dollar" style="font-size: 2rem; margin-bottom: 10px;"></i>
-            <p>No transactions found for this filter.</p>
+            <i class="fas fa-history" style="font-size: 3rem; opacity: 0.2; margin-bottom: 15px;"></i>
+            <p>No transaction history found.</p>
         </div>
     </div>
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-import { getDatabase, ref, query, onValue, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import { getDatabase, ref, query, onValue, limitToLast } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
@@ -96,31 +114,37 @@ const auth = getAuth(app);
 let allTransactions = [];
 
 onAuthStateChanged(auth, user => {
-    if (!user || user.email !== 'alenacloft0@gmail.com') {
-        window.location.href = "dashboard.html";
-    } else {
+    if (user && user.email === 'alenacloft0@gmail.com') {
         fetchTransactions();
+    } else {
+        window.location.href = "login.html";
     }
 });
 
 function fetchTransactions() {
-    // Fetch last 100 transactions globally
-    const txRef = query(ref(db, 'transactions'), limitToLast(100));
+    // Listen to the global 'transactions' node
+    const txRef = query(ref(db, 'transactions'), limitToLast(500));
     
     onValue(txRef, (snapshot) => {
-        const ledgerBody = document.getElementById('ledgerBody');
-        ledgerBody.innerHTML = "";
         allTransactions = [];
+        let totalCredit = 0;
 
         if (snapshot.exists()) {
             snapshot.forEach(child => {
-                allTransactions.push({ id: child.key, ...child.val() });
+                const data = child.val();
+                allTransactions.push({ id: child.key, ...data });
+                if(data.type === "Credit") totalCredit += parseFloat(data.amount || 0);
             });
             
-            // Reverse to show newest first
-            renderTable(allTransactions.reverse());
+            // Sort by date newest first
+            allTransactions.sort((a, b) => (b.date || 0) - (a.date || 0));
+            
+            document.getElementById('statCount').innerText = allTransactions.length;
+            document.getElementById('statVolume').innerText = `₵${totalCredit.toFixed(2)}`;
+            
+            renderTable(allTransactions);
         } else {
-            document.getElementById('emptyMsg').style.display = "block";
+            renderTable([]);
         }
     });
 }
@@ -137,40 +161,49 @@ function renderTable(data) {
     emptyMsg.style.display = "none";
 
     data.forEach(tx => {
-        const date = new Date(tx.date).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
-        const typeClass = tx.type === "Credit" ? "type-credit" : "type-debit";
-        const symbol = tx.type === "Credit" ? "+" : "-";
+        const dateObj = new Date(tx.date || tx.timestamp);
+        const dateStr = dateObj.toLocaleDateString('en-GB', { day:'2-digit', month:'short' });
+        const timeStr = dateObj.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+        
+        const isCredit = tx.type === "Credit";
+        const typeClass = isCredit ? "type-credit" : "type-debit";
+        const symbol = isCredit ? "+" : "-";
 
         tbody.innerHTML += `
             <tr>
-                <td><small>${date}</small></td>
-                <td><span class="uid-link" onclick="copyUid('${tx.uid}')" title="Click to copy UID">${tx.uid.substring(0,8)}...</span></td>
-                <td><span class="type-pill ${typeClass}">${tx.type}</span></td>
-                <td><b style="color: ${tx.type === 'Credit' ? '#166534' : '#991b1b'}">${symbol} ₵${tx.amount.toFixed(2)}</b></td>
-                <td><small>${tx.reference || tx.plan || 'N/A'}</small></td>
-                <td><span style="opacity: 0.7;">${tx.note || tx.category || ''}</span></td>
+                <td><strong>${dateStr}</strong> <br> <small style="color:#94a3b8">${timeStr}</small></td>
+                <td><span class="uid-link" onclick="copyText('${tx.uid}')">${tx.uid.substring(0,8)}...</span></td>
+                <td><span class="type-pill ${typeClass}">${tx.type || 'N/A'}</span></td>
+                <td><b style="color: ${isCredit ? 'var(--success)' : 'var(--danger)'}">${symbol}₵${parseFloat(tx.amount || 0).toFixed(2)}</b></td>
+                <td>
+                    <div style="font-weight:700">${tx.plan || tx.reference || 'N/A'}</div>
+                    <small style="color:#64748b">${tx.network || 'Manual'}</small>
+                </td>
+                <td><span class="type-pill" style="background:#f1f5f9; color:#475569">${tx.category || 'General'}</span></td>
             </tr>
         `;
     });
 }
 
-window.filterLedger = function(category, btn) {
-    // UI Update
+window.filterLedger = (category, btn) => {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
 
-    // Filtering logic
     if (category === 'all') {
         renderTable(allTransactions);
     } else {
-        const filtered = allTransactions.filter(tx => tx.category === category);
+        const filtered = allTransactions.filter(tx => {
+            if (category === 'topup') return tx.type === "Credit" || tx.category === "topup";
+            if (category === 'data') return tx.type === "Deduct" || tx.category === "purchase" || tx.plan;
+            return false;
+        });
         renderTable(filtered);
     }
 };
 
-window.copyUid = function(uid) {
-    navigator.clipboard.writeText(uid);
-    alert("UID Copied: " + uid);
+window.copyText = (text) => {
+    navigator.clipboard.writeText(text);
+    alert("UID Copied!");
 };
 </script>
 </body>
