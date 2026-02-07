@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Credits | Gigantic Data Hub</title>
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-auth-compat.js"></script>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://js.paystack.co/v1/inline.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
@@ -75,7 +78,10 @@
     </div>
 
     <script>
-        const FEE_RATE = 0.025; // 2.5%
+        // --- Firebase Configuration ---
+        // Ensure your firebase.initializeApp({...}) code is here if not handled elsewhere
+        
+        const FEE_RATE = 0.025; 
         const paystackPublicKey = 'pk_live_faecdb3166144fadebd8269829343698dd43de63';
 
         function calculateTotal() {
@@ -88,7 +94,7 @@
             document.getElementById('feePreview').innerText = fee.toFixed(2);
             document.getElementById('totalPreview').innerText = '₵ ' + total.toFixed(2);
 
-            if (amount >= 1) { // Minimum 1 GHS
+            if (amount >= 1) { 
                 payBtn.disabled = false;
                 payBtn.classList.remove('opacity-50', 'cursor-not-allowed');
             } else {
@@ -98,26 +104,32 @@
         }
 
         function startPayment() {
+            // Get current logged-in user from Firebase Auth
+            const user = firebase.auth().currentUser; 
+            if (!user) {
+                alert("Please log in first!");
+                return;
+            }
+
             const amount = parseFloat(document.getElementById('amountInput').value);
             const totalToPay = amount * (1 + FEE_RATE);
-            const userEmail = "customer@example.com"; // Replace with real auth email
 
             let handler = PaystackPop.setup({
                 key: paystackPublicKey,
-                email: userEmail,
-                amount: (totalToPay * 100).toFixed(0), // Amount in Pesewas
+                email: user.email, 
+                amount: (totalToPay * 100).toFixed(0), 
                 currency: 'GHS',
                 ref: 'GH-' + Date.now(),
                 onClose: () => alert('Transaction Cancelled'),
                 callback: (response) => {
-                    // Send original 'amount' and 'reference' to server
-                    verifyOnServer(response.reference, amount);
+                    // Send reference, amount, and userId to server
+                    verifyOnServer(response.reference, amount, user.uid);
                 }
             });
             handler.openIframe();
         }
 
-        async function verifyOnServer(reference, creditedAmount) {
+        async function verifyOnServer(reference, creditedAmount, userId) {
             const btn = document.getElementById('payBtn');
             btn.innerText = "Verifying...";
             btn.disabled = true;
@@ -128,7 +140,8 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         reference: reference,
-                        amount: creditedAmount // The value to actually add to wallet
+                        amount: creditedAmount,
+                        userId: userId 
                     })
                 });
 
@@ -137,11 +150,15 @@
                     alert("Success! Wallet credited.");
                     window.location.reload();
                 } else {
-                    alert("Verification failed.");
+                    alert("Verification failed: " + (result.message || "Unknown error"));
+                    btn.innerText = "Pay Securely";
+                    btn.disabled = false;
                 }
             } catch (e) {
                 console.error(e);
                 alert("Server error. Please contact support.");
+                btn.innerText = "Pay Securely";
+                btn.disabled = false;
             }
         }
     </script>
