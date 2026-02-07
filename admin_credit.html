@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin: Audit & Credit - GiganticData</title>
+    <title>Admin: Master Ledger - GiganticData</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
@@ -11,101 +11,75 @@
             --dark: #0f172a;
             --success: #10b981;
             --danger: #ef4444;
-            --bg: #f1f5f9;
+            --bg: #f8fafc;
         }
         body { margin:0; font-family:'Inter', sans-serif; background:var(--bg); color:var(--dark); }
-        .wrapper { max-width: 1200px; margin: auto; padding: 20px; display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+        .container { padding: 30px; max-width: 1200px; margin: auto; }
         
-        .card { background:white; border-radius:20px; padding:25px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
-        h3 { margin-top: 0; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 20px;}
+        /* Header & Filters */
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .filter-bar { display: flex; gap: 10px; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .filter-btn { padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.8rem; background: #f1f5f9; color: #64748b; transition: 0.3s; }
+        .filter-btn.active { background: var(--primary); color: white; }
 
-        /* Input Styles */
-        .input-group { margin-bottom: 15px; position: relative; }
-        label { display:block; font-weight:700; font-size:11px; color:#64748b; margin-bottom: 5px; }
-        input { 
-            width:100%; padding:12px; border:2px solid #f1f5f9; border-radius:10px; 
-            font-size:0.9rem; outline:none; box-sizing:border-box; transition: 0.3s;
-        }
-        input:focus { border-color:var(--primary); }
+        /* Ledger Table */
+        .ledger-card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 15px; background: #f8fafc; color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        td { padding: 15px; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; }
         
-        /* Reference Checker Badge */
-        .ref-status { position: absolute; right: 10px; top: 32px; font-size: 0.7rem; font-weight: 800; padding: 4px 8px; border-radius: 6px; display: none;}
+        /* Badges */
+        .type-pill { padding: 4px 8px; border-radius: 6px; font-weight: 800; font-size: 0.7rem; text-transform: uppercase; }
+        .type-credit { background: #dcfce7; color: #166534; }
+        .type-debit { background: #fee2e2; color: #991b1b; }
         
-        .user-info { background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid var(--primary); display: none; }
+        .uid-link { color: var(--primary); font-family: monospace; cursor: pointer; text-decoration: none; }
+        .uid-link:hover { text-decoration: underline; }
         
-        .btn-exec { 
-            width:100%; background:var(--primary); color:white; border:none; 
-            padding:16px; border-radius:12px; font-weight:700; cursor:pointer; 
-        }
-
-        /* Audit Table */
-        .table-container { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-        th { text-align: left; padding: 12px; background: #f8fafc; color: #64748b; }
-        td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
-        
-        .bal-pill { font-family: monospace; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: #eee; }
-        .text-success { color: var(--success); }
-        .text-danger { color: var(--danger); }
-
-        @media (max-width: 900px) { .wrapper { grid-template-columns: 1fr; } }
+        .empty-state { text-align: center; padding: 50px; color: #94a3b8; }
     </style>
 </head>
 <body>
 
-<div class="wrapper">
-    <div class="card">
-        <h3><i class="fas fa-plus-circle"></i> Smart Credit</h3>
-        
-        <div class="input-group">
-            <label>User UID</label>
-            <input type="text" id="targetUid" placeholder="Paste UID..." oninput="checkUser(this.value)">
+<div class="container">
+    <div class="page-header">
+        <div>
+            <h1 style="font-size: 1.5rem; margin-bottom: 5px;">Master Transaction Ledger</h1>
+            <p style="color: #64748b; font-size: 0.9rem;">Real-time monitoring of all user financial activity</p>
         </div>
-
-        <div id="userBox" class="user-info">
-            <div style="font-weight: 800;" id="uName">---</div>
-            <div style="font-size: 0.8rem; opacity: 0.7;">Current Wallet: <span id="uWall">₵0.00</span></div>
+        <div class="filter-bar">
+            <button class="filter-btn active" onclick="filterLedger('all', this)">All</button>
+            <button class="filter-btn" onclick="filterLedger('topup', this)">Top-ups</button>
+            <button class="filter-btn" onclick="filterLedger('data', this)">Data Purchases</button>
         </div>
-
-        <div class="input-group">
-            <label>Paystack Reference</label>
-            <input type="text" id="payRef" placeholder="T123456789..." oninput="verifyRef(this.value)">
-            <span id="refBadge" class="ref-status"></span>
-        </div>
-
-        <div class="input-group">
-            <label>Amount to Credit (₵)</label>
-            <input type="number" id="amt" placeholder="0.00" step="0.01">
-        </div>
-
-        <button class="btn-exec" id="execBtn" onclick="runCredit()">APPROVE & UPDATE WALLET</button>
     </div>
 
-    <div class="card">
-        <h3><i class="fas fa-list-check"></i> Audit Trail (Manual Credits)</h3>
+    <div class="ledger-card">
         
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>User & Reference</th>
-                        <th>Before</th>
-                        <th>Credit</th>
-                        <th>After</th>
-                    </tr>
-                </thead>
-                <tbody id="auditBody">
-                    <tr><td colspan="5" style="text-align:center">Loading audit logs...</td></tr>
+        <table id="ledgerTable">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>User ID</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Reference / Plan</th>
+                    <th>Note</th>
+                </tr>
+            </thead>
+            <tbody id="ledgerBody">
                 </tbody>
-            </table>
+        </table>
+        <div id="emptyMsg" class="empty-state" style="display: none;">
+            <i class="fas fa-search-dollar" style="font-size: 2rem; margin-bottom: 10px;"></i>
+            <p>No transactions found for this filter.</p>
         </div>
     </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-import { getDatabase, ref, get, update, query, limitToLast, onValue } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+import { getDatabase, ref, query, onValue, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -119,129 +93,84 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
 
+let allTransactions = [];
+
 onAuthStateChanged(auth, user => {
     if (!user || user.email !== 'alenacloft0@gmail.com') {
         window.location.href = "dashboard.html";
     } else {
-        loadAuditTrail();
+        fetchTransactions();
     }
 });
 
-// FEATURE: REAL-TIME REFERENCE CHECKER
-window.verifyRef = async function(refStr) {
-    const badge = document.getElementById('refBadge');
-    if (refStr.length < 5) { badge.style.display = "none"; return; }
+function fetchTransactions() {
+    // Fetch last 100 transactions globally
+    const txRef = query(ref(db, 'transactions'), limitToLast(100));
     
-    const snap = await get(ref(db, `verified_references/${refStr}`));
-    badge.style.display = "block";
-    if (snap.exists()) {
-        badge.innerText = "ALREADY USED";
-        badge.style.background = "#fef2f2";
-        badge.style.color = "#991b1b";
-    } else {
-        badge.innerText = "AVAILABLE";
-        badge.style.background = "#ecfdf5";
-        badge.style.color = "#065f46";
-    }
-};
+    onValue(txRef, (snapshot) => {
+        const ledgerBody = document.getElementById('ledgerBody');
+        ledgerBody.innerHTML = "";
+        allTransactions = [];
 
-// FEATURE: USER INFO PREVIEW
-window.checkUser = async function(uid) {
-    if (uid.length < 10) return;
-    const snap = await get(ref(db, `users/${uid}`));
-    const box = document.getElementById('userBox');
-    if (snap.exists()) {
-        const u = snap.val();
-        document.getElementById('uName').innerText = u.name || u.email;
-        document.getElementById('uWall').innerText = "₵" + (parseFloat(u.wallet) || 0).toFixed(2);
-        box.style.display = "block";
-    } else {
-        box.style.display = "none";
-    }
-};
-
-// FEATURE: AUDIT LOG WITH BEFORE/AFTER BALANCE
-function loadAuditTrail() {
-    const auditRef = query(ref(db, 'admin_deposit_logs'), limitToLast(20));
-    onValue(auditRef, (snapshot) => {
-        const tbody = document.getElementById('auditBody');
-        tbody.innerHTML = "";
         if (snapshot.exists()) {
-            const logs = [];
-            snapshot.forEach(child => { logs.push(child.val()); });
-            logs.reverse().forEach(log => {
-                const date = new Date(log.date).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
-                tbody.innerHTML += `
-                    <tr>
-                        <td><small>${date}</small></td>
-                        <td>
-                            <b>${log.user_email || 'User'}</b><br>
-                            <small style="color:#64748b">${log.ref}</small>
-                        </td>
-                        <td><span class="bal-pill">₵${log.oldBal.toFixed(2)}</span></td>
-                        <td><b class="text-success">+₵${log.amt.toFixed(2)}</b></td>
-                        <td><span class="bal-pill" style="background:var(--primary); color:white">₵${log.newBal.toFixed(2)}</span></td>
-                    </tr>
-                `;
+            snapshot.forEach(child => {
+                allTransactions.push({ id: child.key, ...child.val() });
             });
+            
+            // Reverse to show newest first
+            renderTable(allTransactions.reverse());
+        } else {
+            document.getElementById('emptyMsg').style.display = "block";
         }
     });
 }
 
-window.runCredit = async function() {
-    const uid = document.getElementById('targetUid').value.trim();
-    const refStr = document.getElementById('payRef').value.trim();
-    const amount = parseFloat(document.getElementById('amt').value);
-
-    if (!uid || !refStr || isNaN(amount) || amount <= 0) return alert("Fill all fields correctly");
-
-    const btn = document.getElementById('execBtn');
-    btn.disabled = true;
-
-    try {
-        // Final Security Check
-        const refSnap = await get(ref(db, `verified_references/${refStr}`));
-        if (refSnap.exists()) throw new Error("Reference already used!");
-
-        const userSnap = await get(ref(db, `users/${uid}`));
-        if (!userSnap.exists()) throw new Error("User not found!");
-
-        const userData = userSnap.val();
-        const oldBalance = parseFloat(userData.wallet || 0);
-        const newBalance = oldBalance + amount;
-        const timestamp = Date.now();
-        const txId = "MANUAL-" + timestamp;
-
-        const updates = {};
-        updates[`users/${uid}/wallet`] = newBalance;
-        updates[`verified_references/${refStr}`] = { uid, amount, date: timestamp };
-        
-        // Comprehensive Audit Record
-        updates[`admin_deposit_logs/${txId}`] = {
-            uid,
-            user_email: userData.email || "N/A",
-            amt: amount,
-            ref: refStr,
-            oldBal: oldBalance,
-            newBal: newBalance,
-            date: timestamp,
-            admin: auth.currentUser.email
-        };
-
-        await update(ref(db), updates);
-        alert(`Successfully Credited! Wallet moved from ₵${oldBalance.toFixed(2)} to ₵${newBalance.toFixed(2)}`);
-        
-        // Reset UI
-        document.getElementById('targetUid').value = "";
-        document.getElementById('payRef').value = "";
-        document.getElementById('amt').value = "";
-        document.getElementById('userBox').style.display = "none";
-
-    } catch (err) {
-        alert(err.message);
-    } finally {
-        btn.disabled = false;
+function renderTable(data) {
+    const tbody = document.getElementById('ledgerBody');
+    const emptyMsg = document.getElementById('emptyMsg');
+    tbody.innerHTML = "";
+    
+    if (data.length === 0) {
+        emptyMsg.style.display = "block";
+        return;
     }
+    emptyMsg.style.display = "none";
+
+    data.forEach(tx => {
+        const date = new Date(tx.date).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+        const typeClass = tx.type === "Credit" ? "type-credit" : "type-debit";
+        const symbol = tx.type === "Credit" ? "+" : "-";
+
+        tbody.innerHTML += `
+            <tr>
+                <td><small>${date}</small></td>
+                <td><span class="uid-link" onclick="copyUid('${tx.uid}')" title="Click to copy UID">${tx.uid.substring(0,8)}...</span></td>
+                <td><span class="type-pill ${typeClass}">${tx.type}</span></td>
+                <td><b style="color: ${tx.type === 'Credit' ? '#166534' : '#991b1b'}">${symbol} ₵${tx.amount.toFixed(2)}</b></td>
+                <td><small>${tx.reference || tx.plan || 'N/A'}</small></td>
+                <td><span style="opacity: 0.7;">${tx.note || tx.category || ''}</span></td>
+            </tr>
+        `;
+    });
+}
+
+window.filterLedger = function(category, btn) {
+    // UI Update
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    // Filtering logic
+    if (category === 'all') {
+        renderTable(allTransactions);
+    } else {
+        const filtered = allTransactions.filter(tx => tx.category === category);
+        renderTable(filtered);
+    }
+};
+
+window.copyUid = function(uid) {
+    navigator.clipboard.writeText(uid);
+    alert("UID Copied: " + uid);
 };
 </script>
 </body>
