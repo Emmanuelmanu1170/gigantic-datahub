@@ -3,60 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin: Payment Investigator</title>
+    <title>Investigator - Gigantic Data Hub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --primary: #0f172a; --accent: #4f46e5; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; }
         body { margin:0; font-family:'Inter', sans-serif; background:var(--bg); color:var(--primary); }
         .container { padding: 30px; max-width: 800px; margin: auto; }
-        .search-box { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 30px; border: 1px solid #e2e8f0; }
-        input { width: 100%; padding: 15px; border: 2px solid #f1f5f9; border-radius: 12px; font-size: 1rem; outline: none; box-sizing: border-box; }
-        input:focus { border-color: var(--accent); }
         
-        .result-card { background: white; border-radius: 20px; padding: 25px; display: none; border: 1px solid #e2e8f0; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .header-box { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; }
+        .search-box { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
         
-        .data-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
-        .data-row b { color: #64748b; font-size: 0.8rem; text-transform: uppercase; }
+        input { width: 100%; padding: 15px; border: 2px solid #f1f5f9; border-radius: 12px; font-size: 1rem; outline: none; transition: 0.3s; }
+        input:focus { border-color: var(--accent); background: #fff; }
+        
+        .result-card { background: white; border-radius: 24px; padding: 30px; display: none; border: 1px solid #e2e8f0; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); margin-top: 20px; }
+        
+        .info-table { width: 100%; margin: 20px 0; border-collapse: collapse; }
+        .info-table td { padding: 12px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+        .info-table td:first-child { color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; }
+        .info-table td:last-child { text-align: right; font-weight: 700; color: var(--primary); }
+
+        .balance-delta { background: #f8fafc; padding: 15px; border-radius: 12px; display: flex; justify-content: space-around; margin: 20px 0; border: 1px dashed #cbd5e1; }
+        .delta-item { text-align: center; }
+        .delta-item small { display: block; font-size: 0.7rem; color: #64748b; margin-bottom: 4px; }
         
         .action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 25px; }
-        .btn { padding: 15px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s; }
-        .btn-credit { background: var(--success); color: white; }
+        .btn { padding: 18px; border: none; border-radius: 15px; font-weight: 800; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
+        .btn-credit { background: var(--success); color: white; box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3); }
         .btn-dismiss { background: #fee2e2; color: var(--danger); }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        
-        .badge { padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; }
-        .badge-pending { background: #fef3c7; color: #92400e; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+        .badge { padding: 5px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
+        .status-warn { background: #fff7ed; color: #9a3412; border: 1px solid #ffedd5; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 style="margin-bottom: 10px;"><i class="fas fa-search-dollar"></i> Verify Reported Payment</h2>
-    <p style="color: #64748b; margin-bottom: 30px;">Search by the "T-Reference" the user provided from the error popup.</p>
+    <div class="header-box">
+        <div style="background:var(--accent); color:white; width:50px; height:50px; border-radius:15px; display:flex; align-items:center; justify-content:center; font-size:1.5rem;">
+            <i class="fas fa-search-dollar"></i>
+        </div>
+        <div>
+            <h2 style="margin:0">Payment Investigator</h2>
+            <p style="margin:0; font-size:0.85rem; color:#64748b">Verify "T-Reference" claims against database logs.</p>
+        </div>
+    </div>
 
     <div class="search-box">
-        <label style="font-size: 0.75rem; font-weight: 800; color: #64748b; display: block; margin-bottom: 8px;">ENTER ERROR REFERENCE</label>
+        <label style="font-size: 0.75rem; font-weight: 800; color: #64748b; display: block; margin-bottom: 10px; letter-spacing: 1px;">PASTE USER'S ERROR REFERENCE (T-REF)</label>
         <div style="display: flex; gap: 10px;">
-            <input type="text" id="searchInput" placeholder="e.g. T546184643551538">
-            <button onclick="investigate()" style="padding: 0 25px; border-radius: 12px; background: var(--accent); color: white; border: none; font-weight: 700; cursor: pointer;">SEARCH</button>
+            <input type="text" id="searchInput" placeholder="e.g. T48291048293...">
+            <button onclick="investigate()" style="padding: 0 30px; border-radius: 12px; background: var(--accent); color: white; border: none; font-weight: 700; cursor: pointer;">VERIFY</button>
         </div>
     </div>
 
     <div id="resultArea" class="result-card">
-        <div style="text-align: center; margin-bottom: 20px;">
-            <span class="badge badge-pending" id="resStatus">STATUS: UNRESOLVED</span>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="badge status-warn"><i class="fas fa-clock"></i> Unresolved Failure Log</span>
+            <small id="logDate" style="color:#94a3b8"></small>
         </div>
-        
-        <div class="data-row"><b>Report ID</b> <span id="resReportId"></span></div>
-        <div class="data-row"><b>Paystack Reference</b> <span id="resPaystack"></span></div>
-        <div class="data-row"><b>User Email</b> <span id="resEmail"></span></div>
-        <div class="data-row"><b>Amount Claimed</b> <span id="resAmount" style="color: var(--success); font-weight: 800;"></span></div>
-        <div class="data-row"><b>Claim Date</b> <span id="resDate"></span></div>
+
+        <table class="info-table">
+            <tr><td>Paystack Reference</td><td id="resPaystack"></td></tr>
+            <tr><td>Associated Email</td><td id="resEmail"></td></tr>
+            <tr><td>User UID</td><td id="resUid" style="font-family: monospace; font-size: 0.75rem;"></td></tr>
+        </table>
+
+        <div class="balance-delta">
+            <div class="delta-item">
+                <small>CURRENT WALLET</small>
+                <span id="resCurrent" style="color:var(--primary); font-weight:800">₵0.00</span>
+            </div>
+            <div class="delta-item">
+                <small>CLAIMED TOP-UP</small>
+                <span id="resClaim" style="color:var(--success); font-weight:800">+₵0.00</span>
+            </div>
+            <div class="delta-item">
+                <small>NEW BALANCE</small>
+                <span id="resNew" style="color:var(--accent); font-weight:800">₵0.00</span>
+            </div>
+        </div>
 
         <div class="action-btns">
-            <button class="btn btn-dismiss" onclick="markAsLiar()">DISMISS (LIAR)</button>
-            <button class="btn btn-credit" id="creditBtn" onclick="resolveAndCredit()">VERIFIED: CREDIT USER</button>
+            <button class="btn btn-dismiss" onclick="markAsLiar()">DISMISS (FAKE CLAIM)</button>
+            <button class="btn btn-credit" id="creditBtn" onclick="resolveAndCredit()">APPROVE & CREDIT USER</button>
         </div>
     </div>
 </div>
@@ -78,67 +109,91 @@ onAuthStateChanged(auth, user => {
 });
 
 window.investigate = async function() {
-    const refId = document.getElementById('searchInput').value.trim();
-    if(!refId) return;
+    const tRef = document.getElementById('searchInput').value.trim();
+    if(!tRef) return;
 
-    const snap = await get(ref(db, `pending_manual_credits/${refId}`));
-    if(snap.exists()) {
-        currentReport = { id: refId, ...snap.val() };
+    try {
+        const snap = await get(ref(db, `pending_manual_credits/${tRef}`));
+        if(!snap.exists()) {
+            alert("❌ LIAR DETECTED: This reference does not exist in the system's failure logs.");
+            document.getElementById('resultArea').style.display = "none";
+            return;
+        }
+
+        currentReport = { id: tRef, ...snap.val() };
+        
+        // Fetch real-time user balance to show delta
+        const userSnap = await get(ref(db, `users/${currentReport.uid}/wallet`));
+        const currentBal = parseFloat(userSnap.val() || 0);
+        const claimAmt = parseFloat(currentReport.amount);
+
         document.getElementById('resultArea').style.display = "block";
-        document.getElementById('resReportId').innerText = refId;
         document.getElementById('resPaystack').innerText = currentReport.paystackReference;
         document.getElementById('resEmail').innerText = currentReport.userEmail;
-        document.getElementById('resAmount').innerText = "₵" + parseFloat(currentReport.amount).toFixed(2);
-        document.getElementById('resDate').innerText = new Date(currentReport.timestamp).toLocaleString();
-    } else {
-        alert("This reference does not exist in our failure logs. User might be lying.");
-        document.getElementById('resultArea').style.display = "none";
+        document.getElementById('resUid').innerText = currentReport.uid;
+        document.getElementById('logDate').innerText = new Date(currentReport.timestamp).toLocaleString();
+        
+        document.getElementById('resCurrent').innerText = "₵" + currentBal.toFixed(2);
+        document.getElementById('resClaim').innerText = "+₵" + claimAmt.toFixed(2);
+        document.getElementById('resNew').innerText = "₵" + (currentBal + claimAmt).toFixed(2);
+
+    } catch (e) {
+        alert("Error fetching data: " + e.message);
     }
 };
 
 window.resolveAndCredit = async function() {
     if(!currentReport) return;
     const btn = document.getElementById('creditBtn');
+    
+    if(!confirm("Are you sure you want to credit this user? This cannot be undone.")) return;
+
     btn.disabled = true;
-    btn.innerText = "Processing...";
+    btn.innerText = "Applying Funds...";
 
     try {
-        // 1. Get User current wallet
+        // Double check Paystack ref hasn't been credited already
+        const usedSnap = await get(ref(db, `verified_references/${currentReport.paystackReference}`));
+        if(usedSnap.exists()){
+            alert("Error: This Paystack reference was already credited to an account.");
+            return;
+        }
+
         const userSnap = await get(ref(db, `users/${currentReport.uid}/wallet`));
         const currentBal = parseFloat(userSnap.val() || 0);
-        const newBal = currentBal + parseFloat(currentReport.amount);
+        const claimAmt = parseFloat(currentReport.amount);
+        const newBal = currentBal + claimAmt;
+
+        const timestamp = Date.now();
+        const txId = "RESOLVE-" + timestamp;
 
         const updates = {};
-        // 2. Add money
+        // 1. Update Wallet
         updates[`users/${currentReport.uid}/wallet`] = newBal;
-        // 3. Prevent double credit by logging reference
-        updates[`verified_references/${currentReport.paystackReference}`] = { used: true, date: Date.now() };
-        // 4. Record successful manual transaction
-        const txId = "MAN-" + Date.now();
-        updates[`transactions/${txId}`] = {
-            uid: currentReport.uid,
-            amount: currentReport.amount,
-            type: "Credit",
-            category: "topup",
-            date: Date.now(),
-            note: "Manual Resolution for: " + currentReport.id
-        };
+        // 2. Prevent Double Credit
+        updates[`verified_references/${currentReport.paystackReference}`] = { used: true, date: timestamp, resolver: auth.currentUser.email };
+        // 3. Log into Admin Audit
+        updates[`admin_deposit_logs/${txId}`] = { uid: currentReport.uid, amt: claimAmt, ref: currentReport.paystackReference, date: timestamp };
+        // 4. Log User Transaction
+        updates[`transactions/${txId}`] = { uid: currentReport.uid, amount: claimAmt, type: "Credit", category: "topup", date: timestamp, note: "Manual Resolution (T-Ref: " + currentReport.id + ")" };
 
         await update(ref(db), updates);
         await remove(ref(db, `pending_manual_credits/${currentReport.id}`));
 
-        alert("User Credited Successfully!");
+        alert("✅ Success: Wallet Credited and Logged.");
         location.reload();
+
     } catch (e) {
-        alert("Error: " + e.message);
+        alert("Transaction Failed: " + e.message);
         btn.disabled = false;
+        btn.innerText = "RETRY";
     }
 };
 
 window.markAsLiar = async function() {
-    if(confirm("Are you sure this is a fake claim? This will delete the report.")) {
+    if(confirm("DANGER: This will delete the failure log. Use this only if you have confirmed the user did NOT actually pay Paystack. Proceed?")) {
         await remove(ref(db, `pending_manual_credits/${currentReport.id}`));
-        alert("Report Deleted.");
+        alert("Log Deleted. Liar dismissed.");
         location.reload();
     }
 };
