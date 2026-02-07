@@ -17,7 +17,6 @@
         .back-btn { background: rgba(255,255,255,0.15); color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 0.8rem; font-weight: 700; }
         .container { padding: 30px 5%; }
         
-        /* API Status Banner */
         .api-banner { background: #0f172a; color: #4ade80; padding: 10px 5%; font-family: monospace; font-size: 11px; display: flex; justify-content: space-between; align-items: center; }
         .pulse { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; display: inline-block; margin-right: 5px; animation: blink 1s infinite; }
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
@@ -42,7 +41,7 @@
 <body>
 
 <div class="api-banner">
-    <div><span class="pulse"></span> IDATAGH API AUTO-FULFILLMENT ACTIVE</div>
+    <div><span class="pulse"></span> iDataGH LIVE TERMINAL - FULFILLMENT ACTIVE</div>
     <div id="apiClock">00:00:00</div>
 </div>
 
@@ -53,14 +52,14 @@
 
 <div class="container">
     <div class="controls-card">
-        <div class="control-group"><label>Search Orders</label><input type="text" id="searchInput" placeholder="Email or Recipient..."></div>
+        <div class="control-group"><label>Search Orders</label><input type="text" id="searchInput" placeholder="Recipient or Email..."></div>
         <div class="control-group">
             <label>Filter Status</label>
             <select id="statusFilter">
                 <option value="all">All Statuses</option>
                 <option value="Pending">Pending</option>
                 <option value="Completed">Completed</option>
-                <option value="Flagged">Flagged (Hackers)</option>
+                <option value="Flagged">Flagged</option>
             </select>
         </div>
     </div>
@@ -80,12 +79,14 @@
                     </tr>
                 </thead>
                 <tbody id="orderTbody">
-                    <tr><td colspan="7" style="text-align:center; padding:50px;">Initializing Security Nodes...</td></tr>
+                    <tr><td colspan="7" style="text-align:center; padding:50px;">Connecting to Secure Nodes...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
+
+
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -103,9 +104,14 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-// API SETTINGS
 const API_KEY = "Tera_live_95abf76d96984f4612153a4869e43d3e";
 const API_URL = "https://idatagh.com/wp-json/custom/v1/place-order";
+
+// iDataGH Data Mapping (Update these IDs based on your provider's specific package list)
+const packageMapping = {
+    "1GB": 1, "2GB": 2, "3GB": 3, "4GB": 4, "5GB": 5, "6GB": 6, "8GB": 8, "10GB": 10,
+    "15GB": 15, "20GB": 20, "25GB": 25, "30GB": 30, "40GB": 40, "50GB": 50, "100GB": 100
+};
 
 let allOrders = [];
 let userEmailMap = {};
@@ -117,13 +123,11 @@ onAuthStateChanged(auth, user => {
 });
 
 async function startEngine() {
-    // 1. Map Users
     onValue(ref(db, "users"), snap => {
         const data = snap.val() || {};
         Object.entries(data).forEach(([uid, info]) => { userEmailMap[uid] = info.email; });
     });
 
-    // 2. Listen for Orders
     onValue(ref(db, "user_orders"), snapshot => {
         const data = snapshot.val() || {};
         allOrders = [];
@@ -132,7 +136,6 @@ async function startEngine() {
                 const orderObj = { id, uid, ...order, email: userEmailMap[uid] || order.email };
                 allOrders.push(orderObj);
                 
-                // 3. AUTOMATION TRIGGER
                 if (order.status === "Pending") {
                     securityAudit(orderObj);
                 }
@@ -142,32 +145,25 @@ async function startEngine() {
     });
 }
 
-// HACKER SECURITY SHIELD
 async function securityAudit(order) {
-    console.log("🛡️ Auditing Order:", order.id);
-
     try {
-        // A. Velocity Check (Spam Prevention)
         const historySnap = await get(ref(db, `user_orders/${order.uid}`));
         const history = Object.values(historySnap.val() || {});
         const recent = history.filter(o => (Date.now() - o.timestamp) < 60000);
 
         if (recent.length > 2) {
-            handleFlag(order, "Hacker Check: Too many orders in 60s");
+            handleFlag(order, "Velocity Trigger: Spam attempt");
             return;
         }
 
-        // B. Balance Manipulation Check
         const userSnap = await get(ref(db, `users/${order.uid}`));
         const userData = userSnap.val();
         if (userData.balance < 0) {
-            handleFlag(order, "Hacker Check: Negative balance bypass");
+            handleFlag(order, "Integrity Trigger: Negative balance");
             return;
         }
 
-        // C. Passed Audit -> Proceed to API
         fulfillOrder(order);
-
     } catch (e) { console.error("Audit Fail", e); }
 }
 
@@ -176,26 +172,23 @@ async function handleFlag(order, reason) {
     updates[`user_orders/${order.uid}/${order.id}/status`] = "Flagged";
     updates[`orders/${order.id}/status`] = "Flagged";
     await update(ref(db), updates);
-
-    // Auto-Add to Financial Guard (Hackers page)
-    push(ref(db, "admin_settings/financial_guard"), {
-        email: order.email,
-        uid: order.uid,
-        reason: reason
-    });
+    push(ref(db, "admin_settings/financial_guard"), { email: order.email, uid: order.uid, reason: reason });
 }
 
 async function fulfillOrder(order) {
-    // Set Status to Processing so it doesn't trigger again
     const processUpdate = {};
     processUpdate[`user_orders/${order.uid}/${order.id}/status`] = "Processing";
     await update(ref(db), processUpdate);
 
-    // API Payload per idatagh documentation
+    // EXTRACT PLAN ID: Convert "5GB" to 5
+    const cleanPlan = order.plan.replace(/[^0-9]/g, '');
+    const planID = packageMapping[order.plan] || parseInt(cleanPlan) || 5;
+
+    // Payload formatted for iDataGH
     const payload = {
-        network: order.network.toLowerCase(),
-        beneficiary: order.recipient,
-        "pa_data-bundle-packages": parseInt(order.plan) || 5 // Defaulting if plan string doesn't parse
+        network: order.network.toLowerCase(), // "mtn"
+        beneficiary: order.recipient,        // "024XXXXXXX"
+        "pa_data-bundle-packages": planID    // Integer ID
     };
 
     try {
@@ -210,13 +203,14 @@ async function fulfillOrder(order) {
 
         const result = await response.json();
 
+        // Successful if provider returns success status or 200 OK
         if (result.status === "success" || response.ok) {
             updateStatus(order, "Completed");
         } else {
-            updateStatus(order, "Failed: " + (result.message || "Provider Error"));
+            updateStatus(order, "Failed: " + (result.message || "Provider Rejected"));
         }
     } catch (err) {
-        updateStatus(order, "API Offline");
+        updateStatus(order, "Connection Error");
     }
 }
 
@@ -234,27 +228,27 @@ function renderTable() {
     
     let entries = allOrders.sort((a,b) => b.timestamp - a.timestamp);
     if(filter !== 'all') entries = entries.filter(o => o.status === filter);
-    if(search) entries = entries.filter(o => o.email.toLowerCase().includes(search) || o.recipient.includes(search));
+    if(search) entries = entries.filter(o => o.recipient.includes(search) || o.email.toLowerCase().includes(search));
 
     tbody.innerHTML = "";
     entries.forEach(o => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
             <td><b>#${o.id.slice(-6)}</b><br><small>${new Date(o.timestamp).toLocaleString()}</small></td>
-            <td><b>${o.network}</b><br><span>${o.plan}</span></td>
+            <td><b>${o.network.toUpperCase()}</b><br><span>${o.plan}</span></td>
             <td style="font-weight:700;">₵${parseFloat(o.amount).toFixed(2)}</td>
             <td>${o.recipient}</td>
             <td style="font-size:11px; font-weight:700;">${o.email}</td>
             <td><span class="status-badge status-${o.status}">${o.status}</span></td>
             <td style="text-align:right">
-                <button class="delete-btn" onclick="deleteRec('${o.id}','${o.uid}')"><i class="fas fa-trash"></i></button>
+                <button class="delete-btn" onclick="delRec('${o.id}','${o.uid}')"><i class="fas fa-trash"></i></button>
             </td>
         `;
         tbody.appendChild(tr);
     });
 }
 
-window.deleteRec = (id, uid) => {
+window.delRec = (id, uid) => {
     if(confirm("Delete record?")){
         const up = {};
         up[`user_orders/${uid}/${id}`] = null;
