@@ -10,7 +10,6 @@
         :root { --primary: #001a33; --accent: #ff8c00; --success: #10b981; --bg: #f8fafc; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
         
-        /* RECEIPT DESIGN */
         #receiptArea {
             width: 100%; max-width: 360px; background: white; padding: 25px;
             border-radius: 15px; box-shadow: 0 15px 40px rgba(0,0,0,0.08);
@@ -31,7 +30,6 @@
 
         .barcode-mimic { height: 40px; background: repeating-linear-gradient(90deg, #333, #333 2px, #fff 2px, #fff 6px); opacity: 0.2; margin-top: 20px; }
 
-        /* LEDGER BOOK SECTION */
         .ledger-container { width: 100%; max-width: 400px; margin-top: 40px; }
         .ledger-title { font-size: 12px; font-weight: 900; color: #64748b; text-transform: uppercase; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
 
@@ -47,7 +45,6 @@
         .row-info span { font-size: 11px; color: #94a3b8; }
         .row-price { font-weight: 800; color: var(--primary); font-size: 14px; }
 
-        /* BUTTONS */
         .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 360px; margin-top: 25px; }
         .btn { padding: 15px; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 13px; }
         .btn-dl { background: var(--primary); color: white; }
@@ -98,11 +95,16 @@
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
     import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-    const firebaseConfig = { 
-        apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4", 
-        authDomain: "gigantic-data.firebaseapp.com", 
-        databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com", 
-        projectId: "gigantic-data" 
+    // COMPLETE CONFIG INTEGRATED
+    const firebaseConfig = {
+        apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho",
+        authDomain: "gigantic-data.firebaseapp.com",
+        databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
+        projectId: "gigantic-data",
+        storageBucket: "gigantic-data.firebasestorage.app",
+        messagingSenderId: "727845403550",
+        appId: "1:727845403550:web:56d06c9389993153a9748f",
+        measurementId: "G-10F198VFE6"
     };
     
     const app = initializeApp(firebaseConfig);
@@ -110,10 +112,11 @@
     const db = getDatabase(app);
 
     let activeOrder = null;
+    let isAuthReady = false; // The Guard variable
 
     onAuthStateChanged(auth, user => {
+        isAuthReady = true; // Auth state determined
         if (user) {
-            // Path corrected to match your dashboard history path: user_orders/UID
             const orderRef = ref(db, `user_orders/${user.uid}`);
             
             onValue(orderRef, snap => {
@@ -130,7 +133,6 @@
                     orders.push({ id: child.key, ...child.val() }); 
                 });
 
-                // Sort by timestamp (latest first)
                 orders.sort((a,b) => b.timestamp - a.timestamp);
 
                 orders.slice(0, 15).forEach((order, index) => {
@@ -147,16 +149,18 @@
                     `;
                     ledger.appendChild(row);
                     
-                    // Automatically display the most recent receipt on load
                     if(index === 0) updateReceipt(order);
                 });
             });
         } else {
-            window.location.href = "login.html";
+            // Only redirect if Firebase has finished checking and there's no user session
+            if (isAuthReady) {
+                window.location.href = "login.html";
+            }
         }
     });
 
-    function selectOrder(order, element) {
+    window.selectOrder = function(order, element) {
         document.querySelectorAll('.order-row').forEach(r => r.classList.remove('active'));
         element.classList.add('active');
         updateReceipt(order);
