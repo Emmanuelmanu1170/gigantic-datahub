@@ -68,7 +68,6 @@
         .tool-box i { font-size: 24px; margin-bottom: 10px; display: block; }
         .tool-box b { font-size: 13px; }
 
-        /* LISTS */
         .order-card {
             background: var(--white); border-radius: 20px; margin-bottom: 15px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 20px; border: 1px solid rgba(0,0,0,0.05);
@@ -86,12 +85,6 @@
         .tel-bg { background: #E60000; }
         .air-bg { background: #0052CC; }
 
-        .order-footer {
-            margin-top: 12px; padding-top: 12px; border-top: 1.5px dashed #e2e8f0;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .amount-paid { font-size: 16px; font-weight: 900; color: var(--primary); }
-
         .bottom-nav {
             position: fixed; bottom: 0; width: 100%; background: var(--white);
             display: flex; justify-content: space-around; padding: 15px 0;
@@ -107,14 +100,15 @@
 <div id="authGuard" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:9999; display:flex; align-items:center; justify-content:center;">
     <div style="text-align:center;">
         <i class="fas fa-shield-alt fa-spin" style="font-size:40px; color:var(--primary);"></i>
-        <p style="margin-top:15px; font-weight:800; color:var(--primary); font-size:12px;">SECURING SESSION...</p>
+        <p style="margin-top:15px; font-weight:800; color:var(--primary); font-size:12px;">VALIDATING MERCHANT ACCESS...</p>
+        <p style="font-size:10px; color:var(--text-gray);">Session handshake in progress</p>
     </div>
 </div>
 
 <div class="merchant-header">
     <div class="shop-title"><i class="fas fa-store-alt"></i> Merchant Terminal</div>
-    <span class="user-meta" id="userEmail">Loading...</span>
-    <span class="badge-agent" id="userStatus">Verifying...</span>
+    <span class="user-meta" id="userEmail">Checking email...</span>
+    <span class="badge-agent" id="userStatus">PENDING</span>
 </div>
 
 <div class="stats-grid">
@@ -188,32 +182,41 @@
     let currentMargin = 0.4;
     let todaySalesVolume = 0;
 
-    // STEP 1: Strict Persistence Handshake
+    // THE 5-MINUTE GRACE PERIOD SYSTEM
+    // We allow the page to sit for 5 minutes before we force a redirect to login.
+    const GRACE_PERIOD = 300000; 
+    const entryTime = Date.now();
+
     setPersistence(auth, browserLocalPersistence).then(() => {
         onAuthStateChanged(auth, user => {
             if (user) {
+                localStorage.setItem('lastKnownSession', user.uid);
                 document.getElementById('userEmail').innerText = user.email;
-                syncMerchantTerminal(user);
+                syncTerminal(user);
             } else {
-                // Buffer to allow slow tokens to load
-                setTimeout(() => { if(!auth.currentUser) window.location.replace("login.html"); }, 2000);
+                // Check if 5 minutes have passed since page load
+                const timeElapsed = Date.now() - entryTime;
+                if (timeElapsed > GRACE_PERIOD) {
+                    window.location.replace("login.html");
+                } else {
+                    console.log("Waiting for session handshake...");
+                }
             }
         });
     });
 
-    function syncMerchantTerminal(user) {
-        // Hide Guard
+    function syncTerminal(user) {
         document.getElementById('authGuard').style.display = 'none';
 
         onValue(ref(db, `users/${user.uid}`), snap => {
             const data = snap.val() || {};
             document.getElementById('agentWallet').innerText = "₵" + Number(data.wallet || data.balance || 0).toFixed(2);
             
-            const statusLabel = data.status || data.userType || "Member";
-            document.getElementById('userStatus').innerText = statusLabel;
+            const status = (data.status || data.userType || "Member");
+            document.getElementById('userStatus').innerText = status;
 
-            // Security check: If not agent, kick to user dashboard
-            if(statusLabel.toLowerCase() !== 'agent') {
+            // If confirmed NOT an agent by the database, go to dashboard
+            if(status.toLowerCase() !== 'agent') {
                 window.location.replace("dashboard.html");
             }
         });
@@ -222,7 +225,7 @@
             const container = document.getElementById('historyContainer');
             const data = snapshot.val();
             if (!data) {
-                container.innerHTML = `<p style="text-align:center; padding:30px; color:#94a3b8;">No records found.</p>`;
+                container.innerHTML = `<p style="text-align:center; padding:30px; color:#94a3b8;">No records.</p>`;
                 return;
             }
 
@@ -248,7 +251,7 @@
                         <div style="font-size:12px; font-weight:700;">${order.plan} → ${order.recipient}</div>
                         <div class="order-footer">
                             <div class="amount-paid">₵${amount.toFixed(2)}</div>
-                            <span style="font-size:9px; color:var(--merchant-green); font-weight:800; text-transform:uppercase;">${order.status || 'Completed'}</span>
+                            <span style="font-size:9px; color:var(--merchant-green); font-weight:800;">${order.status || 'Success'}</span>
                         </div>
                     </div>`;
             });
@@ -273,7 +276,7 @@
     }
 
     window.shareMarketingKit = () => {
-        const msg = `🚀 *GIGANTIC DATA MERCHANT* 🚀\nMerchant email: ${auth.currentUser.email}\nBuy cheap data instantly via my portal! ⚡`;
+        const msg = `🚀 *GIGANTIC DATA MERCHANT* 🚀\nMerchant: ${auth.currentUser.email}\nBuy cheap data instantly via my portal! ⚡`;
         window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
     };
 </script>
