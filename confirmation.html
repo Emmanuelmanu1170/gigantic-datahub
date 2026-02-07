@@ -5,60 +5,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Secure Checkout - Gigantic Data Hub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root {
-            --accent: #6a5af9;
-            --accent-light: #f5f3ff;
-            --success: #16a34a;
-            --text-dark: #0f172a;
-            --text-muted: #64748b;
-            --bg: #f8fafc;
+        :root { --accent: #6a5af9; --success: #10b981; --bg: #f8fafc; }
+        body { background-color: var(--bg); font-family: 'Inter', sans-serif; }
+        .order-card { background: white; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        .info-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
+        .price-box { background: #f5f3ff; border: 1px dashed var(--accent); border-radius: 16px; }
+        
+        #successOverlay {
+            display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95);
+            z-index: 1000; align-items: center; justify-content: center;
         }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
-        body { background-color: var(--bg); color: var(--text-dark); display: flex; justify-content: center; min-height: 100vh; padding: 20px; }
-        .checkout-container { width: 100%; max-width: 450px; }
-        .order-card { background: #ffffff; border-radius: 24px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
-        .receipt-header { text-align: center; margin-bottom: 20px; }
-        .receipt-header i { font-size: 40px; color: var(--accent); }
-        .info-grid { display: grid; gap: 16px; margin-bottom: 24px; }
-        .info-item { display: flex; justify-content: space-between; padding-bottom: 12px; border-bottom: 1px solid #f1f5f9; }
-        .info-item label { color: var(--text-muted); font-size: 0.85rem; }
-        .info-item span { font-weight: 600; font-size: 0.95rem; }
-        .price-box { background: var(--accent-light); border-radius: 16px; padding: 20px; text-align: center; border: 1px dashed var(--accent); margin-bottom: 24px; }
-        .price-box h1 { font-size: 2.2rem; color: var(--text-dark); }
-        .pay-btn { width: 100%; padding: 18px; border-radius: 16px; border: none; background: var(--accent); color: white; font-weight: 700; cursor: pointer; }
-        .pay-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
-        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); display: none; align-items: center; justify-content: center; z-index: 1000; }
-        .modal { background: white; border-radius: 30px; padding: 40px 20px; width: 90%; max-width: 350px; text-align: center; }
-        .success-check { width: 80px; height: 80px; background: var(--success); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 20px; }
     </style>
 </head>
-<body>
+<body class="flex items-center justify-center min-h-screen p-4">
 
-    <div class="checkout-container">
-        <div class="order-card">
-            <div class="receipt-header">
-                <i class="fas fa-shield-check"></i>
-                <h2 style="margin-top:10px">Confirm Order</h2>
-            </div>
-
-            <div class="info-grid" id="details">
-                <p style="text-align: center;">Syncing with Wallet...</p>
-            </div>
-
-            <div id="priceArea"></div>
-
-            <button class="pay-btn" id="confirmBtn">CONFIRM & PAY NOW</button>
+    <div class="max-w-md w-full order-card p-8">
+        <div class="text-center mb-6">
+            <i class="fas fa-shield-check text-4xl text-indigo-500"></i>
+            <h2 class="text-2xl font-extrabold text-slate-800 mt-2">Confirm Order</h2>
         </div>
+
+        <div class="space-y-1 mb-6" id="details">
+            <p class="text-center text-slate-400 animate-pulse">Checking Wallet...</p>
+        </div>
+
+        <div id="priceArea" class="price-box p-6 text-center mb-6"></div>
+
+        <button id="confirmBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg active:scale-95">
+            CONFIRM & PAY NOW
+        </button>
     </div>
 
-    <div class="overlay" id="successOverlay">
-        <div class="modal">
-            <div class="success-check"><i class="fas fa-check"></i></div>
-            <h2>Delivery Started</h2>
-            <p style="margin: 15px 0; color: var(--text-muted);">Your data is being processed. It will arrive shortly.</p>
-            <button onclick="window.location.replace('dashboard.html')" style="width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--text-dark); color: white; font-weight: 700; cursor: pointer;">RETURN TO DASHBOARD</button>
+    <div id="successOverlay">
+        <div class="bg-white rounded-3xl p-10 max-w-xs w-full text-center shadow-2xl">
+            <div class="w-20 h-20 bg-emerald-500 text-white rounded-full flex items-center justify-center text-4xl mx-auto mb-6 shadow-lg shadow-emerald-200">
+                <i class="fas fa-check"></i>
+            </div>
+            <h2 class="text-2xl font-black text-slate-800">Order Placed!</h2>
+            <p class="text-slate-500 mt-3 mb-8">Your data bundle is being processed automatically.</p>
+            <div class="flex items-center justify-center gap-2 text-emerald-600 font-bold text-sm">
+                <i class="fas fa-spinner fa-spin"></i> Redirecting to History...
+            </div>
         </div>
     </div>
 
@@ -69,16 +58,11 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
         import { getDatabase, ref, onValue, update, push } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-        // CONFIG INTEGRATION
         const firebaseConfig = { 
             apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho", 
             authDomain: "gigantic-data.firebaseapp.com", 
             databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com", 
-            projectId: "gigantic-data",
-            storageBucket: "gigantic-data.firebasestorage.app",
-            messagingSenderId: "727845403550",
-            appId: "1:727845403550:web:56d06c9389993153a9748f",
-            measurementId: "G-10F198VFE6"
+            projectId: "gigantic-data"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -88,120 +72,80 @@
         const API_KEY = "tera_live_95abf76d96984f4612153a4869e43d3e";
         const API_URL = "https://idatagh.com/wp-json/custom/v1/place-order";
 
-        let authProcessed = false;
-
         onAuthStateChanged(auth, (user) => {
-            authProcessed = true;
             if (!user) { window.location.href = "login.html"; return; }
 
             const order = JSON.parse(localStorage.getItem('pendingOrder'));
             if (!order) { window.location.href = "order.html"; return; }
 
-            // UNIFIED PATH: Listening to 'balance'
             onValue(ref(db, `users/${user.uid}`), (snapshot) => {
                 const userData = snapshot.val() || {};
-                const wallet = parseFloat(userData.balance || userData.wallet || 0);
+                const wallet = parseFloat(userData.balance || 0);
                 const cost = parseFloat(order.amount);
 
                 document.getElementById('details').innerHTML = `
-                    <div class="info-item"><label>Network</label><span>${order.network}</span></div>
-                    <div class="info-item"><label>Data Plan</label><span>${order.plan}</span></div>
-                    <div class="info-item"><label>Recipient</label><span>${order.recipient}</span></div>
-                    <div class="info-item"><label>Mode</label><span>${order.mode.toUpperCase()}</span></div>
-                    <div class="info-item"><label>Current Balance</label><span>GH₵ ${wallet.toFixed(2)}</span></div>
+                    <div class="info-item"><span class="text-slate-500">Network</span><span class="font-bold">${order.network}</span></div>
+                    <div class="info-item"><span class="text-slate-500">Recipient</span><span class="font-bold">${order.recipient}</span></div>
+                    <div class="info-item"><span class="text-slate-500">Balance</span><span class="font-bold">₵${wallet.toFixed(2)}</span></div>
                 `;
 
                 document.getElementById('priceArea').innerHTML = `
-                    <div class="price-box"><p>Amount to Deduct</p><h1>GH₵ ${cost.toFixed(2)}</h1></div>
+                    <p class="text-xs font-bold uppercase text-indigo-400">Total Deducted</p>
+                    <h1 class="text-3xl font-black text-slate-800">GH₵ ${cost.toFixed(2)}</h1>
                 `;
 
                 document.getElementById('confirmBtn').onclick = async () => {
-                    if (wallet < cost) {
-                        alert("Error: Your balance (GH₵ " + wallet.toFixed(2) + ") is insufficient.");
-                        return;
-                    }
+                    if (wallet < cost) { alert("Insufficient Balance!"); return; }
 
                     const btn = document.getElementById('confirmBtn');
                     btn.disabled = true;
-                    btn.innerText = "Processing...";
-
-                    let networkID = order.network.toLowerCase();
-                    if (networkID.includes("airtel") || networkID.includes("at")) networkID = "at";
-                    else if (networkID.includes("telecel") || networkID.includes("vod")) networkID = "telecel";
-                    else networkID = "mtn";
+                    btn.innerText = "Processing Order...";
 
                     try {
+                        // 1. Send Order to Provider
                         const response = await fetch(API_URL, {
                             method: "POST",
-                            headers: { 
-                                "Authorization": "Bearer " + API_KEY, 
-                                "Content-Type": "application/json" 
-                            },
+                            headers: { "Authorization": "Bearer " + API_KEY, "Content-Type": "application/json" },
                             body: JSON.stringify({
-                                "network": networkID,
+                                "network": order.network.toLowerCase().includes("mtn") ? "mtn" : (order.network.toLowerCase().includes("telecel") ? "telecel" : "at"),
                                 "beneficiary": order.recipient.toString().trim(),
                                 "pa_data-bundle-packages": order.plan 
                             })
                         });
 
                         const res = await response.json();
-                        
-                        if (res.status === "error" || (res.code && res.code.includes("fail"))) {
-                             throw new Error(res.message || "Provider error.");
-                        }
+                        if (res.status === "error") throw new Error(res.message);
 
-                        const orderId = "GID-" + Math.floor(Math.random() * 89999 + 10000);
+                        // 2. Prepare Database Updates
+                        const orderId = "GID-" + Math.floor(Math.random() * 90000 + 10000);
                         const newBalance = parseFloat((wallet - cost).toFixed(2));
-                        
-                        const finalReceipt = {
-                            uid: user.uid,
-                            amount: cost,
-                            network: order.network,
-                            recipient: order.recipient,
-                            plan: order.plan,
-                            status: "Successful",
-                            timestamp: Date.now(),
-                            orderId: orderId,
-                            provider_ref: res.order_id || "N/A"
-                        };
-
-                        // Atomic Transaction Log for Ledger
                         const txKey = push(ref(db, 'transactions')).key;
-                        const txLog = {
-                            uid: user.uid,
-                            amount: cost,
-                            type: "Debit",
-                            description: `Data Purchase (${order.plan})`,
-                            timestamp: Date.now(),
-                            newBalance: newBalance
-                        };
 
                         const updates = {};
                         updates[`users/${user.uid}/balance`] = newBalance;
-                        updates[`users/${user.uid}/wallet`] = newBalance; // Safety sync
-                        updates[`orders/${orderId}`] = finalReceipt;
-                        updates[`user_orders/${user.uid}/${orderId}`] = finalReceipt;
-                        updates[`transactions/${txKey}`] = txLog;
+                        updates[`users/${user.uid}/wallet`] = newBalance; // legacy sync
+                        updates[`orders/${orderId}`] = { ...order, status: "Successful", timestamp: Date.now() };
+                        updates[`user_orders/${user.uid}/${orderId}`] = { ...order, status: "Successful", timestamp: Date.now() };
+                        updates[`transactions/${txKey}`] = {
+                            uid: user.uid, amount: cost, type: "Debit", 
+                            description: `Data: ${order.plan}`, timestamp: Date.now(), newBalance: newBalance
+                        };
 
                         await update(ref(db), updates);
                         
+                        // 3. Success UI and Redirect
                         localStorage.removeItem('pendingOrder');
                         document.getElementById('successOverlay').style.display = 'flex';
+                        setTimeout(() => window.location.href = "order_history.html", 3000);
 
                     } catch (err) {
                         alert("Order Failed: " + err.message);
                         btn.disabled = false;
-                        btn.innerText = "TRY AGAIN";
+                        btn.innerText = "CONFIRM & PAY NOW";
                     }
                 };
             }, { onlyOnce: true });
         });
-
-        setTimeout(() => {
-            if (!authProcessed && !auth.currentUser) {
-                window.location.href = "login.html";
-            }
-        }, 5000);
     </script>
 </body>
 </html>
