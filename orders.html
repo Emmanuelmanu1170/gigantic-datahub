@@ -7,63 +7,50 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --deep-blue: #003366; --primary-blue: #0052cc; --orange-gradient: linear-gradient(135deg, #ff8c00 0%, #ff4500 100%);
-            --light-bg: #f4f7fe; --white: #ffffff; --text-main: #1e293b; --success: #10b981;
-            --pending: #f59e0b; --info: #3b82f6; --danger: #ef4444;
+            --deep-blue: #003366; --primary-blue: #0052cc;
+            --light-bg: #f4f7fe; --white: #ffffff; --text-main: #1e293b;
+            --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
         }
         * { margin:0; padding:0; box-sizing:border-box; font-family: -apple-system, sans-serif; }
         body { background: var(--light-bg); color: var(--text-main); min-height: 100vh; }
-        header { background: var(--deep-blue); color: white; padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        header { background: var(--deep-blue); color: white; padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
         .back-btn { background: rgba(255,255,255,0.15); color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 0.8rem; font-weight: 700; }
         .container { padding: 30px 5%; }
-        
         .api-banner { background: #0f172a; color: #4ade80; padding: 10px 5%; font-family: monospace; font-size: 11px; display: flex; justify-content: space-between; align-items: center; }
         .pulse { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; display: inline-block; margin-right: 5px; animation: blink 1s infinite; }
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
-
-        .controls-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end; }
-        .control-group { display: flex; flex-direction: column; gap: 8px; }
-        label { font-size: 0.7rem; font-weight: 800; color: var(--deep-blue); text-transform: uppercase; }
-        input, select { padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 0.85rem; outline: none; }
-
-        .table-card { background: white; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: hidden; }
+        .table-card { background: white; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; min-width: 1000px; }
         th { background: #f8fafc; color: #64748b; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; padding: 15px; text-align: left; }
         td { padding: 15px; font-size: 0.85rem; border-bottom: 1px solid #f1f5f9; }
         .status-badge { font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; border: 1px solid transparent; }
         .status-Pending { background: #fffbeb; color: #b45309; border-color: #fde68a; }
         .status-Completed { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
-        .status-Flagged { background: #fef2f2; color: #b91c1c; border-color: #fecaca; font-weight: 900; }
+        .status-Flagged { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
         .status-Processing { background: #eff6ff; color: #1e40af; border-color: #bfdbfe; }
-        .delete-btn { color: #94a3b8; border: 1px solid #e2e8f0; padding: 8px 10px; border-radius: 8px; cursor: pointer; }
+        .action-btn { border:none; background:none; cursor:pointer; color:#94a3b8; margin-left: 10px; transition: 0.2s; }
+        .action-btn:hover { color: var(--primary-blue); }
+        .retry-btn { color: var(--warning); font-size: 14px; }
+        
+        .log-card { background: #1e293b; color: #94a3b8; padding: 20px; border-radius: 15px; font-family: monospace; font-size: 12px; height: 200px; overflow-y: auto; }
+        .log-card h3 { color: white; margin-bottom: 10px; font-size: 14px; }
+        .log-entry { border-bottom: 1px solid #334155; padding: 5px 0; }
+        .log-err { color: #ef4444; }
     </style>
 </head>
 <body>
 
 <div class="api-banner">
-    <div><span class="pulse"></span> iDataGH AUTO-DISPATCH ACTIVE - SECURE SYNC</div>
+    <div><span class="pulse"></span> GIGANTIC SECURITY & API AUTO-DISPATCH ACTIVE</div>
     <div id="apiClock">00:00:00</div>
 </div>
 
 <header>
-    <h1><i class="fas fa-robot"></i> API ORDER CONTROL</h1>
+    <h1><i class="fas fa-shield-alt"></i> ORDER COMMAND CENTER</h1>
     <a href="admin_dashboard.html" class="back-btn"><i class="fas fa-arrow-left"></i> Dashboard</a>
 </header>
 
 <div class="container">
-    <div class="controls-card">
-        <div class="control-group"><label>Search Orders</label><input type="text" id="searchInput" placeholder="Recipient or Email..."></div>
-        <div class="control-group">
-            <label>Filter Status</label>
-            <select id="statusFilter">
-                <option value="all">All Statuses</option>
-                <option value="Pending">Pending</option>
-                <option value="Completed">Completed</option>
-                <option value="Flagged">Flagged</option>
-            </select>
-        </div>
-    </div>
-
     <div class="table-card">
         <div style="overflow-x: auto;">
             <table id="ordersTable">
@@ -79,10 +66,15 @@
                     </tr>
                 </thead>
                 <tbody id="orderTbody">
-                    <tr><td colspan="7" style="text-align:center; padding:50px;">Connecting to Secure Nodes...</td></tr>
+                    <tr><td colspan="7" style="text-align:center; padding:50px;">Initializing Security & Proxy Nodes...</td></tr>
                 </tbody>
             </table>
         </div>
+    </div>
+
+    <div class="log-card" id="logConsole">
+        <h3><i class="fas fa-terminal"></i> Live Security & API Logs</h3>
+        <div id="logEntries"></div>
     </div>
 </div>
 
@@ -103,17 +95,26 @@ const auth = getAuth(app);
 const db = getDatabase(app);
 
 // API CREDENTIALS
-const API_KEY = "Tera_live_95abf76d96984f4612153a4869e43d3e";
+const API_KEY = "tera_live_1191f4118022d549ec1419d8d6ab249c";
 const API_URL = "https://idatagh.com/wp-json/custom/v1/place-order";
+const PROXY = "https://corsproxy.io/?";
 
 let allOrders = [];
 let userEmailMap = {};
 
 onAuthStateChanged(auth, user => {
     if(user && user.email === "alenacloft0@gmail.com"){
+        writeLog("Admin Authenticated. Starting Monitor...");
         startEngine();
     } else { window.location.href = "login.html"; }
 });
+
+function writeLog(msg, isError = false) {
+    const logDiv = document.getElementById("logEntries");
+    const time = new Date().toLocaleTimeString();
+    const entry = `<div class="log-entry ${isError ? 'log-err' : ''}">[${time}] ${msg}</div>`;
+    logDiv.innerHTML = entry + logDiv.innerHTML;
+}
 
 async function startEngine() {
     onValue(ref(db, "users"), snap => {
@@ -128,43 +129,37 @@ async function startEngine() {
             Object.entries(orders).forEach(([id, order]) => {
                 const orderObj = { id, uid, ...order, email: userEmailMap[uid] || order.email };
                 allOrders.push(orderObj);
-                
-                // AUTOMATED FULFILLMENT TRIGGER
-                if (order.status === "Pending") {
-                    securityAudit(orderObj);
-                }
+                if (order.status === "Pending") securityAudit(orderObj);
             });
         });
         renderTable();
     });
 }
 
-// SECURITY & ANTI-HACKER LOGIC
 async function securityAudit(order) {
     try {
         const historySnap = await get(ref(db, `user_orders/${order.uid}`));
-        const history = Object.values(historySnap.val() || {});
-        const recent = history.filter(o => (Date.now() - o.timestamp) < 60000);
-
+        const recent = Object.values(historySnap.val() || {}).filter(o => (Date.now() - o.timestamp) < 60000);
+        
         if (recent.length > 2) {
-            handleFlag(order, "Velocity Check: Too many orders");
+            handleFlag(order, "Hacker: Velocity Attack (Too many orders)");
             return;
         }
 
         const userSnap = await get(ref(db, `users/${order.uid}`));
         const userData = userSnap.val();
-        // Check for balance bypass/negative wallet trick
-        const currentWallet = parseFloat(userData.wallet || userData.balance || 0);
-        if (currentWallet < 0) {
-            handleFlag(order, "Integrity Check: Balance Bypass");
+        if (parseFloat(userData.wallet || userData.balance || 0) < 0) {
+            handleFlag(order, "Hacker: Negative Balance Exploit");
             return;
         }
-
+        
+        writeLog(`Audit Passed for #${order.id.slice(-6)}. Sending to API...`);
         fulfillOrder(order);
-    } catch (e) { console.error("Security Audit Fail", e); }
+    } catch (e) { writeLog("Audit Error: " + e.message, true); }
 }
 
 async function handleFlag(order, reason) {
+    writeLog(`FLAGGED: ${order.email} - ${reason}`, true);
     const updates = {};
     updates[`user_orders/${order.uid}/${order.id}/status`] = "Flagged";
     updates[`orders/${order.id}/status`] = "Flagged";
@@ -172,50 +167,41 @@ async function handleFlag(order, reason) {
     push(ref(db, "admin_settings/financial_guard"), { email: order.email, uid: order.uid, reason: reason, date: Date.now() });
 }
 
-// FULFILLMENT ENGINE
 async function fulfillOrder(order) {
-    // 1. Mark as Processing to prevent loops
-    const processUpdate = {};
-    processUpdate[`user_orders/${order.uid}/${order.id}/status`] = "Processing";
-    await update(ref(db), processUpdate);
+    await update(ref(db, `user_orders/${order.uid}/${order.id}`), { status: "Processing" });
 
-    // 2. Format Network for Provider
     let net = order.network.toLowerCase();
-    if (net.includes("mtn")) net = "mtn-gh";
-    else if (net.includes("at") || net.includes("airtel")) net = "at-gh";
-    else if (net.includes("telecel") || net.includes("vod")) net = "telecel-gh";
+    if (net.includes("mtn")) net = "mtn";
+    else if (net.includes("at") || net.includes("airtel")) net = "at";
+    else if (net.includes("telecel") || net.includes("vod")) net = "telecel";
 
-    // 3. Extract numeric Plan ID (API expects an ID, not just text)
-    // Extracting digits from "5GB" -> 5
-    const planID = parseInt(order.plan.replace(/[^0-9]/g, '')) || 1;
+    const planID = parseInt(order.plan.replace(/[^0-9]/g, '')) || 5;
 
-    // 4. API PAYLOAD
     const payload = {
         "network": net,
-        "beneficiary": order.recipient.trim(),
+        "beneficiary": order.recipient.toString().trim(),
         "pa_data-bundle-packages": planID
     };
 
     try {
-        const response = await fetch(API_URL, {
+        const response = await fetch(PROXY + encodeURIComponent(API_URL), {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${API_KEY}`,
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
 
         const result = await response.json();
 
-        // 5. Handle Provider Response
         if (result.status === "success" || response.ok) {
+            writeLog(`SUCCESS: Order #${order.id.slice(-6)} completed by API.`);
             updateStatus(order, "Completed");
         } else {
-            updateStatus(order, "Failed: " + (result.message || "Provider Error"));
+            writeLog(`REJECTED: API says "${result.message || 'Unknown Error'}"`, true);
+            updateStatus(order, "Failed: " + (result.message || "Provider Rejected"));
         }
     } catch (err) {
-        updateStatus(order, "Network Error");
+        writeLog(`PROXY ERROR: Check Internet or Proxy URL`, true);
+        updateStatus(order, "Proxy/Network Error");
     }
 }
 
@@ -228,43 +214,43 @@ function updateStatus(order, status) {
 
 function renderTable() {
     const tbody = document.getElementById("orderTbody");
-    const search = document.getElementById("searchInput").value.toLowerCase();
-    const filter = document.getElementById("statusFilter").value;
-    
-    let entries = allOrders.sort((a,b) => b.timestamp - a.timestamp);
-    if(filter !== 'all') entries = entries.filter(o => o.status === filter);
-    if(search) entries = entries.filter(o => o.recipient.includes(search) || o.email.toLowerCase().includes(search));
-
     tbody.innerHTML = "";
-    entries.forEach(o => {
+    allOrders.sort((a,b) => b.timestamp - a.timestamp).forEach(o => {
         const tr = document.createElement("tr");
+        const statusClass = o.status.replace(" ", "-");
         tr.innerHTML = `
             <td><b>#${o.id.slice(-6)}</b><br><small>${new Date(o.timestamp).toLocaleString()}</small></td>
             <td><b>${o.network.toUpperCase()}</b><br><span>${o.plan}</span></td>
-            <td style="font-weight:700;">₵${parseFloat(o.amount).toFixed(2)}</td>
+            <td>₵${parseFloat(o.amount).toFixed(2)}</td>
             <td>${o.recipient}</td>
-            <td style="font-size:11px; font-weight:700; color:var(--primary-blue);">${o.email}</td>
-            <td><span class="status-badge status-${o.status}">${o.status}</span></td>
+            <td style="font-size:11px; font-weight:700;">${o.email}</td>
+            <td><span class="status-badge status-${statusClass}">${o.status}</span></td>
             <td style="text-align:right">
-                <button class="delete-btn" onclick="delRec('${o.id}','${o.uid}')"><i class="fas fa-trash"></i></button>
+                ${o.status.includes('Failed') ? `<button class="action-btn retry-btn" title="Retry API" onclick="manualRetry('${o.id}')"><i class="fas fa-redo"></i></button>` : ''}
+                <button class="action-btn" onclick="delRec('${o.id}','${o.uid}')"><i class="fas fa-trash"></i></button>
             </td>
         `;
         tbody.appendChild(tr);
     });
 }
 
+window.manualRetry = function(orderId) {
+    const order = allOrders.find(o => o.id === orderId);
+    if(order) {
+        writeLog(`Manual Retry Initiated for #${orderId.slice(-6)}`);
+        securityAudit(order);
+    }
+}
+
 window.delRec = (id, uid) => {
-    if(confirm("Delete record permanently?")){
+    if(confirm("Delete record?")){
         const up = {};
         up[`user_orders/${uid}/${id}`] = null;
         up[`orders/${id}`] = null;
         update(ref(db), up);
     }
 }
-
 setInterval(() => { document.getElementById('apiClock').innerText = new Date().toLocaleTimeString(); }, 1000);
-document.getElementById('searchInput').addEventListener('input', renderTable);
-document.getElementById('statusFilter').addEventListener('change', renderTable);
 </script>
 </body>
 </html>
