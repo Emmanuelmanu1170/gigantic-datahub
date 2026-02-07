@@ -7,97 +7,82 @@
     <script src="https://js.paystack.co/v1/inline.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root {
-            --primary: #4f46e5;
-            --dark: #0f172a;
-            --success: #10b981;
-            --bg: #f8fafc;
-        }
-        * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter', sans-serif; }
-        body { background: var(--bg); color: var(--dark); display: flex; justify-content: center; min-height: 100vh; padding: 20px; }
-        
-        .card {
-            background: white; width: 100%; max-width: 400px; border-radius: 28px;
-            padding: 30px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
-            border: 1px solid #e2e8f0; height: fit-content;
-        }
-
-        .header { text-align: center; margin-bottom: 25px; }
-        .header i { font-size: 40px; color: var(--primary); margin-bottom: 10px; }
-        .header h2 { font-size: 1.5rem; font-weight: 800; }
-
-        .input-group { margin-bottom: 20px; }
-        label { display: block; font-size: 0.75rem; font-weight: 700; color: #64748b; margin-bottom: 8px; text-transform: uppercase; }
-        .input-wrapper { position: relative; }
-        .input-wrapper span { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); font-weight: 800; }
-        input { 
-            width: 100%; padding: 15px 15px 15px 40px; border: 2px solid #f1f5f9; 
-            border-radius: 12px; font-size: 1.1rem; font-weight: 600; outline: none; transition: 0.3s;
-        }
-        input:focus { border-color: var(--primary); background: #fff; }
-
-        .pay-btn {
-            width: 100%; background: var(--primary); color: white; border: none;
-            padding: 18px; border-radius: 15px; font-weight: 700; cursor: pointer;
-            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4); transition: 0.3s;
-            margin-bottom: 15px;
-        }
-
-        .whatsapp-btn {
-            width: 100%; background: #25D366; color: white; border: none;
-            padding: 15px; border-radius: 15px; font-weight: 700; cursor: pointer;
-            text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px;
-        }
+        :root { --primary: #4f46e5; --dark: #0f172a; --bg: #f8fafc; }
+        body { background: var(--bg); font-family: 'Inter', sans-serif; display: flex; justify-content: center; padding: 20px; }
+        .card { background: white; width: 100%; max-width: 400px; border-radius: 28px; padding: 30px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
+        .input-group { margin: 20px 0; }
+        input { width: 100%; padding: 15px; border: 2px solid #f1f5f9; border-radius: 12px; font-size: 1.1rem; outline: none; box-sizing: border-box; }
+        .pay-btn { width: 100%; background: var(--primary); color: white; border: none; padding: 18px; border-radius: 15px; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        .pay-btn:active { transform: scale(0.98); }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div class="header">
-        <i class="fas fa-wallet"></i>
-        <h2>Fund Wallet</h2>
-    </div>
-
+    <h2 style="text-align:center"><i class="fas fa-wallet"></i> Fund Wallet</h2>
     <div class="input-group">
-        <label>Amount to deposit (GHS)</label>
-        <div class="input-wrapper">
-            <span>₵</span>
-            <input type="number" id="amount" placeholder="0.00">
-        </div>
+        <label style="font-size: 0.8rem; font-weight: 700; color: #64748b;">AMOUNT (GHS)</label>
+        <input type="number" id="amount" placeholder="0.00">
     </div>
 
-    <button class="pay-btn" onclick="payWithPaystack()">SECURE TOP-UP</button>
+    <button class="pay-btn" id="mainPayBtn" onclick="payWithPaystack()">SECURE TOP-UP</button>
 
-    <a href="https://wa.me/233549055308?text=Hello%20Admin,%20I%20need%20help%20with%20my%20topup." class="whatsapp-btn">
-        <i class="fab fa-whatsapp"></i> Contact Admin for Help
+    <a href="https://wa.me/233549055308" style="display:block; text-align:center; margin-top:20px; color:#25D366; text-decoration:none; font-weight:700;">
+        <i class="fab fa-whatsapp"></i> Need Help? Chat Admin
     </a>
 </div>
 
 <script type="module">
-    // Import your Firebase config here
-    import { auth } from './firebase-config.js'; // Adjust path accordingly
+    // Make sure your Firebase initialization is here
+    import { auth } from './firebase-config.js'; 
 
-    window.payWithPaystack = () => {
-        const amount = document.getElementById('amount').value;
+    window.payWithPaystack = function() {
+        const amt = document.getElementById('amount').value;
+        const btn = document.getElementById('mainPayBtn');
+
+        // Check if user is logged in
         const user = auth.currentUser;
+        if (!user) {
+            alert("Error: You must be logged in to top up.");
+            return;
+        }
 
-        if (!user) return alert("Please login first");
-        if (amount < 1) return alert("Min GH₵ 1.00");
+        if (!amt || amt < 1) {
+            alert("Please enter a valid amount.");
+            return;
+        }
+
+        // SAFETY CHECK: Is Paystack loaded?
+        if (typeof PaystackPop === 'undefined') {
+            alert("Gateway is still loading. Please refresh or check your internet.");
+            return;
+        }
+
+        btn.innerText = "Opening Gateway...";
+        btn.disabled = true;
 
         const handler = PaystackPop.setup({
             key: 'pk_live_faecdb3166144fadebd8269829343698dd43de63',
             email: user.email,
-            amount: Math.round(amount * 100), // GHS to Pesewas
+            amount: Math.round(amt * 100), // Converts GHS to Pesewas
             currency: 'GHS',
             metadata: { 
-                uid: user.uid,
-                real_amount: amount 
+                uid: user.uid, 
+                real_amount: amt 
             },
-            callback: (response) => {
-                alert("Payment received! Your wallet will be updated in a moment.");
-                location.reload();
+            callback: function(response) {
+                // This part just confirms the browser saw the success
+                // The actual money is added by your Cloud Function Webhook
+                alert("Payment complete! Reference: " + response.reference);
+                window.location.href = "dashboard.html";
+            },
+            onClose: function() {
+                btn.innerText = "SECURE TOP-UP";
+                btn.disabled = false;
+                alert("Window closed.");
             }
         });
+
         handler.openIframe();
     };
 </script>
