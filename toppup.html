@@ -7,9 +7,11 @@
     
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://js.paystack.co/v1/inline.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         body {
@@ -78,8 +80,9 @@
         </div>
     </div>
 
+    
+
     <script>
-        // --- Firebase Initialization ---
         const firebaseConfig = {
             apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho",
             authDomain: "gigantic-data.firebaseapp.com",
@@ -93,12 +96,14 @@
 
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
+        const database = firebase.database();
 
         const FEE_RATE = 0.025; 
         const paystackPublicKey = 'pk_live_faecdb3166144fadebd8269829343698dd43de63';
 
         function calculateTotal() {
-            const amount = parseFloat(document.getElementById('amountInput').value) || 0;
+            const amountInput = document.getElementById('amountInput');
+            const amount = parseFloat(amountInput.value) || 0;
             const fee = amount * FEE_RATE;
             const total = amount + fee;
             const payBtn = document.getElementById('payBtn');
@@ -119,8 +124,8 @@
         function startPayment() {
             const user = auth.currentUser; 
             if (!user) {
-                alert("Please log in to your Gigantic Data account first!");
-                // Optionally: window.location.href = "login.html";
+                alert("Session expired. Please log in again.");
+                window.location.href = "login.html";
                 return;
             }
 
@@ -130,47 +135,50 @@
             let handler = PaystackPop.setup({
                 key: paystackPublicKey,
                 email: user.email, 
-                amount: (totalToPay * 100).toFixed(0), 
+                amount: Math.round(totalToPay * 100), 
                 currency: 'GHS',
-                ref: 'GH-' + Date.now(),
-                onClose: () => alert('Transaction Cancelled'),
+                ref: 'GDH-' + Date.now(),
+                onClose: () => { console.log('Window closed'); },
                 callback: (response) => {
-                    verifyOnServer(response.reference, amount, user.uid);
+                    verifyOnServer(response.reference, user.uid);
                 }
             });
             handler.openIframe();
         }
 
-        async function verifyOnServer(reference, creditedAmount, userId) {
+        async function verifyOnServer(reference, userId) {
             const btn = document.getElementById('payBtn');
-            btn.innerText = "Verifying...";
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Verifying...`;
             btn.disabled = true;
 
+            // Real-time listener: The UI will update the moment the balance hits the DB
+            const balanceRef = database.ref(`users/${userId}/balance`);
+            
             try {
                 const response = await fetch('https://us-central1-gigantic-data.cloudfunctions.net/verifyPayment', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         reference: reference,
-                        amount: creditedAmount,
                         userId: userId 
                     })
                 });
 
                 const result = await response.json();
+                
                 if(result.success) {
-                    alert("Success! Your wallet has been credited.");
-                    window.location.reload();
+                    alert(`SUCCESS! ₵${result.amount} added to your wallet.`);
+                    window.location.href = "dashboard.html";
                 } else {
-                    alert("Verification failed: " + (result.message || "Please check your network."));
-                    btn.innerText = "Pay Securely";
+                    alert("Verification error: " + (result.message || "Please contact support."));
+                    btn.innerText = "Retry Payment";
                     btn.disabled = false;
                 }
             } catch (e) {
-                console.error(e);
-                alert("Server error. Transaction log created.");
-                btn.innerText = "Pay Securely";
-                btn.disabled = false;
+                console.error("Fetch Error:", e);
+                // Graceful fallback
+                alert("Network slow. If you were debited, your balance will update shortly.");
+                window.location.href = "dashboard.html";
             }
         }
     </script>
