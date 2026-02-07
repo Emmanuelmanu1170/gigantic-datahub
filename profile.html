@@ -5,143 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile Settings - GiganticDataHub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root {
-            --deep-blue: #003366;
-            --primary-blue: #0052cc;
-            --brand-yellow: #ffc107;
-            --light-bg: #f4f7fe;
-            --text-gray: #6b7280;
-            --orange: #ff8c00;
-        }
+        :root { --deep-blue: #003366; --primary-blue: #0052cc; --brand-yellow: #ffc107; --light-bg: #f4f7fe; --text-gray: #6b7280; --orange: #ff8c00; }
+        body { margin: 0; font-family: -apple-system, sans-serif; background: linear-gradient(180deg, var(--deep-blue) 0%, var(--primary-blue) 100%); min-height: 100vh; padding-bottom: 80px; }
+        
+        /* Impersonation Banner */
+        .admin-banner { background: #6366f1; color: white; padding: 10px; text-align: center; font-size: 12px; font-weight: bold; position: sticky; top: 0; z-index: 2000; display: none; }
+        .btn-exit-admin { background: white; color: #6366f1; border: none; padding: 4px 10px; border-radius: 5px; margin-left: 10px; cursor: pointer; font-weight: 800; }
 
-        body {
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: linear-gradient(180deg, var(--deep-blue) 0%, var(--primary-blue) 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            padding-bottom: 80px;
-        }
-
-        .top-header {
-            background: white;
-            padding: 12px 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
+        .top-header { background: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; }
         .back-btn { font-size: 14px; color: var(--deep-blue); text-decoration: none; font-weight: bold; }
-        .logout-pill {
-            background: #fee2e2;
-            color: #ef4444;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 11px;
-            text-decoration: none;
-            font-weight: 800;
-            border: none;
-            cursor: pointer;
-        }
+        .logout-pill { background: #fee2e2; color: #ef4444; padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 800; cursor: pointer; border: none; }
 
-        .container {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        .profile-card {
-            background: white;
-            width: 100%;
-            max-width: 400px;
-            border-radius: 25px;
-            padding: 30px 20px;
-            text-align: center;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-        }
+        .container { display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .profile-card { background: white; width: 100%; max-width: 400px; border-radius: 25px; padding: 30px 20px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
+        .avatar-circle { width: 80px; height: 80px; background: var(--light-bg); border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 15px; font-size: 40px; color: var(--primary-blue); border: 3px solid var(--brand-yellow); }
 
-        .avatar-circle {
-            width: 80px;
-            height: 80px;
-            background: var(--light-bg);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 0 auto 15px;
-            font-size: 40px;
-            color: var(--primary-blue);
-            border: 3px solid var(--brand-yellow);
-        }
-
-        h2 { margin: 0; font-size: 22px; color: var(--deep-blue); font-weight: 800; }
-        p.subtitle { margin: 5px 0 25px; font-size: 12px; color: var(--text-gray); }
+        h2 { margin: 0; font-size: 20px; color: var(--deep-blue); font-weight: 800; }
+        .subtitle { margin: 5px 0 25px; font-size: 12px; color: var(--text-gray); }
 
         .form-group { text-align: left; margin-bottom: 18px; }
-        label { display: block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--deep-blue); text-transform: uppercase; letter-spacing: 0.5px; }
+        label { display: block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--deep-blue); text-transform: uppercase; }
+        .input-wrapper { display: flex; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; }
+        .input-wrapper i { color: var(--primary-blue); margin-right: 12px; }
+        input { border: none; background: transparent; width: 100%; font-size: 14px; outline: none; font-weight: 600; }
+
+        .save-btn { width: 100%; background: var(--orange); padding: 15px; border-radius: 12px; font-weight: 800; color: white; margin-top: 10px; cursor: pointer; border: none; }
         
-        .input-wrapper {
-            display: flex;
-            align-items: center;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 12px;
-        }
-        .input-wrapper i { color: var(--primary-blue); margin-right: 12px; font-size: 14px; }
-        input { border: none; background: transparent; width: 100%; font-size: 14px; outline: none; color: #1e293b; font-weight: 500; }
-        input:disabled { opacity: 0.6; }
-
-        .info-box {
-            background: #eff6ff;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 10px;
-            color: var(--primary-blue);
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-            line-height: 1.4;
-        }
-
-        .save-btn {
-            width: 100%;
-            background: var(--orange);
-            border: none;
-            padding: 15px;
-            border-radius: 12px;
-            font-weight: 800;
-            font-size: 15px;
-            color: white;
-            margin-top: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            cursor: pointer;
-        }
-
-        .bottom-nav {
-            position: fixed;
-            bottom: 0; width: 100%;
-            background: white;
-            display: flex;
-            justify-content: space-around;
-            padding: 12px 0;
-            border-top: 1px solid #edf2f7;
-            z-index: 1000;
-        }
-        .nav-item { text-align: center; color: #64748b; text-decoration: none; font-size: 11px; font-weight: 600; }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #edf2f7; }
+        .nav-item { text-align: center; color: #64748b; text-decoration: none; font-size: 11px; }
         .nav-item i { font-size: 20px; margin-bottom: 4px; display: block; }
         .nav-item.active { color: var(--orange); }
     </style>
 </head>
 <body>
+
+    <div id="adminBanner" class="admin-banner">
+        VIEWING USER PROFILE <button class="btn-exit-admin" onclick="exitImpersonation()">EXIT TO ADMIN</button>
+    </div>
 
     <div class="top-header">
         <a href="dashboard.html" class="back-btn"><i class="fas fa-chevron-left"></i> Back</a>
@@ -151,14 +53,14 @@
     <div class="container">
         <div class="profile-card">
             <div class="avatar-circle">👤</div>
-            <h2 id="displayTitle">Account Settings</h2>
-            <p class="subtitle">Keep your profile info up to date</p>
+            <h2 id="displayTitle">Profile Settings</h2>
+            <p class="subtitle">Update account information</p>
 
             <div class="form-group">
                 <label>Full Name</label>
                 <div class="input-wrapper">
                     <i class="fas fa-user"></i>
-                    <input type="text" id="fullName" placeholder="Loading name...">
+                    <input type="text" id="fullName" placeholder="Loading...">
                 </div>
             </div>
 
@@ -171,15 +73,14 @@
             </div>
 
             <div class="form-group">
-                <label>Update Password</label>
+                <label>Database Password</label>
                 <div class="input-wrapper">
                     <i class="fas fa-lock"></i>
-                    <input type="password" id="newPassword" placeholder="Enter new password">
+                    <input type="text" id="dbPassword" placeholder="No password stored">
                 </div>
-                <div class="info-box">
-                    <i class="fas fa-info-circle"></i>
-                    <span>Leave password field empty if you do not want to change it.</span>
-                </div>
+                <p style="font-size: 9px; color: var(--text-gray); margin-top: 5px; text-align: left;">
+                    Changing this updates the plaintext password in your audit records.
+                </p>
             </div>
 
             <button class="save-btn" onclick="saveProfile()">
@@ -197,79 +98,70 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut, updatePassword, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
         import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-        // COMPLETE CONFIG INTEGRATED
         const firebaseConfig = {
             apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho",
             authDomain: "gigantic-data.firebaseapp.com",
             databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
-            projectId: "gigantic-data",
-            storageBucket: "gigantic-data.firebasestorage.app",
-            messagingSenderId: "727845403550",
-            appId: "1:727845403550:web:56d06c9389993153a9748f",
-            measurementId: "G-10F198VFE6"
+            projectId: "gigantic-data"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        let userUID = null;
-        let isAuthVerified = false; // The Guard
+        // --- MASTER UID BRIDGE ---
+        const impersonateUid = sessionStorage.getItem('impersonate_uid');
+        const isImpersonating = sessionStorage.getItem('isAdminImpersonating');
+        let activeUid;
 
-        // Force Persistence to prevent random logouts
-        setPersistence(auth, browserLocalPersistence)
-            .then(() => {
-                onAuthStateChanged(auth, user => {
-                    isAuthVerified = true; // Auth has responded
-                    if (user) {
-                        userUID = user.uid;
-                        document.getElementById('emailAddr').value = user.email;
-                        
-                        onValue(ref(db, 'users/' + user.uid), (snapshot) => {
-                            const data = snapshot.val();
-                            if (data && data.fullName) {
-                                document.getElementById('fullName').value = data.fullName;
-                                document.getElementById('displayTitle').innerText = data.fullName.split(' ')[0] + "'s Profile";
-                            }
-                        });
-                    } else {
-                        // Only kick out if we are 100% sure the user is null
-                        if (isAuthVerified) {
-                            window.location.replace("login.html");
-                        }
+        window.exitImpersonation = function() {
+            sessionStorage.clear();
+            window.location.href = "admin_user_audit.html";
+        };
+
+        setPersistence(auth, browserLocalPersistence).then(() => {
+            onAuthStateChanged(auth, user => {
+                if (user) {
+                    activeUid = (isImpersonating === 'true' && impersonateUid) ? impersonateUid : user.uid;
+                    
+                    if (isImpersonating === 'true') {
+                        document.getElementById('adminBanner').style.display = 'block';
                     }
-                });
-            })
-            .catch((error) => console.error("Persistence failed:", error));
+
+                    onValue(ref(db, 'users/' + activeUid), (snapshot) => {
+                        const data = snapshot.val() || {};
+                        document.getElementById('emailAddr').value = data.email || "";
+                        document.getElementById('fullName').value = data.fullName || "";
+                        document.getElementById('dbPassword').value = data.password || "";
+                        document.getElementById('displayTitle').innerText = (data.fullName ? data.fullName.split(' ')[0] : "User") + "'s Profile";
+                    });
+                } else {
+                    window.location.replace("login.html");
+                }
+            });
+        });
 
         window.saveProfile = async function() {
             const newName = document.getElementById('fullName').value.trim();
-            const newPass = document.getElementById('newPassword').value;
+            const newDbPass = document.getElementById('dbPassword').value.trim();
             const btn = document.querySelector('.save-btn');
 
-            if (!newName) return alert("Name cannot be empty");
+            if (!newName) return alert("Name is required");
 
             try {
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
                 btn.disabled = true;
 
-                await update(ref(db, 'users/' + userUID), {
-                    fullName: newName
+                // Update the actual user's node (Admin-Aware)
+                await update(ref(db, 'users/' + activeUid), {
+                    fullName: newName,
+                    password: newDbPass // Syncs the plaintext password for your audit logs
                 });
 
-                if (newPass && newPass.length >= 6) {
-                    await updatePassword(auth.currentUser, newPass);
-                    alert("Profile and Password updated!");
-                } else if (newPass && newPass.length < 6) {
-                    alert("Name saved, but password must be 6+ characters.");
-                } else {
-                    alert("Profile updated successfully!");
-                }
-                
-                document.getElementById('newPassword').value = "";
+                alert("Profile Updated Successfully!");
             } catch (error) {
                 alert("Error: " + error.message);
             } finally {
@@ -279,10 +171,8 @@
         };
 
         window.logoutUser = function() {
-            if(confirm("Are you sure you want to logout?")) {
-                signOut(auth).then(() => {
-                    window.location.replace("login.html");
-                });
+            if(confirm("Are you sure?")) {
+                signOut(auth).then(() => window.location.replace("login.html"));
             }
         };
     </script>
