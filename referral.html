@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Affiliate Hub — GiganticDataHub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
@@ -161,35 +161,38 @@
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
     import { getDatabase, ref, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
+    // COMPLETE CONFIG INTEGRATION
     const firebaseConfig = {
-        apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
+        apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho",
         authDomain: "gigantic-data.firebaseapp.com",
         databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
-        projectId: "gigantic-data"
+        projectId: "gigantic-data",
+        storageBucket: "gigantic-data.firebasestorage.app",
+        messagingSenderId: "727845403550",
+        appId: "1:727845403550:web:56d06c9389993153a9748f",
+        measurementId: "G-10F198VFE6"
     };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
 
+    let authWaiting = true; // Guard variable
+
     onAuthStateChanged(auth, user => {
+        authWaiting = false; // Auth check has responded
         if (user) {
             const baseUrl = window.location.origin;
             const fullLink = `${baseUrl}/register.html?ref=${user.uid}`;
             document.getElementById('referralLink').innerText = fullLink;
 
-            // REAL-TIME SYNC FOR APPROVED DATA
-            // This ensures Admin-approved bonuses in 'referralBonus' field show immediately
             onValue(ref(db, 'users/' + user.uid), (snap) => {
                 const data = snap.val() || {};
                 document.getElementById('refCountDisplay').innerText = data.referralCount || 0;
-                
-                // Using referralBonus as the source for admin-approved earnings
                 const approvedEarnings = Number(data.referralBonus || 0);
                 document.getElementById('refBalanceDisplay').innerText = `₵${approvedEarnings.toFixed(2)}`;
             });
 
-            // SYNC LEADERBOARD
             const topQuery = query(ref(db, 'users'), orderByChild('referralCount'), limitToLast(20));
             onValue(topQuery, (snap) => {
                 const board = document.getElementById('leaderboardList');
@@ -202,7 +205,6 @@
                     }
                 });
                 
-                // Perfect Arrangement: Highest referralCount first
                 users.sort((a,b) => (b.referralCount || 0) - (a.referralCount || 0));
                 const top5 = users.slice(0, 5);
 
@@ -230,7 +232,12 @@
                 });
             });
 
-        } else { window.location.href = "login.html"; }
+        } else { 
+            // Only redirect if Firebase has confirmed there is no user session
+            if (!authWaiting) {
+                window.location.href = "login.html"; 
+            }
+        }
     });
 
     window.copyLink = function() {
