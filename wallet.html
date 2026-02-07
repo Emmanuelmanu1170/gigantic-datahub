@@ -17,11 +17,9 @@
             --purple: #a855f7;
         }
 
-        * { margin:0; padding:0; box-sizing:border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif; }
         body { background: var(--light-bg); color: #1e293b; min-height: 100vh; display: flex; flex-direction: column; }
 
-        /* Sidebar */
         .sidebar { 
             position: fixed; top: 0; left: 0; width: 260px; height: 100vh; 
             background: var(--deep-blue); color: #fff; padding: 30px 20px; 
@@ -91,6 +89,7 @@
         <li><a href="admin_dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a></li>
         <li><a href="users.html"><i class="fas fa-users"></i> User Management</a></li>
         <li><a href="wallet.html" class="active"><i class="fas fa-wallet"></i> Wallet Control</a></li>
+        <li><a href="agent.html"><i class="fas fa-user-tie"></i> Agent Panel</a></li>
     </ul>
 </aside>
 
@@ -102,32 +101,32 @@
 
 <div class="container">
     <div class="status-bar">
-        <div class="status-item">Cloud Sync: <span style="color: var(--success);">● REAL-TIME</span></div>
+        <div class="status-item">Sync Status: <span style="color: var(--success);">● UNIFIED BALANCE ACTIVE</span></div>
         <div class="status-item">Total Logs: <span id="logCounter">0</span></div>
     </div>
 
     <div class="card">
-        <h3><i class="fas fa-coins"></i> Quick Wallet Modification</h3>
+        <h3><i class="fas fa-coins"></i> Admin Wallet Modification</h3>
         <form id="walletForm" class="wallet-grid">
             <input type="text" id="userUid" placeholder="Paste User UID" required>
             <input type="number" id="creditAmount" placeholder="Credit (+) Amount" step="0.01">
             <input type="number" id="deductAmount" placeholder="Deduct (-) Amount" step="0.01">
-            <button type="submit" class="btn-update">Submit Transaction</button>
+            <button type="submit" class="btn-update">Update Balance</button>
         </form>
     </div>
 
     <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap: wrap; gap:10px;">
-            <h3><i class="fas fa-history"></i> Sorted Financial Ledger</h3>
-            <input type="text" id="searchLog" placeholder="Search Email / UID / Info..." style="max-width:280px; padding: 10px; border-radius: 10px; border: 1px solid #ddd; outline: none;">
+            <h3><i class="fas fa-history"></i> Master Financial Ledger</h3>
+            <input type="text" id="searchLog" placeholder="Search Email / Reference / Action..." style="max-width:280px; padding: 10px; border-radius: 10px; border: 1px solid #ddd; outline: none;">
         </div>
         <div class="table-responsive">
             <table>
                 <thead>
                     <tr>
                         <th>Source</th>
-                        <th>Direction</th>
-                        <th>User Email</th>
+                        <th>Type</th>
+                        <th>User Account</th>
                         <th>Reference ID</th>
                         <th>Transaction Info</th>
                         <th>Amount</th>
@@ -137,7 +136,7 @@
                     </tr>
                 </thead>
                 <tbody id="masterLogBody">
-                    <tr><td colspan="9" style="text-align:center; padding:50px;"><i class="fas fa-sync fa-spin"></i> Organizing database records...</td></tr>
+                    <tr><td colspan="9" style="text-align:center; padding:50px;"><i class="fas fa-sync fa-spin"></i> Loading Ledger Records...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -150,7 +149,7 @@ import { getDatabase, ref, onValue, update, push, remove } from "https://www.gst
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
+    apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho",
     authDomain: "gigantic-data.firebaseapp.com",
     databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
     projectId: "gigantic-data"
@@ -169,78 +168,59 @@ onAuthStateChanged(auth, user => {
         document.getElementById("adminEmail").textContent = user.email;
         loadGlobalData();
     } else {
-        window.location.href = "login.html";
+        window.location.href = "admin_login.html";
     }
 });
 
 function loadGlobalData() {
-    // 1. Fetch Users
     onValue(ref(db, 'users'), snap => { 
         usersData = snap.val() || {}; 
-        syncAllStreams();
+        syncLedger();
     });
 }
 
-function syncAllStreams() {
+function syncLedger() {
     const txRef = ref(db, 'transactions'); 
-    const topupRef = ref(db, 'topupNotes'); 
-    const ordersRef = ref(db, 'user_orders');
+    const ordersRef = ref(db, 'orders'); // Pulling from central orders node
 
     onValue(txRef, (txSnap) => {
-        onValue(topupRef, (topSnap) => {
-            onValue(ordersRef, (orderSnap) => {
+        onValue(ordersRef, (orderSnap) => {
+            
+            // Stream A: Admin Adjustments, Paystack Topups, Agent Upgrades (via Cloud Functions)
+            const txs = txSnap.exists() ? Object.entries(txSnap.val()).map(([id, v]) => {
+                const isCredit = v.type === 'Credit' || v.type === 'Top-up';
+                let sourceTag = 'ADMIN';
+                let infoMsg = v.description || v.info || `System ${v.type}`;
                 
-                // Stream A: Admin Adjustments & Auto-Logs (Including Agent Upgrades)
-                const txs = txSnap.exists() ? Object.entries(txSnap.val()).map(([id, v]) => {
-                    const isCredit = v.type === 'Credit' || v.src === 'BONUS';
-                    
-                    // Identify if this was an Agent Activation based on specific info
-                    let sourceTag = (v.type === 'Credit' || v.type === 'Deduct') ? 'ADMIN' : 'SYSTEM';
-                    let infoMsg = v.info || (v.type ? `Manual ${v.type}` : 'System Log');
-                    
-                    if (v.userType === 'agent' && v.amount === 45) {
-                        sourceTag = 'AGENT';
-                        infoMsg = 'Agent Upgrade Activation';
-                    }
+                if (infoMsg.toLowerCase().includes('top-up')) sourceTag = 'TOPUP';
+                if (infoMsg.toLowerCase().includes('agent')) sourceTag = 'AGENT';
 
-                    return { 
-                        id, ...v, 
-                        ts: v.date || v.timestamp, 
-                        src: sourceTag,
-                        direction: isCredit ? 'CREDIT' : 'DEDUCT',
-                        info: infoMsg
-                    };
-                }) : [];
-                
-                // Stream B: Paystack Deposits
-                let tops = [];
-                if(topSnap.exists()){
-                    Object.entries(topSnap.val()).forEach(([uid, notes]) => {
-                        Object.entries(notes).forEach(([id, v]) => {
-                            tops.push({ id, ...v, uid, ts: v.timestamp, src: 'TOPUP', direction: 'CREDIT', email: usersData[uid]?.email || 'N/A', info: 'Wallet Top-up' });
-                        });
+                return { 
+                    id, ...v, 
+                    ts: v.timestamp || v.date, 
+                    src: sourceTag,
+                    direction: isCredit ? 'CREDIT' : 'DEDUCT',
+                    info: infoMsg,
+                    email: v.email || usersData[v.uid]?.email || 'N/A'
+                };
+            }) : [];
+            
+            // Stream B: Unified Data Purchases
+            let orders = [];
+            if(orderSnap.exists()){
+                Object.entries(orderSnap.val()).forEach(([id, o]) => {
+                    orders.push({ 
+                        id, ...o, ts: o.timestamp, src: 'PURCHASE', direction: 'DEDUCT', 
+                        email: usersData[o.uid]?.email || 'N/A', 
+                        info: `Data: ${o.network} ${o.plan}` 
                     });
-                }
+                });
+            }
 
-                // Stream C: Data Purchases
-                let orders = [];
-                if(orderSnap.exists()){
-                    Object.entries(orderSnap.val()).forEach(([uid, logs]) => {
-                        Object.entries(logs).forEach(([id, o]) => {
-                            orders.push({ 
-                                id, ...o, uid, ts: o.timestamp, src: 'PURCHASE', direction: 'DEDUCT', 
-                                email: usersData[uid]?.email || 'N/A', 
-                                info: `${o.network} - ${o.plan}` 
-                            });
-                        });
-                    });
-                }
-
-                // MERGE & SORT (NEAREST AT TOP)
-                masterLogs = [...txs, ...tops, ...orders].sort((a, b) => b.ts - a.ts);
-                document.getElementById('logCounter').innerText = masterLogs.length;
-                renderTable(document.getElementById('searchLog').value);
-            });
+            // MERGE & SORT
+            masterLogs = [...txs, ...orders].sort((a, b) => b.ts - a.ts);
+            document.getElementById('logCounter').innerText = masterLogs.length;
+            renderTable(document.getElementById('searchLog').value);
         });
     });
 }
@@ -251,8 +231,7 @@ function renderTable(filter = "") {
     
     const filtered = masterLogs.filter(l => 
         (l.email && l.email.toLowerCase().includes(filter.toLowerCase())) || 
-        (l.uid && l.uid.includes(filter)) || 
-        (l.id && l.id.includes(filter)) ||
+        (l.id && l.id.toLowerCase().includes(filter.toLowerCase())) ||
         (l.info && l.info.toLowerCase().includes(filter.toLowerCase()))
     );
 
@@ -262,7 +241,6 @@ function renderTable(filter = "") {
         else if(log.src === 'TOPUP') badgeClass = 'bg-topup';
         else if(log.src === 'AGENT') badgeClass = 'bg-agent';
 
-        const userEmail = log.email || usersData[log.uid]?.email || 'N/A';
         const isCredit = log.direction === 'CREDIT';
 
         const tr = document.createElement("tr");
@@ -274,8 +252,8 @@ function renderTable(filter = "") {
                     ${log.direction}
                 </div>
             </td>
-            <td><b>${userEmail}</b><br><small style="color:#94a3b8; font-family:monospace; font-size:9px;">${log.uid || '---'}</small></td>
-            <td style="font-family:monospace; font-size:10px;">${log.id.substring(0,12)}...</td>
+            <td><b>${log.email}</b><br><small style="color:#94a3b8; font-size:9px;">${log.uid || '---'}</small></td>
+            <td style="font-family:monospace; font-size:10px;">${log.id.substring(0,14)}...</td>
             <td style="font-size:11px; font-weight:700;">${log.info}</td>
             <td style="font-weight:800; color:${isCredit ? '#10b981' : '#ef4444'};">
                 ${isCredit ? '+' : '-'}₵${parseFloat(log.amount || 0).toFixed(2)}
@@ -289,12 +267,11 @@ function renderTable(filter = "") {
 }
 
 window.deleteEntry = (id, src, uid) => {
-    if(!confirm("Erase this financial record?")) return;
+    if(!confirm("Warning: Deleting financial records can break your balance history. Continue?")) return;
     let path = `transactions/${id}`;
-    if(src === 'TOPUP') path = `topupNotes/${uid}/${id}`;
-    if(src === 'PURCHASE') path = `user_orders/${uid}/${id}`;
+    if(src === 'PURCHASE') path = `orders/${id}`; // Matches updated orders node
     
-    remove(ref(db, path)).then(() => alert("Record Erased."));
+    remove(ref(db, path)).then(() => alert("Entry removed."));
 };
 
 document.getElementById('walletForm').addEventListener('submit', async (e) => {
@@ -303,22 +280,33 @@ document.getElementById('walletForm').addEventListener('submit', async (e) => {
     const credit = parseFloat(document.getElementById('creditAmount').value) || 0;
     const deduct = parseFloat(document.getElementById('deductAmount').value) || 0;
 
-    if(!usersData[uid]) return alert("Error: UID not found.");
+    if(!usersData[uid]) return alert("UID Error: User not found in database.");
 
-    const currentBal = parseFloat(usersData[uid].wallet || 0);
-    const newBal = Math.max(0, currentBal + credit - deduct);
+    const currentBal = parseFloat(usersData[uid].balance || usersData[uid].wallet || 0);
+    const change = credit - deduct;
+    const newBal = parseFloat((currentBal + change).toFixed(2));
 
-    await update(ref(db, `users/${uid}`), { wallet: newBal });
+    const updates = {};
+    updates[`users/${uid}/balance`] = newBal;
+    updates[`users/${uid}/wallet`] = newBal; // Safety sync
+
+    await update(ref(db), updates);
     
-    const type = credit > 0 ? 'Credit' : 'Deduct';
-    const amount = credit > 0 ? credit : deduct;
-
-    push(ref(db, 'transactions'), {
-        uid, email: usersData[uid].email, type, amount, newBalance: newBal, date: Date.now(), info: `Admin ${type}`
+    const type = change >= 0 ? 'Credit' : 'Deduct';
+    const txRef = push(ref(db, 'transactions'));
+    
+    await update(txRef, {
+        uid, 
+        email: usersData[uid].email, 
+        type: type, 
+        amount: Math.abs(change), 
+        newBalance: newBal, 
+        timestamp: Date.now(), 
+        description: `Admin Adjustment (${type})`
     });
 
     document.getElementById('walletForm').reset();
-    alert("User wallet synced and logged.");
+    alert(`Success: User balance updated to ₵${newBal}`);
 });
 
 document.getElementById('searchLog').addEventListener('input', (e) => renderTable(e.target.value));
