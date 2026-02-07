@@ -3,207 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin: Master Ledger - GiganticData</title>
+    <title>Admin: Payment Investigator</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root {
-            --primary: #4f46e5;
-            --dark: #0f172a;
-            --success: #10b981;
-            --danger: #ef4444;
-            --bg: #f8fafc;
-        }
-        body { margin:0; font-family:'Inter', sans-serif; background:var(--bg); color:var(--dark); }
-        .container { padding: 30px; max-width: 1200px; margin: auto; }
+        :root { --primary: #0f172a; --accent: #4f46e5; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; }
+        body { margin:0; font-family:'Inter', sans-serif; background:var(--bg); color:var(--primary); }
+        .container { padding: 30px; max-width: 800px; margin: auto; }
+        .search-box { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 30px; border: 1px solid #e2e8f0; }
+        input { width: 100%; padding: 15px; border: 2px solid #f1f5f9; border-radius: 12px; font-size: 1rem; outline: none; box-sizing: border-box; }
+        input:focus { border-color: var(--accent); }
         
-        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 20px; }
+        .result-card { background: white; border-radius: 20px; padding: 25px; display: none; border: 1px solid #e2e8f0; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .stat-card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid #e2e8f0; }
-        .stat-card label { font-size: 0.7rem; text-transform: uppercase; color: #64748b; font-weight: 700; display: block; margin-bottom: 5px; }
-        .stat-card h2 { font-size: 1.5rem; margin: 0; color: var(--dark); }
-
-        .filter-bar { display: flex; gap: 10px; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .filter-btn { padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.8rem; background: #f1f5f9; color: #64748b; transition: 0.3s; }
-        .filter-btn.active { background: var(--primary); color: white; }
-
-        .ledger-card { background: white; border-radius: 20px; padding: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; overflow: hidden; }
-        .table-wrapper { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 800px; }
-        th { text-align: left; padding: 15px; background: #f8fafc; color: #64748b; font-size: 0.75rem; text-transform: uppercase; border-bottom: 2px solid #f1f5f9; }
-        td { padding: 15px; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; vertical-align: middle; }
+        .data-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
+        .data-row b { color: #64748b; font-size: 0.8rem; text-transform: uppercase; }
         
-        .type-pill { padding: 4px 8px; border-radius: 6px; font-weight: 800; font-size: 0.7rem; text-transform: uppercase; }
-        .type-credit { background: #dcfce7; color: #166534; }
-        .type-debit { background: #fee2e2; color: #991b1b; }
+        .action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 25px; }
+        .btn { padding: 15px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        .btn-credit { background: var(--success); color: white; }
+        .btn-dismiss { background: #fee2e2; color: var(--danger); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         
-        .uid-link { color: var(--primary); font-family: 'Courier New', monospace; font-weight: bold; cursor: pointer; text-decoration: none; background: #f1f5f9; padding: 2px 5px; border-radius: 4px; }
-        
-        .empty-state { text-align: center; padding: 80px; color: #94a3b8; }
-        .loader { text-align: center; padding: 50px; color: var(--primary); }
+        .badge { padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; }
+        .badge-pending { background: #fef3c7; color: #92400e; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="page-header">
-        <div>
-            <h1 style="font-size: 1.5rem; margin-bottom: 5px;">Master Transaction Ledger</h1>
-            <p style="color: #64748b; font-size: 0.9rem;">Global monitoring of all user financial records</p>
-        </div>
-        <div class="filter-bar">
-            <button class="filter-btn active" onclick="filterLedger('all', this)">All Activity</button>
-            <button class="filter-btn" onclick="filterLedger('topup', this)">Deposits</button>
-            <button class="filter-btn" onclick="filterLedger('data', this)">Data Purchases</button>
+    <h2 style="margin-bottom: 10px;"><i class="fas fa-search-dollar"></i> Verify Reported Payment</h2>
+    <p style="color: #64748b; margin-bottom: 30px;">Search by the "T-Reference" the user provided from the error popup.</p>
+
+    <div class="search-box">
+        <label style="font-size: 0.75rem; font-weight: 800; color: #64748b; display: block; margin-bottom: 8px;">ENTER ERROR REFERENCE</label>
+        <div style="display: flex; gap: 10px;">
+            <input type="text" id="searchInput" placeholder="e.g. T546184643551538">
+            <button onclick="investigate()" style="padding: 0 25px; border-radius: 12px; background: var(--accent); color: white; border: none; font-weight: 700; cursor: pointer;">SEARCH</button>
         </div>
     </div>
 
-    <div class="stats-row">
-        <div class="stat-card">
-            <label>Total Transactions</label>
-            <h2 id="statCount">0</h2>
+    <div id="resultArea" class="result-card">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <span class="badge badge-pending" id="resStatus">STATUS: UNRESOLVED</span>
         </div>
-        <div class="stat-card">
-            <label>Total Volume (Credit)</label>
-            <h2 id="statVolume" style="color: var(--success);">₵0.00</h2>
-        </div>
-    </div>
-
-    <div class="ledger-card">
         
-        <div class="table-wrapper">
-            <table id="ledgerTable">
-                <thead>
-                    <tr>
-                        <th>Date & Time</th>
-                        <th>User UID</th>
-                        <th>Type</th>
-                        <th>Amount</th>
-                        <th>Service Details</th>
-                        <th>Category</th>
-                    </tr>
-                </thead>
-                <tbody id="ledgerBody">
-                    <tr><td colspan="6" class="loader"><i class="fas fa-spinner fa-spin fa-2x"></i></td></tr>
-                </tbody>
-            </table>
-        </div>
-        <div id="emptyMsg" class="empty-state" style="display: none;">
-            <i class="fas fa-history" style="font-size: 3rem; opacity: 0.2; margin-bottom: 15px;"></i>
-            <p>No transaction history found.</p>
+        <div class="data-row"><b>Report ID</b> <span id="resReportId"></span></div>
+        <div class="data-row"><b>Paystack Reference</b> <span id="resPaystack"></span></div>
+        <div class="data-row"><b>User Email</b> <span id="resEmail"></span></div>
+        <div class="data-row"><b>Amount Claimed</b> <span id="resAmount" style="color: var(--success); font-weight: 800;"></span></div>
+        <div class="data-row"><b>Claim Date</b> <span id="resDate"></span></div>
+
+        <div class="action-btns">
+            <button class="btn btn-dismiss" onclick="markAsLiar()">DISMISS (LIAR)</button>
+            <button class="btn btn-credit" id="creditBtn" onclick="resolveAndCredit()">VERIFIED: CREDIT USER</button>
         </div>
     </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { getDatabase, ref, query, onValue, limitToLast } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+import { getDatabase, ref, get, update, remove } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
-const firebaseConfig = {
-    apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
-    authDomain: "gigantic-data.firebaseapp.com",
-    databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
-    projectId: "gigantic-data"
-};
-
+const firebaseConfig = { apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4", authDomain: "gigantic-data.firebaseapp.com", databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com", projectId: "gigantic-data" };
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
 
-let allTransactions = [];
+let currentReport = null;
 
 onAuthStateChanged(auth, user => {
-    if (user && user.email === 'alenacloft0@gmail.com') {
-        fetchTransactions();
-    } else {
-        window.location.href = "login.html";
-    }
+    if (!user || user.email !== 'alenacloft0@gmail.com') window.location.href = "login.html";
 });
 
-function fetchTransactions() {
-    // Listen to the global 'transactions' node
-    const txRef = query(ref(db, 'transactions'), limitToLast(500));
-    
-    onValue(txRef, (snapshot) => {
-        allTransactions = [];
-        let totalCredit = 0;
+window.investigate = async function() {
+    const refId = document.getElementById('searchInput').value.trim();
+    if(!refId) return;
 
-        if (snapshot.exists()) {
-            snapshot.forEach(child => {
-                const data = child.val();
-                allTransactions.push({ id: child.key, ...data });
-                if(data.type === "Credit") totalCredit += parseFloat(data.amount || 0);
-            });
-            
-            // Sort by date newest first
-            allTransactions.sort((a, b) => (b.date || 0) - (a.date || 0));
-            
-            document.getElementById('statCount').innerText = allTransactions.length;
-            document.getElementById('statVolume').innerText = `₵${totalCredit.toFixed(2)}`;
-            
-            renderTable(allTransactions);
-        } else {
-            renderTable([]);
-        }
-    });
-}
-
-function renderTable(data) {
-    const tbody = document.getElementById('ledgerBody');
-    const emptyMsg = document.getElementById('emptyMsg');
-    tbody.innerHTML = "";
-    
-    if (data.length === 0) {
-        emptyMsg.style.display = "block";
-        return;
-    }
-    emptyMsg.style.display = "none";
-
-    data.forEach(tx => {
-        const dateObj = new Date(tx.date || tx.timestamp);
-        const dateStr = dateObj.toLocaleDateString('en-GB', { day:'2-digit', month:'short' });
-        const timeStr = dateObj.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
-        
-        const isCredit = tx.type === "Credit";
-        const typeClass = isCredit ? "type-credit" : "type-debit";
-        const symbol = isCredit ? "+" : "-";
-
-        tbody.innerHTML += `
-            <tr>
-                <td><strong>${dateStr}</strong> <br> <small style="color:#94a3b8">${timeStr}</small></td>
-                <td><span class="uid-link" onclick="copyText('${tx.uid}')">${tx.uid.substring(0,8)}...</span></td>
-                <td><span class="type-pill ${typeClass}">${tx.type || 'N/A'}</span></td>
-                <td><b style="color: ${isCredit ? 'var(--success)' : 'var(--danger)'}">${symbol}₵${parseFloat(tx.amount || 0).toFixed(2)}</b></td>
-                <td>
-                    <div style="font-weight:700">${tx.plan || tx.reference || 'N/A'}</div>
-                    <small style="color:#64748b">${tx.network || 'Manual'}</small>
-                </td>
-                <td><span class="type-pill" style="background:#f1f5f9; color:#475569">${tx.category || 'General'}</span></td>
-            </tr>
-        `;
-    });
-}
-
-window.filterLedger = (category, btn) => {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-
-    if (category === 'all') {
-        renderTable(allTransactions);
+    const snap = await get(ref(db, `pending_manual_credits/${refId}`));
+    if(snap.exists()) {
+        currentReport = { id: refId, ...snap.val() };
+        document.getElementById('resultArea').style.display = "block";
+        document.getElementById('resReportId').innerText = refId;
+        document.getElementById('resPaystack').innerText = currentReport.paystackReference;
+        document.getElementById('resEmail').innerText = currentReport.userEmail;
+        document.getElementById('resAmount').innerText = "₵" + parseFloat(currentReport.amount).toFixed(2);
+        document.getElementById('resDate').innerText = new Date(currentReport.timestamp).toLocaleString();
     } else {
-        const filtered = allTransactions.filter(tx => {
-            if (category === 'topup') return tx.type === "Credit" || tx.category === "topup";
-            if (category === 'data') return tx.type === "Deduct" || tx.category === "purchase" || tx.plan;
-            return false;
-        });
-        renderTable(filtered);
+        alert("This reference does not exist in our failure logs. User might be lying.");
+        document.getElementById('resultArea').style.display = "none";
     }
 };
 
-window.copyText = (text) => {
-    navigator.clipboard.writeText(text);
-    alert("UID Copied!");
+window.resolveAndCredit = async function() {
+    if(!currentReport) return;
+    const btn = document.getElementById('creditBtn');
+    btn.disabled = true;
+    btn.innerText = "Processing...";
+
+    try {
+        // 1. Get User current wallet
+        const userSnap = await get(ref(db, `users/${currentReport.uid}/wallet`));
+        const currentBal = parseFloat(userSnap.val() || 0);
+        const newBal = currentBal + parseFloat(currentReport.amount);
+
+        const updates = {};
+        // 2. Add money
+        updates[`users/${currentReport.uid}/wallet`] = newBal;
+        // 3. Prevent double credit by logging reference
+        updates[`verified_references/${currentReport.paystackReference}`] = { used: true, date: Date.now() };
+        // 4. Record successful manual transaction
+        const txId = "MAN-" + Date.now();
+        updates[`transactions/${txId}`] = {
+            uid: currentReport.uid,
+            amount: currentReport.amount,
+            type: "Credit",
+            category: "topup",
+            date: Date.now(),
+            note: "Manual Resolution for: " + currentReport.id
+        };
+
+        await update(ref(db), updates);
+        await remove(ref(db, `pending_manual_credits/${currentReport.id}`));
+
+        alert("User Credited Successfully!");
+        location.reload();
+    } catch (e) {
+        alert("Error: " + e.message);
+        btn.disabled = false;
+    }
+};
+
+window.markAsLiar = async function() {
+    if(confirm("Are you sure this is a fake claim? This will delete the report.")) {
+        await remove(ref(db, `pending_manual_credits/${currentReport.id}`));
+        alert("Report Deleted.");
+        location.reload();
+    }
 };
 </script>
 </body>
