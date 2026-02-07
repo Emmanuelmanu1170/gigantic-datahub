@@ -67,31 +67,36 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
         import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-        // Your Firebase Config (Corrected & Optimized)
+        // CONFIG INTEGRATED
         const firebaseConfig = { 
-            apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4", 
+            apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho", 
             authDomain: "gigantic-data.firebaseapp.com", 
             databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com", 
             projectId: "gigantic-data" 
         };
+
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // Your IDATAGH Provider Key
+        // API Configuration
         const API_KEY = "tera_live_95abf76d96984f4612153a4869e43d3e";
         const API_URL = "https://idatagh.com/wp-json/custom/v1/place-order";
 
+        let authWaiting = true; // Guard variable
+
         onAuthStateChanged(auth, (user) => {
+            authWaiting = false;
             if (!user) { window.location.href = "login.html"; return; }
 
             const order = JSON.parse(localStorage.getItem('pendingOrder'));
-            if (!order) { window.location.href = "buy-data.html"; return; }
+            if (!order) { window.location.href = "order.html"; return; }
 
             // Listener to get live wallet balance
             onValue(ref(db, `users/${user.uid}`), (snapshot) => {
                 const userData = snapshot.val() || {};
-                const wallet = parseFloat(userData.wallet || 0);
+                // Synchronized with Realtime Database key 'wallet'
+                const wallet = parseFloat(userData.wallet || userData.balance || 0);
                 const cost = parseFloat(order.amount);
 
                 document.getElementById('details').innerHTML = `
@@ -116,14 +121,13 @@
                     btn.disabled = true;
                     btn.innerText = "Processing Delivery...";
 
-                    // Map Network names to Provider IDs
+                    // Map Network names
                     let networkID = order.network.toLowerCase();
                     if (networkID.includes("airtel") || networkID.includes("at")) networkID = "at";
                     else if (networkID.includes("telecel") || networkID.includes("vod")) networkID = "telecel";
                     else networkID = "mtn";
 
                     try {
-                        // Call Data Provider API
                         const response = await fetch(API_URL, {
                             method: "POST",
                             headers: { 
@@ -133,18 +137,17 @@
                             body: JSON.stringify({
                                 "network": networkID,
                                 "beneficiary": order.recipient.toString().trim(),
-                                "pa_data-bundle-packages": order.plan // Or order.data_id if you mapped IDs
+                                "pa_data-bundle-packages": order.plan 
                             })
                         });
 
                         const res = await response.json();
                         
-                        // Check if provider accepted the order
                         if (res.status === "error" || (res.code && res.code.includes("fail"))) {
                              throw new Error(res.message || "Provider error. Please contact support.");
                         }
 
-                        // Success: Prepare Database Updates
+                        // Prepare Database Updates
                         const orderId = "GID-" + Math.floor(Math.random() * 89999 + 10000);
                         const newBalance = parseFloat((wallet - cost).toFixed(2));
                         
@@ -161,11 +164,9 @@
                         };
 
                         const updates = {};
-                        // 1. Deduct money from user wallet
                         updates[`users/${user.uid}/wallet`] = newBalance;
-                        // 2. Log globally for Admin
+                        updates[`users/${user.uid}/balance`] = newBalance; // Backup key sync
                         updates[`orders/${orderId}`] = finalReceipt;
-                        // 3. Log specifically for User History
                         updates[`user_orders/${user.uid}/${orderId}`] = finalReceipt;
 
                         await update(ref(db), updates);
@@ -179,7 +180,7 @@
                         btn.innerText = "TRY AGAIN";
                     }
                 };
-            }, { onlyOnce: true }); // onlyOnce ensures we don't loop if balance updates
+            }, { onlyOnce: true });
         });
     </script>
 </body>
