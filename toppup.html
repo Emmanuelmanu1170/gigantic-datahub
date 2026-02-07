@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top Up Credits | Gigantic Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-6">
+
+    <div class="max-w-4xl w-full">
+        <div class="text-center mb-10">
+            <h1 class="text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
+                Top Up Your Account
+            </h1>
+            <p class="text-gray-400 mt-2">Select a package to add credits to your wallet instantly.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <div class="glass p-8 rounded-2xl flex flex-col items-center hover:scale-105 transition-transform cursor-pointer border-transparent hover:border-blue-500">
+                <span class="text-sm font-semibold text-blue-400 uppercase">Basic</span>
+                <h2 class="text-3xl font-bold my-4">10 GHS</h2>
+                <p class="text-gray-400 mb-6">1,000 Credits</p>
+                <button onclick="payWithPaystack(10)" class="w-full py-3 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 font-bold hover:shadow-lg hover:shadow-blue-500/30">Select</button>
+            </div>
+
+            <div class="glass p-8 rounded-2xl flex flex-col items-center scale-110 border-blue-500 border-2 relative overflow-hidden bg-white/10">
+                <div class="absolute top-0 right-0 bg-blue-500 text-xs px-3 py-1 rounded-bl-lg font-bold">POPULAR</div>
+                <span class="text-sm font-semibold text-blue-300 uppercase">Pro</span>
+                <h2 class="text-3xl font-bold my-4">50 GHS</h2>
+                <p class="text-gray-400 mb-6">6,000 Credits</p>
+                <button onclick="payWithPaystack(50)" class="w-full py-3 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 font-bold hover:shadow-lg hover:shadow-purple-500/30">Select</button>
+            </div>
+
+            <div class="glass p-8 rounded-2xl flex flex-col items-center hover:scale-105 transition-transform cursor-pointer border-transparent hover:border-purple-500">
+                <span class="text-sm font-semibold text-purple-400 uppercase">Premium</span>
+                <h2 class="text-3xl font-bold my-4">100 GHS</h2>
+                <p class="text-gray-400 mb-6">15,000 Credits</p>
+                <button onclick="payWithPaystack(100)" class="w-full py-3 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-700 font-bold hover:shadow-lg hover:shadow-indigo-500/30">Select</button>
+            </div>
+
+        </div>
+
+        <div class="mt-12 text-center text-gray-500 text-sm">
+            Secured by Paystack. Your credits will be added automatically.
+        </div>
+    </div>
+
+    <script>
+        const paystackPublicKey = 'pk_live_faecdb3166144fadebd8269829343698dd43de63';
+
+        function payWithPaystack(amount) {
+            // In a real app, get the user's email from Firebase Auth
+            const userEmail = "customer@example.com"; 
+
+            let handler = PaystackPop.setup({
+                key: paystackPublicKey,
+                email: userEmail,
+                amount: amount * 100, // Paystack uses kobo/pesewas
+                currency: 'GHS',
+                ref: 'GH-' + Math.floor((Math.random() * 1000000000) + 1),
+                onClose: function() {
+                    alert('Transaction cancelled.');
+                },
+                callback: function(response) {
+                    // This runs after successful payment
+                    verifyTransactionOnServer(response.reference);
+                }
+            });
+
+            handler.openIframe();
+        }
+
+        async function verifyTransactionOnServer(reference) {
+            console.log("Verifying reference:", reference);
+            
+            // Call your Firebase Cloud Function here
+            try {
+                const response = await fetch('YOUR_FIREBASE_FUNCTION_URL', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reference: reference })
+                });
+
+                const result = await response.json();
+                if(result.success) {
+                    alert("Credits added successfully!");
+                    window.location.reload();
+                } else {
+                    alert("Verification failed. Please contact support.");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        }
+    </script>
+</body>
+</html>
