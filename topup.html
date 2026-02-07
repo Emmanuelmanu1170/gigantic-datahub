@@ -12,39 +12,82 @@
             --primary: #4f46e5;
             --success: #10b981;
             --white: #ffffff;
+            --slate: #64748b;
         }
         body { margin:0; font-family:'Poppins', sans-serif; background:#f8fafc; color:var(--deep); overflow-x:hidden; }
         .header { background:var(--deep); color:white; padding:20px; display:flex; align-items:center; gap:15px; box-shadow:0 4px 12px rgba(0,0,0,0.1);}
         .container { padding:20px; max-width:450px; margin:auto; }
         .card { background:var(--white); border-radius:28px; padding:25px; box-shadow:0 15px 35px rgba(0,0,0,0.05); margin-bottom:20px; border:1px solid #e2e8f0; position:relative; }
-        .balance-card { background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%); color:white; padding:22px; border-radius:22px; margin-bottom:25px; text-align:center; border:1px solid rgba(255,255,255,0.1);}
-        label { display:block; font-weight:700; font-size:12px; margin-bottom:10px; color:#64748b; text-transform:uppercase; letter-spacing:1px; }
+        
+        .balance-card { 
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); 
+            color: white; padding: 22px; border-radius: 22px; margin-bottom: 25px; 
+            text-align: center; border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        label { display:block; font-weight:700; font-size:12px; margin-bottom:10px; color:var(--slate); text-transform:uppercase; letter-spacing:1px; }
         .input-group { position:relative; margin-bottom:20px; }
         .input-group span { position:absolute; left:18px; top:14px; font-weight:800; color:var(--deep); font-size:1.1rem; }
-        input { width:100%; padding:16px 16px 16px 60px; border:2px solid #f1f5f9; border-radius:18px; font-size:1.2rem; outline:none; transition:0.3s; box-sizing:border-box; font-weight:600; }
+        
+        input { 
+            width:100%; padding:16px 16px 16px 60px; border:2px solid #f1f5f9; 
+            border-radius:18px; font-size:1.2rem; outline:none; transition:0.3s; 
+            box-sizing:border-box; font-weight:600; 
+        }
         input:focus { border-color:var(--primary); background:#fff; box-shadow:0 0 0 4px rgba(79,70,229,0.1); }
 
         .fee-info { background:#f8fafc; border-radius:18px; padding:18px; font-size:0.9rem; border:1px dashed #cbd5e1; margin-bottom:15px; }
-        .fee-row { display:flex; justify-content:space-between; margin-bottom:8px; color:#64748b; }
+        .fee-row { display:flex; justify-content:space-between; margin-bottom:8px; color:var(--slate); }
         .total-row { border-top:2px solid #e2e8f0; padding-top:12px; margin-top:12px; font-weight:800; color:var(--primary); font-size:1.1rem; }
 
-        .pay-btn { width:100%; background:var(--primary); color:white; border:none; padding:20px; border-radius:20px; font-weight:700; font-size:1rem; margin-top:25px; cursor:pointer; transition:0.3s; box-shadow:0 10px 25px rgba(79,70,229,0.3); text-transform:uppercase; letter-spacing:1px;}
+        .pay-btn { 
+            width:100%; background:var(--primary); color:white; border:none; padding:20px; 
+            border-radius:20px; font-weight:700; font-size:1rem; margin-top:25px; 
+            cursor:pointer; transition:0.3s; box-shadow:0 10px 25px rgba(79,70,229,0.3); 
+            text-transform:uppercase; letter-spacing:1px;
+        }
         .pay-btn:disabled { background:#94a3b8; cursor:not-allowed; box-shadow:none; }
 
-        #status-modal { position:fixed; inset:0; background:rgba(15,23,42,0.9); display:none; align-items:center; justify-content:center; z-index:2000; backdrop-filter:blur(8px);}
-        .modal-content { background:white; width:85%; max-width:380px; padding:40px 30px; border-radius:32px; text-align:center; animation:slideUp 0.4s ease-out; }
-        @keyframes slideUp { from { transform:translateY(50px); opacity:0; } to { transform:translateY(0); opacity:1; } }
-        .success-icon { font-size:70px; color:var(--success); margin-bottom:20px; }
+        /* --- MODAL STYLING --- */
+        #status-modal { 
+            position:fixed; inset:0; background:rgba(15,23,42,0.85); 
+            display:none; align-items:center; justify-content:center; 
+            z-index:2000; backdrop-filter:blur(10px);
+        }
+        .modal-content { 
+            background:white; width:85%; max-width:380px; padding:40px 30px; 
+            border-radius:32px; text-align:center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation:modalEntry 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); 
+        }
+        @keyframes modalEntry { from { transform:scale(0.8) translateY(30px); opacity:0; } to { transform:scale(1) translateY(0); opacity:1; } }
+        
+        .success-icon-wrapper {
+            width: 80px; height: 80px; background: #f0fdf4; color: var(--success);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 40px; margin: 0 auto 20px; border: 2px solid #dcfce7;
+        }
+
+        .modal-title { font-size: 1.5rem; font-weight: 800; color: var(--deep); margin-bottom: 8px; }
+        .modal-text { color: var(--slate); font-size: 0.95rem; line-height: 1.5; margin-bottom: 25px; }
+        
+        .done-btn {
+            width: 100%; background: var(--deep); color: white; border: none;
+            padding: 16px; border-radius: 16px; font-weight: 700; cursor: pointer;
+            transition: 0.2s;
+        }
+        .done-btn:hover { opacity: 0.9; transform: translateY(-2px); }
     </style>
 </head>
 <body>
 
 <div id="status-modal">
     <div class="modal-content">
-        <i class="fas fa-check-circle success-icon"></i>
-        <h2 style="margin:0; color: var(--deep);">Payment Successful!</h2>
-        <p style="color:#64748b; font-size:14px; margin:20px 0;">Your wallet has been credited successfully.</p>
-        <button class="pay-btn" onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
+        <div class="success-icon-wrapper">
+            <i class="fas fa-check"></i>
+        </div>
+        <div class="modal-title">Top-up Successful</div>
+        <div class="modal-text">Great news! Your payment has been verified and your wallet has been credited.</div>
+        <button class="done-btn" onclick="window.location.href='dashboard.html'">Return to Dashboard</button>
     </div>
 </div>
 
@@ -79,7 +122,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-import { getDatabase, ref, onValue, update, get } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
@@ -125,7 +168,6 @@ async function recordTransaction(paymentRef, amountPaid) {
 
     const updates = {};
     
-    // 1. Create entry in transactions (General History)
     updates[`transactions/${txId}`] = {
         uid: currentUser.uid,
         amount: amountPaid,
@@ -136,7 +178,6 @@ async function recordTransaction(paymentRef, amountPaid) {
         reference: paymentRef
     };
 
-    // 2. Create entry in topupNotes (Deposit Filter)
     updates[`topupNotes/${currentUser.uid}/${txId}`] = {
         amount: amountPaid,
         timestamp: timestamp,
@@ -145,7 +186,6 @@ async function recordTransaction(paymentRef, amountPaid) {
         reference: paymentRef
     };
 
-    // 3. Update the wallet balance
     updates[`users/${currentUser.uid}/wallet`] = newBalance;
 
     try {
@@ -175,7 +215,6 @@ function initiatePayment() {
             ] 
         },
         callback: function(response){
-            // Pass the transaction to the database logger
             recordTransaction(response.reference, amt);
         },
         onClose: function(){
