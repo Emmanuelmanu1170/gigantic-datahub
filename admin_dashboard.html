@@ -237,5 +237,40 @@ document.getElementById("logoutBtn").onclick = () => {
     signOut(auth).then(() => location.href="admin_login.html");
 };
 </script>
+
+<br>
+<a href="hackers.html" class="btn-security">
+    <i class="fas fa-user-shield"></i>
+    <span>Financial Guard</span>
+</a>
+
+<style>
+    .btn-security {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 20px;
+        background: linear-gradient(135deg, #ef4444 0%, #991b1b 100%);
+        color: white;
+        text-decoration: none;
+        border-radius: 12px;
+        font-weight: 800;
+        font-size: 14px;
+        transition: 0.3s;
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-security:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
+        filter: brightness(1.1);
+    }
+
+    .btn-security i {
+        font-size: 18px;
+    }
+</style>
+
 </body>
 </html>
