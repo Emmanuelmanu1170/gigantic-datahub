@@ -12,11 +12,7 @@
         .order-card { background: white; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
         .info-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
         .price-box { background: #f5f3ff; border: 1px dashed var(--accent); border-radius: 16px; }
-        
-        #successOverlay {
-            display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95);
-            z-index: 1000; align-items: center; justify-content: center;
-        }
+        #successOverlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); z-index: 1000; align-items: center; justify-content: center; }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
@@ -28,7 +24,7 @@
         </div>
 
         <div class="space-y-1 mb-6" id="details">
-            <p class="text-center text-slate-400 animate-pulse">Checking Wallet...</p>
+            <p class="text-center text-slate-400 animate-pulse">Syncing Order Details...</p>
         </div>
 
         <div id="priceArea" class="price-box p-6 text-center mb-6"></div>
@@ -44,7 +40,7 @@
                 <i class="fas fa-check"></i>
             </div>
             <h2 class="text-2xl font-black text-slate-800">Order Successful!</h2>
-            <p class="text-slate-500 mt-3 mb-8">Your data has been sent. Check your balance in a moment.</p>
+            <p class="text-slate-500 mt-3 mb-8">Data details have been recorded. Delivery is in progress.</p>
             <div class="flex items-center justify-center gap-2 text-emerald-600 font-bold text-sm">
                 <i class="fas fa-spinner fa-spin"></i> Moving to History...
             </div>
@@ -82,13 +78,14 @@
                 const cost = parseFloat(order.amount);
 
                 document.getElementById('details').innerHTML = `
-                    <div class="info-item"><span class="text-slate-500">Network</span><span class="font-bold">${order.network}</span></div>
+                    <div class="info-item"><span class="text-slate-500">Network</span><span class="font-bold text-indigo-600">${order.network}</span></div>
+                    <div class="info-item"><span class="text-slate-500">Plan</span><span class="font-bold">${order.plan}</span></div>
                     <div class="info-item"><span class="text-slate-500">Recipient</span><span class="font-bold">${order.recipient}</span></div>
-                    <div class="info-item"><span class="text-slate-500">My Balance</span><span class="font-bold">₵${wallet.toFixed(2)}</span></div>
+                    <div class="info-item"><span class="text-slate-500">Recipients Count</span><span class="font-bold">${order.count || 1}</span></div>
                 `;
 
                 document.getElementById('priceArea').innerHTML = `
-                    <p class="text-xs font-bold uppercase text-indigo-400">Total Price</p>
+                    <p class="text-xs font-bold uppercase text-indigo-400">Final Charge</p>
                     <h1 class="text-3xl font-black text-slate-800">GH₵ ${cost.toFixed(2)}</h1>
                 `;
 
@@ -97,10 +94,9 @@
 
                     const btn = document.getElementById('confirmBtn');
                     btn.disabled = true;
-                    btn.innerText = "Processing Transaction...";
+                    btn.innerText = "Finalizing Transaction...";
 
                     try {
-                        // 1. Send Order to Provider FIRST
                         const response = await fetch(API_URL, {
                             method: "POST",
                             headers: { "Authorization": "Bearer " + API_KEY, "Content-Type": "application/json" },
@@ -112,34 +108,47 @@
                         });
 
                         const res = await response.json();
-                        // If provider fails, we stop here and don't deduct money
                         if (res.status === "error") throw new Error(res.message);
 
-                        // 2. Provider Succeeded, now update Firebase
                         const orderId = "GID-" + Math.floor(Math.random() * 90000 + 10000);
                         const newBalance = parseFloat((wallet - cost).toFixed(2));
                         const txKey = push(ref(db, 'transactions')).key;
 
+                        // RECORD ALL DETAILS
+                        const fullOrderRecord = {
+                            ...order,
+                            orderId: orderId,
+                            uid: user.uid,
+                            status: "Successful",
+                            provider_response: res.message || "Order Received",
+                            provider_id: res.order_id || "N/A",
+                            timestamp: Date.now(),
+                            date: new Date().toLocaleString()
+                        };
+
                         const updates = {};
                         updates[`users/${user.uid}/balance`] = newBalance;
-                        updates[`users/${user.uid}/wallet`] = newBalance; // legacy sync
-                        updates[`orders/${orderId}`] = { ...order, status: "Successful", timestamp: Date.now() };
-                        updates[`user_orders/${user.uid}/${orderId}`] = { ...order, status: "Successful", timestamp: Date.now() };
+                        updates[`users/${user.uid}/wallet`] = newBalance; 
+                        updates[`orders/${orderId}`] = fullOrderRecord;
+                        updates[`user_orders/${user.uid}/${orderId}`] = fullOrderRecord;
                         updates[`transactions/${txKey}`] = {
-                            uid: user.uid, amount: cost, type: "Debit", 
-                            description: `Data: ${order.plan}`, timestamp: Date.now(), newBalance: newBalance
+                            uid: user.uid, 
+                            amount: cost, 
+                            type: "Debit", 
+                            description: `Data: ${order.network} ${order.plan} to ${order.recipient}`, 
+                            timestamp: Date.now(), 
+                            newBalance: newBalance,
+                            orderId: orderId
                         };
 
                         await update(ref(db), updates);
                         
-                        // 3. Clear storage and show Success
                         localStorage.removeItem('pendingOrder');
                         document.getElementById('successOverlay').style.display = 'flex';
                         setTimeout(() => window.location.href = "order_history.html", 2500);
 
                     } catch (err) {
-                        console.error("ORDER_ERROR:", err);
-                        alert("Error: " + err.message);
+                        alert("Order Failed: " + err.message);
                         btn.disabled = false;
                         btn.innerText = "CONFIRM & PAY NOW";
                     }
