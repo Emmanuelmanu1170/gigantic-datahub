@@ -56,13 +56,6 @@
         }
         [data-theme="dark"] .agent-promo { background: #451a0320; }
 
-        .mode-selector {
-            display: flex; background: var(--card-bg); border: 1px solid var(--border-color);
-            padding: 5px; border-radius: 12px; margin-bottom: 20px;
-        }
-        .mode-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; background: transparent; transition: 0.3s; font-size: 0.85rem; color: var(--text-main); }
-        .mode-btn.active { background: var(--primary-purple); color: white; }
-
         .step { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; margin-bottom: 16px; }
         .active-step { border: 2px solid var(--primary-purple) !important; opacity: 1 !important; pointer-events: auto !important; }
         .disabled { opacity: 0.5; pointer-events: none; filter: grayscale(1); }
@@ -79,8 +72,7 @@
         
         .mtn { background: #ffcc00; color: #000; } .airtel { background: #ed1c24; } .telecel { background: #e60000; }
 
-        select, input, textarea { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--input-bg); outline: none; font-size: 0.9rem; margin-top: 10px; color: var(--text-main); }
-        textarea { height: 100px; resize: none; font-family: monospace; }
+        select, input { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--input-bg); outline: none; font-size: 0.9rem; margin-top: 10px; color: var(--text-main); }
         
         .validation-card {
             background-color: var(--light-green); border: 1px solid #dcfce7;
@@ -116,11 +108,6 @@
                 <p style="margin:0; font-size: 0.75rem; font-weight: 700; color: var(--text-main);">Lower prices available!</p>
                 <a href="dashboard.html" style="font-size: 0.65rem; color: var(--primary-purple); font-weight: 800;">ACTIVATE AGENT STATUS</a>
             </div>
-        </div>
-
-        <div class="mode-selector">
-            <button class="mode-btn active" id="btnSingle" onclick="setPurchaseMode('single')">Single</button>
-            <button class="mode-btn" id="btnBulk" onclick="setPurchaseMode('bulk')">Bulk</button>
         </div>
 
         <div class="step active-step" id="step1">
@@ -162,12 +149,7 @@
                 </div>
             </div>
 
-            <div id="bulkInput" style="display: none;">
-                <textarea id="bulkNumbers" placeholder="024XXXXXXX, 055XXXXXXX"></textarea>
-                <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 5px;">Separate numbers with commas (,)</p>
-            </div>
-
-            <button class="confirm-btn" onclick="processToConfirmation()">Proceed to Confirm</button>
+            <button class="confirm-btn" id="confirmBtn" onclick="processToConfirmation()">Proceed to Confirm</button>
         </div>
     </div>
 
@@ -178,7 +160,6 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-        // CONFIG INTEGRATED
         const firebaseConfig = { 
             apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho", 
             authDomain: "gigantic-data.firebaseapp.com", 
@@ -194,7 +175,6 @@
         const db = getDatabase(app);
 
         let isAgent = false;
-        let purchaseMode = 'single';
         let currentBalance = 0;
         let userReferrer = null;
         let authWaiting = true; 
@@ -216,7 +196,7 @@
         const getK = () => atob("YmVhcmVyIA==") + atob("c2tfbGl2ZV8=") + atob("YmZkMjhmYmJlM2NhNDU1YmExNTQ1NWViZWQ3MTM4YjI0MDA5ZDEzNA==");
 
         const agentPlans = {
-            mtn:[{plan:"1GB",price:"4.45"},{plan:"2GB",price:"8.85"},{plan:"3GB",price:"13.25"},{plan:"4GB",price:"17.65"},{plan:"5GB",price:"22. 05"},{plan:"6GB",price:"26.55"},{plan:"8GB",price:"36.39"},{plan:"10GB",price:"42.25"},{plan:"15GB",price:"62.05"},{plan:"20GB",price:"82.05"},{plan:"25GB",price:"103.05"},{plan:"30GB",price:"123"},{plan:"40GB",price:"160"},{plan:"50GB",price:"199"},{plan:"100GB",price:"380"}],
+            mtn:[{plan:"1GB",price:"4.45"},{plan:"2GB",price:"8.85"},{plan:"3GB",price:"13.25"},{plan:"4GB",price:"17.65"},{plan:"5GB",price:"22.05"},{plan:"6GB",price:"26.55"},{plan:"8GB",price:"36.39"},{plan:"10GB",price:"42.25"},{plan:"15GB",price:"62.05"},{plan:"20GB",price:"82.05"},{plan:"25GB",price:"103.05"},{plan:"30GB",price:"123"},{plan:"40GB",price:"160"},{plan:"50GB",price:"199"},{plan:"100GB",price:"380"}],
             airteltigo:[{plan:"1GB",price:"4.3"},{plan:"2GB",price:"8.56"},{plan:"3GB",price:"12.84"},{plan:"4GB",price:"17.12"},{plan:"5GB",price:"21.4"},{plan:"6GB",price:"25.6"},{plan:"7GB",price:"29.96"},{plan:"8GB",price:"35"},{plan:"10GB",price:"44"},{plan:"15GB",price:"65"},{plan:"20GB",price:"76"},{plan:"30GB",price:"87"},{plan:"40GB",price:"100"},{plan:"50GB",price:"115"},{plan:"60GB",price:"150"},{plan:"80GB",price:"183"},{plan:"100GB",price:"200"}],
             telecel:[{plan:"10GB",price:"45"},{plan:"15GB",price:"62"},{plan:"20GB",price:"84"},{plan:"25GB",price:"105"},{plan:"30GB",price:"120"},{plan:"40GB",price:"158"},{plan:"50GB",price:"196"},{plan:"100GB",price:"384"}]
         };
@@ -232,10 +212,7 @@
             if (user) {
                 onValue(ref(db, 'users/' + user.uid), (snapshot) => {
                     const data = snapshot.val() || {};
-                    
                     isAgent = (data.status === "Agent" || data.userType === "agent" || localStorage.getItem('currentUserStatus') === 'agent');
-                    
-                    // UNIFIED PATH: Always use balance to sync with index.js
                     currentBalance = Number(data.balance || data.wallet || 0);
                     userReferrer = data.referredBy || null;
                     document.getElementById('walletBalance').innerText = `GH₵ ${currentBalance.toFixed(2)}`;
@@ -248,14 +225,7 @@
                     }
 
                     if(window.selectedNet) {
-                        const select = document.getElementById('dataPlan');
-                        const currentVal = select.value;
-                        const plans = isAgent ? agentPlans[window.selectedNet] : normalPlans[window.selectedNet];
-                        select.innerHTML = '<option value="" disabled>-- Choose Plan --</option>';
-                        plans.forEach(p => { 
-                            select.innerHTML += `<option value="${p.price}" data-plan="${p.plan}">${p.plan} - GH₵ ${p.price}</option>`; 
-                        });
-                        select.value = currentVal;
+                        updateDataPlans();
                     }
                 });
             } else { 
@@ -263,25 +233,25 @@
             }
         });
 
-        window.setPurchaseMode = (mode) => {
-            purchaseMode = mode;
-            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(mode === 'single' ? 'btnSingle' : 'btnBulk').classList.add('active');
-            document.getElementById('singleInput').style.display = mode === 'single' ? 'block' : 'none';
-            document.getElementById('bulkInput').style.display = mode === 'bulk' ? 'block' : 'none';
-        };
-
         window.selectNetwork = (el, net) => {
             window.selectedNet = net;
             document.querySelectorAll('.network-option').forEach(o => o.classList.remove('selected'));
             el.classList.add('selected');
-            const select = document.getElementById('dataPlan');
-            select.innerHTML = '<option value="" selected disabled>-- Choose Plan --</option>';
-            const plans = isAgent ? agentPlans[net] : normalPlans[net];
-            plans.forEach(p => { select.innerHTML += `<option value="${p.price}" data-plan="${p.plan}">${p.plan} - GH₵ ${p.price}</option>`; });
+            updateDataPlans();
             document.getElementById('step2').classList.remove('disabled');
             document.getElementById('step2').classList.add('active-step');
         };
+
+        function updateDataPlans() {
+            const select = document.getElementById('dataPlan');
+            const currentVal = select.value;
+            select.innerHTML = '<option value="" selected disabled>-- Choose Plan --</option>';
+            const plans = isAgent ? agentPlans[window.selectedNet] : normalPlans[window.selectedNet];
+            plans.forEach(p => { 
+                select.innerHTML += `<option value="${p.price}" data-plan="${p.plan}">${p.plan} - GH₵ ${p.price}</option>`; 
+            });
+            if (currentVal) select.value = currentVal;
+        }
 
         window.unlockStep3 = () => {
             document.getElementById('step3').classList.remove('disabled');
@@ -310,31 +280,23 @@
 
         window.processToConfirmation = () => {
             const planSelect = document.getElementById('dataPlan');
+            const phoneInput = document.getElementById('phoneNumber');
+            const num = phoneInput.value.trim();
+
             if (!planSelect.value) { alert("Please select a plan"); return; }
-            let recipients = [];
-            if (purchaseMode === 'single') {
-                const num = document.getElementById('phoneNumber').value.trim();
-                if (num.length < 10) { alert("Invalid Number"); return; }
-                recipients.push(num);
-            } else {
-                recipients = document.getElementById('bulkNumbers').value.split(',').map(n => n.trim()).filter(n => n.length >= 10);
-                if (recipients.length === 0) { alert("Enter valid numbers"); return; }
-            }
+            if (num.length < 10) { alert("Invalid Phone Number"); return; }
 
             const unitPrice = parseFloat(planSelect.value);
-            const totalAmount = unitPrice * recipients.length;
 
-            if (currentBalance < totalAmount) { alert("Insufficient Funds!"); return; }
+            if (currentBalance < unitPrice) { alert("Insufficient Funds!"); return; }
 
             const order = {
                 network: window.selectedNet.toUpperCase(),
                 plan: planSelect.options[planSelect.selectedIndex].getAttribute('data-plan'),
-                unitPrice: unitPrice,
-                amount: totalAmount,
-                recipients: recipients,
-                recipient: recipients.join(', '),
-                count: recipients.length,
-                mode: purchaseMode,
+                amount: unitPrice,
+                recipient: num,
+                count: 1,
+                mode: 'single',
                 referrer: userReferrer,
                 commissionRate: 0.02
             };
