@@ -10,7 +10,6 @@
             --accent: #6a5af9;
             --accent-light: #f5f3ff;
             --success: #16a34a;
-            --danger: #dc2626;
             --text-dark: #0f172a;
             --text-muted: #64748b;
             --bg: #f8fafc;
@@ -18,95 +17,48 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
         body { background-color: var(--bg); color: var(--text-dark); display: flex; justify-content: center; min-height: 100vh; padding: 20px; }
-
         .checkout-container { width: 100%; max-width: 450px; }
-        
-        .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; }
-        .back-btn { color: var(--text-dark); text-decoration: none; font-size: 1.2rem; }
-
-        .order-card {
-            background: #ffffff; border-radius: 24px; padding: 24px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-            border: 1px solid rgba(226, 232, 240, 0.8);
-        }
-
+        .order-card { background: #ffffff; border-radius: 24px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
         .receipt-header { text-align: center; margin-bottom: 20px; }
-        .receipt-header i { font-size: 40px; color: var(--accent); margin-bottom: 10px; }
-        .receipt-header h2 { font-size: 1.25rem; font-weight: 700; }
-
+        .receipt-header i { font-size: 40px; color: var(--accent); }
         .info-grid { display: grid; gap: 16px; margin-bottom: 24px; }
-        .info-item { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid #f1f5f9; }
-        .info-item:last-child { border-bottom: none; }
-        .info-item label { color: var(--text-muted); font-size: 0.85rem; font-weight: 500; }
+        .info-item { display: flex; justify-content: space-between; padding-bottom: 12px; border-bottom: 1px solid #f1f5f9; }
+        .info-item label { color: var(--text-muted); font-size: 0.85rem; }
         .info-item span { font-weight: 600; font-size: 0.95rem; }
-
-        .price-box {
-            background: var(--accent-light); border-radius: 16px; padding: 20px;
-            text-align: center; border: 1px dashed var(--accent); margin-bottom: 24px;
-        }
-        .price-box p { font-size: 0.75rem; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
-        .price-box h1 { font-size: 2.2rem; color: var(--text-dark); margin-top: 5px; }
-
-        .status-badge {
-            display: flex; align-items: center; gap: 8px; font-size: 0.8rem;
-            padding: 8px 12px; border-radius: 20px; background: #f1f5f9; width: fit-content; margin: 0 auto 20px;
-        }
-
-        .pay-btn {
-            width: 100%; padding: 18px; border-radius: 16px; border: none;
-            background: var(--accent); color: white; font-size: 1rem; font-weight: 700;
-            cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px;
-        }
-        .pay-btn:active { transform: scale(0.98); }
-        .pay-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
-
-        .loader { width: 18px; height: 18px; border: 3px solid #ffffff60; border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; display: none; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* Success Overlay */
-        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 1000; }
-        .modal { background: white; border-radius: 30px; padding: 40px 20px; width: 100%; max-width: 350px; text-align: center; }
+        .price-box { background: var(--accent-light); border-radius: 16px; padding: 20px; text-align: center; border: 1px dashed var(--accent); margin-bottom: 24px; }
+        .price-box h1 { font-size: 2.2rem; color: var(--text-dark); }
+        .pay-btn { width: 100%; padding: 18px; border-radius: 16px; border: none; background: var(--accent); color: white; font-weight: 700; cursor: pointer; }
+        .pay-btn:disabled { background: #cbd5e1; }
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal { background: white; border-radius: 30px; padding: 40px 20px; width: 90%; max-width: 350px; text-align: center; }
         .success-check { width: 80px; height: 80px; background: var(--success); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 20px; }
     </style>
 </head>
 <body>
 
     <div class="checkout-container">
-        <header class="header">
-            <a href="order.html" class="back-btn"><i class="fas fa-chevron-left"></i></a>
-            <h3 style="font-size: 1rem;">Confirm Transaction</h3>
-            <div style="width: 24px;"></div>
-        </header>
-
         <div class="order-card">
             <div class="receipt-header">
                 <i class="fas fa-shield-check"></i>
-                <h2>Review Order</h2>
-            </div>
-
-            <div class="status-badge">
-                <i class="fas fa-lock" style="color: var(--success)"></i> Secure 256-bit Encryption
+                <h2 style="margin-top:10px">Confirm Order</h2>
             </div>
 
             <div class="info-grid" id="details">
-                <p style="text-align: center; color: var(--text-muted);">Fetching details...</p>
+                <p style="text-align: center;">Loading details...</p>
             </div>
 
-            <div class="price-focus" id="priceArea"></div>
+            <div id="priceArea"></div>
 
-            <button class="pay-btn" id="confirmBtn">
-                <span class="loader" id="btnLoader"></span>
-                <span id="btnText">PAY & DELIVER NOW</span>
-            </button>
+            <button class="pay-btn" id="confirmBtn">CONFIRM & PAY</button>
         </div>
     </div>
 
     <div class="overlay" id="successOverlay">
         <div class="modal">
             <div class="success-check"><i class="fas fa-check"></i></div>
-            <h2 style="margin-bottom: 10px;">Success!</h2>
-            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 25px;">Your data bundle has been processed and sent successfully.</p>
-            <button onclick="window.location.replace('dashboard.html')" style="width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--text-dark); color: white; font-weight: 700; cursor: pointer;">RETURN HOME</button>
+            <h2>Delivery Started</h2>
+            <p style="margin: 15px 0; color: var(--text-muted);">Your data is being processed by the network.</p>
+            <button onclick="window.location.replace('dashboard.html')" style="width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--text-dark); color: white; font-weight: 700; cursor: pointer;">DONE</button>
         </div>
     </div>
 
@@ -127,10 +79,7 @@
             if (!user) { window.location.href = "login.html"; return; }
 
             const order = JSON.parse(localStorage.getItem('pendingOrder'));
-            if (!order || !order.data_id) {
-                document.getElementById('details').innerHTML = `<p style="color:red; text-align:center;">Session expired. Please start over.</p>`;
-                return;
-            }
+            if (!order) return;
 
             onValue(ref(db, `users/${user.uid}`), (snapshot) => {
                 const userData = snapshot.val() || {};
@@ -138,50 +87,51 @@
                 const cost = parseFloat(order.amount);
 
                 document.getElementById('details').innerHTML = `
-                    <div class="info-item"><label>Service</label><span>${order.network} DATA</span></div>
-                    <div class="info-item"><label>Package</label><span>${order.plan}</span></div>
-                    <div class="info-item"><label>Recipient</label><span>${order.recipient}</span></div>
-                    <div class="info-item"><label>Current Wallet</label><span>GH₵ ${wallet.toFixed(2)}</span></div>
+                    <div class="info-item"><label>Network</label><span>${order.network}</span></div>
+                    <div class="info-item"><label>Plan</label><span>${order.plan}</span></div>
+                    <div class="info-item"><label>Number</label><span>${order.recipient}</span></div>
+                    <div class="info-item"><label>Wallet</label><span>GH₵ ${wallet.toFixed(2)}</span></div>
                 `;
 
                 document.getElementById('priceArea').innerHTML = `
-                    <div class="price-box">
-                        <p>Total Payable</p>
-                        <h1>GH₵ ${cost.toFixed(2)}</h1>
-                    </div>
+                    <div class="price-box"><p>Total</p><h1>GH₵ ${cost.toFixed(2)}</h1></div>
                 `;
 
                 document.getElementById('confirmBtn').onclick = async () => {
-                    if (wallet < cost) { alert("Balance too low for this purchase."); return; }
+                    if (wallet < cost) { alert("Insufficient Balance"); return; }
 
                     const btn = document.getElementById('confirmBtn');
-                    const loader = document.getElementById('btnLoader');
-                    const txt = document.getElementById('btnText');
-
                     btn.disabled = true;
-                    loader.style.display = "block";
-                    txt.innerText = "VERIFYING...";
+                    btn.innerText = "Processing...";
+
+                    // --- NETWORK NAME PATCH ---
+                    let networkID = order.network.toLowerCase();
+                    if (networkID.includes("airtel")) networkID = "at";
+                    if (networkID.includes("telecel")) networkID = "telecel";
+                    if (networkID.includes("mtn")) networkID = "mtn";
 
                     try {
-                        // 1. External API Call (Lowercase Net + Numerical ID)
                         const response = await fetch(API_URL, {
                             method: "POST",
                             headers: { "Authorization": "Bearer " + API_KEY, "Content-Type": "application/json" },
                             body: JSON.stringify({
-                                "network": order.network.toLowerCase(),
+                                "network": networkID,
                                 "beneficiary": order.recipient.toString().trim(),
                                 "pa_data-bundle-packages": Number(order.data_id)
                             })
                         });
 
                         const res = await response.json();
-                        if (res.status === "error") throw new Error(res.message);
+                        
+                        // FIX: Improved API validation
+                        if (res.status === "error" || (res.code && res.code.includes("fail"))) {
+                             throw new Error(res.message || "Provider Delivery Failed");
+                        }
 
-                        // 2. Prepare Data for Firebase (Matches your rules exactly)
+                        // Success Actions
                         const orderId = "GID-" + Math.floor(Math.random() * 89999 + 10000);
                         const newBalance = Number((wallet - cost).toFixed(2));
-                        const timestamp = Date.now();
-
+                        
                         const finalData = {
                             uid: user.uid,
                             amount: Number(cost),
@@ -189,7 +139,7 @@
                             recipient: order.recipient,
                             plan: order.plan,
                             status: "Successful",
-                            timestamp: timestamp,
+                            timestamp: Date.now(),
                             orderId: orderId,
                             api_ref: res.order_id || "N/A"
                         };
@@ -199,17 +149,14 @@
                         updates[`orders/${orderId}`] = finalData;
                         updates[`user_orders/${user.uid}/${orderId}`] = finalData;
 
-                        // 3. Multi-path Atomic Update
                         await update(ref(db), updates);
-
                         localStorage.removeItem('pendingOrder');
                         document.getElementById('successOverlay').style.display = 'flex';
 
                     } catch (err) {
-                        alert("Error: " + err.message);
+                        alert("API Error: " + err.message);
                         btn.disabled = false;
-                        loader.style.display = "none";
-                        txt.innerText = "RETRY PAYMENT";
+                        btn.innerText = "RETRY PAYMENT";
                     }
                 };
             });
