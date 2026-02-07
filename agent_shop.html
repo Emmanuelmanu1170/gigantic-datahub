@@ -17,24 +17,28 @@
         }
         body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding-bottom: 100px; color: var(--text-main); }
         
+        /* HEADER */
         .merchant-header {
             background: linear-gradient(135deg, var(--primary) 0%, #001a33 100%); 
-            color: white; padding: 40px 20px 80px;
+            color: white; padding: 30px 20px 70px;
             border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;
             text-align: center;
         }
-        .shop-title { font-size: 1.5rem; font-weight: 900; letter-spacing: -0.5px; }
-        .badge-agent { background: var(--gold); color: #000; padding: 5px 15px; border-radius: 20px; font-size: 11px; font-weight: 900; display: inline-block; margin-top: 10px; }
+        .shop-title { font-size: 1.3rem; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 5px; }
+        .user-meta { font-size: 11px; opacity: 0.8; font-weight: 600; margin-bottom: 10px; display: block; }
+        .badge-agent { background: var(--gold); color: #000; padding: 5px 15px; border-radius: 20px; font-size: 10px; font-weight: 900; display: inline-block; text-transform: uppercase; }
 
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: -50px 20px 20px; }
+        /* STATS CARDS */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: -40px 20px 20px; }
         .stat-card {
             background: var(--white); padding: 22px 15px; border-radius: 24px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.06); text-align: center;
             border: 1px solid rgba(255,255,255,0.8);
         }
-        .stat-card b { display: block; font-size: 22px; color: var(--primary); margin-bottom: 4px; }
+        .stat-card b { display: block; font-size: 20px; color: var(--primary); margin-bottom: 4px; }
         .stat-card span { font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; }
 
+        /* PROFIT CALCULATOR */
         .profit-calculator {
             background: var(--white); margin: 0 20px 25px; padding: 20px; 
             border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.06);
@@ -64,6 +68,7 @@
         .tool-box i { font-size: 24px; margin-bottom: 10px; display: block; }
         .tool-box b { font-size: 13px; }
 
+        /* LISTS */
         .order-card {
             background: var(--white); border-radius: 20px; margin-bottom: 15px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 20px; border: 1px solid rgba(0,0,0,0.05);
@@ -81,22 +86,11 @@
         .tel-bg { background: #E60000; }
         .air-bg { background: #0052CC; }
 
-        .order-details { display: flex; flex-direction: column; gap: 6px; }
-        .detail-row { display: flex; justify-content: space-between; align-items: center; }
-        .detail-row span { font-size: 11px; color: var(--text-gray); }
-        .detail-row b { font-size: 12px; color: var(--text-main); }
-
         .order-footer {
             margin-top: 12px; padding-top: 12px; border-top: 1.5px dashed #e2e8f0;
             display: flex; justify-content: space-between; align-items: center;
         }
         .amount-paid { font-size: 16px; font-weight: 900; color: var(--primary); }
-        .status-pill {
-            font-size: 9px; font-weight: 800; padding: 4px 10px;
-            border-radius: 30px; text-transform: uppercase;
-        }
-        .status-completed { background: #ecfdf5; color: #047857; }
-        .status-pending { background: #fffbeb; color: #b45309; }
 
         .bottom-nav {
             position: fixed; bottom: 0; width: 100%; background: var(--white);
@@ -110,9 +104,17 @@
 </head>
 <body>
 
+<div id="authGuard" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:9999; display:flex; align-items:center; justify-content:center;">
+    <div style="text-align:center;">
+        <i class="fas fa-shield-alt fa-spin" style="font-size:40px; color:var(--primary);"></i>
+        <p style="margin-top:15px; font-weight:800; color:var(--primary); font-size:12px;">SECURING SESSION...</p>
+    </div>
+</div>
+
 <div class="merchant-header">
     <div class="shop-title"><i class="fas fa-store-alt"></i> Merchant Terminal</div>
-    <span class="badge-agent">CERTIFIED VENDOR PARTNER</span>
+    <span class="user-meta" id="userEmail">Loading...</span>
+    <span class="badge-agent" id="userStatus">Verifying...</span>
 </div>
 
 <div class="stats-grid">
@@ -142,29 +144,17 @@
 <div class="section">
     <div class="section-header">Business Terminal</div>
     <div class="tools-grid">
-        <a href="order.html" class="tool-box">
-            <i class="fas fa-wifi" style="color: #3b82f6;"></i>
-            <b>Buy Data</b>
-        </a>
-        <a href="agent_tools.html" class="tool-box">
-            <i class="fas fa-tools" style="color: #a855f7;"></i>
-            <b>Agent Tools</b>
-        </a>
-        <a href="receipt.html" class="tool-box">
-            <i class="fas fa-file-invoice-dollar" style="color: #10b981;"></i>
-            <b>Receipts</b>
-        </a>
-        <div class="tool-box" onclick="shareMarketingKit()" style="cursor:pointer;">
-            <i class="fab fa-whatsapp" style="color: #25d366;"></i>
-            <b>Marketing</b>
-        </div>
+        <a href="order.html" class="tool-box"><i class="fas fa-wifi" style="color: #3b82f6;"></i><b>Buy Data</b></a>
+        <a href="agent_tools.html" class="tool-box"><i class="fas fa-tools" style="color: #a855f7;"></i><b>Agent Tools</b></a>
+        <a href="receipt.html" class="tool-box"><i class="fas fa-file-invoice-dollar" style="color: #10b981;"></i><b>Receipts</b></a>
+        <div class="tool-box" onclick="shareMarketingKit()" style="cursor:pointer;"><i class="fab fa-whatsapp" style="color: #25d366;"></i><b>Marketing</b></div>
     </div>
 </div>
 
 <div class="section">
     <div class="section-header">Recent Business History</div>
     <div id="historyContainer">
-        <p style="text-align: center; font-size: 12px; color: #94a3b8; padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Syncing transactions...</p>
+        <p style="text-align: center; font-size: 11px; color: #94a3b8; padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Loading transactions...</p>
     </div>
 </div>
 
@@ -197,45 +187,42 @@
 
     let currentMargin = 0.4;
     let todaySalesVolume = 0;
-    let isUserAuthenticated = false;
 
-    // STEP 1: Set explicit persistence
+    // STEP 1: Strict Persistence Handshake
     setPersistence(auth, browserLocalPersistence).then(() => {
-        // STEP 2: Handle auth state with a small delay for local storage sync
         onAuthStateChanged(auth, user => {
             if (user) {
-                isUserAuthenticated = true;
-                syncAgentData(user);
+                document.getElementById('userEmail').innerText = user.email;
+                syncMerchantTerminal(user);
             } else {
-                // Buffer to prevent kicking users out during slow network handshakes
-                setTimeout(() => {
-                    if (!auth.currentUser) {
-                        window.location.replace("login.html");
-                    }
-                }, 1500);
+                // Buffer to allow slow tokens to load
+                setTimeout(() => { if(!auth.currentUser) window.location.replace("login.html"); }, 2000);
             }
         });
     });
 
-    function syncAgentData(user) {
-        // Sync Wallet & Status
+    function syncMerchantTerminal(user) {
+        // Hide Guard
+        document.getElementById('authGuard').style.display = 'none';
+
         onValue(ref(db, `users/${user.uid}`), snap => {
             const data = snap.val() || {};
             document.getElementById('agentWallet').innerText = "₵" + Number(data.wallet || data.balance || 0).toFixed(2);
             
-            const status = (data.status || data.userType || "").toLowerCase();
-            // Redirect non-agents back to standard dashboard
-            if(status !== 'agent' && isUserAuthenticated) {
+            const statusLabel = data.status || data.userType || "Member";
+            document.getElementById('userStatus').innerText = statusLabel;
+
+            // Security check: If not agent, kick to user dashboard
+            if(statusLabel.toLowerCase() !== 'agent') {
                 window.location.replace("dashboard.html");
             }
         });
 
-        // Sync History
         onValue(ref(db, `user_orders/${user.uid}`), (snapshot) => {
             const container = document.getElementById('historyContainer');
             const data = snapshot.val();
             if (!data) {
-                container.innerHTML = `<p style="text-align:center; padding:30px; color:#94a3b8;">No transactions yet</p>`;
+                container.innerHTML = `<p style="text-align:center; padding:30px; color:#94a3b8;">No records found.</p>`;
                 return;
             }
 
@@ -251,23 +238,17 @@
 
                 const network = (order.network || 'MTN').toUpperCase();
                 let netClass = network.includes('TELECEL') ? 'tel-bg' : (network.includes('AT') ? 'air-bg' : 'mtn-bg');
-                const status = order.status || 'Completed';
 
                 html += `
                     <div class="order-card">
                         <div class="order-header">
                             <div class="network-icon ${netClass}">${network.substring(0,3)}</div>
-                            <div style="text-align:right">
-                                <div style="font-size:10px; color:var(--text-gray);">#${id.slice(-8)}</div>
-                            </div>
+                            <div style="text-align:right"><div style="font-size:9px; color:var(--text-gray);">#${id.slice(-8)}</div></div>
                         </div>
-                        <div class="order-details">
-                            <div class="detail-row"><span>Plan</span><b>${order.plan}</b></div>
-                            <div class="detail-row"><span>Recipient</span><b>${order.recipient}</b></div>
-                        </div>
+                        <div style="font-size:12px; font-weight:700;">${order.plan} → ${order.recipient}</div>
                         <div class="order-footer">
                             <div class="amount-paid">₵${amount.toFixed(2)}</div>
-                            <span class="status-pill status-${status.toLowerCase()}">${status}</span>
+                            <span style="font-size:9px; color:var(--merchant-green); font-weight:800; text-transform:uppercase;">${order.status || 'Completed'}</span>
                         </div>
                     </div>`;
             });
@@ -292,7 +273,7 @@
     }
 
     window.shareMarketingKit = () => {
-        const msg = `🚀 *GIGANTIC DATA MERCHANT* 🚀\nOfficial agent dashboard active. Buy cheap data instantly!\nDM me now to save money! ⚡`;
+        const msg = `🚀 *GIGANTIC DATA MERCHANT* 🚀\nMerchant email: ${auth.currentUser.email}\nBuy cheap data instantly via my portal! ⚡`;
         window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
     };
 </script>
