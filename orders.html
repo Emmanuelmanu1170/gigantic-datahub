@@ -17,7 +17,7 @@
         .back-btn { background: rgba(255,255,255,0.15); color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 0.8rem; font-weight: 700; }
         .container { padding: 30px 5%; }
         .api-banner { background: #0f172a; color: #4ade80; padding: 10px 5%; font-family: monospace; font-size: 11px; display: flex; justify-content: space-between; align-items: center; }
-        .pulse { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; display: inline-block; margin-right: 5px; animation: blink 1.5s infinite; }
+        .pulse { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; display: inline-block; margin-right: 5px; animation: blink 1s infinite; }
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
         
         .table-card { background: white; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 20px; }
@@ -31,6 +31,7 @@
         .status-Flagged { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
         .status-Processing { background: #eff6ff; color: #1e40af; border-color: #bfdbfe; }
         
+        .status-select { padding: 5px; border-radius: 5px; font-size: 0.75rem; border: 1px solid #cbd5e1; outline: none; cursor: pointer; }
         .log-card { background: #1e293b; color: #94a3b8; padding: 20px; border-radius: 15px; font-family: monospace; font-size: 12px; height: 200px; overflow-y: auto; }
         .log-entry { border-bottom: 1px solid #334155; padding: 5px 0; }
         .log-err { color: #ef4444; }
@@ -39,7 +40,7 @@
 <body>
 
 <div class="api-banner">
-    <div><span class="pulse"></span> iDataGH AUTO-FULFILLMENT ENGINE ACTIVE</div>
+    <div><span class="pulse"></span> GIGANTIC AUTO-API & SECURITY TERMINAL ACTIVE</div>
     <div id="apiClock">00:00:00</div>
 </div>
 
@@ -60,11 +61,11 @@
                         <th>Recipient</th>
                         <th>User Email</th>
                         <th>Status</th>
-                        <th style="text-align:right">Actions</th>
+                        <th style="text-align:right">Update / Delete</th>
                     </tr>
                 </thead>
                 <tbody id="orderTbody">
-                    <tr><td colspan="7" style="text-align:center; padding:50px;">Syncing Firebase Data...</td></tr>
+                    <tr><td colspan="7" style="text-align:center; padding:50px;">Connecting to Secure Nodes...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -75,12 +76,10 @@
     </div>
 </div>
 
-
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-import { getDatabase, ref, onValue, update, get, push } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+import { getDatabase, ref, onValue, update, get, push, remove } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
@@ -93,17 +92,16 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-// API CREDENTIALS (Synced with your Checkout Page)
 const API_KEY = "tera_live_1191f4118022d549ec1419d8d6ab249c";
 const API_URL = "https://idatagh.com/wp-json/custom/v1/place-order";
-const PROXY = "https://corsproxy.io/?"; // Critical to stop browser blocks
+const PROXY = "https://corsproxy.io/?";
 
 let allOrders = [];
 let userEmailMap = {};
 
 onAuthStateChanged(auth, user => {
     if(user && user.email === "alenacloft0@gmail.com"){
-        writeLog("Master Admin Authenticated. Monitoring for orders...");
+        writeLog("Master Admin Authenticated.");
         startEngine();
     } else { window.location.href = "login.html"; }
 });
@@ -127,31 +125,23 @@ async function startEngine() {
             Object.entries(orders).forEach(([id, order]) => {
                 const orderObj = { id, uid, ...order, email: userEmailMap[uid] || order.email };
                 allOrders.push(orderObj);
-                
-                // AUTOMATED FULFILLMENT TRIGGER
-                if (order.status === "Pending") {
-                    securityAudit(orderObj);
-                }
+                if (order.status === "Pending") securityAudit(orderObj);
             });
         });
         renderTable();
     });
 }
 
-// SECURITY LAYER (Hacker Defense)
 async function securityAudit(order) {
     try {
         const userSnap = await get(ref(db, `users/${order.uid}`));
         const userData = userSnap.val();
-        
-        // 1. Check for Negative Balance Exploit
         const balance = parseFloat(userData.wallet || userData.balance || 0);
         if (balance < 0) {
-            handleFlag(order, "Security Alert: Negative Balance Bypass");
+            handleFlag(order, "Security Alert: Negative Balance");
             return;
         }
 
-        // 2. Velocity Check (Spam Prevention)
         const historySnap = await get(ref(db, `user_orders/${order.uid}`));
         const recent = Object.values(historySnap.val() || {}).filter(o => (Date.now() - o.timestamp) < 60000);
         if (recent.length > 2) {
@@ -160,83 +150,85 @@ async function securityAudit(order) {
         }
 
         fulfillOrder(order);
-    } catch (e) { writeLog("Audit Error: " + e.message, true); }
+    } catch (e) { console.error(e); }
 }
 
 async function handleFlag(order, reason) {
     writeLog(`FLAGGED: ${order.email} - ${reason}`, true);
-    const updates = {};
-    updates[`user_orders/${order.uid}/${order.id}/status`] = "Flagged";
-    updates[`orders/${order.id}/status`] = "Flagged";
-    await update(ref(db), updates);
+    updateStatusInDb(order.uid, order.id, "Flagged");
     push(ref(db, "admin_settings/financial_guard"), { email: order.email, uid: order.uid, reason: reason, date: Date.now() });
 }
 
-// FULFILLMENT ENGINE (Matching Checkout Route)
 async function fulfillOrder(order) {
-    // Lock order
-    await update(ref(db, `user_orders/${order.uid}/${order.id}`), { status: "Processing" });
-    writeLog(`Fulfilling #${order.id.slice(-6)} via API...`);
+    updateStatusInDb(order.uid, order.id, "Processing");
+    writeLog(`Auto-Fulfilling #${order.id.slice(-6)}...`);
 
-    // Format Network (Matching Checkout Logic)
     let networkID = order.network.toLowerCase();
-    if (networkID.includes("airtel") || networkID.includes("at")) networkID = "at";
-    else if (networkID.includes("telecel") || networkID.includes("vod")) networkID = "telecel";
+    if (networkID.includes("at")) networkID = "at";
+    else if (networkID.includes("telecel")) networkID = "telecel";
     else networkID = "mtn";
 
     const payload = {
         "network": networkID,
         "beneficiary": order.recipient.toString().trim(),
-        "pa_data-bundle-packages": order.plan // Passing the exact Plan string/ID from your checkout
+        "pa_data-bundle-packages": order.plan 
     };
 
     try {
         const response = await fetch(PROXY + encodeURIComponent(API_URL), {
             method: 'POST',
-            headers: { 
-                'Authorization': `Bearer ${API_KEY}`,
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
-
         const result = await response.json();
-
         if (result.status === "success" || response.ok) {
-            writeLog(`SUCCESS: #${order.id.slice(-6)} delivered.`);
-            updateStatus(order, "Completed");
+            writeLog(`SUCCESS: Order #${order.id.slice(-6)} delivered.`);
+            updateStatusInDb(order.uid, order.id, "Completed");
         } else {
             writeLog(`API REJECTED: ${result.message || 'Unknown Error'}`, true);
-            updateStatus(order, "Failed: " + (result.message || "Error"));
+            updateStatusInDb(order.uid, order.id, "Failed: " + (result.message || "Error"));
         }
     } catch (err) {
-        writeLog(`PROXY/NETWORK ERROR. Order #${order.id.slice(-6)} set back to Pending.`, true);
-        updateStatus(order, "Pending");
+        writeLog(`PROXY ERROR. Resetting to Pending.`, true);
+        updateStatusInDb(order.uid, order.id, "Pending");
     }
 }
 
-function updateStatus(order, status) {
+function updateStatusInDb(uid, orderId, status) {
     const updates = {};
-    updates[`user_orders/${order.uid}/${order.id}/status`] = status;
-    updates[`orders/${order.id}/status`] = status;
+    updates[`user_orders/${uid}/${orderId}/status`] = status;
+    updates[`orders/${orderId}/status`] = status;
     update(ref(db), updates);
 }
+
+window.manualStatusUpdate = function(uid, orderId, newStatus) {
+    if(!newStatus) return;
+    updateStatusInDb(uid, orderId, newStatus);
+    writeLog(`MANUAL: Status updated to ${newStatus} for #${orderId.slice(-6)}`);
+};
 
 function renderTable() {
     const tbody = document.getElementById("orderTbody");
     tbody.innerHTML = "";
     allOrders.sort((a,b) => b.timestamp - a.timestamp).forEach(o => {
         const tr = document.createElement("tr");
-        const sClass = o.status.replace(" ", "-");
+        const sClass = (o.status || "Pending").replace(" ", "-");
         tr.innerHTML = `
             <td><b>#${o.id.slice(-6)}</b><br><small>${new Date(o.timestamp).toLocaleString()}</small></td>
-            <td><b>${o.network.toUpperCase()}</b><br><span>${o.plan}</span></td>
-            <td>₵${parseFloat(o.amount).toFixed(2)}</td>
+            <td><b>${(o.network || "").toUpperCase()}</b><br><span>${o.plan}</span></td>
+            <td>₵${parseFloat(o.amount || 0).toFixed(2)}</td>
             <td>${o.recipient}</td>
             <td style="font-size:11px; font-weight:700;">${o.email}</td>
             <td><span class="status-badge status-${sClass}">${o.status}</span></td>
             <td style="text-align:right">
-                <button onclick="delRec('${o.id}','${o.uid}')" style="border:none; background:none; cursor:pointer; color:#94a3b8;"><i class="fas fa-trash"></i></button>
+                <select class="status-select" onchange="manualStatusUpdate('${o.uid}', '${o.id}', this.value)">
+                    <option value="" selected disabled>Update</option>
+                    <option value="Processing">Processing</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Canceled">Canceled</option>
+                </select>
+                <button onclick="delRec('${o.id}','${o.uid}')" style="border:none; background:none; cursor:pointer; color:#94a3b8; margin-left:10px;"><i class="fas fa-trash"></i></button>
             </td>
         `;
         tbody.appendChild(tr);
@@ -245,10 +237,8 @@ function renderTable() {
 
 window.delRec = (id, uid) => {
     if(confirm("Delete record?")){
-        const up = {};
-        up[`user_orders/${uid}/${id}`] = null;
-        up[`orders/${id}`] = null;
-        update(ref(db), up);
+        remove(ref(db, `user_orders/${uid}/${id}`));
+        remove(ref(db, `orders/${id}`));
     }
 }
 setInterval(() => { document.getElementById('apiClock').innerText = new Date().toLocaleTimeString(); }, 1000);
