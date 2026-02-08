@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin — Auto-API Order Control</title>
+    <title>Admin — Command Center</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
@@ -17,7 +17,7 @@
         .back-btn { background: rgba(255,255,255,0.15); color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 0.8rem; font-weight: 700; }
         .container { padding: 30px 5%; }
         .api-banner { background: #0f172a; color: #4ade80; padding: 10px 5%; font-family: monospace; font-size: 11px; display: flex; justify-content: space-between; align-items: center; }
-        .pulse { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; display: inline-block; margin-right: 5px; animation: blink 1s infinite; }
+        .pulse { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; display: inline-block; margin-right: 5px; animation: blink 1.5s infinite; }
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
         
         .table-card { background: white; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 20px; }
@@ -31,7 +31,7 @@
         .status-Flagged { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
         .status-Processing { background: #eff6ff; color: #1e40af; border-color: #bfdbfe; }
         
-        .status-select { padding: 5px; border-radius: 5px; font-size: 0.75rem; border: 1px solid #cbd5e1; outline: none; cursor: pointer; }
+        .status-select { padding: 6px; border-radius: 8px; font-size: 0.75rem; border: 1px solid #cbd5e1; outline: none; cursor: pointer; background: #f8fafc; color: var(--deep-blue); font-weight: 600; }
         .log-card { background: #1e293b; color: #94a3b8; padding: 20px; border-radius: 15px; font-family: monospace; font-size: 12px; height: 200px; overflow-y: auto; }
         .log-entry { border-bottom: 1px solid #334155; padding: 5px 0; }
         .log-err { color: #ef4444; }
@@ -40,12 +40,12 @@
 <body>
 
 <div class="api-banner">
-    <div><span class="pulse"></span> GIGANTIC AUTO-API & SECURITY TERMINAL ACTIVE</div>
+    <div><span class="pulse"></span> MASTER COMMAND CENTER ACTIVE — SYSTEM SECURED</div>
     <div id="apiClock">00:00:00</div>
 </div>
 
 <header>
-    <h1><i class="fas fa-robot"></i> API MASTER CONTROL</h1>
+    <h1><i class="fas fa-user-shield"></i> MASTER CONTROL</h1>
     <a href="admin_dashboard.html" class="back-btn"><i class="fas fa-arrow-left"></i> Dashboard</a>
 </header>
 
@@ -65,7 +65,7 @@
                     </tr>
                 </thead>
                 <tbody id="orderTbody">
-                    <tr><td colspan="7" style="text-align:center; padding:50px;">Connecting to Secure Nodes...</td></tr>
+                    <tr><td colspan="7" style="text-align:center; padding:50px;">Authenticating Secure Connection...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -82,7 +82,7 @@ import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/
 import { getDatabase, ref, onValue, update, get, push, remove } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
+    apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
     authDomain: "gigantic-data.firebaseapp.com",
     databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
     projectId: "gigantic-data"
@@ -92,6 +92,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
+// API CREDENTIALS
 const API_KEY = "tera_live_1191f4118022d549ec1419d8d6ab249c";
 const API_URL = "https://idatagh.com/wp-json/custom/v1/place-order";
 const PROXY = "https://corsproxy.io/?";
@@ -101,7 +102,7 @@ let userEmailMap = {};
 
 onAuthStateChanged(auth, user => {
     if(user && user.email === "alenacloft0@gmail.com"){
-        writeLog("Master Admin Authenticated.");
+        writeLog("Secure Session Initiated.");
         startEngine();
     } else { window.location.href = "login.html"; }
 });
@@ -125,68 +126,83 @@ async function startEngine() {
             Object.entries(orders).forEach(([id, order]) => {
                 const orderObj = { id, uid, ...order, email: userEmailMap[uid] || order.email };
                 allOrders.push(orderObj);
-                if (order.status === "Pending") securityAudit(orderObj);
+                
+                // TRIGGER AUTOMATION FOR PENDING
+                if (order.status === "Pending") {
+                    securityAudit(orderObj);
+                }
             });
         });
         renderTable();
     });
 }
 
+// THE HACKER SHIELD
 async function securityAudit(order) {
     try {
         const userSnap = await get(ref(db, `users/${order.uid}`));
         const userData = userSnap.val();
+        
+        // 1. Balance Integrity Check
         const balance = parseFloat(userData.wallet || userData.balance || 0);
         if (balance < 0) {
-            handleFlag(order, "Security Alert: Negative Balance");
+            handleFlag(order, "ALERT: Negative Balance Detected");
             return;
         }
 
+        // 2. Velocity Check (Spam Prevention)
         const historySnap = await get(ref(db, `user_orders/${order.uid}`));
         const recent = Object.values(historySnap.val() || {}).filter(o => (Date.now() - o.timestamp) < 60000);
         if (recent.length > 2) {
-            handleFlag(order, "Security Alert: Velocity Attack");
+            handleFlag(order, "ALERT: Velocity Attack detected");
             return;
         }
 
         fulfillOrder(order);
-    } catch (e) { console.error(e); }
+    } catch (e) { writeLog("Audit Fail", true); }
 }
 
 async function handleFlag(order, reason) {
-    writeLog(`FLAGGED: ${order.email} - ${reason}`, true);
+    writeLog(reason, true);
     updateStatusInDb(order.uid, order.id, "Flagged");
     push(ref(db, "admin_settings/financial_guard"), { email: order.email, uid: order.uid, reason: reason, date: Date.now() });
 }
 
+// API FULFILLMENT ENGINE
 async function fulfillOrder(order) {
+    // Mark as Processing immediately to "Lock" the order
     updateStatusInDb(order.uid, order.id, "Processing");
-    writeLog(`Auto-Fulfilling #${order.id.slice(-6)}...`);
+    writeLog(`Auto-Fulfillment: #${order.id.slice(-6)}`);
 
-    let networkID = order.network.toLowerCase();
-    if (networkID.includes("at")) networkID = "at";
-    else if (networkID.includes("telecel")) networkID = "telecel";
-    else networkID = "mtn";
+    let net = order.network.toLowerCase();
+    if (net.includes("at")) net = "at";
+    else if (net.includes("telecel")) net = "telecel";
+    else net = "mtn";
+
+    // Format Plan as an Integer (Matching iDataGH requirement)
+    const planID = parseInt(order.plan.replace(/[^0-9]/g, '')) || 5;
 
     const payload = {
-        "network": networkID,
+        "network": net,
         "beneficiary": order.recipient.toString().trim(),
-        "pa_data-bundle-packages": order.plan 
+        "pa_data-bundle-packages": planID
     };
 
     try {
+        // Use PROXY to bypass browser CORS blocks
         const response = await fetch(PROXY + encodeURIComponent(API_URL), {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
         const result = await response.json();
+        
         if (result.status === "success" || response.ok) {
-            writeLog(`SUCCESS: Order #${order.id.slice(-6)} delivered.`);
+            writeLog(`SUCCESS: #${order.id.slice(-6)}`);
             updateStatusInDb(order.uid, order.id, "Completed");
         } else {
-            writeLog(`API REJECTED: ${result.message || 'Unknown Error'}`, true);
-            updateStatusInDb(order.uid, order.id, "Failed: " + (result.message || "Error"));
+            writeLog(`REJECTED: ${result.message || 'Error'}`, true);
+            updateStatusInDb(order.uid, order.id, "Failed");
         }
     } catch (err) {
         writeLog(`PROXY ERROR. Resetting to Pending.`, true);
@@ -201,6 +217,7 @@ function updateStatusInDb(uid, orderId, status) {
     update(ref(db), updates);
 }
 
+// Manual Override for Admin
 window.manualStatusUpdate = function(uid, orderId, newStatus) {
     if(!newStatus) return;
     updateStatusInDb(uid, orderId, newStatus);
