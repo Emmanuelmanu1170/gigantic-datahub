@@ -45,6 +45,7 @@
         .icon-purchase { background: #fee2e2; color: var(--danger); }
         .icon-topup { background: #dcfce7; color: var(--success); }
         .icon-agent { background: #f3e8ff; color: var(--purple); }
+        .icon-bonus { background: #e0f2fe; color: #0052cc; }
 
         .tx-info { flex: 1; }
         .tx-info h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 2px; }
@@ -85,15 +86,14 @@
     <div id="historyList"></div>
 </div>
 
-
-
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { getDatabase, ref, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+// UNIFIED SECURE CONFIG
 const firebaseConfig = {
-    apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho",
+    apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
     authDomain: "gigantic-data.firebaseapp.com",
     databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
     projectId: "gigantic-data"
@@ -115,18 +115,19 @@ window.exitImpersonation = function() {
 
 let masterLogs = [];
 
-onAuthStateChanged(auth, user => {
-    if (user) {
-        activeUid = (isImpersonating === 'true' && impersonateUid) ? impersonateUid : user.uid;
-        
-        if (isImpersonating === 'true') {
-            document.getElementById('adminBanner').style.display = 'block';
+setPersistence(auth, browserLocalPersistence).then(() => {
+    onAuthStateChanged(auth, user => {
+        if (user) {
+            activeUid = (isImpersonating === 'true' && impersonateUid) ? impersonateUid : user.uid;
+            
+            if (isImpersonating === 'true') {
+                document.getElementById('adminBanner').style.display = 'block';
+            }
+            loadData(activeUid);
+        } else {
+            window.location.replace("login.html");
         }
-
-        loadData(activeUid);
-    } else {
-        window.location.replace("login.html");
-    }
+    });
 });
 
 function loadData(uid) {
@@ -200,7 +201,7 @@ function render(logs) {
                 <p>${time} • <span class="tx-ref" onclick="copyRef('${log.id}')">${log.id.substring(0,8)}...</span></p>
             </div>
             <div class="tx-amount">
-                <span class="amount-val" style="color: ${amountColor}">${isCredit ? '+' : '-'}₵${parseFloat(log.amount).toFixed(2)}</span>
+                <span class="amount-val" style="color: ${amountColor}">${isCredit ? '+' : '-'}₵${parseFloat(log.amount || log.price || 0).toFixed(2)}</span>
                 <span class="bal-val">${log.newBalance ? 'Bal: ₵'+parseFloat(log.newBalance).toFixed(2) : 'Successful'}</span>
             </div>
         `;
