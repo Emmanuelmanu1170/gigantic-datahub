@@ -77,13 +77,13 @@
 
 <header>
     <div class="header-left">
-        <a href="admin_dashboard.html" style="color:white; font-size: 1.2rem;"><i class="fas fa-grid-2"></i></a>
+        <a href="admin_dashboard.html" style="color:white; font-size: 1.2rem;"><i class="fas fa-th-large"></i></a>
         <div>
             <h1 style="font-size:1.1rem; font-weight: 800;">Command Center</h1>
             <span class="admin-badge">SYSTEM ADMIN</span>
         </div>
     </div>
-    <div id="activeUser" style="font-size: 0.75rem; opacity: 0.8;">Syncing...</div>
+    <div id="activeUser" style="font-size: 0.75rem; opacity: 0.8;">Syncing Terminal...</div>
 </header>
 
 <div class="container">
@@ -124,12 +124,13 @@
 </div>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-    import { getDatabase, ref, onValue, update, get, remove } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getDatabase, ref, onValue, update, get, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+    // UNIFIED SECURE CONFIG
     const firebaseConfig = {
-        apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
+        apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
         authDomain: "gigantic-data.firebaseapp.com",
         databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
         projectId: "gigantic-data"
@@ -139,8 +140,13 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
+    const ADMIN_EMAIL = "alenacloft0@gmail.com";
+
     onAuthStateChanged(auth, (user) => {
-        if (!user || user.email !== "alenacloft0@gmail.com") { window.location.href = "login.html"; return; }
+        if (!user || user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) { 
+            window.location.href = "admin_login.html"; 
+            return; 
+        }
         document.getElementById('activeUser').innerText = user.email;
 
         // Leaderboard Sync
@@ -150,7 +156,7 @@
             const top10 = Object.entries(users)
                 .map(([uid, val]) => ({ uid, ...val }))
                 .filter(u => u.referralCount > 0)
-                .sort((a,b) => b.referralCount - a.referralCount)
+                .sort((a,b) => (b.referralCount || 0) - (a.referralCount || 0))
                 .slice(0, 10);
             
             let html = "";
@@ -175,11 +181,10 @@
             }
 
             let regHtml = ""; let cashHtml = ""; let count = 0; let vol = 0;
-            Object.entries(data).sort((a,b) => b[1].timestamp - a[1].timestamp).forEach(([id, req]) => {
-                count++; vol += parseFloat(req.amount);
+            Object.entries(data).sort((a,b) => (b[1].timestamp || 0) - (a[1].timestamp || 0)).forEach(([id, req]) => {
+                count++; vol += parseFloat(req.amount || 0);
                 const isReg = req.network === "Referral Bonus";
                 
-                // Show BOTH UIDs for registration bonuses
                 const uidDetails = isReg ? `
                     <div class="uid-flow">
                         <div class="uid-row"><span>EARNER (REFERRER):</span> <b onclick="autoFill('${req.uid}')" style="cursor:pointer; color:var(--primary)">${req.uid} <i class="fas fa-mouse-pointer"></i></b></div>
@@ -197,7 +202,7 @@
                         </div>
                     </div>
                     <div class="action-btns">
-                        <div style="text-align:right; font-weight:800; font-size:1.2rem; color:${isReg?'var(--teal)':'var(--orange)'}; margin-bottom:10px;">₵${parseFloat(req.amount).toFixed(2)}</div>
+                        <div style="text-align:right; font-weight:800; font-size:1.2rem; color:${isReg?'var(--teal)':'var(--orange)'}; margin-bottom:10px;">₵${parseFloat(req.amount || 0).toFixed(2)}</div>
                         <button class="btn-main btn-appr" onclick="approveTask('${id}', '${req.uid}', ${req.amount}, ${isReg})">APPROVE & CREDIT</button>
                         <button class="btn-main btn-del" onclick="deleteTask('${id}')">DISMISS</button>
                     </div>
@@ -225,13 +230,12 @@
                 const updatePayload = {
                     referralBonus: parseFloat(((data.referralBonus||0) + amt).toFixed(2))
                 };
-                // Automatically increase count if it's a registration referral
                 if(isReg) { updatePayload.referralCount = (data.referralCount||0) + 1; }
                 
                 await update(userRef, updatePayload);
             }
             await remove(ref(db, `withdrawal_requests/${reqId}`));
-            alert("Success! Balance updated and +1 referral added.");
+            alert("Success! Balance updated.");
         } catch(e) { alert(e); }
     };
 
@@ -248,7 +252,6 @@
             const data = snap.val();
             
             const newBal = mode === 'credit' ? (data.referralBonus||0) + amt : (data.referralBonus||0) - amt;
-            // CREDIT mode always adds a referral count
             const newCount = mode === 'credit' ? (data.referralCount||0) + 1 : (data.referralCount||0);
             
             await update(uRef, { referralBonus: parseFloat(newBal.toFixed(2)), referralCount: newCount });
