@@ -68,7 +68,7 @@
     <div id="loadingOverlay">
         <div style="text-align:center;">
             <i class="fas fa-circle-notch fa-spin fa-2x" style="color: var(--accent-blue);"></i>
-            <p>Verifying Admin Access...</p>
+            <p>Authenticating Master Terminal...</p>
         </div>
     </div>
 
@@ -132,18 +132,16 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+        // UNIFIED SECURE CONFIG
         const firebaseConfig = {
-            apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
+            apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
             authDomain: "gigantic-data.firebaseapp.com",
             databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
-            projectId: "gigantic-data",
-            storageBucket: "gigantic-data.firebasestorage.app",
-            messagingSenderId: "727845403550",
-            appId: "1:727845403550:web:e3c3a40ce615aaaca9748f"
+            projectId: "gigantic-data"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -153,17 +151,15 @@
         const ADMIN_EMAIL = 'alenacloft0@gmail.com';
 
         onAuthStateChanged(auth, (user) => {
-            if (user && user.email === ADMIN_EMAIL) {
+            if (user && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
                 document.getElementById('loadingOverlay').style.display = 'none';
                 loadAdminData();
             } else {
-                alert("Unauthorized");
-                window.location.href = "dashboard.html"; 
+                window.location.href = "admin_login.html"; 
             }
         });
 
         function loadAdminData() {
-            // Get Start of Today (local time)
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             const startOfTodayTimestamp = today.getTime();
@@ -179,7 +175,7 @@
 
                 Object.values(users).forEach(u => {
                     const refBal = parseFloat(u.referralBonus || 0);
-                    const mainBal = parseFloat(u.wallet || 0);
+                    const mainBal = parseFloat(u.wallet || u.balance || 0);
                     if (u.createdAt && u.createdAt > sevenDaysAgo) newUserCount++;
                     totalRefDebt += refBal;
                     totalMainDebt += mainBal;
@@ -189,7 +185,7 @@
                         email: u.email || 'N/A',
                         refBal: refBal,
                         mainBal: mainBal,
-                        status: u.status || 'User'
+                        status: u.userType || u.status || 'User'
                     });
                 });
 
@@ -201,21 +197,19 @@
                 setupSearch(userList);
             });
 
-            // 2. Process Orders (Fixed Logic)
+            // 2. Process Orders
             onValue(ref(db, 'orders'), (snapshot) => {
                 const orders = snapshot.val() || {};
                 let dailyCount = 0;
                 let dailySales = 0;
 
                 Object.values(orders).forEach(order => {
-                    // Normalize Status to uppercase for comparison
                     const status = (order.status || "").toUpperCase();
                     const orderTime = order.timestamp || 0;
 
-                    // If order is today AND (Successful OR Completed)
-                    if (orderTime >= startOfTodayTimestamp && (status === 'SUCCESSFUL' || status === 'COMPLETED')) {
+                    if (orderTime >= startOfTodayTimestamp && (status === 'SUCCESSFUL' || status === 'COMPLETED' || status === 'SUCCESS')) {
                         dailyCount++;
-                        dailySales += parseFloat(order.amount || 0);
+                        dailySales += parseFloat(order.amount || order.price || 0);
                     }
                 });
 
@@ -223,8 +217,6 @@
                 document.getElementById('ordersToday').innerText = dailyCount;
                 document.getElementById('revenueToday').innerText = `GH₵ ${netProfit.toFixed(2)}`;
                 document.getElementById('grossSales').innerText = `Gross: GH₵ ${dailySales.toFixed(2)}`;
-                
-                console.log("Admin Log:", { dailyCount, dailySales, startOfTodayTimestamp });
             });
         }
 
@@ -236,7 +228,7 @@
                     <td>${u.email}</td>
                     <td style="color: #ff8c00; font-weight: 700;">GH₵ ${u.refBal.toFixed(2)}</td>
                     <td style="font-weight: 600;">GH₵ ${u.mainBal.toFixed(2)}</td>
-                    <td><span class="badge ${u.status === 'Agent' ? 'badge-agent' : 'badge-user'}">${u.status}</span></td>
+                    <td><span class="badge ${u.status.toLowerCase() === 'agent' ? 'badge-agent' : 'badge-user'}">${u.status}</span></td>
                 </tr>
             `).join('');
         }
