@@ -87,9 +87,9 @@
     <h2>GIGANTIC ADMIN</h2>
     <ul>
         <li><a href="admin_dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-        <li><a href="users.html"><i class="fas fa-users"></i> User Management</a></li>
+        <li><a href="admin_user_audit.html"><i class="fas fa-users"></i> User Management</a></li>
         <li><a href="wallet.html" class="active"><i class="fas fa-wallet"></i> Wallet Control</a></li>
-        <li><a href="agent.html"><i class="fas fa-user-tie"></i> Agent Panel</a></li>
+        <li><a href="command_center.html"><i class="fas fa-user-tie"></i> Command Panel</a></li>
     </ul>
 </aside>
 
@@ -144,12 +144,13 @@
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { getDatabase, ref, onValue, update, push, remove } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, onValue, update, push, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+// UNIFIED SECURE CONFIG
 const firebaseConfig = {
-    apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho",
+    apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
     authDomain: "gigantic-data.firebaseapp.com",
     databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
     projectId: "gigantic-data"
@@ -163,13 +164,15 @@ const ADMIN_EMAIL = "alenacloft0@gmail.com";
 let usersData = {};
 let masterLogs = [];
 
-onAuthStateChanged(auth, user => {
-    if (user && user.email === ADMIN_EMAIL) {
-        document.getElementById("adminEmail").textContent = user.email;
-        loadGlobalData();
-    } else {
-        window.location.href = "admin_login.html";
-    }
+setPersistence(auth, browserLocalPersistence).then(() => {
+    onAuthStateChanged(auth, user => {
+        if (user && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+            document.getElementById("adminEmail").textContent = user.email;
+            loadGlobalData();
+        } else {
+            window.location.href = "admin_login.html";
+        }
+    });
 });
 
 function loadGlobalData() {
@@ -181,12 +184,12 @@ function loadGlobalData() {
 
 function syncLedger() {
     const txRef = ref(db, 'transactions'); 
-    const ordersRef = ref(db, 'orders'); // Pulling from central orders node
+    const ordersRef = ref(db, 'orders');
 
     onValue(txRef, (txSnap) => {
         onValue(ordersRef, (orderSnap) => {
             
-            // Stream A: Admin Adjustments, Paystack Topups, Agent Upgrades (via Cloud Functions)
+            // Stream A: Adjustments, Topups, Upgrades
             const txs = txSnap.exists() ? Object.entries(txSnap.val()).map(([id, v]) => {
                 const isCredit = v.type === 'Credit' || v.type === 'Top-up';
                 let sourceTag = 'ADMIN';
@@ -205,7 +208,7 @@ function syncLedger() {
                 };
             }) : [];
             
-            // Stream B: Unified Data Purchases
+            // Stream B: Data Purchases
             let orders = [];
             if(orderSnap.exists()){
                 Object.entries(orderSnap.val()).forEach(([id, o]) => {
@@ -218,7 +221,7 @@ function syncLedger() {
             }
 
             // MERGE & SORT
-            masterLogs = [...txs, ...orders].sort((a, b) => b.ts - a.ts);
+            masterLogs = [...txs, ...orders].sort((a, b) => (b.ts || 0) - (a.ts || 0));
             document.getElementById('logCounter').innerText = masterLogs.length;
             renderTable(document.getElementById('searchLog').value);
         });
@@ -256,7 +259,7 @@ function renderTable(filter = "") {
             <td style="font-family:monospace; font-size:10px;">${log.id.substring(0,14)}...</td>
             <td style="font-size:11px; font-weight:700;">${log.info}</td>
             <td style="font-weight:800; color:${isCredit ? '#10b981' : '#ef4444'};">
-                ${isCredit ? '+' : '-'}₵${parseFloat(log.amount || 0).toFixed(2)}
+                ${isCredit ? '+' : '-'}₵${parseFloat(log.amount || log.price || 0).toFixed(2)}
             </td>
             <td style="font-weight:700;">₵${parseFloat(log.newBalance || 0).toFixed(2)}</td>
             <td style="font-size:11px; color:#64748b;">${new Date(log.ts).toLocaleString()}</td>
@@ -269,7 +272,7 @@ function renderTable(filter = "") {
 window.deleteEntry = (id, src, uid) => {
     if(!confirm("Warning: Deleting financial records can break your balance history. Continue?")) return;
     let path = `transactions/${id}`;
-    if(src === 'PURCHASE') path = `orders/${id}`; // Matches updated orders node
+    if(src === 'PURCHASE') path = `orders/${id}`;
     
     remove(ref(db, path)).then(() => alert("Entry removed."));
 };
@@ -288,7 +291,7 @@ document.getElementById('walletForm').addEventListener('submit', async (e) => {
 
     const updates = {};
     updates[`users/${uid}/balance`] = newBal;
-    updates[`users/${uid}/wallet`] = newBal; // Safety sync
+    updates[`users/${uid}/wallet`] = newBal;
 
     await update(ref(db), updates);
     
