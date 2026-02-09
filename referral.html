@@ -151,42 +151,51 @@
 </nav>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-    import { getDatabase, ref, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getDatabase, ref, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import {  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+    // --- RE-IMPORT DATABASE TOOLS FOR COMPATIBILITY ---
+    import * as dbTools from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    const { getDatabase: gDB, ref: r, onValue: oV, query: q, orderByChild: oBC, limitToLast: lTL } = dbTools;
+
+    // UNIFIED SECURE CONFIG
     const firebaseConfig = {
-        apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho",
+        apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
         authDomain: "gigantic-data.firebaseapp.com",
         databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
-        projectId: "gigantic-data",
-        storageBucket: "gigantic-data.firebasestorage.app",
-        messagingSenderId: "727845403550",
-        appId: "1:727845403550:web:56d06c9389993153a9748f",
-        measurementId: "G-10F198VFE6"
+        projectId: "gigantic-data"
     };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db = getDatabase(app);
+    const db = gDB(app);
 
-    // FIX: Force persistence to prevent logout on refresh
+    // --- MASTER UID BRIDGE ---
+    const impersonateUid = sessionStorage.getItem('impersonate_uid');
+    const isImpersonating = sessionStorage.getItem('isAdminImpersonating');
+    let activeUid;
+
     setPersistence(auth, browserLocalPersistence).then(() => {
         onAuthStateChanged(auth, user => {
             if (user) {
+                activeUid = (isImpersonating === 'true' && impersonateUid) ? impersonateUid : user.uid;
+                
                 const baseUrl = window.location.origin;
-                const fullLink = `${baseUrl}/register.html?ref=${user.uid}`;
+                const fullLink = `${baseUrl}/register.html?ref=${activeUid}`;
                 document.getElementById('referralLink').innerText = fullLink;
 
-                onValue(ref(db, 'users/' + user.uid), (snap) => {
+                oV(r(db, 'users/' + activeUid), (snap) => {
                     const data = snap.val() || {};
                     document.getElementById('refCountDisplay').innerText = data.referralCount || 0;
                     const approvedEarnings = Number(data.referralBonus || 0);
                     document.getElementById('refBalanceDisplay').innerText = `₵${approvedEarnings.toFixed(2)}`;
                 });
 
-                const topQuery = query(ref(db, 'users'), orderByChild('referralCount'), limitToLast(5));
-                onValue(topQuery, (snap) => {
+                // Sync Leaderboard
+                const topQuery = q(r(db, 'users'), oBC('referralCount'), lTL(5));
+                oV(topQuery, (snap) => {
                     const board = document.getElementById('leaderboardList');
                     board.innerHTML = "";
                     let users = [];
@@ -234,6 +243,5 @@
         });
     };
 </script>
-
 </body>
 </html>
