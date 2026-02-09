@@ -106,15 +106,14 @@
         </div>
     </div>
 
-    
-
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-        import { getDatabase, ref, onValue, get, update, push, runTransaction } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, onValue, get, update, push, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+        // UNIFIED SECURE CONFIG
         const firebaseConfig = { 
-            apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho", 
+            apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA", 
             authDomain: "gigantic-data.firebaseapp.com", 
             databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com", 
             projectId: "gigantic-data"
@@ -142,7 +141,7 @@
                 onValue(ref(db, 'users/' + activeUid), (snapshot) => {
                     const data = snapshot.val() || {};
                     isAgent = (data.userType === "agent" || data.status === "Agent");
-                    currentBalance = Number(data.balance || 0);
+                    currentBalance = Number(data.balance || data.wallet || 0);
                     userEmail = data.email || "";
                     document.getElementById('walletBalance').innerText = `GH₵ ${currentBalance.toFixed(2)}`;
                     document.getElementById('userTypeBadge').innerText = isAgent ? "AGENT" : "NORMAL USER";
@@ -207,7 +206,7 @@
         });
 
         window.processOrder = async () => {
-            if (isProcessing) return; // Immediate lock to prevent multiple clicks
+            if (isProcessing) return; 
             
             const planSelect = document.getElementById('dataPlan');
             const num = document.getElementById('phoneNumber').value.trim();
@@ -216,15 +215,15 @@
             const cost = parseFloat(planSelect.value);
             const btn = document.getElementById('confirmBtn');
             
-            // 1. START ATOMIC TRANSACTION
             isProcessing = true;
             btn.disabled = true;
             btn.innerText = "SECURING FUNDS...";
 
             try {
-                // Fetch fresh balance from server to prevent local manipulation
-                const balSnap = await get(ref(db, `users/${activeUid}/balance`));
-                const freshBal = Number(balSnap.val() || 0);
+                // Check both balance and wallet paths
+                const userSnap = await get(ref(db, `users/${activeUid}`));
+                const userDataObj = userSnap.val() || {};
+                const freshBal = Number(userDataObj.balance || userDataObj.wallet || 0);
 
                 if (freshBal < cost) {
                     alert("Insufficient Funds! Please reload.");
@@ -242,9 +241,11 @@
                     plan: planName, recipient: num, status: "Successful", timestamp: Date.now()
                 };
 
-                // 2. ATOMIC BATCH UPDATE (Deduct money and Create order in ONE action)
                 const updates = {};
-                updates[`users/${activeUid}/balance`] = newBalance;
+                // Update both potential paths to stay in sync
+                if(userDataObj.balance !== undefined) updates[`users/${activeUid}/balance`] = newBalance;
+                if(userDataObj.wallet !== undefined) updates[`users/${activeUid}/wallet`] = newBalance;
+                
                 updates[`orders/${orderId}`] = orderData;
                 updates[`user_orders/${activeUid}/${orderId}`] = orderData;
                 updates[`transactions/${txKey}`] = {
@@ -255,7 +256,6 @@
 
                 await update(ref(db), updates);
                 
-                // 3. COMPLETE
                 alert("Order Placed Successfully!");
                 window.location.href = "order_history.html";
 
@@ -269,4 +269,3 @@
     </script>
 </body>
 </html>
-. 
