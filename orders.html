@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin — Command Center</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
     <style>
         :root {
             --deep-blue: #003366; --primary-blue: #0052cc;
@@ -36,16 +41,11 @@
         .log-entry { border-bottom: 1px solid #334155; padding: 5px 0; }
         .log-err { color: #ef4444; }
     </style>
-
-    <script defer src="/__/firebase/10.7.1/firebase-app-compat.js"></script>
-    <script defer src="/__/firebase/10.7.1/firebase-auth-compat.js"></script>
-    <script defer src="/__/firebase/10.7.1/firebase-database-compat.js"></script>
-    <script defer src="/__/firebase/init.js"></script>
 </head>
 <body>
 
 <div class="api-banner">
-    <div><span class="pulse"></span> MASTER COMMAND CENTER ACTIVE — SYSTEM SECURED</div>
+    <div><span class="pulse"></span> MASTER COMMAND CENTER ACTIVE — GITHUB HOSTING SECURED</div>
     <div id="apiClock">00:00:00</div>
 </div>
 
@@ -82,154 +82,163 @@
 </div>
 
 <script>
-// Wait for Firebase to load from the /__/ auto-inject scripts
-window.onload = function() {
-    if (typeof firebase !== 'undefined') {
-        const auth = firebase.auth();
-        const db = firebase.database();
-        
-        const API_URL = "https://idatagh.com/wp-json/custom/v1/place-order";
-        const PROXY = "https://corsproxy.io/?";
-
-        let allOrders = [];
-        let userEmailMap = {};
-
-        auth.onAuthStateChanged(user => {
-            // ONLY EMMANUEL ACCESS
-            if(user && user.email === "alenacloft0@gmail.com"){
-                writeLog("Secure Session Initiated.");
-                startEngine(db);
-            } else { window.location.href = "login.html"; }
-        });
-
-        function writeLog(msg, isError = false) {
-            const logDiv = document.getElementById("logEntries");
-            const time = new Date().toLocaleTimeString();
-            logDiv.innerHTML = `<div class="log-entry ${isError ? 'log-err' : ''}">[${time}] ${msg}</div>` + logDiv.innerHTML;
-        }
-
-        async function startEngine(db) {
-            db.ref("users").on("value", snap => {
-                const data = snap.val() || {};
-                Object.entries(data).forEach(([uid, info]) => { userEmailMap[uid] = info.email; });
-            });
-
-            db.ref("user_orders").on("value", snapshot => {
-                const data = snapshot.val() || {};
-                allOrders = [];
-                Object.entries(data).forEach(([uid, orders]) => {
-                    Object.entries(orders).forEach(([id, order]) => {
-                        const orderObj = { id, uid, ...order, email: userEmailMap[uid] || order.email };
-                        allOrders.push(orderObj);
-                        
-                        if (order.status === "Pending") {
-                            securityAudit(db, orderObj);
-                        }
-                    });
-                });
-                renderTable(db);
-            });
-        }
-
-        async function securityAudit(db, order) {
-            try {
-                const userSnap = await db.ref(`users/${order.uid}`).get();
-                const userData = userSnap.val();
-                const balance = parseFloat(userData.wallet || userData.balance || 0);
-                
-                if (balance < 0) {
-                    handleFlag(db, order, "ALERT: Negative Balance");
-                    return;
-                }
-                fulfillOrder(db, order);
-            } catch (e) { writeLog("Audit Fail", true); }
-        }
-
-        async function fulfillOrder(db, order) {
-            updateStatusInDb(db, order.uid, order.id, "Processing");
-            writeLog(`Fetching API Key...`);
-
-            // FETCH KEY PRIVATELY FROM DATABASE (NOT ON GITHUB)
-            const keySnap = await db.ref('admin_settings/idata_key').get();
-            const SECURE_API_KEY = keySnap.val();
-
-            if (!SECURE_API_KEY) {
-                writeLog("ERROR: API Key not found in admin_settings!", true);
-                return;
-            }
-
-            let net = order.network.toLowerCase();
-            if (net.includes("at")) net = "at";
-            else if (net.includes("telecel")) net = "telecel";
-            else net = "mtn";
-
-            const planID = parseInt(order.plan.replace(/[^0-9]/g, '')) || 5;
-
-            const payload = {
-                "network": net,
-                "beneficiary": order.recipient.toString().trim(),
-                "pa_data-bundle-packages": planID
-            };
-
-            try {
-                const response = await fetch(PROXY + encodeURIComponent(API_URL), {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${SECURE_API_KEY}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const result = await response.json();
-                
-                if (result.status === "success" || response.ok) {
-                    writeLog(`SUCCESS: #${order.id.slice(-6)}`);
-                    updateStatusInDb(db, order.uid, order.id, "Completed");
-                } else {
-                    writeLog(`REJECTED: ${result.message}`, true);
-                    updateStatusInDb(db, order.uid, order.id, "Failed");
-                }
-            } catch (err) {
-                writeLog(`CONNECTION ERROR`, true);
-                updateStatusInDb(db, order.uid, order.id, "Pending");
-            }
-        }
-
-        function updateStatusInDb(db, uid, orderId, status) {
-            const updates = {};
-            updates[`user_orders/${uid}/${orderId}/status`] = status;
-            updates[`orders/${orderId}/status`] = status;
-            db.ref().update(updates);
-        }
-
-        window.manualStatusUpdate = function(uid, orderId, newStatus) {
-            if(!newStatus) return;
-            updateStatusInDb(db, uid, orderId, newStatus);
-        };
-
-        function renderTable(db) {
-            const tbody = document.getElementById("orderTbody");
-            tbody.innerHTML = "";
-            allOrders.sort((a,b) => b.timestamp - a.timestamp).forEach(o => {
-                const tr = document.createElement("tr");
-                const sClass = (o.status || "Pending").replace(" ", "-");
-                tr.innerHTML = `
-                    <td><b>#${o.id.slice(-6)}</b></td>
-                    <td><b>${(o.network || "").toUpperCase()}</b><br>${o.plan}</td>
-                    <td>₵${parseFloat(o.amount || 0).toFixed(2)}</td>
-                    <td>${o.recipient}</td>
-                    <td>${o.email}</td>
-                    <td><span class="status-badge status-${sClass}">${o.status}</span></td>
-                    <td style="text-align:right">
-                        <select class="status-select" onchange="manualStatusUpdate('${o.uid}', '${o.id}', this.value)">
-                            <option value="" selected disabled>Update</option>
-                            <option value="Completed">Completed</option>
-                            <option value="Canceled">Canceled</option>
-                        </select>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-    }
+// 1. FIREBASE CONFIG (Safe on GitHub because you restricted it in Google Console)
+const firebaseConfig = {
+    apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
+    authDomain: "gigantic-data.firebaseapp.com",
+    databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
+    projectId: "gigantic-data"
 };
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+
+const API_URL = "https://idatagh.com/wp-json/custom/v1/place-order";
+const PROXY = "https://corsproxy.io/?";
+
+let allOrders = [];
+let userEmailMap = {};
+
+// 2. AUTH CHECK
+auth.onAuthStateChanged(user => {
+    if(user && user.email === "alenacloft0@gmail.com"){
+        writeLog("Secure Session Initiated.");
+        startEngine();
+    } else { 
+        window.location.href = "login.html"; 
+    }
+});
+
+function writeLog(msg, isError = false) {
+    const logDiv = document.getElementById("logEntries");
+    const time = new Date().toLocaleTimeString();
+    logDiv.innerHTML = `<div class="log-entry ${isError ? 'log-err' : ''}">[${time}] ${msg}</div>` + logDiv.innerHTML;
+}
+
+async function startEngine() {
+    db.ref("users").on("value", snap => {
+        const data = snap.val() || {};
+        Object.entries(data).forEach(([uid, info]) => { userEmailMap[uid] = info.email; });
+    });
+
+    db.ref("user_orders").on("value", snapshot => {
+        const data = snapshot.val() || {};
+        allOrders = [];
+        Object.entries(data).forEach(([uid, orders]) => {
+            Object.entries(orders).forEach(([id, order]) => {
+                const orderObj = { id, uid, ...order, email: userEmailMap[uid] || order.email };
+                allOrders.push(orderObj);
+                if (order.status === "Pending") { securityAudit(orderObj); }
+            });
+        });
+        renderTable();
+    });
+}
+
+async function securityAudit(order) {
+    try {
+        const userSnap = await db.ref(`users/${order.uid}`).get();
+        const userData = userSnap.val();
+        const balance = parseFloat(userData.wallet || userData.balance || 0);
+        
+        if (balance < 0) {
+            updateStatusInDb(order.uid, order.id, "Flagged");
+            writeLog("ALERT: Negative Balance", true);
+            return;
+        }
+        fulfillOrder(order);
+    } catch (e) { writeLog("Audit Error", true); }
+}
+
+// 3. SECURE API FULFILLMENT
+async function fulfillOrder(order) {
+    updateStatusInDb(order.uid, order.id, "Processing");
+    
+    // FETCH THE iDataGH KEY FROM DATABASE (Safe from GitHub hackers)
+    writeLog(`Fetching secure key...`);
+    const keySnap = await db.ref('admin_settings/idata_key').get();
+    const SECURE_API_KEY = keySnap.val();
+
+    if (!SECURE_API_KEY) {
+        writeLog("ERROR: API Key not found in Database!", true);
+        return;
+    }
+
+    let net = order.network.toLowerCase();
+    if (net.includes("at")) net = "at";
+    else if (net.includes("telecel")) net = "telecel";
+    else net = "mtn";
+
+    const planID = parseInt(order.plan.replace(/[^0-9]/g, '')) || 5;
+
+    const payload = {
+        "network": net,
+        "beneficiary": order.recipient.toString().trim(),
+        "pa_data-bundle-packages": planID
+    };
+
+    try {
+        const response = await fetch(PROXY + encodeURIComponent(API_URL), {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${SECURE_API_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        
+        if (result.status === "success" || response.ok) {
+            writeLog(`SUCCESS: Order #${order.id.slice(-6)}`);
+            updateStatusInDb(order.uid, order.id, "Completed");
+        } else {
+            writeLog(`REJECTED: ${result.message || 'Check iDataGH balance'}`, true);
+            updateStatusInDb(order.uid, order.id, "Failed");
+        }
+    } catch (err) {
+        writeLog(`CONNECTION ERROR`, true);
+        updateStatusInDb(order.uid, order.id, "Pending");
+    }
+}
+
+function updateStatusInDb(uid, orderId, status) {
+    const updates = {};
+    updates[`user_orders/${uid}/${orderId}/status`] = status;
+    updates[`orders/${orderId}/status`] = status;
+    db.ref().update(updates);
+}
+
+window.manualStatusUpdate = function(uid, orderId, newStatus) {
+    if(!newStatus) return;
+    updateStatusInDb(uid, orderId, newStatus);
+    writeLog(`Manual Status: ${newStatus}`);
+};
+
+function renderTable() {
+    const tbody = document.getElementById("orderTbody");
+    tbody.innerHTML = "";
+    allOrders.sort((a,b) => b.timestamp - a.timestamp).forEach(o => {
+        const tr = document.createElement("tr");
+        const sClass = (o.status || "Pending").replace(" ", "-");
+        tr.innerHTML = `
+            <td><b>#${o.id.slice(-6)}</b></td>
+            <td><b>${(o.network || "").toUpperCase()}</b><br>${o.plan}</td>
+            <td>₵${parseFloat(o.amount || 0).toFixed(2)}</td>
+            <td>${o.recipient}</td>
+            <td>${o.email}</td>
+            <td><span class="status-badge status-${sClass}">${o.status}</span></td>
+            <td style="text-align:right">
+                <select class="status-select" onchange="manualStatusUpdate('${o.uid}', '${o.id}', this.value)">
+                    <option value="" selected disabled>Update</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Canceled">Canceled</option>
+                </select>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
 setInterval(() => { document.getElementById('apiClock').innerText = new Date().toLocaleTimeString(); }, 1000);
 </script>
 </body>
