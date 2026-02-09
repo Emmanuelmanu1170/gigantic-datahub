@@ -50,12 +50,13 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+        // UNIFIED SECURE CONFIG
         const firebaseConfig = {
-            apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
+            apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
             authDomain: "gigantic-data.firebaseapp.com",
             databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
             projectId: "gigantic-data"
@@ -68,9 +69,9 @@
         const ADMIN_EMAIL = "alenacloft0@gmail.com";
 
         onAuthStateChanged(auth, user => {
-            if (!user || user.email !== ADMIN_EMAIL) {
+            if (!user || user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
                 alert("Restricted Area: Admins Only");
-                window.location.href = "login.html";
+                window.location.href = "admin_login.html";
             }
         });
 
@@ -86,17 +87,20 @@
             loader.style.display = "block";
 
             try {
-                // Verify user exists before redirecting
                 const userSnap = await get(ref(db, `users/${targetUid}`));
 
                 if (userSnap.exists()) {
                     const data = userSnap.val();
                     
-                    // --- THE FIX ---
-                    // Force the frontend to use this UID for all database calls
+                    // --- SESSION HIJACK LOGIC ---
+                    // These session storage items are read by your dashboard.html
+                    sessionStorage.setItem('impersonate_uid', targetUid);
+                    sessionStorage.setItem('impersonate_email', data.email || 'Mirror Account');
+                    sessionStorage.setItem('isAdminImpersonating', 'true');
+                    
+                    // Legacy support for your dashboard's local storage checks
                     localStorage.setItem('mirrorMode', 'true');
                     localStorage.setItem('activeUid', targetUid); 
-                    localStorage.setItem('mirrorName', data.fullName || 'User');
                     localStorage.setItem('currentUserStatus', (data.status || data.userType || 'Normal').toLowerCase());
 
                     setTimeout(() => {
