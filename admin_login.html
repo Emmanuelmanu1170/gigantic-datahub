@@ -13,117 +13,51 @@
             --light-bg: #f4f7fe;
         }
 
-        * { margin:0; padding:0; box-sizing:border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: -apple-system, sans-serif; }
         
         body { 
             background-color: var(--light-bg);
-            height:100vh; 
-            display:flex; 
-            align-items:center; 
-            justify-content:center;
+            height:100vh; display:flex; 
+            align-items:center; justify-content:center;
             padding: 20px;
         }
 
         .login-box { 
-            background:#fff; 
-            padding:40px 30px; 
-            border-radius:20px; 
-            width:100%;
-            max-width: 400px; 
+            background:#fff; padding:40px 30px; border-radius:20px; 
+            width:100%; max-width: 400px; 
             box-shadow: 0 15px 35px rgba(0, 51, 102, 0.1);
-            text-align:center; 
-            position:relative;
+            text-align:center; position:relative;
             border: 1px solid #edf2f7;
         }
 
         .admin-icon {
-            width: 70px;
-            height: 70px;
-            background: var(--orange-gradient);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 30px;
-            margin: 0 auto 20px;
+            width: 70px; height: 70px;
+            background: var(--orange-gradient); color: white;
+            border-radius: 50%; display: flex;
+            align-items: center; justify-content: center;
+            font-size: 30px; margin: 0 auto 20px;
             box-shadow: 0 10px 20px rgba(255, 69, 0, 0.2);
         }
 
-        h2 { 
-            font-size: 22px; 
-            font-weight: 800; 
-            margin-bottom: 10px; 
-            color: var(--deep-blue);
-            letter-spacing: -0.5px;
-        }
-
-        p {
-            font-size: 13px;
-            color: #64748b;
-            margin-bottom: 30px;
-        }
+        h2 { font-size: 22px; font-weight: 800; margin-bottom: 10px; color: var(--deep-blue); }
+        p { font-size: 13px; color: #64748b; margin-bottom: 30px; }
 
         .input-group { text-align:left; margin-bottom:20px; }
-        
-        label { 
-            font-weight: 700; 
-            margin-bottom: 8px; 
-            display: block; 
-            font-size: 12px;
-            color: var(--deep-blue);
-            text-transform: uppercase;
-        }
+        label { font-weight: 700; margin-bottom: 8px; display: block; font-size: 12px; color: var(--deep-blue); text-transform: uppercase; }
 
-        input { 
-            width:100%; 
-            padding: 14px; 
-            border-radius: 12px; 
-            border: 2px solid #e2e8f0; 
-            font-size: 15px; 
-            outline: none;
-            transition: 0.2s;
-        }
-
-        input:focus { border-color: #ff8c00; background: #fffcf9; }
+        input { width:100%; padding: 14px; border-radius: 12px; border: 2px solid #e2e8f0; font-size: 15px; outline: none; }
+        input:focus { border-color: #ff8c00; }
 
         button { 
-            width:100%; 
-            padding:16px; 
-            background: var(--orange-gradient); 
-            border:none; 
-            color:#fff; 
-            border-radius: 12px; 
-            font-size: 16px; 
-            cursor:pointer; 
-            font-weight: 700; 
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 8px 15px rgba(255, 69, 0, 0.2);
+            width:100%; padding:16px; background: var(--orange-gradient); 
+            border:none; color:#fff; border-radius: 12px; 
+            font-size: 16px; cursor:pointer; font-weight: 700; 
         }
-
-        button:hover { transform: translateY(-2px); box-shadow: 0 12px 20px rgba(255, 69, 0, 0.3); }
-        button:active { transform: scale(0.98); }
 
         .toast { 
-            position:absolute; 
-            bottom: -70px; 
-            left:50%; 
-            transform:translateX(-50%); 
-            background: #1e293b; 
-            color:#fff; 
-            padding:12px 20px; 
-            border-radius:10px; 
-            display:none; 
-            font-size:12px;
-            width: 90%;
-            font-weight: 600;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            animation: slideUp 0.3s ease;
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translate(-50%, 10px); }
-            to { opacity: 1; transform: translate(-50%, 0); }
+            position:absolute; bottom: -70px; left:50%; transform:translateX(-50%); 
+            background: #1e293b; color:#fff; padding:12px 20px; border-radius:10px; 
+            display:none; font-size:12px; width: 90%; font-weight: 600;
         }
     </style>
 </head>
@@ -133,71 +67,83 @@
 <div class="login-box">
   <div class="admin-icon"><i class="fas fa-user-shield"></i></div>
   <h2>Admin Access</h2>
-  <p>Please enter your administrator credentials</p>
+  <p>Gigantic Data Command Center</p>
 
   <div class="input-group">
-    <label>Email Address</label>
+    <label>Admin Email</label>
     <input type="email" id="email" placeholder="admin@example.com">
   </div>
 
   <div class="input-group">
-    <label>Password</label>
+    <label>Master Password</label>
     <input type="password" id="password" placeholder="••••••••">
   </div>
 
   <button id="loginBtn">Secure Login</button>
-
   <div id="toast" class="toast"></div>
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+// Use Version 10 Compat for better stability with your existing dashboard
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+// UNIFIED CONFIG: Matches your working Admin engine
 const firebaseConfig = {
-  apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
-  authDomain: "gigantic-data.firebaseapp.com",
-  databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
-  projectId: "gigantic-data",
-  storageBucket: "gigantic-data.firebasestorage.app",
-  messagingSenderId: "727845403550",
-  appId: "1:727845403550:web:e3c3a40ce615aaaca9748f"
+    apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
+    authDomain: "gigantic-data.firebaseapp.com",
+    databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
+    projectId: "gigantic-data"
 };
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 const toastEl = document.getElementById("toast");
-function showToast(msg, duration=3000){
+function showToast(msg){
   toastEl.textContent = msg;
   toastEl.style.display = "block";
-  setTimeout(()=> toastEl.style.display="none", duration);
+  setTimeout(()=> toastEl.style.display="none", 3000);
 }
 
 const ADMIN_EMAIL = "alenacloft0@gmail.com"; 
 
 async function adminLogin(){
   const loginBtn = document.getElementById("loginBtn");
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value.trim();
+  const email = document.getElementById("email").value.trim().toLowerCase();
+  const password = document.getElementById("password").value;
   
   if(!email || !password) return showToast("Please fill in all fields");
 
+  // Safety check to ensure ONLY you use this page
   if(email !== ADMIN_EMAIL){
-    return showToast("Access Denied: You are not an authorized admin");
+    return showToast("Access Denied: Unauthorized Email");
   }
 
-  loginBtn.innerText = "Authenticating...";
-  loginBtn.style.opacity = "0.7";
+  loginBtn.innerText = "Verifying...";
   loginBtn.disabled = true;
 
   try {
+    // 1. Set Persistence so the session stays active when you switch pages
+    await setPersistence(auth, browserSessionPersistence);
+    
+    // 2. Sign In
     await signInWithEmailAndPassword(auth, email, password);
-    sessionStorage.setItem("adminLoggedIn","true");
-    window.location.href = "admin_dashboard.html";
-  } catch(err){
-    showToast("Invalid credentials or network error");
+    
+    // 3. Success
+    showToast("Access Granted. Redirecting...");
+    setTimeout(() => {
+        window.location.href = "admin_dashboard.html";
+    }, 1000);
+
+  } catch(err) {
+    console.error(err.code);
+    if(err.code === "auth/network-request-failed") {
+        showToast("Block: Check Google Cloud Restrictions");
+    } else {
+        showToast("Invalid credentials or access blocked.");
+    }
     loginBtn.innerText = "Secure Login";
-    loginBtn.style.opacity = "1";
     loginBtn.disabled = false;
   }
 }
@@ -207,4 +153,3 @@ document.getElementById("loginBtn").addEventListener("click", adminLogin);
 
 </body>
 </html>
-Add uid section that will require admin uid, email and password to log in
