@@ -78,7 +78,11 @@
         }
         
         .signup-link:hover { background: #f1f5f9; }
-        .error-msg { color: #ef4444; font-size: 13px; text-align: center; margin-top: 10px; display: none; }
+        .error-msg { 
+            color: #ef4444; font-size: 13px; text-align: center; 
+            margin-top: 10px; display: none; background: #fef2f2; 
+            padding: 10px; border-radius: 8px; border: 1px solid #fecaca; 
+        }
     </style>
 </head>
 <body>
@@ -126,16 +130,13 @@
     import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    // Your Exact Correct Config
+    // UNIFIED CONFIG (Matches your secure Admin page)
     const firebaseConfig = {
-        apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho",
+        apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
         authDomain: "gigantic-data.firebaseapp.com",
         databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
         projectId: "gigantic-data",
-        storageBucket: "gigantic-data.firebasestorage.app",
-        messagingSenderId: "727845403550",
-        appId: "1:727845403550:web:56d06c9389993153a9748f",
-        measurementId: "G-10F198VFE6"
+        storageBucket: "gigantic-data.appspot.com"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -146,7 +147,8 @@
     const errorMsg = document.getElementById('errorMsg');
 
     loginBtn.addEventListener('click', async () => {
-        const email = document.getElementById('email').value;
+        // CLEAN INPUTS: Removes spaces and converts to lowercase to stop login errors
+        const email = document.getElementById('email').value.trim().toLowerCase();
         const password = document.getElementById('password').value;
 
         if(!email || !password) {
@@ -163,30 +165,44 @@
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
-            // 2. Verify account exists in Realtime Database
+            // 2. Fetch profile to check User Type
             const userRef = ref(db, `users/${user.uid}`);
             const snapshot = await get(userRef);
 
             if (snapshot.exists()) {
-                // Successful login - go to dashboard
-                window.location.href = "dashboard.html";
+                const userData = snapshot.val();
+                
+                // 3. SMART ROUTING
+                if (userData.userType === "Admin" || email === "alenacloft0@gmail.com") {
+                    window.location.href = "admin.html";
+                } else {
+                    window.location.href = "dashboard.html";
+                }
             } else {
-                showError("User data not found. Please contact support.");
-                loginBtn.disabled = false;
-                loginBtn.innerText = "Log In";
+                showError("User profile data not found. Please contact support.");
+                resetButton();
             }
 
         } catch (error) {
-            console.error(error);
-            showError("Invalid email or password. Please try again.");
-            loginBtn.disabled = false;
-            loginBtn.innerText = "Log In";
+            console.error("Login Error:", error.code);
+            
+            if (error.code === "auth/network-request-failed") {
+                showError("Network Error: Check if GitHub is an Authorized Domain in Firebase.");
+            } else {
+                showError("Invalid email or password. Please try again.");
+            }
+            resetButton();
         }
     });
 
     function showError(text) {
         errorMsg.innerText = text;
         errorMsg.style.display = "block";
+    }
+
+    function resetButton() {
+        loginBtn.disabled = false;
+        loginBtn.innerText = "Log In";
     }
 </script>
 
