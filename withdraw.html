@@ -38,7 +38,6 @@
         .status-msg { margin-top: 15px; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 600; display: none; text-align: center; }
         .msg-success { background: #dcfce7; color: var(--success); }
 
-        /* Updated Leaderboard Styles */
         .leaderboard { margin-top: 30px; border-top: 1px solid #edf2f7; padding-top: 20px; }
         .leader-title { font-size: 0.9rem; font-weight: 800; display: flex; align-items: center; gap: 8px; margin-bottom: 15px; color: var(--accent); }
         .leader-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 10px; border-bottom: 1px solid #f8fafc; background: #fff; border-radius: 10px; margin-bottom: 8px; border: 1px solid #eee; }
@@ -100,12 +99,13 @@
 </div>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-    import { getDatabase, ref, onValue, push, set, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getDatabase, ref, onValue, push, set, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+    // UNIFIED SECURE CONFIG
     const firebaseConfig = {
-        apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
+        apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
         authDomain: "gigantic-data.firebaseapp.com",
         databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
         projectId: "gigantic-data"
@@ -117,86 +117,88 @@
 
     let currentApprovedBonus = 0;
 
-    onAuthStateChanged(auth, (user) => {
-        if (!user) { window.location.href = "login.html"; return; }
+    // Maintain Auth Session
+    setPersistence(auth, browserLocalPersistence).then(() => {
+        onAuthStateChanged(auth, (user) => {
+            if (!user) { window.location.href = "login.html"; return; }
 
-        // SYNC USER BALANCE
-        onValue(ref(db, `users/${user.uid}`), (snap) => {
-            const data = snap.val() || {};
-            currentApprovedBonus = parseFloat(data.referralBonus || 0);
-            document.getElementById('bonusBalance').innerText = "₵" + currentApprovedBonus.toFixed(2);
-        });
-
-        // SYNC LEADERBOARD (SHOWING FULL EMAILS)
-        const topRefQuery = query(ref(db, 'users'), orderByChild('referralCount'), limitToLast(20));
-        onValue(topRefQuery, (snap) => {
-            const list = document.getElementById('leaderList');
-            list.innerHTML = "";
-            let users = [];
-            
-            snap.forEach(child => { 
-                const u = child.val();
-                if(u.referralCount > 0) users.push(u); 
+            // SYNC USER BALANCE
+            onValue(ref(db, `users/${user.uid}`), (snap) => {
+                const data = snap.val() || {};
+                currentApprovedBonus = parseFloat(data.referralBonus || 0);
+                document.getElementById('bonusBalance').innerText = "₵" + currentApprovedBonus.toFixed(2);
             });
 
-            // Highest referrals first
-            users.sort((a,b) => (b.referralCount || 0) - (a.referralCount || 0));
-
-            if(users.length === 0) {
-                list.innerHTML = "<p style='font-size:11px; text-align:center; color:#94a3b8;'>No rankings yet.</p>";
-                return;
-            }
-
-            users.slice(0, 5).forEach((u, i) => {
-                const userEmail = u.email || "Confidential User";
-                const row = `
-                    <div class="leader-item">
-                        <div class="leader-rank ${i === 0 ? 'rank-1' : ''}">${i + 1}</div>
-                        <div class="leader-email">${userEmail}</div>
-                        <div class="leader-count">${u.referralCount || 0} refs</div>
-                    </div>`;
-                list.innerHTML += row;
-            });
-        });
-
-        // WITHDRAWAL HANDLING
-        document.getElementById('submitBtn').onclick = async () => {
-            const amt = parseFloat(document.getElementById('withdrawAmt').value);
-            const num = document.getElementById('momoNumber').value.trim();
-            const name = document.getElementById('momoName').value.trim();
-            const btn = document.getElementById('submitBtn');
-            
-            if (!amt || amt < 27) { alert("Minimum payout is GH₵ 27.00."); return; }
-            if (amt > currentApprovedBonus) { alert("Insufficient Balance!"); return; }
-            if (num.length < 10 || name === "") { alert("Provide valid MoMo details."); return; }
-
-            btn.disabled = true;
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Submitting...`;
-
-            try {
-                const requestRef = push(ref(db, 'withdrawal_requests'));
-                await set(requestRef, {
-                    uid: user.uid,
-                    email: user.email,
-                    amount: amt,
-                    network: document.getElementById('momoNetwork').value,
-                    momoNumber: num,
-                    accountName: name,
-                    status: "Pending",
-                    timestamp: Date.now()
+            // SYNC LEADERBOARD
+            const topRefQuery = query(ref(db, 'users'), orderByChild('referralCount'), limitToLast(20));
+            onValue(topRefQuery, (snap) => {
+                const list = document.getElementById('leaderList');
+                list.innerHTML = "";
+                let users = [];
+                
+                snap.forEach(child => { 
+                    const u = child.val();
+                    if(u.referralCount > 0) users.push(u); 
                 });
 
-                document.getElementById('withdrawAmt').value = "";
-                document.getElementById('successNote').style.display = "block";
-                alert("Withdrawal request sent to Admin!");
+                users.sort((a,b) => (b.referralCount || 0) - (a.referralCount || 0));
+
+                if(users.length === 0) {
+                    list.innerHTML = "<p style='font-size:11px; text-align:center; color:#94a3b8;'>No rankings yet.</p>";
+                    return;
+                }
+
+                users.slice(0, 5).forEach((u, i) => {
+                    const userEmail = u.email || "Confidential User";
+                    const row = `
+                        <div class="leader-item">
+                            <div class="leader-rank ${i === 0 ? 'rank-1' : ''}">${i + 1}</div>
+                            <div class="leader-email">${userEmail}</div>
+                            <div class="leader-count">${u.referralCount || 0} refs</div>
+                        </div>`;
+                    list.innerHTML += row;
+                });
+            });
+
+            // WITHDRAWAL HANDLING
+            document.getElementById('submitBtn').onclick = async () => {
+                const amt = parseFloat(document.getElementById('withdrawAmt').value);
+                const num = document.getElementById('momoNumber').value.trim();
+                const name = document.getElementById('momoName').value.trim();
+                const btn = document.getElementById('submitBtn');
                 
-            } catch (err) {
-                alert("Error: " + err.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "PROCEED WITHDRAWAL";
-            }
-        };
+                if (!amt || amt < 27) { alert("Minimum payout is GH₵ 27.00."); return; }
+                if (amt > currentApprovedBonus) { alert("Insufficient Balance!"); return; }
+                if (num.length < 10 || name === "") { alert("Provide valid MoMo details."); return; }
+
+                btn.disabled = true;
+                btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Submitting...`;
+
+                try {
+                    const requestRef = push(ref(db, 'withdrawal_requests'));
+                    await set(requestRef, {
+                        uid: user.uid,
+                        email: user.email,
+                        amount: amt,
+                        network: document.getElementById('momoNetwork').value,
+                        momoNumber: num,
+                        accountName: name,
+                        status: "Pending",
+                        timestamp: Date.now()
+                    });
+
+                    document.getElementById('withdrawAmt').value = "";
+                    document.getElementById('successNote').style.display = "block";
+                    alert("Withdrawal request sent to Admin!");
+                    
+                } catch (err) {
+                    alert("Error: " + err.message);
+                } finally {
+                    btn.disabled = false;
+                    btn.innerText = "PROCEED WITHDRAWAL";
+                }
+            };
+        });
     });
 </script>
 </body>
