@@ -145,5 +145,31 @@
         </p>
     </div>
 
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        // UNIFIED SECURE CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
+            authDomain: "gigantic-data.firebaseapp.com",
+            databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
+            projectId: "gigantic-data"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // SYNC AUTH SESSION
+        setPersistence(auth, browserLocalPersistence).then(() => {
+            onAuthStateChanged(auth, user => {
+                if (!user) {
+                    // This allows visitors to read terms even without being logged in, 
+                    // but ensures the active session is maintained if they are logged in.
+                    console.log("Viewing as guest or maintaining active session.");
+                }
+            });
+        });
+    </script>
 </body>
 </html>
