@@ -86,15 +86,14 @@
         </div>
     </div>
 
-    
-
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+        // UNIFIED SECURE CONFIG
         const firebaseConfig = {
-            apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho",
+            apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
             authDomain: "gigantic-data.firebaseapp.com",
             databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
             projectId: "gigantic-data"
@@ -143,11 +142,11 @@
                     let spentTodaySum = 0;
                     const startOfToday = new Date().setHours(0,0,0,0);
 
-                    const entries = Object.entries(data).sort((a,b) => b[1].timestamp - a[1].timestamp);
+                    const entries = Object.entries(data).sort((a,b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
                     totalOrdersCount = entries.length;
 
                     entries.forEach(([id, order]) => {
-                        const amount = parseFloat(order.amount || 0);
+                        const amount = parseFloat(order.amount || order.price || 0);
                         const ts = order.timestamp || Date.now();
                         
                         totalSpentSum += amount;
@@ -158,7 +157,7 @@
                         if(network.includes('TELECEL')) netClass = 'tel-bg';
                         if(network.includes('AT') || network.includes('AIRTEL')) netClass = 'air-bg';
 
-                        const status = order.status || 'Pending';
+                        const status = order.status || 'Successful';
                         const statusClass = `status-${status.toLowerCase()}`;
 
                         html += `
