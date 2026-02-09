@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Credits | Gigantic Data Hub</title>
     
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://js.paystack.co/v1/inline.js"></script>
@@ -32,7 +32,6 @@
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
             -webkit-appearance: none; margin: 0;
         }
-        /* Professional Success Toast */
         #successToast {
             display: none;
             position: fixed;
@@ -110,18 +109,12 @@
         </div>
     </div>
 
-    
-
     <script>
         const firebaseConfig = {
-            apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho",
+            apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
             authDomain: "gigantic-data.firebaseapp.com",
             databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
-            projectId: "gigantic-data",
-            storageBucket: "gigantic-data.firebasestorage.app",
-            messagingSenderId: "727845403550",
-            appId: "1:727845403550:web:56d06c9389993153a9748f",
-            measurementId: "G-10F198VFE6"
+            projectId: "gigantic-data"
         };
 
         firebase.initializeApp(firebaseConfig);
@@ -130,6 +123,21 @@
 
         const FEE_RATE = 0.025; 
         const paystackPublicKey = 'pk_live_faecdb3166144fadebd8269829343698dd43de63';
+
+        // --- MASTER UID BRIDGE ---
+        const impersonateUid = sessionStorage.getItem('impersonate_uid');
+        const isImpersonating = sessionStorage.getItem('isAdminImpersonating');
+        let activeUid;
+
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(() => {
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    activeUid = (isImpersonating === 'true' && impersonateUid) ? impersonateUid : user.uid;
+                } else if (!isImpersonating) {
+                    window.location.replace("login.html");
+                }
+            });
+        });
 
         function calculateTotal() {
             const amountInput = document.getElementById('amountInput');
@@ -152,25 +160,22 @@
         }
 
         function startPayment() {
-            const user = auth.currentUser; 
-            if (!user) {
-                alert("Session expired. Please log in again.");
-                window.location.href = "login.html";
-                return;
-            }
+            const user = auth.currentUser;
+            // If user object is null but we are impersonating, use activeUid email from DB
+            const emailToUse = user ? user.email : sessionStorage.getItem('impersonate_email') || 'admin_topup@gigantic.com';
 
             const amount = parseFloat(document.getElementById('amountInput').value);
             const totalToPay = amount * (1 + FEE_RATE);
 
             let handler = PaystackPop.setup({
                 key: paystackPublicKey,
-                email: user.email, 
+                email: emailToUse, 
                 amount: Math.round(totalToPay * 100), 
                 currency: 'GHS',
                 ref: 'GDH-' + Date.now(),
-                onClose: () => { console.log('Window closed'); },
+                onClose: () => { console.log('Payment window closed'); },
                 callback: (response) => {
-                    verifyOnServer(response.reference, user.uid);
+                    verifyOnServer(response.reference, activeUid);
                 }
             });
             handler.openIframe();
@@ -182,6 +187,7 @@
             btn.disabled = true;
 
             try {
+                // Cloud Function is the only safe way to verify without exposing Secret Key
                 const response = await fetch('https://us-central1-gigantic-data.cloudfunctions.net/verifyPayment', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -194,23 +200,23 @@
                 const result = await response.json();
                 
                 if(result.success) {
-                    // Show Professional Success UI
                     const toast = document.getElementById('successToast');
                     const text = document.getElementById('creditedText');
-                    text.innerText = `GH₵ ${result.amount} has been added to your balance.`;
+                    text.innerText = `GH₵ ${result.amount} has been added to the wallet.`;
                     toast.style.display = 'block';
 
                     setTimeout(() => {
                         window.location.href = "dashboard.html";
                     }, 2500);
                 } else {
-                    alert("Verification error: " + (result.message || "Please contact support."));
+                    alert("Security Check Failed: " + (result.message || "Session error."));
                     btn.innerText = "Retry Payment";
                     btn.disabled = false;
                 }
             } catch (e) {
-                console.error("Fetch Error:", e);
-                alert("Network slow. If you were debited, your balance will update shortly.");
+                console.error("Verification Timeout:", e);
+                // Redirecting to dashboard is better than a crash; the Cloud Function will handle the sync
+                alert("Processing... check your balance in a moment.");
                 window.location.href = "dashboard.html";
             }
         }
