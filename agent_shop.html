@@ -158,22 +158,17 @@
     <a href="profile.html" class="nav-item"><i class="fas fa-user-tie"></i>Profile</a>
 </nav>
 
-
-
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+    // UNIFIED SECURE CONFIG
     const firebaseConfig = {
-        apiKey: "AIzaSyCLl30c9nc09dZrkodA80hj5KSe9_B_aho",
+        apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
         authDomain: "gigantic-data.firebaseapp.com",
         databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
-        projectId: "gigantic-data",
-        storageBucket: "gigantic-data.firebasestorage.app",
-        messagingSenderId: "727845403550",
-        appId: "1:727845403550:web:56d06c9389993153a9748f",
-        measurementId: "G-10F198VFE6"
+        projectId: "gigantic-data"
     };
     
     const app = initializeApp(firebaseConfig);
@@ -184,16 +179,13 @@
     let todaySalesVolume = 0;
     let isAuthReady = false;
 
-    // STEP 1: Lock Persistence to Local Storage
     setPersistence(auth, browserLocalPersistence).then(() => {
-        // STEP 2: Monitor Auth State
         onAuthStateChanged(auth, user => {
             isAuthReady = true;
             if (user) {
                 document.getElementById('userEmail').innerText = user.email;
                 syncTerminal(user);
             } else {
-                // Buffer check to ensure handshake isn't just slow
                 setTimeout(() => {
                     if (!auth.currentUser) {
                         window.location.replace("login.html");
@@ -208,8 +200,9 @@
 
         onValue(ref(db, `users/${user.uid}`), snap => {
             const data = snap.val() || {};
-            // UNIFIED PATH: Using balance (fallback to wallet for legacy)
-            document.getElementById('agentWallet').innerText = "₵" + Number(data.balance || data.wallet || 0).toFixed(2);
+            // Updated to handle both database naming structures
+            const balance = data.balance || data.wallet || 0;
+            document.getElementById('agentWallet').innerText = "₵" + Number(balance).toFixed(2);
             
             const status = (data.status || data.userType || "Member");
             document.getElementById('userStatus').innerText = status.toUpperCase();
@@ -243,9 +236,9 @@
                             <div style="text-align:right"><div style="font-size:9px; color:var(--text-gray);">#${id.slice(-8)}</div></div>
                         </div>
                         <div style="font-size:12px; font-weight:700;">${order.plan} → ${order.recipient}</div>
-                        <div class="order-footer">
-                            <div class="amount-paid">₵${amount.toFixed(2)}</div>
-                            <span style="font-size:9px; color:var(--merchant-green); font-weight:800;">${order.status || 'Success'}</span>
+                        <div style="display:flex; justify-content:space-between; margin-top:10px; align-items:center;">
+                            <div style="font-weight:900; color:var(--primary);">₵${amount.toFixed(2)}</div>
+                            <span style="font-size:9px; color:var(--merchant-green); font-weight:800; text-transform:uppercase;">${order.status || 'Success'}</span>
                         </div>
                     </div>`;
             });
