@@ -1,61 +1,248 @@
-{
-  "rules": {
-    /* 1. ADMIN SETTINGS */
-    "admin_settings": {
-      ".read": "auth.token.email === 'alenacloft0@gmail.com'",
-      ".write": "auth.token.email === 'alenacloft0@gmail.com'"
-    },
 
-    /* 2. USERS: Intelligent Access & Hacker Protection */
-    "users": {
-      // Allow general read for Leaderboard (filtering done by Query in JS)
-      ".read": "auth != null",
-      // Indexing required for the Affiliate Leaderboard
-      ".indexOn": ["referralCount", "uid"],
-      
-      "$uid": {
-        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'alenacloft0@gmail.com')",
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Affiliate Hub — GiganticDataHub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #003366;
+            --accent: #ff8c00;
+            --bg: #f4f7fe;
+            --success: #10b981;
+            --card-white: #ffffff;
+            --text-gray: #64748b;
+        }
+
+        [data-theme="dark"] {
+            --bg: #02040a;
+            --card-white: #0d1117;
+            --text-main: #f0f6fc;
+            --border: #30363d;
+        }
+
+        body {
+            margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: #1e293b; padding-bottom: 100px;
+        }
+
+        header {
+            background: var(--primary); color: white; padding: 20px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 100;
+        }
+
+        .container { padding: 20px; max-width: 500px; margin: auto; }
+
+        .referral-card {
+            background: linear-gradient(135deg, var(--primary) 0%, #0052cc 100%);
+            border-radius: 24px; padding: 25px; color: white; text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1); margin-bottom: 25px;
+        }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+        .stat-item-box { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; }
+        .ref-bal-label { font-size: 10px; text-transform: uppercase; opacity: 0.8; letter-spacing: 1px; margin-bottom: 5px; display: block;}
+        .stat-value { font-size: 22px; font-weight: 900; }
+
+        .link-section {
+            background: var(--card-white); border-radius: 20px; padding: 20px;
+            margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center;
+        }
+        .link-box {
+            background: #f1f5f9; padding: 12px; border-radius: 12px;
+            font-size: 12px; color: var(--primary); font-weight: 600;
+            word-break: break-all; margin: 10px 0; border: 1px dashed #cbd5e1;
+        }
+        .copy-btn {
+            background: var(--accent); color: white; border: none;
+            padding: 10px 20px; border-radius: 10px; font-weight: 700;
+            cursor: pointer; width: 100%; transition: 0.3s;
+        }
+        .copy-btn:active { transform: scale(0.98); }
+
+        .info-note {
+            background: rgba(255, 140, 0, 0.1); border-left: 4px solid var(--accent);
+            padding: 15px; border-radius: 12px; margin-bottom: 25px; font-size: 13px; line-height: 1.5;
+        }
+
+        .section-title { font-weight: 800; font-size: 15px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        .leader-card { background: var(--card-white); border-radius: 20px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         
-        // HACKER PROTECTION: No user can manually add balance, wallet, or referral stats.
-        "balance": { ".write": "auth != null && auth.uid === $uid && newData.val() < data.val() && newData.val() >= 0" },
-        "wallet": { ".write": "auth != null && auth.uid === $uid && newData.val() < data.val() && newData.val() >= 0" },
-        "referralCount": { ".write": "false" },
-        "referralBonus": { ".write": "false" },
+        .leader-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 0; border-bottom: 1px solid #f1f5f9;
+        }
+        .leader-item:last-child { border-bottom: none; }
         
-        // Profile can only be created once during registration
-        ".write": "auth != null && auth.uid === $uid && !data.exists()"
-      }
-    },
+        .rank-box {
+            width: 28px; height: 28px; border-radius: 50%; background: #f1f5f9;
+            display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800;
+        }
+        .rank-1 { background: #ffd700; color: #000; }
+        .rank-2 { background: #c0c0c0; color: #000; }
+        .rank-3 { background: #cd7f32; color: #fff; }
 
-    /* 3. TRANSACTIONS & HISTORY */
-    "transactions": {
-      ".read": "auth != null && (auth.token.email === 'alenacloft0@gmail.com' || query.orderByChild === 'uid' && query.equalTo === auth.uid)",
-      ".indexOn": ["uid"],
-      "$txid": { ".write": "auth.token.email === 'alenacloft0@gmail.com'" }
-    },
+        .name-box b { display: block; font-size: 13px; }
+        .name-box span { font-size: 11px; color: var(--text-gray); }
 
-    /* 4. PENDING ORDERS: The Secure Trigger */
-    "pending_orders": {
-      ".read": "auth.token.email === 'alenacloft0@gmail.com'",
-      "$orderid": {
-        ".write": "auth != null && !data.exists() && newData.child('uid').val() === auth.uid",
-        ".validate": "newData.hasChildren(['network', 'plan', 'recipient', 'amount', 'uid', 'status', 'timestamp'])"
-      }
-    },
+        .ref-count { font-weight: 800; color: var(--success); font-size: 14px; }
 
-    /* 5. MASTER ORDERS */
-    "orders": {
-      ".read": "auth != null && (auth.token.email === 'alenacloft0@gmail.com' || (query.orderByChild === 'uid' && query.equalTo === auth.uid))",
-      ".indexOn": ["uid", "status"],
-      "$orderid": { ".write": "auth.token.email === 'alenacloft0@gmail.com'" }
-    },
+        .bottom-nav {
+            position: fixed; bottom: 0; width: 100%; background: white;
+            display: flex; justify-content: space-around; padding: 15px 0;
+            border-top: 1px solid #eee;
+        }
+        .nav-item { text-align: center; color: #94a3b8; text-decoration: none; font-size: 11px; font-weight: 700; }
+        .nav-item.active { color: var(--accent); }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; display: block; }
+    </style>
+</head>
+<body>
 
-    /* 6. USER HISTORY */
-    "user_orders": {
-      "$uid": {
-        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'alenacloft0@gmail.com')",
-        "$orderid": { ".write": "auth.token.email === 'alenacloft0@gmail.com'" }
-      }
-    }
-  }
-}
+<header>
+    <a href="dashboard.html" style="color:white;"><i class="fas fa-arrow-left"></i></a>
+    <b style="letter-spacing: 1px;">AFFILIATE HUB</b>
+    <i class="fas fa-medal"></i>
+</header>
+
+<div class="container">
+    <div class="referral-card">
+        <div class="stats-grid">
+            <div class="stat-item-box">
+                <span class="ref-bal-label">Approved Refs</span>
+                <div class="stat-value" id="refCountDisplay">0</div>
+            </div>
+            <div class="stat-item-box">
+                <span class="ref-bal-label">Total Earnings</span>
+                <div class="stat-value" id="refBalanceDisplay">₵0.00</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="link-section">
+        <div class="ref-bal-label" style="color: var(--text-gray);">Your Referral Link</div>
+        <div class="link-box" id="referralLink">Generating link...</div>
+        <button class="copy-btn" onclick="copyLink()">
+            <i class="fas fa-copy"></i> Copy Link
+        </button>
+    </div>
+
+    <div class="info-note">
+        <i class="fas fa-award" style="color: var(--accent);"></i>
+        <b>Monthly Reward:</b> The <b>Rank #1</b> Referrer earns an extra <b>GH₵ 20.00</b> monthly bonus. 
+        <br>Note: Monthly bonuses are sent directly to the winner's <b>registered email address</b>.
+    </div>
+
+    <div class="section-title">
+        <i class="fas fa-crown" style="color: #ffd700;"></i> Top 5 Referrers (Monthly Hall of Fame)
+    </div>
+    <div class="leader-card" id="leaderboardList">
+        <div style="text-align: center; padding: 20px; color: #94a3b8;">
+            <i class="fas fa-spinner fa-spin"></i> Syncing leaderboard...
+        </div>
+    </div>
+</div>
+
+<nav class="bottom-nav">
+    <a href="dashboard.html" class="nav-item"><i class="fas fa-home"></i>Home</a>
+    <a href="order_history.html" class="nav-item"><i class="fas fa-receipt"></i>Orders</a>
+    <a href="referral.html" class="nav-item active"><i class="fas fa-users"></i>Referral</a>
+    <a href="profile.html" class="nav-item"><i class="fas fa-user-circle"></i>Profile</a>
+</nav>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getDatabase, ref, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import {  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    // --- RE-IMPORT DATABASE TOOLS FOR COMPATIBILITY ---
+    import * as dbTools from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    const { getDatabase: gDB, ref: r, onValue: oV, query: q, orderByChild: oBC, limitToLast: lTL } = dbTools;
+
+    // UNIFIED SECURE CONFIG
+    const firebaseConfig = {
+        apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
+        authDomain: "gigantic-data.firebaseapp.com",
+        databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
+        projectId: "gigantic-data"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = gDB(app);
+
+    // --- MASTER UID BRIDGE ---
+    const impersonateUid = sessionStorage.getItem('impersonate_uid');
+    const isImpersonating = sessionStorage.getItem('isAdminImpersonating');
+    let activeUid;
+
+    setPersistence(auth, browserLocalPersistence).then(() => {
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                activeUid = (isImpersonating === 'true' && impersonateUid) ? impersonateUid : user.uid;
+                
+                const baseUrl = window.location.origin;
+                const fullLink = `${baseUrl}/register.html?ref=${activeUid}`;
+                document.getElementById('referralLink').innerText = fullLink;
+
+                oV(r(db, 'users/' + activeUid), (snap) => {
+                    const data = snap.val() || {};
+                    document.getElementById('refCountDisplay').innerText = data.referralCount || 0;
+                    const approvedEarnings = Number(data.referralBonus || 0);
+                    document.getElementById('refBalanceDisplay').innerText = `₵${approvedEarnings.toFixed(2)}`;
+                });
+
+                // Sync Leaderboard
+                const topQuery = q(r(db, 'users'), oBC('referralCount'), lTL(5));
+                oV(topQuery, (snap) => {
+                    const board = document.getElementById('leaderboardList');
+                    board.innerHTML = "";
+                    let users = [];
+                    snap.forEach(child => { 
+                        const userData = child.val();
+                        if(userData.referralCount > 0) users.push(userData); 
+                    });
+                    
+                    users.sort((a,b) => (b.referralCount || 0) - (a.referralCount || 0));
+
+                    if(users.length === 0) {
+                        board.innerHTML = '<div style="text-align: center; padding: 20px; color: #94a3b8;">No approved referrals yet.</div>';
+                        return;
+                    }
+
+                    users.forEach((u, i) => {
+                        const rank = i + 1;
+                        const rankClass = rank <= 3 ? `rank-${rank}` : '';
+                        const name = (u.fullName || "User").split(' ')[0];
+                        board.innerHTML += `
+                            <div class="leader-item">
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    <div class="rank-box ${rankClass}">${rank}</div>
+                                    <div class="name-box">
+                                        <b>${name}***</b>
+                                        <span>Joined Member</span>
+                                    </div>
+                                </div>
+                                <div class="ref-count">${u.referralCount || 0} Refs</div>
+                            </div>`;
+                    });
+                });
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+    });
+
+    window.copyLink = function() {
+        const linkText = document.getElementById('referralLink').innerText;
+        navigator.clipboard.writeText(linkText).then(() => {
+            const btn = document.querySelector('.copy-btn');
+            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            setTimeout(() => { btn.innerHTML = '<i class="fas fa-copy"></i> Copy Link'; }, 2000);
+        });
+    };
+</script>
+</body>
+</html>
