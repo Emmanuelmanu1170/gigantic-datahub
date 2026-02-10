@@ -2,13 +2,12 @@
 <html lang="en">
 <head>
     <script>
-        // Theme Persistence Script
+        // Theme Persistence
         (function() {
             const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
         })();
     </script>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order History - Gigantic Data Hub</title>
@@ -18,77 +17,71 @@
         :root {
             --deep-blue: #003366; --primary-blue: #0052cc; --bg-light: #f4f7fe;
             --text-main: #1e293b; --text-gray: #64748b; --accent-orange: #f06529;
-            --success-green: #22c55e; --card-white: #ffffff;
+            --card-white: #ffffff;
         }
-
         [data-theme="dark"] {
             --bg-light: #02040a; --card-white: #0d1117; --text-main: #f0f6fc;
             --text-gray: #8b949e; --deep-blue: #010409;
         }
-
-        body { margin: 0; font-family: -apple-system, sans-serif; background-color: var(--bg-light); color: var(--text-main); padding-bottom: 30px; }
-
-        .admin-banner { background: #6366f1; color: white; padding: 10px; text-align: center; font-size: 12px; font-weight: bold; position: sticky; top: 0; z-index: 2000; display: none; }
-        .btn-exit-admin { background: white; color: #6366f1; border: none; padding: 4px 10px; border-radius: 50px; margin-left: 10px; cursor: pointer; font-weight: 800; }
-
+        body { font-family: -apple-system, sans-serif; background-color: var(--bg-light); color: var(--text-main); padding-bottom: 30px; }
+        
         .header { background-color: var(--deep-blue); color: white; padding: 18px 20px; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; }
-        .header a { color: white; text-decoration: none; font-size: 18px; }
-        .header h1 { font-size: 16px; margin: 0; font-weight: 700; }
+        .header a { color: white; text-decoration: none; }
 
         .container { padding: 15px; max-width: 500px; margin: 0 auto; }
-
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 25px; margin-top: 15px; }
-        .stat-box { background: var(--card-white); padding: 15px 10px; border-radius: 16px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.02); }
-        .stat-box small { display: block; font-size: 10px; color: var(--text-gray); font-weight: 800; margin-bottom: 5px; text-transform: uppercase; }
+        
+        /* Stats Styling */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 25px; margin-top: 10px; }
+        .stat-box { background: var(--card-white); padding: 12px; border-radius: 16px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
+        .stat-box small { display: block; font-size: 10px; color: var(--text-gray); font-weight: 800; text-transform: uppercase; margin-bottom: 2px; }
         .stat-box b { font-size: 14px; color: var(--primary-blue); }
 
-        .order-card { background: var(--card-white); border-radius: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 20px; border: 1px solid rgba(0,0,0,0.05); position: relative; }
-        .order-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px dashed #e2e8f0; padding-bottom: 15px; margin-bottom: 15px; }
-        .network-icon { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 12px; color: white; }
+        /* Order Card Styling */
+        .order-card { background: var(--card-white); border-radius: 20px; margin-bottom: 16px; padding: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05); }
+        .order-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px dashed #e2e8f0; padding-bottom: 12px; margin-bottom: 12px; }
+        .network-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 11px; color: white; }
         .mtn-bg { background: #FFCC00; color: #000; } .tel-bg { background: #E60000; } .air-bg { background: #0052CC; }
 
-        .order-details { display: flex; flex-direction: column; gap: 8px; }
-        .detail-row { display: flex; justify-content: space-between; align-items: center; }
+        .detail-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
         .detail-row span { font-size: 12px; color: var(--text-gray); }
-        .detail-row b { font-size: 13px; color: var(--text-main); }
+        .detail-row b { font-size: 13px; font-weight: 700; }
 
-        .order-footer { margin-top: 15px; padding-top: 15px; border-top: 1.5px dashed #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
-        .amount-paid { font-size: 18px; font-weight: 900; color: var(--primary-blue); }
         .status-pill { font-size: 10px; font-weight: 800; padding: 4px 12px; border-radius: 30px; text-transform: uppercase; }
-        
-        /* Automation Status Colors */
         .status-successful { background: #ecfdf5; color: #047857; }
-        .status-pending { background: #fffbeb; color: #b45309; }
         .status-processing { background: #eff6ff; color: #1e40af; animation: pulse 1.5s infinite; }
         .status-failed { background: #fef2f2; color: #b91c1c; }
-        .status-refunded { background: #f1f5f9; color: #475569; }
+        .status-pending { background: #fffbeb; color: #b45309; }
 
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
         .empty-state { text-align: center; padding: 60px 20px; color: var(--text-gray); }
+
+        /* Impersonation Banner */
+        .admin-banner { background: #6366f1; color: white; padding: 8px; text-align: center; font-size: 11px; font-weight: 700; position: sticky; top: 58px; z-index: 99; display: none; }
     </style>
 </head>
 <body>
 
     <div id="adminBanner" class="admin-banner">
-        AUDITING USER: <span id="targetUser">...</span> <button class="btn-exit-admin" onclick="exitImpersonation()">EXIT</button>
+        <i class="fas fa-user-shield mr-1"></i> AUDITING USER HISTORY 
+        <button onclick="exitAudit()" class="ml-2 bg-white text-indigo-600 px-2 py-0.5 rounded shadow">EXIT</button>
     </div>
 
     <div class="header">
         <a href="dashboard.html"><i class="fas fa-chevron-left"></i></a>
-        <h1>My Order History</h1>
+        <h1 class="font-bold text-lg">Purchase Records</h1>
     </div>
 
     <div class="container">
         <div class="stats-grid">
-            <div class="stat-box"><small>Total Orders</small><b id="totalOrders">0</b></div>
-            <div class="stat-box"><small>Total Spent</small><b id="totalSales">₵0.00</b></div>
-            <div class="stat-box"><small>Spent Today</small><b id="spentToday" style="color:var(--accent-orange)">₵0.00</b></div>
+            <div class="stat-box"><small>Total</small><b id="totalOrders">0</b></div>
+            <div class="stat-box"><small>Spent</small><b id="totalSpent">₵0.00</b></div>
+            <div class="stat-box"><small>Today</small><b id="spentToday">₵0.00</b></div>
         </div>
 
-        <div id="orderList">
+        <div id="historyContainer">
             <div class="empty-state">
                 <i class="fas fa-circle-notch fa-spin fa-2x"></i>
-                <p class="mt-2">Connecting to Secure Ledger...</p>
+                <p class="mt-2 text-sm">Syncing with ledger...</p>
             </div>
         </div>
     </div>
@@ -111,102 +104,91 @@
 
         const impersonateUid = sessionStorage.getItem('impersonate_uid');
         const isImpersonating = sessionStorage.getItem('isAdminImpersonating');
-        let activeUid;
 
-        window.exitImpersonation = function() {
-            sessionStorage.clear();
-            window.location.href = "admin_user_audit.html";
-        };
+        window.exitAudit = () => { sessionStorage.clear(); window.location.href = "admin_user_audit.html"; };
 
         onAuthStateChanged(auth, user => {
             if (user) {
-                activeUid = (isImpersonating === 'true' && impersonateUid) ? impersonateUid : user.uid;
-                if (isImpersonating === 'true') {
-                    document.getElementById('adminBanner').style.display = 'block';
-                    document.getElementById('targetUser').innerText = activeUid.slice(0,8);
-                }
-                loadMasterOrderStream();
-            } else {
-                window.location.href = "login.html";
-            }
+                const activeUid = (isImpersonating === 'true') ? impersonateUid : user.uid;
+                if (isImpersonating === 'true') document.getElementById('adminBanner').style.display = 'block';
+                
+                initHistory(activeUid);
+            } else { window.location.href = "login.html"; }
         });
 
-        function loadMasterOrderStream() {
-            // Using the 'orders' path with a query filter for the specific user
-            // Requires '.indexOn': ['uid'] in your Firebase Rules for the 'orders' node
+        function initHistory(uid) {
+            // Unified listener for the master 'orders' path
+            // Filtering for this specific user's UID
             const ordersRef = ref(db, 'orders');
-            const userOrdersQuery = query(ordersRef, orderByChild('uid'), equalTo(activeUid));
+            const userOrdersQuery = query(ordersRef, orderByChild('uid'), equalTo(uid));
 
             onValue(userOrdersQuery, (snapshot) => {
-                const container = document.getElementById('orderList');
+                const container = document.getElementById('historyContainer');
                 const data = snapshot.val();
 
                 if (!data) {
                     container.innerHTML = `
                         <div class="empty-state">
-                            <i class="fas fa-receipt fa-4x opacity-20"></i>
-                            <p class="mt-4">You haven't placed any orders yet.</p>
+                            <i class="fas fa-receipt fa-4x opacity-10"></i>
+                            <p class="mt-4 font-bold">No Records Found</p>
+                            <p class="text-xs">Your data purchases will appear here.</p>
                         </div>`;
-                    resetStats();
+                    updateStats([], 0, 0);
                     return;
                 }
 
                 const entries = Object.entries(data).sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
                 
                 let html = "";
-                let totalSpent = 0;
-                let spentToday = 0;
-                const startOfToday = new Date().setHours(0,0,0,0);
+                let spent = 0;
+                let today = 0;
+                const startOfDay = new Date().setHours(0,0,0,0);
 
                 entries.forEach(([id, order]) => {
                     const amount = parseFloat(order.amount || 0);
                     const ts = order.timestamp || Date.now();
                     const status = order.status || "Pending";
-                    
-                    // Stats calculation logic
-                    if (status === "Successful" || status === "Pending" || status === "Processing") {
-                        totalSpent += amount;
-                        if (ts >= startOfToday) spentToday += amount;
+
+                    // Stats logic
+                    if (status === "Successful" || status === "Processing") {
+                        spent += amount;
+                        if (ts >= startOfDay) today += amount;
                     }
 
-                    const network = (order.network || 'MTN').toUpperCase();
+                    const net = (order.network || 'MTN').toUpperCase();
                     let netClass = 'mtn-bg';
-                    if(network.includes('TEL')) netClass = 'tel-bg';
-                    if(network.includes('AT') || network.includes('AIR')) netClass = 'air-bg';
-
-                    const statusClass = `status-${status.toLowerCase().split(' ')[0]}`;
+                    if (net.includes('TEL')) netClass = 'tel-bg';
+                    if (net.includes('AT') || net.includes('AIR')) netClass = 'air-bg';
 
                     html += `
                         <div class="order-card">
                             <div class="order-header">
-                                <div class="network-icon ${netClass}">${network.substring(0,3)}</div>
-                                <div style="text-align:right">
-                                    <div style="font-family:monospace; font-size:11px; color:var(--text-gray); font-weight:700;">#${id.slice(-8)}</div>
-                                    <div style="font-size:10px; color:var(--text-gray);">${new Date(ts).toLocaleString()}</div>
+                                <div class="network-icon ${netClass}">${net.substring(0,3)}</div>
+                                <div class="text-right">
+                                    <div class="font-mono text-[10px] text-gray-400 font-bold">#${id.slice(-8)}</div>
+                                    <div class="text-[9px] text-gray-400">${new Date(ts).toLocaleString()}</div>
                                 </div>
                             </div>
                             <div class="order-details">
-                                <div class="detail-row"><span>Package</span><b>${order.plan || 'N/A'}</b></div>
-                                <div class="detail-row"><span>Number</span><b>${order.recipient || 'N/A'}</b></div>
+                                <div class="detail-row"><span>Package</span><b>${order.plan}</b></div>
+                                <div class="detail-row"><span>Recipient</span><b>${order.recipient}</b></div>
                             </div>
-                            <div class="order-footer">
-                                <div class="amount-paid">₵${amount.toFixed(2)}</div>
-                                <span class="status-pill ${statusClass}">${status}</span>
+                            <div class="flex justify-between items-center mt-4 pt-3 border-t border-dashed border-gray-100">
+                                <b class="text-lg text-indigo-600">₵${amount.toFixed(2)}</b>
+                                <span class="status-pill status-${status.toLowerCase().split(' ')[0]}">${status}</span>
                             </div>
                         </div>`;
                 });
 
-                document.getElementById('totalOrders').innerText = entries.length;
-                document.getElementById('totalSales').innerText = `₵${totalSpent.toFixed(2)}`;
-                document.getElementById('spentToday').innerText = `₵${spentToday.toFixed(2)}`;
                 container.innerHTML = html;
+                updateStats(entries.length, spent, today);
             });
         }
 
-        function resetStats() {
-            document.getElementById('totalOrders').innerText = "0";
-            document.getElementById('totalSales').innerText = "₵0.00";
-            document.getElementById('spentToday').innerText = "₵0.00";
+        function updateStats(count, spent, today) {
+            document.getElementById('totalOrders').innerText = count;
+            document.getElementById('totalSpent').innerText = `₵${spent.toFixed(2)}`;
+            document.getElementById('spentToday').innerText = `₵${today.toFixed(2)}`;
         }
     </script>
 </body>
