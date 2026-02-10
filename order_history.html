@@ -70,25 +70,25 @@
 <body>
 
     <div id="adminBanner" class="admin-banner">
-        VIEWING USER ORDER HISTORY <button class="btn-exit-admin" onclick="exitImpersonation()">EXIT</button>
+        AUDITING USER: <span id="targetUser">...</span> <button class="btn-exit-admin" onclick="exitImpersonation()">EXIT</button>
     </div>
 
     <div class="header">
         <a href="dashboard.html"><i class="fas fa-chevron-left"></i></a>
-        <h1>Purchase Records</h1>
+        <h1>My Order History</h1>
     </div>
 
     <div class="container">
         <div class="stats-grid">
-            <div class="stat-box"><small>Orders</small><b id="totalOrders">0</b></div>
-            <div class="stat-box"><small>Total Vol.</small><b id="totalSales">₵0.00</b></div>
+            <div class="stat-box"><small>Total Orders</small><b id="totalOrders">0</b></div>
+            <div class="stat-box"><small>Total Spent</small><b id="totalSales">₵0.00</b></div>
             <div class="stat-box"><small>Spent Today</small><b id="spentToday" style="color:var(--accent-orange)">₵0.00</b></div>
         </div>
 
         <div id="orderList">
             <div class="empty-state">
                 <i class="fas fa-circle-notch fa-spin fa-2x"></i>
-                <p class="mt-2">Fetching live records...</p>
+                <p class="mt-2">Connecting to Secure Ledger...</p>
             </div>
         </div>
     </div>
@@ -121,96 +121,86 @@
         onAuthStateChanged(auth, user => {
             if (user) {
                 activeUid = (isImpersonating === 'true' && impersonateUid) ? impersonateUid : user.uid;
-                if (isImpersonating === 'true') document.getElementById('adminBanner').style.display = 'block';
-
-                loadUnifiedHistory();
+                if (isImpersonating === 'true') {
+                    document.getElementById('adminBanner').style.display = 'block';
+                    document.getElementById('targetUser').innerText = activeUid.slice(0,8);
+                }
+                loadMasterOrderStream();
             } else {
                 window.location.href = "login.html";
             }
         });
 
-        function loadUnifiedHistory() {
-            // Path 1: Permanent History
-            const historyRef = ref(db, `user_orders/${activeUid}`);
-            // Path 2: Live Processing Orders
-            const pendingQuery = query(ref(db, 'pending_orders'), orderByChild('uid'), equalTo(activeUid));
+        function loadMasterOrderStream() {
+            // Using the 'orders' path with a query filter for the specific user
+            // Requires '.indexOn': ['uid'] in your Firebase Rules for the 'orders' node
+            const ordersRef = ref(db, 'orders');
+            const userOrdersQuery = query(ordersRef, orderByChild('uid'), equalTo(activeUid));
 
-            let historyData = {};
-            let pendingData = {};
+            onValue(userOrdersQuery, (snapshot) => {
+                const container = document.getElementById('orderList');
+                const data = snapshot.val();
 
-            // Listen to History
-            onValue(historyRef, (snap) => {
-                historyData = snap.val() || {};
-                renderMergedData(historyData, pendingData);
-            });
-
-            // Listen to Pending (Live)
-            onValue(pendingQuery, (snap) => {
-                pendingData = snap.val() || {};
-                renderMergedData(historyData, pendingData);
-            });
-        }
-
-        function renderMergedData(history, pending) {
-            const container = document.getElementById('orderList');
-            const merged = { ...history, ...pending };
-            const entries = Object.entries(merged);
-
-            if (entries.length === 0) {
-                container.innerHTML = `<div class="empty-state"><i class="fas fa-receipt fa-4x opacity-20"></i><p>No transactions yet</p></div>`;
-                resetStats();
-                return;
-            }
-
-            // Sort: Newest first
-            entries.sort((a,b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
-
-            let html = "";
-            let totalSpent = 0;
-            let spentToday = 0;
-            const startOfToday = new Date().setHours(0,0,0,0);
-
-            entries.forEach(([id, order]) => {
-                const amount = parseFloat(order.amount || 0);
-                const ts = order.timestamp || Date.now();
-                const status = (pending[id]) ? "Processing" : (order.status || "Successful");
-                
-                if (status === "Successful" || status === "Pending") {
-                    totalSpent += amount;
-                    if (ts >= startOfToday) spentToday += amount;
+                if (!data) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-receipt fa-4x opacity-20"></i>
+                            <p class="mt-4">You haven't placed any orders yet.</p>
+                        </div>`;
+                    resetStats();
+                    return;
                 }
 
-                const network = (order.network || 'MTN').toUpperCase();
-                let netClass = 'mtn-bg';
-                if(network.includes('TEL')) netClass = 'tel-bg';
-                if(network.includes('AT') || network.includes('AIR')) netClass = 'air-bg';
+                const entries = Object.entries(data).sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+                
+                let html = "";
+                let totalSpent = 0;
+                let spentToday = 0;
+                const startOfToday = new Date().setHours(0,0,0,0);
 
-                const statusClass = `status-${status.toLowerCase().split(' ')[0]}`;
+                entries.forEach(([id, order]) => {
+                    const amount = parseFloat(order.amount || 0);
+                    const ts = order.timestamp || Date.now();
+                    const status = order.status || "Pending";
+                    
+                    // Stats calculation logic
+                    if (status === "Successful" || status === "Pending" || status === "Processing") {
+                        totalSpent += amount;
+                        if (ts >= startOfToday) spentToday += amount;
+                    }
 
-                html += `
-                    <div class="order-card">
-                        <div class="order-header">
-                            <div class="network-icon ${netClass}">${network.substring(0,3)}</div>
-                            <div style="text-align:right">
-                                <div style="font-family:monospace; font-size:11px; color:var(--text-gray); font-weight:700;">#${id.slice(-8)}</div>
-                                <div style="font-size:10px; color:var(--text-gray);">${new Date(ts).toLocaleString()}</div>
+                    const network = (order.network || 'MTN').toUpperCase();
+                    let netClass = 'mtn-bg';
+                    if(network.includes('TEL')) netClass = 'tel-bg';
+                    if(network.includes('AT') || network.includes('AIR')) netClass = 'air-bg';
+
+                    const statusClass = `status-${status.toLowerCase().split(' ')[0]}`;
+
+                    html += `
+                        <div class="order-card">
+                            <div class="order-header">
+                                <div class="network-icon ${netClass}">${network.substring(0,3)}</div>
+                                <div style="text-align:right">
+                                    <div style="font-family:monospace; font-size:11px; color:var(--text-gray); font-weight:700;">#${id.slice(-8)}</div>
+                                    <div style="font-size:10px; color:var(--text-gray);">${new Date(ts).toLocaleString()}</div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="order-details">
-                            <div class="detail-row"><span>Plan</span><b>${order.plan || 'N/A'}</b></div>
-                            <div class="detail-row"><span>Recipient</span><b>${order.recipient || 'N/A'}</b></div>
-                        </div>
-                        <div class="order-footer">
-                            <div class="amount-paid">₵${amount.toFixed(2)}</div>
-                            <span class="status-pill ${statusClass}">${status}</span>
-                        </div>
-                    </div>`;
-            });
+                            <div class="order-details">
+                                <div class="detail-row"><span>Package</span><b>${order.plan || 'N/A'}</b></div>
+                                <div class="detail-row"><span>Number</span><b>${order.recipient || 'N/A'}</b></div>
+                            </div>
+                            <div class="order-footer">
+                                <div class="amount-paid">₵${amount.toFixed(2)}</div>
+                                <span class="status-pill ${statusClass}">${status}</span>
+                            </div>
+                        </div>`;
+                });
 
-            document.getElementById('totalOrders').innerText = entries.length;
-            document.getElementById('totalSales').innerText = `₵${totalSpent.toFixed(2)}`;
-            document.getElementById('spentToday').innerText = `₵${spentToday.toFixed(2)}`;
-            container.innerHTML = html;
+                document.getElementById('totalOrders').innerText = entries.length;
+                document.getElementById('totalSales').innerText = `₵${totalSpent.toFixed(2)}`;
+                document.getElementById('spentToday').innerText = `₵${spentToday.toFixed(2)}`;
+                container.innerHTML = html;
+            });
         }
 
         function resetStats() {
