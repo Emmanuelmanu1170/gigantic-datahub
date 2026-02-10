@@ -1,253 +1,69 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buy Data Bundle - GiganticDataHub</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        :root {
-            --primary-purple: #6a5af9; --secondary-purple: #a855f7; --bg-gray: #fcfdfe;
-            --card-bg: #ffffff; --border-color: #eef2f6; --text-main: #1e293b;
-            --text-muted: #94a3b8; --active-blue: #3b82f6; --success-green: #16a34a;
-            --light-green: #f0fdf4; --warning-amber: #f59e0b; --input-bg: #f8fafc;
-        }
-        [data-theme="dark"] {
-            --bg-gray: #02040a; --card-bg: #0d1117; --border-color: #30363d;
-            --text-main: #f0f6fc; --text-muted: #8b949e; --input-bg: #161b22;
-        }
-        * { box-sizing: border-box; font-family: -apple-system, sans-serif; transition: background 0.3s, border-color 0.3s, color 0.1s; }
-        body { background-color: var(--bg-gray); margin: 0; display: flex; justify-content: center; color: var(--text-main); }
-        .container { width: 100%; max-width: 480px; padding: 16px; min-height: 100vh; }
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-        .back-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-main); text-decoration: none;}
-        .balance-card {
-            background: linear-gradient(135deg, var(--primary-purple) 0%, var(--secondary-purple) 100%);
-            color: white; padding: 24px; border-radius: 20px; margin-bottom: 15px;
-            box-shadow: 0 10px 20px rgba(106, 90, 249, 0.2);
-        }
-        .balance-card h2 { margin: 8px 0 0; font-size: 1.75rem; font-weight: 800; }
-        .user-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; background: rgba(255,255,255,0.2); font-size: 0.65rem; font-weight: 700; margin-top: 10px; }
-        .step { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; margin-bottom: 16px; }
-        .active-step { border: 2px solid var(--primary-purple) !important; opacity: 1 !important; }
-        .disabled { opacity: 0.5; pointer-events: none; filter: grayscale(1); }
-        .step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
-        .step-number { background: #f1f5f9; color: var(--active-blue); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; }
-        .network-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .network-option { border: 1px solid var(--border-color); border-radius: 12px; padding: 12px 5px; text-align: center; cursor: pointer; }
-        .network-option.selected { border: 2px solid var(--primary-purple); background: #f5f3ff10; }
-        .logo-box { width: 35px; height: 35px; margin: 0 auto 8px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 900; color: white; }
-        .mtn { background: #ffcc00; color: #000; } .airtel { background: #ed1c24; } .telecel { background: #e60000; }
-        select, input { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--input-bg); outline: none; font-size: 0.9rem; margin-top: 10px; color: var(--text-main); }
+{
+  "rules": {
+    /* 1. ADMIN SETTINGS */
+    "admin_settings": {
+      ".read": "auth.token.email === 'alenacloft0@gmail.com'",
+      ".write": "auth.token.email === 'alenacloft0@gmail.com'"
+    },
+
+    /* 2. USERS: Affiliate & Hacker Protection */
+    "users": {
+      ".read": "auth != null",
+      ".indexOn": ["referralCount"],
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'alenacloft0@gmail.com')",
         
-        .validation-card { background-color: var(--light-green); border: 1px solid #dcfce7; border-radius: 12px; padding: 12px; margin-top: 15px; display: none; align-items: flex-start; gap: 12px; }
-        .validation-card i { color: var(--success-green); font-size: 1.1rem; margin-top: 2px; }
-        .acc-name { font-weight: 800; text-transform: uppercase; color: var(--success-green); }
+        // HACKER PROTECTION: Users can spend (subtract) but NEVER add money.
+        "balance": { 
+          ".write": "auth != null && auth.uid === $uid && newData.val() < data.val() && newData.val() >= 0" 
+        },
+        "wallet": { 
+          ".write": "auth != null && auth.uid === $uid && newData.val() < data.val() && newData.val() >= 0" 
+        },
+        "referralCount": { ".write": "false" },
+        "referralBonus": { ".write": "false" },
         
-        .confirm-btn { width: 100%; padding: 18px; background: var(--primary-purple); color: white; border: none; border-radius: 14px; font-weight: 700; margin-top: 20px; cursor: pointer; font-size: 1rem; box-shadow: 0 5px 15px rgba(106, 90, 249, 0.3); }
-        .confirm-btn:disabled { background: #cbd5e1; cursor: not-allowed; opacity: 0.7; box-shadow: none; }
+        ".write": "auth != null && auth.uid === $uid && !data.exists()"
+      }
+    },
 
-        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); display: none; align-items: center; justify-content: center; z-index: 2000; }
-        .modal { background: white; border-radius: 30px; padding: 40px 20px; width: 90%; max-width: 350px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
-        .success-icon { width: 80px; height: 80px; background: var(--success-green); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 20px; }
-        [data-theme="dark"] .modal { background: #0d1117; color: white; }
-    </style>
-</head>
-<body>
+    /* 3. TRANSACTIONS */
+    "transactions": {
+      ".read": "auth != null && (auth.token.email === 'alenacloft0@gmail.com' || query.orderByChild === 'uid' && query.equalTo === auth.uid)",
+      ".indexOn": ["uid"],
+      "$txid": {
+        ".write": "auth.token.email === 'alenacloft0@gmail.com'"
+      }
+    },
 
-    <div class="container">
-        <header>
-            <a href="dashboard.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
-            <h1 style="font-size: 1rem;">Instant Data Hub</h1>
-        </header>
+    /* 4. PENDING ORDERS: The Secure Trigger */
+    "pending_orders": {
+      ".read": "auth.token.email === 'alenacloft0@gmail.com'",
+      "$orderid": {
+        ".write": "auth != null && !data.exists() && newData.child('uid').val() === auth.uid",
+        ".validate": "newData.hasChildren(['network', 'plan', 'recipient', 'amount', 'uid', 'status', 'timestamp'])"
+      }
+    },
 
-        <div class="balance-card">
-            <p style="margin:0; font-size: 0.75rem; opacity: 0.8;">Wallet Balance</p>
-            <h2 id="walletBalance">GH₵ 0.00</h2>
-            <div class="user-badge" id="userTypeBadge">USER</div>
-        </div>
+    /* 5. MASTER ORDERS: Allow user to CREATE their record */
+    "orders": {
+      ".read": "auth != null && (auth.token.email === 'alenacloft0@gmail.com' || (query.orderByChild === 'uid' && query.equalTo === auth.uid))",
+      ".indexOn": ["uid", "status"],
+      "$orderid": {
+        // Allow user to write only if the record is brand new and belongs to them
+        ".write": "auth != null && (!data.exists() && newData.child('uid').val() === auth.uid) || auth.token.email === 'alenacloft0@gmail.com'"
+      }
+    },
 
-        <div class="step active-step" id="step1">
-            <div class="step-header">
-                <div class="step-number">1</div>
-                <div class="step-title"><h3>Select Network</h3></div>
-            </div>
-            <div class="network-grid">
-                <div class="network-option" onclick="selectNetwork(this, 'mtn')"><div class="logo-box mtn">MTN</div><p style="font-size:11px">MTN</p></div>
-                <div class="network-option" onclick="selectNetwork(this, 'airteltigo')"><div class="logo-box airtel">AT</div><p style="font-size:11px">AirtelTigo</p></div>
-                <div class="network-option" onclick="selectNetwork(this, 'telecel')"><div class="logo-box telecel">TEL</div><p style="font-size:11px">Telecel</p></div>
-            </div>
-        </div>
-
-        <div class="step disabled" id="step2">
-            <div class="step-header">
-                <div class="step-number">2</div>
-                <div class="step-title"><h3>Choose Data Plan</h3></div>
-            </div>
-            <select id="dataPlan" onchange="unlockStep3()">
-                <option value="" selected disabled>-- Choose Network --</option>
-            </select>
-        </div>
-
-        <div class="step disabled" id="step3">
-            <div class="step-header">
-                <div class="step-number">3</div>
-                <div class="step-title"><h3>Recipient & Pay</h3></div>
-            </div>
-            <input type="tel" id="phoneNumber" placeholder="024XXXXXXX" maxlength="10">
-            
-            <div class="validation-card" id="validationBox">
-                <i class="fas fa-check-circle"></i>
-                <div class="validation-text">
-                    <b style="font-size: 0.85rem; display: block;">Recipient Verified</b>
-                    <p style="font-size: 0.75rem; margin: 0;">SIM Name: <span class="acc-name" id="displayAccName">Searching...</span></p>
-                </div>
-            </div>
-
-            <button class="confirm-btn" id="confirmBtn" onclick="placeDirectOrder()">PAY NOW & ACTIVATE</button>
-        </div>
-    </div>
-
-    <div class="overlay" id="successOverlay">
-        <div class="modal">
-            <div class="success-icon"><i class="fas fa-check"></i></div>
-            <h2 style="font-weight: 800;">Order Initiated!</h2>
-            <p style="margin: 15px 0; color: var(--text-muted); font-size: 0.9rem;">Your data bundle is being processed. You will receive an SMS confirmation shortly.</p>
-            <button onclick="window.location.replace('dashboard.html')" style="width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--text-main); color: white; font-weight: 700; cursor: pointer;">RETURN HOME</button>
-        </div>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, onValue, update, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-        const firebaseConfig = { 
-            apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA", 
-            authDomain: "gigantic-data.firebaseapp.com", 
-            databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com", 
-            projectId: "gigantic-data"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getDatabase(app);
-
-        let isAgent = false;
-        let currentBalance = 0;
-        let activeUid = "";
-        window.selectedNet = "";
-
-        const getK = () => atob("YmVhcmVyIA==") + atob("c2tfbGl2ZV8=") + atob("YmZkMjhmYmJlM2NhNDU1YmExNTQ1NWViZWQ3MTM4YjI0MDA5ZDEzNA==");
-
-        const agentPlans = {
-            mtn:[{plan:"1GB",price:"4.45"},{plan:"2GB",price:"8.85"},{plan:"3GB",price:"13.25"},{plan:"4GB",price:"17.65"},{plan:"5GB",price:"22.05"},{plan:"6GB",price:"26.55"},{plan:"8GB",price:"36.39"},{plan:"10GB",price:"42.25"},{plan:"15GB",price:"62.05"},{plan:"20GB",price:"82.05"},{plan:"25GB",price:"103.05"},{plan:"30GB",price:"123"},{plan:"40GB",price:"160"},{plan:"50GB",price:"199"},{plan:"100GB",price:"380"}],
-            airteltigo:[{plan:"1GB",price:"4.3"},{plan:"2GB",price:"8.56"},{plan:"3GB",price:"12.84"},{plan:"4GB",price:"17.12"},{plan:"5GB",price:"21.4"},{plan:"6GB",price:"25.6"},{plan:"7GB",price:"29.96"},{plan:"8GB",price:"35"},{plan:"10GB",price:"44"},{plan:"15GB",price:"65"},{plan:"20GB",price:"76"},{plan:"30GB",price:"87"},{plan:"40GB",price:"100"},{plan:"50GB",price:"115"},{plan:"60GB",price:"150"},{plan:"80GB",price:"183"},{plan:"100GB",price:"200"}],
-            telecel:[{plan:"10GB",price:"45"},{plan:"15GB",price:"62"},{plan:"20GB",price:"84"},{plan:"25GB",price:"105"},{plan:"30GB",price:"120"},{plan:"40GB",price:"158"},{plan:"50GB",price:"196"},{plan:"100GB",price:"384"}]
-        };
-
-        const normalPlans = {
-            mtn:[{plan:"1GB",price:"4.6"},{plan:"2GB",price:"9.2"},{plan:"3GB",price:"13.8"},{plan:"4GB",price:"18"},{plan:"5GB",price:"22.2"},{plan:"6GB",price:"26.6"},{plan:"8GB",price:"36"},{plan:"10GB",price:"45.4"},{plan:"15GB",price:"66.8"},{plan:"20GB",price:"82.2"},{plan:"30GB",price:"125"},{plan:"40GB",price:"199"},{plan:"50GB",price:"210"},{plan:"100GB",price:"420"}],
-            airteltigo:[{plan:"1GB",price:"4.4"},{plan:"2GB",price:"8.6"},{plan:"3GB",price:"13"},{plan:"4GB",price:"18.1"},{plan:"5GB",price:"22.8"},{plan:"6GB",price:"26.9"},{plan:"7GB",price:"31.1"},{plan:"8GB",price:"35.4"},{plan:"10GB",price:"44.5"},{plan:"15GB",price:"67.9"},{plan:"20GB",price:"78.8"},{plan:"30GB",price:"89.7"},{plan:"40GB",price:"106"},{plan:"50GB",price:"121.5"},{plan:"60GB",price:"173"},{plan:"80GB",price:"194.5"},{plan:"100GB",price:"215.5"}],
-            telecel:[{plan:"10GB",price:"46.7"},{plan:"15GB",price:"63.3"},{plan:"20GB",price:"85.1"},{plan:"25GB",price:"106.5"},{plan:"30GB",price:"121.5"},{plan:"40GB",price:"159.5"},{plan:"50GB",price:"198.4"},{plan:"100GB",price:"386.7"}]
-        };
-
-        onAuthStateChanged(auth, user => {
-            if (user) {
-                activeUid = user.uid;
-                onValue(ref(db, 'users/' + activeUid), (snapshot) => {
-                    const data = snapshot.val() || {};
-                    isAgent = (data.userType === "agent" || data.status === "Agent");
-                    currentBalance = Number(data.balance || data.wallet || 0);
-                    document.getElementById('walletBalance').innerText = `GH₵ ${currentBalance.toFixed(2)}`;
-                    document.getElementById('userTypeBadge').innerText = isAgent ? "AGENT" : "NORMAL USER";
-                    if(window.selectedNet) updatePlans();
-                });
-            } else { window.location.href = "login.html"; }
-        });
-
-        window.selectNetwork = (el, net) => {
-            window.selectedNet = net;
-            document.querySelectorAll('.network-option').forEach(o => o.classList.remove('selected'));
-            el.classList.add('selected');
-            updatePlans();
-            document.getElementById('step2').className = "step active-step";
-        };
-
-        function updatePlans() {
-            const select = document.getElementById('dataPlan');
-            select.innerHTML = '<option value="" selected disabled>-- Choose Plan --</option>';
-            const plans = isAgent ? agentPlans[window.selectedNet] : normalPlans[window.selectedNet];
-            plans.forEach(p => { 
-                select.innerHTML += `<option value="${p.price}" data-plan="${p.plan}">${p.plan} - GH₵ ${p.price}</option>`; 
-            });
+    /* 6. USER HISTORY: Allow user to CREATE their record */
+    "user_orders": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'alenacloft0@gmail.com')",
+        "$orderid": {
+          // Allow user to write only if the record is brand new
+          ".write": "auth != null && (auth.uid === $uid && !data.exists()) || auth.token.email === 'alenacloft0@gmail.com'"
         }
-
-        window.unlockStep3 = () => { document.getElementById('step3').className = "step active-step"; };
-
-        document.getElementById('phoneNumber').addEventListener('input', async function(e) {
-            const num = e.target.value;
-            const box = document.getElementById('validationBox');
-            const nameSpan = document.getElementById('displayAccName');
-            if (num.length === 10) {
-                box.style.display = "flex";
-                nameSpan.innerText = "Syncing SIM...";
-                const bankCode = { 'mtn': 'MTN', 'airteltigo': 'ATL', 'telecel': 'VOD' }[window.selectedNet];
-                try {
-                    const response = await fetch(`https://api.paystack.co/bank/resolve?account_number=${num}&bank_code=${bankCode}`, {
-                        headers: { 'Authorization': getK() }
-                    });
-                    const res = await response.json();
-                    nameSpan.innerText = res.status ? res.data.account_name : "NETWORK VERIFIED";
-                } catch (err) { nameSpan.innerText = "READY"; }
-            } else { box.style.display = "none"; }
-        });
-
-        window.placeDirectOrder = async () => {
-            const planSelect = document.getElementById('dataPlan');
-            const num = document.getElementById('phoneNumber').value.trim();
-            const amount = parseFloat(planSelect.value);
-
-            if (!planSelect.value || num.length < 10) { alert("Complete all steps first!"); return; }
-            if (currentBalance < amount) { alert("Insufficient Balance!"); return; }
-
-            const btn = document.getElementById('confirmBtn');
-            btn.disabled = true;
-            btn.innerText = "Processing Transaction...";
-
-            try {
-                const orderId = "GID-" + Date.now();
-                const planName = planSelect.options[planSelect.selectedIndex].getAttribute('data-plan');
-                const newBalance = parseFloat((currentBalance - amount).toFixed(2));
-
-                const automationData = {
-                    uid: activeUid,
-                    amount: amount,
-                    network: window.selectedNet.toUpperCase(),
-                    plan: planName,
-                    recipient: num,
-                    status: "Processing",
-                    timestamp: serverTimestamp() 
-                };
-
-                // --- ATOMIC MULTI-PATH UPDATE ---
-                // Updates balance, triggers automation, and creates history simultaneously
-                const updates = {};
-                updates[`users/${activeUid}/balance`] = newBalance;
-                updates[`users/${activeUid}/wallet`] = newBalance;
-                updates[`pending_orders/${orderId}`] = automationData;
-                updates[`orders/${orderId}`] = automationData; // Master Record
-                updates[`user_orders/${activeUid}/${orderId}`] = automationData; // User History
-
-                await update(ref(db), updates);
-                
-                document.getElementById('successOverlay').style.display = 'flex';
-            } catch (err) {
-                alert("Order Error: " + err.message);
-                btn.disabled = false;
-                btn.innerText = "PAY NOW & ACTIVATE";
-            }
-        };
-    </script>
-</body>
-</html>
+      }
+    }
+  }
+}
