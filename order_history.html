@@ -28,9 +28,8 @@
 
         body { margin: 0; font-family: -apple-system, sans-serif; background-color: var(--bg-light); color: var(--text-main); padding-bottom: 30px; }
 
-        /* Impersonation Banner */
         .admin-banner { background: #6366f1; color: white; padding: 10px; text-align: center; font-size: 12px; font-weight: bold; position: sticky; top: 0; z-index: 2000; display: none; }
-        .btn-exit-admin { background: white; color: #6366f1; border: none; padding: 4px 10px; border-radius: 5px; margin-left: 10px; cursor: pointer; font-weight: 800; }
+        .btn-exit-admin { background: white; color: #6366f1; border: none; padding: 4px 10px; border-radius: 50px; margin-left: 10px; cursor: pointer; font-weight: 800; }
 
         .header { background-color: var(--deep-blue); color: white; padding: 18px 20px; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; }
         .header a { color: white; text-decoration: none; font-size: 18px; }
@@ -43,7 +42,7 @@
         .stat-box small { display: block; font-size: 10px; color: var(--text-gray); font-weight: 800; margin-bottom: 5px; text-transform: uppercase; }
         .stat-box b { font-size: 14px; color: var(--primary-blue); }
 
-        .order-card { background: var(--card-white); border-radius: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 20px; border: 1px solid rgba(0,0,0,0.05); position: relative; overflow: hidden; }
+        .order-card { background: var(--card-white); border-radius: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 20px; border: 1px solid rgba(0,0,0,0.05); position: relative; }
         .order-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px dashed #e2e8f0; padding-bottom: 15px; margin-bottom: 15px; }
         .network-icon { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 12px; color: white; }
         .mtn-bg { background: #FFCC00; color: #000; } .tel-bg { background: #E60000; } .air-bg { background: #0052CC; }
@@ -60,17 +59,18 @@
         /* Automation Status Colors */
         .status-successful { background: #ecfdf5; color: #047857; }
         .status-pending { background: #fffbeb; color: #b45309; }
-        .status-processing { background: #eff6ff; color: #1e40af; }
+        .status-processing { background: #eff6ff; color: #1e40af; animation: pulse 1.5s infinite; }
         .status-failed { background: #fef2f2; color: #b91c1c; }
-        .status-refunded { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+        .status-refunded { background: #f1f5f9; color: #475569; }
 
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
         .empty-state { text-align: center; padding: 60px 20px; color: var(--text-gray); }
     </style>
 </head>
 <body>
 
     <div id="adminBanner" class="admin-banner">
-        VIEWING USER ORDER HISTORY <button class="btn-exit-admin" onclick="exitImpersonation()">EXIT TO ADMIN</button>
+        VIEWING USER ORDER HISTORY <button class="btn-exit-admin" onclick="exitImpersonation()">EXIT</button>
     </div>
 
     <div class="header">
@@ -88,7 +88,7 @@
         <div id="orderList">
             <div class="empty-state">
                 <i class="fas fa-circle-notch fa-spin fa-2x"></i>
-                <p class="mt-2">Connecting to secure vault...</p>
+                <p class="mt-2">Fetching live records...</p>
             </div>
         </div>
     </div>
@@ -96,7 +96,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
@@ -121,91 +121,97 @@
         onAuthStateChanged(auth, user => {
             if (user) {
                 activeUid = (isImpersonating === 'true' && impersonateUid) ? impersonateUid : user.uid;
-                
-                if (isImpersonating === 'true') {
-                    document.getElementById('adminBanner').style.display = 'block';
-                }
+                if (isImpersonating === 'true') document.getElementById('adminBanner').style.display = 'block';
 
-                // Listen to user_orders path
-                const orderRef = ref(db, `user_orders/${activeUid}`);
-                
-                onValue(orderRef, (snapshot) => {
-                    const container = document.getElementById('orderList');
-                    const data = snapshot.val();
-
-                    if (!data) {
-                        container.innerHTML = `
-                            <div class="empty-state">
-                                <i class="fas fa-receipt fa-4x" style="opacity:0.1; margin-bottom: 15px;"></i>
-                                <p style="font-weight:700">No Transactions Found</p>
-                                <p style="font-size: 12px; margin-top:5px;">Your data purchases will appear here.</p>
-                                <a href="buy-data.html" style="display:inline-block; margin-top:20px; color:var(--primary-blue); font-weight:800; text-decoration:none; font-size:12px;">BUY DATA NOW <i class="fas fa-arrow-right"></i></a>
-                            </div>`;
-                        resetStats();
-                        return;
-                    }
-
-                    let html = "";
-                    let totalOrdersCount = 0;
-                    let totalSpentSum = 0;
-                    let spentTodaySum = 0;
-                    const startOfToday = new Date().setHours(0,0,0,0);
-
-                    // Sort: Newest orders first
-                    const entries = Object.entries(data).sort((a,b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
-                    totalOrdersCount = entries.length;
-
-                    entries.forEach(([id, order]) => {
-                        const amount = parseFloat(order.amount || 0);
-                        const ts = order.timestamp || Date.now();
-                        
-                        // Don't count failed/refunded orders in total spent if you prefer
-                        if(order.status === "Successful" || order.status === "Pending") {
-                            totalSpentSum += amount;
-                            if (ts >= startOfToday) spentTodaySum += amount;
-                        }
-
-                        // Network Branding
-                        const network = (order.network || 'MTN').toUpperCase();
-                        let netClass = 'mtn-bg';
-                        if(network.includes('TEL')) netClass = 'tel-bg';
-                        if(network.includes('AT') || network.includes('AIR')) netClass = 'air-bg';
-
-                        // Status Formatting
-                        const status = order.status || 'Successful';
-                        const statusClass = `status-${status.toLowerCase().split(' ')[0]}`;
-
-                        html += `
-                            <div class="order-card">
-                                <div class="order-header">
-                                    <div class="network-icon ${netClass}">${network.substring(0,3)}</div>
-                                    <div style="text-align:right">
-                                        <div style="font-family:monospace; font-size:11px; color:var(--text-gray); font-weight:700;">#${id.slice(-8)}</div>
-                                        <div style="font-size:10px; color:var(--text-gray);">${new Date(ts).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</div>
-                                    </div>
-                                </div>
-                                <div class="order-details">
-                                    <div class="detail-row"><span>Data Package</span><b>${order.plan || 'N/A'}</b></div>
-                                    <div class="detail-row"><span>Recipient No.</span><b>${order.recipient || 'N/A'}</b></div>
-                                    ${order.api_msg ? `<div class="detail-row"><span style="color:var(--accent-orange)">Note</span><b style="font-size:10px">${order.api_msg}</b></div>` : ''}
-                                </div>
-                                <div class="order-footer">
-                                    <div class="amount-paid">₵${amount.toFixed(2)}</div>
-                                    <span class="status-pill ${statusClass}">${status}</span>
-                                </div>
-                            </div>
-                        `;
-                    });
-
-                    document.getElementById('totalOrders').innerText = totalOrdersCount;
-                    document.getElementById('totalSales').innerText = `₵${totalSpentSum.toFixed(2)}`;
-                    document.getElementById('spentToday').innerText = `₵${spentTodaySum.toFixed(2)}`;
-                    container.innerHTML = html;
-                });
+                loadUnifiedHistory();
             } else {
                 window.location.href = "login.html";
             }
         });
+
+        function loadUnifiedHistory() {
+            // Path 1: Permanent History
+            const historyRef = ref(db, `user_orders/${activeUid}`);
+            // Path 2: Live Processing Orders
+            const pendingQuery = query(ref(db, 'pending_orders'), orderByChild('uid'), equalTo(activeUid));
+
+            let historyData = {};
+            let pendingData = {};
+
+            // Listen to History
+            onValue(historyRef, (snap) => {
+                historyData = snap.val() || {};
+                renderMergedData(historyData, pendingData);
+            });
+
+            // Listen to Pending (Live)
+            onValue(pendingQuery, (snap) => {
+                pendingData = snap.val() || {};
+                renderMergedData(historyData, pendingData);
+            });
+        }
+
+        function renderMergedData(history, pending) {
+            const container = document.getElementById('orderList');
+            const merged = { ...history, ...pending };
+            const entries = Object.entries(merged);
+
+            if (entries.length === 0) {
+                container.innerHTML = `<div class="empty-state"><i class="fas fa-receipt fa-4x opacity-20"></i><p>No transactions yet</p></div>`;
+                resetStats();
+                return;
+            }
+
+            // Sort: Newest first
+            entries.sort((a,b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+
+            let html = "";
+            let totalSpent = 0;
+            let spentToday = 0;
+            const startOfToday = new Date().setHours(0,0,0,0);
+
+            entries.forEach(([id, order]) => {
+                const amount = parseFloat(order.amount || 0);
+                const ts = order.timestamp || Date.now();
+                const status = (pending[id]) ? "Processing" : (order.status || "Successful");
+                
+                if (status === "Successful" || status === "Pending") {
+                    totalSpent += amount;
+                    if (ts >= startOfToday) spentToday += amount;
+                }
+
+                const network = (order.network || 'MTN').toUpperCase();
+                let netClass = 'mtn-bg';
+                if(network.includes('TEL')) netClass = 'tel-bg';
+                if(network.includes('AT') || network.includes('AIR')) netClass = 'air-bg';
+
+                const statusClass = `status-${status.toLowerCase().split(' ')[0]}`;
+
+                html += `
+                    <div class="order-card">
+                        <div class="order-header">
+                            <div class="network-icon ${netClass}">${network.substring(0,3)}</div>
+                            <div style="text-align:right">
+                                <div style="font-family:monospace; font-size:11px; color:var(--text-gray); font-weight:700;">#${id.slice(-8)}</div>
+                                <div style="font-size:10px; color:var(--text-gray);">${new Date(ts).toLocaleString()}</div>
+                            </div>
+                        </div>
+                        <div class="order-details">
+                            <div class="detail-row"><span>Plan</span><b>${order.plan || 'N/A'}</b></div>
+                            <div class="detail-row"><span>Recipient</span><b>${order.recipient || 'N/A'}</b></div>
+                        </div>
+                        <div class="order-footer">
+                            <div class="amount-paid">₵${amount.toFixed(2)}</div>
+                            <span class="status-pill ${statusClass}">${status}</span>
+                        </div>
+                    </div>`;
+            });
+
+            document.getElementById('totalOrders').innerText = entries.length;
+            document.getElementById('totalSales').innerText = `₵${totalSpent.toFixed(2)}`;
+            document.getElementById('spentToday').innerText = `₵${spentToday.toFixed(2)}`;
+            container.innerHTML = html;
+        }
 
         function resetStats() {
             document.getElementById('totalOrders').innerText = "0";
