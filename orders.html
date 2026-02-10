@@ -37,7 +37,7 @@
         .status-Failed { background: #fdf2f2; color: #ef4444; }
         .status-Refunded { background: #f1f5f9; color: #475569; }
         
-        .status-select { padding: 5px; font-size: 11px; border-radius: 5px; border: 1px solid #e2e8f0; background: #f8fafc; outline: none; cursor: pointer; display: block; }
+        .status-select { padding: 5px; font-size: 11px; border-radius: 5px; border: 1px solid #e2e8f0; background: #f8fafc; outline: none; cursor: pointer; display: block; width: 120px; }
 
         .log-card { background: #1e293b; color: #94a3b8; padding: 20px; border-radius: 15px; font-family: monospace; font-size: 12px; height: 180px; overflow-y: auto; border: 1px solid #334155; }
         .log-entry { border-bottom: 1px solid #334155; padding: 5px 0; }
@@ -128,11 +128,13 @@ function writeLog(msg, isSuccess = false, isError = false) {
 }
 
 function initAutomation() {
+    // Sync Users
     db.ref("users").on("value", snap => { 
         userCache = snap.val() || {}; 
         writeLog("User directory mapped.");
     });
 
+    // Unified listener for history and live triggers
     db.ref("pending_orders").on("value", snapshot => {
         const pendingData = snapshot.val() || {};
         db.ref("orders").limitToLast(50).on("value", historySnap => {
@@ -180,11 +182,11 @@ function renderTable(data) {
                     <span class="status-badge status-${o.status}">${o.status}</span>
                     <select class="status-select" onchange="changeStatus('${o.orderId}', '${o.uid}', this.value)">
                         <option value="" disabled selected>Change Status</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Processing">Processing</option>
-                        <option value="Successful">Successful</option>
-                        <option value="Failed">Failed</option>
-                        <option value="Refunded">Refunded</option>
+                        <option value="Pending" ${o.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                        <option value="Processing" ${o.status === 'Processing' ? 'selected' : ''}>Processing</option>
+                        <option value="Successful" ${o.status === 'Successful' ? 'selected' : ''}>Successful</option>
+                        <option value="Failed" ${o.status === 'Failed' ? 'selected' : ''}>Failed</option>
+                        <option value="Refunded" ${o.status === 'Refunded' ? 'selected' : ''}>Refunded</option>
                     </select>
                 </td>
                 <td style="text-align:right">
@@ -199,7 +201,7 @@ function renderTable(data) {
 
 window.changeStatus = (oid, uid, newStatus) => {
     if(!uid || uid === "undefined") {
-        alert("Cannot update: User ID missing.");
+        writeLog(`Error: Missing UID for Order #${oid}`, false, true);
         return;
     }
     
@@ -207,15 +209,15 @@ window.changeStatus = (oid, uid, newStatus) => {
     updates[`orders/${oid}/status`] = newStatus;
     updates[`user_orders/${uid}/${oid}/status`] = newStatus;
     
-    // If setting to something other than Pending, we should clear it from pending_orders
-    if(newStatus !== "Pending") {
+    // Clear from active trigger node if finalized
+    if(newStatus !== "Pending" && newStatus !== "Processing") {
         updates[`pending_orders/${oid}`] = null;
     }
 
     db.ref().update(updates).then(() => {
-        writeLog(`Order #${oid} status changed to ${newStatus}`, true);
+        writeLog(`STATUS UPDATE: Order #${oid.slice(-6)} set to ${newStatus}`, true);
     }).catch(err => {
-        writeLog(`Update failed: ${err.message}`, false, true);
+        writeLog(`Sync Error: ${err.message}`, false, true);
     });
 };
 
@@ -225,7 +227,7 @@ window.deleteRecord = (oid, uid) => {
         updates[`orders/${oid}`] = null;
         updates[`user_orders/${uid}/${oid}`] = null;
         updates[`pending_orders/${oid}`] = null;
-        db.ref().update(updates).then(() => writeLog(`Record #${oid} purged.`));
+        db.ref().update(updates).then(() => writeLog(`PURGE: Record #${oid.slice(-6)} deleted.`));
     }
 };
 
