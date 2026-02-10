@@ -35,6 +35,7 @@
         .status-Completed { background: #ecfdf5; color: #047857; }
         .status-Processing { background: #eff6ff; color: #1e40af; }
         .status-Failed { background: #fdf2f2; color: #ef4444; }
+        .status-Refunded { background: #f1f5f9; color: #475569; }
         
         .log-card { background: #1e293b; color: #94a3b8; padding: 20px; border-radius: 15px; font-family: monospace; font-size: 12px; height: 180px; overflow-y: auto; border: 1px solid #334155; }
         .log-entry { border-bottom: 1px solid #334155; padding: 5px 0; }
@@ -42,13 +43,15 @@
         .log-err { color: #ef4444; }
         
         .admin-info { font-size: 10px; color: #94a3b8; font-weight: bold; }
+        .user-info-cell { display: flex; flex-direction: column; gap: 2px; }
+        .user-email { font-size: 10px; color: #64748b; }
     </style>
 </head>
 <body>
 
 <div class="api-banner">
     <div><span class="pulse"></span> GIGANTIC AUTO-FULFILLMENT ENGINE: ONLINE</div>
-    <div class="admin-info" id="adminDisplay">Verifying Identity...</div>
+    <div class="admin-info" id="adminDisplay">Handshaking...</div>
     <div id="apiClock">00:00:00</div>
 </div>
 
@@ -67,13 +70,13 @@
                         <th>Network</th>
                         <th>Recipient</th>
                         <th>Plan</th>
-                        <th>User</th>
+                        <th>Customer Details</th>
                         <th>Status</th>
                         <th style="text-align:right">Action</th>
                     </tr>
                 </thead>
                 <tbody id="orderTbody">
-                    <tr><td colspan="7" style="text-align:center; padding:50px;">Waiting for Admin Handshake...</td></tr>
+                    <tr><td colspan="7" style="text-align:center; padding:50px;">Syncing with Data nodes...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -104,22 +107,18 @@ let userCache = {};
 let processedOrders = new Set();
 
 // --- PERSISTENT AUTH GUARD ---
-// Forces the browser to rememberalenacloft0@gmail.com
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
     .then(() => {
         return auth.onAuthStateChanged(user => {
             if(user && user.email === "alenacloft0@gmail.com"){
                 document.getElementById('adminDisplay').innerText = `ADMIN: ${user.email}`;
-                writeLog(`Session Persistent: Logged in as ${user.email}`, true);
+                writeLog(`Security cleared. Admin session active.`, true);
                 initAutomation();
             } else { 
-                writeLog("Access Denied: Admin Auth Required.", false, true);
+                writeLog("Unauthorized Access Attempt.", false, true);
                 setTimeout(() => { window.location.href = "login.html"; }, 2000);
             }
         });
-    })
-    .catch(error => {
-        console.error("Auth Persistence Error", error);
     });
 
 function writeLog(msg, isSuccess = false, isError = false) {
@@ -130,115 +129,79 @@ function writeLog(msg, isSuccess = false, isError = false) {
 }
 
 function initAutomation() {
-    // 1. Sync User Directory
+    // 1. Load User Directory first for immediate name mapping
     db.ref("users").on("value", snap => { 
         userCache = snap.val() || {}; 
-        writeLog("User Directory Synchronized.");
+        writeLog("User directory mapped successfully.");
     });
 
-    // 2. Listen to Orders node
-    db.ref("user_orders").on("value", snapshot => {
-        const rootData = snapshot.val() || {};
-        let tableData = [];
+    // 2. Load Pending Orders (The real-time trigger node)
+    db.ref("pending_orders").on("value", snapshot => {
+        const pendingData = snapshot.val() || {};
+        
+        // 3. Load Master History for the table display
+        db.ref("orders").limitToLast(50).on("value", historySnap => {
+            const historyData = historySnap.val() || {};
+            let combinedData = [];
 
-        Object.entries(rootData).forEach(([uid, orders]) => {
-            Object.entries(orders).forEach(([orderId, order]) => {
-                const fullOrder = { orderId, uid, ...order, email: userCache[uid]?.email || "User" };
-                tableData.push(fullOrder);
+            // Add Master History to Table
+            Object.entries(historyData).forEach(([oid, data]) => {
+                combinedData.push({ ...data, orderId: oid });
+            });
 
-                if (order.status === "Pending" && !processedOrders.has(orderId)) {
-                    processedOrders.add(orderId);
-                    processOrder(fullOrder);
+            // Add Live Triggers to Table (to see them as they process)
+            Object.entries(pendingData).forEach(([oid, data]) => {
+                if(!historyData[oid]) {
+                    combinedData.push({ ...data, orderId: oid, status: 'Processing' });
                 }
             });
+
+            renderTable(combinedData);
         });
-        renderTable(tableData);
     });
-}
-
-async function processOrder(order) {
-    writeLog(`NEW ORDER DETECTED: #${order.orderId.slice(-6)} for ${order.recipient}`);
-    updateStatus(order.uid, order.orderId, "Processing");
-
-    try {
-        const keySnap = await db.ref('admin_settings/idata_key').get();
-        const apiKey = keySnap.val();
-
-        if (!apiKey) {
-            writeLog("CRITICAL: API Key missing in DB!", false, true);
-            return;
-        }
-
-        let net = order.network.toLowerCase();
-        if (net.includes("at")) net = "at";
-        else if (net.includes("telecel")) net = "telecel";
-        else net = "mtn";
-
-        const planID = parseInt(order.plan.replace(/[^0-9]/g, '')) || 1;
-
-        const payload = {
-            "network": net,
-            "beneficiary": order.recipient.toString().trim(),
-            "pa_data-bundle-packages": planID
-        };
-
-        const response = await fetch(PROXY + encodeURIComponent(API_URL), {
-            method: 'POST',
-            headers: { 
-                'Authorization': `Bearer ${apiKey}`, 
-                'Content-Type': 'application/json' 
-            },
-            body: JSON.stringify(payload)
-        });
-
-        const result = await response.json();
-        
-        if (response.ok || result.status === "success") {
-            writeLog(`FULFILLED: Order #${order.orderId.slice(-6)} Success.`, true);
-            updateStatus(order.uid, order.orderId, "Completed");
-        } else {
-            writeLog(`REJECTED: ${result.message || 'Check iData Balance'}`, false, true);
-            updateStatus(order.uid, order.orderId, "Failed");
-        }
-    } catch (err) {
-        writeLog("CONNECTION ERROR: Proxy or API unreachable.", false, true);
-        updateStatus(order.uid, order.orderId, "Failed");
-    }
-}
-
-function updateStatus(uid, orderId, status) {
-    const updates = {};
-    updates[`user_orders/${uid}/${orderId}/status`] = status;
-    updates[`orders/${orderId}/status`] = status;
-    db.ref().update(updates);
 }
 
 function renderTable(data) {
     const tbody = document.getElementById("orderTbody");
     tbody.innerHTML = "";
     
-    data.sort((a,b) => b.timestamp - a.timestamp).forEach(o => {
-        const timeStr = new Date(o.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    // Sort by newest timestamp
+    data.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)).forEach(o => {
+        const timeStr = o.timestamp ? new Date(o.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'N/A';
+        
+        // Link with User Cache for full details
+        const u = userCache[o.uid] || {};
+        const userName = u.fullName || u.email || "Unknown User";
+        const userEmail = u.email || "No Email";
+
         tbody.innerHTML += `
             <tr>
                 <td><small>${timeStr}</small></td>
-                <td><b>${o.network.toUpperCase()}</b></td>
-                <td><b>${o.recipient}</b></td>
-                <td>${o.plan}</td>
-                <td style="font-size:10px;">${o.email}</td>
+                <td><b>${o.network ? o.network.toUpperCase() : 'N/A'}</b></td>
+                <td><b>${o.recipient || 'N/A'}</b></td>
+                <td>${o.plan || 'N/A'}</td>
+                <td>
+                    <div class="user-info-cell">
+                        <span style="font-weight:700">${userName}</span>
+                        <span class="user-email">${userEmail}</span>
+                    </div>
+                </td>
                 <td><span class="status-badge status-${o.status}">${o.status}</span></td>
                 <td style="text-align:right">
-                    <button onclick="deleteRow('${o.orderId}', '${o.uid}')" style="background:none; border:none; color:#cbd5e1; cursor:pointer;"><i class="fas fa-trash"></i></button>
+                    <button onclick="deleteRecord('${o.orderId}', '${o.uid}')" style="background:none; border:none; color:#cbd5e1; cursor:pointer;"><i class="fas fa-trash"></i></button>
                 </td>
             </tr>
         `;
     });
 }
 
-window.deleteRow = (oid, uid) => {
-    if(confirm("Delete record?")) {
-        db.ref(`user_orders/${uid}/${oid}`).remove();
-        db.ref(`orders/${oid}`).remove();
+window.deleteRecord = (oid, uid) => {
+    if(confirm("Permanently delete this order record?")) {
+        const updates = {};
+        updates[`orders/${oid}`] = null;
+        updates[`user_orders/${uid}/${oid}`] = null;
+        updates[`pending_orders/${oid}`] = null;
+        db.ref().update(updates).then(() => writeLog(`Record #${oid} purged.`));
     }
 };
 
