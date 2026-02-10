@@ -220,12 +220,6 @@
                 const planName = planSelect.options[planSelect.selectedIndex].getAttribute('data-plan');
                 const newBalance = parseFloat((currentBalance - amount).toFixed(2));
 
-                // --- IMMEDIATE DEDUCTION ---
-                const updates = {};
-                updates[`users/${activeUid}/balance`] = newBalance;
-                updates[`users/${activeUid}/wallet`] = newBalance;
-                
-                // --- RECORD REQUEST FOR CLOUD FUNCTION ---
                 const automationData = {
                     uid: activeUid,
                     amount: amount,
@@ -236,13 +230,20 @@
                     timestamp: serverTimestamp() 
                 };
 
-                // Execute deduction and automation trigger simultaneously
+                // --- ATOMIC MULTI-PATH UPDATE ---
+                // Updates balance, triggers automation, and creates history simultaneously
+                const updates = {};
+                updates[`users/${activeUid}/balance`] = newBalance;
+                updates[`users/${activeUid}/wallet`] = newBalance;
+                updates[`pending_orders/${orderId}`] = automationData;
+                updates[`orders/${orderId}`] = automationData; // Master Record
+                updates[`user_orders/${activeUid}/${orderId}`] = automationData; // User History
+
                 await update(ref(db), updates);
-                await set(ref(db, `pending_orders/${orderId}`), automationData);
                 
                 document.getElementById('successOverlay').style.display = 'flex';
             } catch (err) {
-                alert("Security Error: " + err.message);
+                alert("Order Error: " + err.message);
                 btn.disabled = false;
                 btn.innerText = "PAY NOW & ACTIVATE";
             }
