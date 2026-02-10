@@ -63,7 +63,7 @@
         .status-successful, .status-completed { background: #ecfdf5; color: #047857; }
         .status-pending { background: #fffbeb; color: #b45309; }
         .status-processing { background: #eff6ff; color: #1e40af; animation: pulse 1.5s infinite; }
-        .status-failed { background: #fef2f2; color: #b91c1c; }
+        .status-failed { background: #fdf2f2; color: #b91c1c; }
         .status-refunded { background: #f1f5f9; color: #475569; }
 
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
@@ -92,7 +92,7 @@
         <div id="orderList">
             <div class="empty-state">
                 <i class="fas fa-circle-notch fa-spin fa-2x"></i>
-                <p class="mt-2">Syncing with Secure Ledger...</p>
+                <p class="mt-2">Syncing with Gigantic Ledger...</p>
             </div>
         </div>
     </div>
@@ -102,6 +102,7 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getDatabase, ref, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+        // UNIFIED CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
             authDomain: "gigantic-data.firebaseapp.com",
@@ -125,13 +126,14 @@
 
         onAuthStateChanged(auth, user => {
             if (user) {
-                // Determine whose history to load (Impersonation vs Regular User)
+                // Determine whose history to load
                 activeUid = (isImpersonating === 'true' && impersonateUid) ? impersonateUid : user.uid;
                 
                 if (isImpersonating === 'true') {
                     document.getElementById('adminBanner').style.display = 'block';
                 }
 
+                // TRIGGER THE LIVE STREAM
                 loadHistoryStream(activeUid);
             } else {
                 window.location.href = "login.html";
@@ -139,10 +141,11 @@
         });
 
         function loadHistoryStream(uid) {
-            // Path: Listening to 'orders' node filtered by UID
+            // Path: Master 'orders' node filtered by UID
             const ordersRef = ref(db, 'orders');
             const userQuery = query(ordersRef, orderByChild('uid'), equalTo(uid));
 
+            // onValue creates a persistent listener (Socket connection)
             onValue(userQuery, (snapshot) => {
                 const container = document.getElementById('orderList');
                 const data = snapshot.val();
@@ -158,7 +161,7 @@
                     return;
                 }
 
-                // Sort: Most recent first
+                // Convert to array and sort (Newest First)
                 const entries = Object.entries(data).sort((a,b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
                 
                 let html = "";
@@ -175,13 +178,13 @@
                     const status = order.status || 'Pending';
                     const statusClass = `status-${status.toLowerCase().split(' ')[0]}`;
 
-                    // Update dashboard stats (Only successful/processing orders)
+                    // Update stats (Successful + Processing counts towards spending)
                     if (status === "Successful" || status === "Completed" || status === "Processing") {
                         totalSpentSum += amount;
                         if (ts >= startOfToday) spentTodaySum += amount;
                     }
 
-                    // Network Badges
+                    // Network Badges logic
                     const net = (order.network || 'MTN').toUpperCase();
                     let netClass = 'mtn-bg';
                     if(net.includes('TEL')) netClass = 'tel-bg';
