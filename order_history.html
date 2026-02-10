@@ -2,15 +2,16 @@
 <html lang="en">
 <head>
     <script>
-        // Theme Persistence
+        // Theme Persistence Script
         (function() {
             const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
         })();
     </script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order History - Gigantic Data Hub</title>
+    <title>Purchase Records - Gigantic Data Hub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -19,69 +20,79 @@
             --text-main: #1e293b; --text-gray: #64748b; --accent-orange: #f06529;
             --card-white: #ffffff;
         }
+
         [data-theme="dark"] {
             --bg-light: #02040a; --card-white: #0d1117; --text-main: #f0f6fc;
             --text-gray: #8b949e; --deep-blue: #010409;
         }
-        body { font-family: -apple-system, sans-serif; background-color: var(--bg-light); color: var(--text-main); padding-bottom: 30px; }
-        
+
+        body { margin: 0; font-family: -apple-system, sans-serif; background-color: var(--bg-light); color: var(--text-main); padding-bottom: 30px; }
+
+        /* Impersonation Banner for Admin Audit */
+        .admin-banner { background: #6366f1; color: white; padding: 10px; text-align: center; font-size: 11px; font-weight: bold; position: sticky; top: 0; z-index: 2000; display: none; }
+        .btn-exit-admin { background: white; color: #6366f1; border: none; padding: 4px 12px; border-radius: 50px; margin-left: 10px; cursor: pointer; font-weight: 800; font-size: 10px; }
+
         .header { background-color: var(--deep-blue); color: white; padding: 18px 20px; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; }
-        .header a { color: white; text-decoration: none; }
+        .header a { color: white; text-decoration: none; font-size: 18px; }
+        .header h1 { font-size: 16px; margin: 0; font-weight: 700; }
 
         .container { padding: 15px; max-width: 500px; margin: 0 auto; }
-        
-        /* Stats Styling */
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 25px; margin-top: 10px; }
-        .stat-box { background: var(--card-white); padding: 12px; border-radius: 16px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
-        .stat-box small { display: block; font-size: 10px; color: var(--text-gray); font-weight: 800; text-transform: uppercase; margin-bottom: 2px; }
+
+        /* Statistics Dashboard */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 25px; margin-top: 15px; }
+        .stat-box { background: var(--card-white); padding: 15px 10px; border-radius: 16px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.02); }
+        .stat-box small { display: block; font-size: 10px; color: var(--text-gray); font-weight: 800; margin-bottom: 5px; text-transform: uppercase; }
         .stat-box b { font-size: 14px; color: var(--primary-blue); }
 
-        /* Order Card Styling */
-        .order-card { background: var(--card-white); border-radius: 20px; margin-bottom: 16px; padding: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05); }
-        .order-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px dashed #e2e8f0; padding-bottom: 12px; margin-bottom: 12px; }
-        .network-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 11px; color: white; }
+        /* Individual Order Card */
+        .order-card { background: var(--card-white); border-radius: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 20px; border: 1px solid rgba(0,0,0,0.05); position: relative; }
+        .order-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px dashed #e2e8f0; padding-bottom: 15px; margin-bottom: 15px; }
+        .network-icon { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 12px; color: white; }
         .mtn-bg { background: #FFCC00; color: #000; } .tel-bg { background: #E60000; } .air-bg { background: #0052CC; }
 
-        .detail-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+        .order-details { display: flex; flex-direction: column; gap: 8px; }
+        .detail-row { display: flex; justify-content: space-between; align-items: center; }
         .detail-row span { font-size: 12px; color: var(--text-gray); }
-        .detail-row b { font-size: 13px; font-weight: 700; }
+        .detail-row b { font-size: 13px; color: var(--text-main); }
 
+        .order-footer { margin-top: 15px; padding-top: 15px; border-top: 1.5px dashed #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+        .amount-paid { font-size: 18px; font-weight: 900; color: var(--primary-blue); }
         .status-pill { font-size: 10px; font-weight: 800; padding: 4px 12px; border-radius: 30px; text-transform: uppercase; }
-        .status-successful { background: #ecfdf5; color: #047857; }
+        
+        /* Dynamic Status Coloring */
+        .status-successful, .status-completed { background: #ecfdf5; color: #047857; }
+        .status-pending { background: #fffbeb; color: #b45309; }
         .status-processing { background: #eff6ff; color: #1e40af; animation: pulse 1.5s infinite; }
         .status-failed { background: #fef2f2; color: #b91c1c; }
-        .status-pending { background: #fffbeb; color: #b45309; }
+        .status-refunded { background: #f1f5f9; color: #475569; }
 
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
         .empty-state { text-align: center; padding: 60px 20px; color: var(--text-gray); }
-
-        /* Impersonation Banner */
-        .admin-banner { background: #6366f1; color: white; padding: 8px; text-align: center; font-size: 11px; font-weight: 700; position: sticky; top: 58px; z-index: 99; display: none; }
     </style>
 </head>
 <body>
 
     <div id="adminBanner" class="admin-banner">
-        <i class="fas fa-user-shield mr-1"></i> AUDITING USER HISTORY 
-        <button onclick="exitAudit()" class="ml-2 bg-white text-indigo-600 px-2 py-0.5 rounded shadow">EXIT</button>
+        <i class="fas fa-shield-alt mr-1"></i> AUDITING USER HISTORY 
+        <button class="btn-exit-admin" onclick="exitAudit()">EXIT TO ADMIN</button>
     </div>
 
     <div class="header">
         <a href="dashboard.html"><i class="fas fa-chevron-left"></i></a>
-        <h1 class="font-bold text-lg">Purchase Records</h1>
+        <h1>Purchase History</h1>
     </div>
 
     <div class="container">
         <div class="stats-grid">
-            <div class="stat-box"><small>Total</small><b id="totalOrders">0</b></div>
-            <div class="stat-box"><small>Spent</small><b id="totalSpent">₵0.00</b></div>
-            <div class="stat-box"><small>Today</small><b id="spentToday">₵0.00</b></div>
+            <div class="stat-box"><small>Orders</small><b id="totalOrders">0</b></div>
+            <div class="stat-box"><small>Total Spent</small><b id="totalSales">₵0.00</b></div>
+            <div class="stat-box"><small>Today</small><b id="spentToday" style="color:var(--accent-orange)">₵0.00</b></div>
         </div>
 
-        <div id="historyContainer">
+        <div id="orderList">
             <div class="empty-state">
                 <i class="fas fa-circle-notch fa-spin fa-2x"></i>
-                <p class="mt-2 text-sm">Syncing with ledger...</p>
+                <p class="mt-2">Syncing with Secure Ledger...</p>
             </div>
         </div>
     </div>
@@ -102,93 +113,112 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
+        // --- MASTER UID BRIDGE ---
         const impersonateUid = sessionStorage.getItem('impersonate_uid');
         const isImpersonating = sessionStorage.getItem('isAdminImpersonating');
+        let activeUid;
 
-        window.exitAudit = () => { sessionStorage.clear(); window.location.href = "admin_user_audit.html"; };
+        window.exitAudit = function() {
+            sessionStorage.clear();
+            window.location.href = "admin_user_audit.html";
+        };
 
         onAuthStateChanged(auth, user => {
             if (user) {
-                const activeUid = (isImpersonating === 'true') ? impersonateUid : user.uid;
-                if (isImpersonating === 'true') document.getElementById('adminBanner').style.display = 'block';
+                // Determine whose history to load (Impersonation vs Regular User)
+                activeUid = (isImpersonating === 'true' && impersonateUid) ? impersonateUid : user.uid;
                 
-                initHistory(activeUid);
-            } else { window.location.href = "login.html"; }
+                if (isImpersonating === 'true') {
+                    document.getElementById('adminBanner').style.display = 'block';
+                }
+
+                loadHistoryStream(activeUid);
+            } else {
+                window.location.href = "login.html";
+            }
         });
 
-        function initHistory(uid) {
-            // Unified listener for the master 'orders' path
-            // Filtering for this specific user's UID
+        function loadHistoryStream(uid) {
+            // Path: Listening to 'orders' node filtered by UID
             const ordersRef = ref(db, 'orders');
-            const userOrdersQuery = query(ordersRef, orderByChild('uid'), equalTo(uid));
+            const userQuery = query(ordersRef, orderByChild('uid'), equalTo(uid));
 
-            onValue(userOrdersQuery, (snapshot) => {
-                const container = document.getElementById('historyContainer');
+            onValue(userQuery, (snapshot) => {
+                const container = document.getElementById('orderList');
                 const data = snapshot.val();
 
                 if (!data) {
                     container.innerHTML = `
                         <div class="empty-state">
-                            <i class="fas fa-receipt fa-4x opacity-10"></i>
-                            <p class="mt-4 font-bold">No Records Found</p>
-                            <p class="text-xs">Your data purchases will appear here.</p>
+                            <i class="fas fa-receipt fa-4x opacity-20"></i>
+                            <p class="mt-4">You haven't placed any orders yet.</p>
+                            <a href="buy-data.html" class="text-blue-500 font-bold text-sm underline mt-2 block">Buy Data Now</a>
                         </div>`;
-                    updateStats([], 0, 0);
+                    resetStats();
                     return;
                 }
 
-                const entries = Object.entries(data).sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+                // Sort: Most recent first
+                const entries = Object.entries(data).sort((a,b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
                 
                 let html = "";
-                let spent = 0;
-                let today = 0;
-                const startOfDay = new Date().setHours(0,0,0,0);
+                let totalOrdersCount = 0;
+                let totalSpentSum = 0;
+                let spentTodaySum = 0;
+                const startOfToday = new Date().setHours(0,0,0,0);
+
+                totalOrdersCount = entries.length;
 
                 entries.forEach(([id, order]) => {
                     const amount = parseFloat(order.amount || 0);
                     const ts = order.timestamp || Date.now();
-                    const status = order.status || "Pending";
+                    const status = order.status || 'Pending';
+                    const statusClass = `status-${status.toLowerCase().split(' ')[0]}`;
 
-                    // Stats logic
-                    if (status === "Successful" || status === "Processing") {
-                        spent += amount;
-                        if (ts >= startOfDay) today += amount;
+                    // Update dashboard stats (Only successful/processing orders)
+                    if (status === "Successful" || status === "Completed" || status === "Processing") {
+                        totalSpentSum += amount;
+                        if (ts >= startOfToday) spentTodaySum += amount;
                     }
 
+                    // Network Badges
                     const net = (order.network || 'MTN').toUpperCase();
                     let netClass = 'mtn-bg';
-                    if (net.includes('TEL')) netClass = 'tel-bg';
-                    if (net.includes('AT') || net.includes('AIR')) netClass = 'air-bg';
+                    if(net.includes('TEL')) netClass = 'tel-bg';
+                    if(net.includes('AT') || net.includes('AIR')) netClass = 'air-bg';
 
                     html += `
                         <div class="order-card">
                             <div class="order-header">
                                 <div class="network-icon ${netClass}">${net.substring(0,3)}</div>
-                                <div class="text-right">
-                                    <div class="font-mono text-[10px] text-gray-400 font-bold">#${id.slice(-8)}</div>
-                                    <div class="text-[9px] text-gray-400">${new Date(ts).toLocaleString()}</div>
+                                <div style="text-align:right">
+                                    <div style="font-family:monospace; font-size:11px; color:var(--text-gray); font-weight:700;">#${id.slice(-8)}</div>
+                                    <div style="font-size:10px; color:var(--text-gray);">${new Date(ts).toLocaleString()}</div>
                                 </div>
                             </div>
                             <div class="order-details">
-                                <div class="detail-row"><span>Package</span><b>${order.plan}</b></div>
-                                <div class="detail-row"><span>Recipient</span><b>${order.recipient}</b></div>
+                                <div class="detail-row"><span>Plan</span><b>${order.plan || 'N/A'}</b></div>
+                                <div class="detail-row"><span>Recipient</span><b>${order.recipient || 'N/A'}</b></div>
                             </div>
-                            <div class="flex justify-between items-center mt-4 pt-3 border-t border-dashed border-gray-100">
-                                <b class="text-lg text-indigo-600">₵${amount.toFixed(2)}</b>
-                                <span class="status-pill status-${status.toLowerCase().split(' ')[0]}">${status}</span>
+                            <div class="order-footer">
+                                <div class="amount-paid">₵${amount.toFixed(2)}</div>
+                                <span class="status-pill ${statusClass}">${status}</span>
                             </div>
-                        </div>`;
+                        </div>
+                    `;
                 });
 
+                document.getElementById('totalOrders').innerText = totalOrdersCount;
+                document.getElementById('totalSales').innerText = `₵${totalSpentSum.toFixed(2)}`;
+                document.getElementById('spentToday').innerText = `₵${spentTodaySum.toFixed(2)}`;
                 container.innerHTML = html;
-                updateStats(entries.length, spent, today);
             });
         }
 
-        function updateStats(count, spent, today) {
-            document.getElementById('totalOrders').innerText = count;
-            document.getElementById('totalSpent').innerText = `₵${spent.toFixed(2)}`;
-            document.getElementById('spentToday').innerText = `₵${today.toFixed(2)}`;
+        function resetStats() {
+            document.getElementById('totalOrders').innerText = "0";
+            document.getElementById('totalSales').innerText = "₵0.00";
+            document.getElementById('spentToday').innerText = "₵0.00";
         }
     </script>
 </body>
