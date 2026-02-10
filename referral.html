@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -154,12 +153,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getDatabase, ref, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import {  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-    // --- RE-IMPORT DATABASE TOOLS FOR COMPATIBILITY ---
-    import * as dbTools from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-    const { getDatabase: gDB, ref: r, onValue: oV, query: q, orderByChild: oBC, limitToLast: lTL } = dbTools;
+    import { getDatabase, ref, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     // UNIFIED SECURE CONFIG
     const firebaseConfig = {
@@ -171,7 +165,7 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db = gDB(app);
+    const db = getDatabase(app);
 
     // --- MASTER UID BRIDGE ---
     const impersonateUid = sessionStorage.getItem('impersonate_uid');
@@ -187,42 +181,48 @@
                 const fullLink = `${baseUrl}/register.html?ref=${activeUid}`;
                 document.getElementById('referralLink').innerText = fullLink;
 
-                oV(r(db, 'users/' + activeUid), (snap) => {
+                // Sync Personal Referral Stats
+                onValue(ref(db, 'users/' + activeUid), (snap) => {
                     const data = snap.val() || {};
                     document.getElementById('refCountDisplay').innerText = data.referralCount || 0;
                     const approvedEarnings = Number(data.referralBonus || 0);
                     document.getElementById('refBalanceDisplay').innerText = `₵${approvedEarnings.toFixed(2)}`;
                 });
 
-                // Sync Leaderboard
-                const topQuery = q(r(db, 'users'), oBC('referralCount'), lTL(5));
-                oV(topQuery, (snap) => {
+                // Sync Global Leaderboard
+                const topQuery = query(ref(db, 'users'), orderByChild('referralCount'), limitToLast(10));
+                onValue(topQuery, (snap) => {
                     const board = document.getElementById('leaderboardList');
                     board.innerHTML = "";
-                    let users = [];
+                    let usersList = [];
+                    
                     snap.forEach(child => { 
                         const userData = child.val();
-                        if(userData.referralCount > 0) users.push(userData); 
+                        if(userData.referralCount > 0) {
+                            usersList.push(userData); 
+                        }
                     });
                     
-                    users.sort((a,b) => (b.referralCount || 0) - (a.referralCount || 0));
+                    // Sort descending for leaderboard
+                    usersList.sort((a,b) => (b.referralCount || 0) - (a.referralCount || 0));
+                    const top5 = usersList.slice(0, 5);
 
-                    if(users.length === 0) {
-                        board.innerHTML = '<div style="text-align: center; padding: 20px; color: #94a3b8;">No approved referrals yet.</div>';
+                    if(top5.length === 0) {
+                        board.innerHTML = '<div style="text-align: center; padding: 20px; color: #94a3b8;">No referrals recorded yet.</div>';
                         return;
                     }
 
-                    users.forEach((u, i) => {
+                    top5.forEach((u, i) => {
                         const rank = i + 1;
                         const rankClass = rank <= 3 ? `rank-${rank}` : '';
-                        const name = (u.fullName || "User").split(' ')[0];
+                        const firstName = (u.fullName || "Member").split(' ')[0];
                         board.innerHTML += `
                             <div class="leader-item">
                                 <div style="display:flex; align-items:center; gap:12px;">
                                     <div class="rank-box ${rankClass}">${rank}</div>
                                     <div class="name-box">
-                                        <b>${name}***</b>
-                                        <span>Joined Member</span>
+                                        <b>${firstName}***</b>
+                                        <span>Verified Partner</span>
                                     </div>
                                 </div>
                                 <div class="ref-count">${u.referralCount || 0} Refs</div>
