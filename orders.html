@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin — Command Center</title>
+    <title>Gigantic Admin — Real-Time Fulfillment</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -19,9 +19,9 @@
         * { margin:0; padding:0; box-sizing:border-box; font-family: -apple-system, sans-serif; }
         body { background: var(--light-bg); color: var(--text-main); min-height: 100vh; }
         header { background: var(--deep-blue); color: white; padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
-        .back-btn { background: rgba(255,255,255,0.15); color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 0.8rem; font-weight: 700; }
+        
         .container { padding: 30px 5%; }
-        .api-banner { background: #0f172a; color: #4ade80; padding: 10px 5%; font-family: monospace; font-size: 11px; display: flex; justify-content: space-between; align-items: center; }
+        .api-banner { background: #0f172a; color: #4ade80; padding: 10px 5%; font-family: monospace; font-size: 11px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e293b; }
         .pulse { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; display: inline-block; margin-right: 5px; animation: blink 1.5s infinite; }
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
         
@@ -30,30 +30,28 @@
         th { background: #f8fafc; color: #64748b; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; padding: 15px; text-align: left; }
         td { padding: 15px; font-size: 0.85rem; border-bottom: 1px solid #f1f5f9; }
         
-        .status-badge { font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; border: 1px solid transparent; }
-        .status-Pending { background: #fffbeb; color: #b45309; border-color: #fde68a; }
-        .status-Completed { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
-        .status-Flagged { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
-        .status-Processing { background: #eff6ff; color: #1e40af; border-color: #bfdbfe; }
-        .status-Failed { background: #fdf2f2; color: #ef4444; border-color: #fecaca; }
+        .status-badge { font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; }
+        .status-Pending { background: #fffbeb; color: #b45309; }
+        .status-Completed { background: #ecfdf5; color: #047857; }
+        .status-Processing { background: #eff6ff; color: #1e40af; }
+        .status-Failed { background: #fdf2f2; color: #ef4444; }
         
-        .status-select { padding: 6px; border-radius: 8px; font-size: 0.75rem; border: 1px solid #cbd5e1; outline: none; cursor: pointer; background: #f8fafc; color: var(--deep-blue); font-weight: 600; }
-        .log-card { background: #1e293b; color: #94a3b8; padding: 20px; border-radius: 15px; font-family: monospace; font-size: 12px; height: 200px; overflow-y: auto; }
+        .log-card { background: #1e293b; color: #94a3b8; padding: 20px; border-radius: 15px; font-family: monospace; font-size: 12px; height: 180px; overflow-y: auto; border: 1px solid #334155; }
         .log-entry { border-bottom: 1px solid #334155; padding: 5px 0; }
+        .log-success { color: #4ade80; }
         .log-err { color: #ef4444; }
-        .loader { font-size: 10px; color: var(--primary-blue); margin-left: 5px; }
     </style>
 </head>
 <body>
 
 <div class="api-banner">
-    <div><span class="pulse"></span> GIGANTIC DATA MASTER COMMAND CENTER ACTIVE</div>
+    <div><span class="pulse"></span> GIGANTIC AUTO-FULFILLMENT ENGINE: ONLINE</div>
     <div id="apiClock">00:00:00</div>
 </div>
 
 <header>
-    <h1><i class="fas fa-user-shield"></i> MASTER CONTROL</h1>
-    <a href="admin_dashboard.html" class="back-btn"><i class="fas fa-arrow-left"></i> Dashboard</a>
+    <h1><i class="fas fa-microchip"></i> COMMAND CENTER</h1>
+    <a href="admin_dashboard.html" style="color:white; text-decoration:none; font-weight:bold; font-size:13px;"><i class="fas fa-home"></i> Dashboard</a>
 </header>
 
 <div class="container">
@@ -62,17 +60,17 @@
             <table id="ordersTable">
                 <thead>
                     <tr>
-                        <th>Order ID</th>
-                        <th>Network/Plan</th>
-                        <th>Amount</th>
+                        <th>Time</th>
+                        <th>Network</th>
                         <th>Recipient</th>
-                        <th>User Email</th>
+                        <th>Plan</th>
+                        <th>User</th>
                         <th>Status</th>
-                        <th style="text-align:right">Update / Delete</th>
+                        <th style="text-align:right">Action</th>
                     </tr>
                 </thead>
                 <tbody id="orderTbody">
-                    <tr><td colspan="7" style="text-align:center; padding:50px;">Connecting to Secure Database...</td></tr>
+                    <tr><td colspan="7" style="text-align:center; padding:50px;">Listening for new orders...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -84,7 +82,7 @@
 </div>
 
 <script>
-// 1. SECURE CONFIGURATION
+// --- CORE CONFIGURATION ---
 const firebaseConfig = {
     apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
     authDomain: "gigantic-data.firebaseapp.com",
@@ -96,97 +94,76 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
 
-const API_URL = "https://idatagh.com/wp-json/custom/v1/place-order";
 const PROXY = "https://corsproxy.io/?";
+const API_URL = "https://idatagh.com/wp-json/custom/v1/place-order";
 
-let allOrders = [];
-let userEmailMap = {};
-let isProcessingOrder = false;
+let userCache = {};
+let processedOrders = new Set(); // Prevents duplicate loops in the same session
 
-// 2. SESSION VALIDATION
+// --- AUTH GUARD ---
 auth.onAuthStateChanged(user => {
     if(user && user.email === "alenacloft0@gmail.com"){
-        writeLog("Master Session Verified.");
-        startEngine();
+        writeLog("Security Handshake Successful. Engine Ready.", true);
+        initAutomation();
     } else { 
         window.location.href = "login.html"; 
     }
 });
 
-function writeLog(msg, isError = false) {
+function writeLog(msg, isSuccess = false, isError = false) {
     const logDiv = document.getElementById("logEntries");
     const time = new Date().toLocaleTimeString();
-    logDiv.innerHTML = `<div class="log-entry ${isError ? 'log-err' : ''}">[${time}] ${msg}</div>` + logDiv.innerHTML;
+    const style = isSuccess ? 'log-success' : (isError ? 'log-err' : '');
+    logDiv.innerHTML = `<div class="log-entry ${style}">[${time}] ${msg}</div>` + logDiv.innerHTML;
 }
 
-async function startEngine() {
-    // Sync Users
-    db.ref("users").on("value", snap => {
-        const data = snap.val() || {};
-        Object.entries(data).forEach(([uid, info]) => { userEmailMap[uid] = info.email; });
-    });
+function initAutomation() {
+    // 1. Sync User Directory
+    db.ref("users").on("value", snap => { userCache = snap.val() || {}; });
 
-    // Listen for Orders
+    // 2. Listen to Orders node - Triggers on any change
     db.ref("user_orders").on("value", snapshot => {
-        const data = snapshot.val() || {};
-        allOrders = [];
-        Object.entries(data).forEach(([uid, orders]) => {
-            Object.entries(orders).forEach(([id, order]) => {
-                const orderObj = { id, uid, ...order, email: userEmailMap[uid] || order.email };
-                allOrders.push(orderObj);
-                
-                // Automate if Pending
-                if (order.status === "Pending" && !isProcessingOrder) { 
-                    securityAudit(orderObj); 
+        const rootData = snapshot.val() || {};
+        let tableData = [];
+
+        Object.entries(rootData).forEach(([uid, orders]) => {
+            Object.entries(orders).forEach(([orderId, order]) => {
+                const fullOrder = { orderId, uid, ...order, email: userCache[uid]?.email || "User" };
+                tableData.push(fullOrder);
+
+                // AUTOMATIC TRIGGER: If status is Pending, send to API immediately
+                if (order.status === "Pending" && !processedOrders.has(orderId)) {
+                    processedOrders.add(orderId); // Lock order for processing
+                    processOrder(fullOrder);
                 }
             });
         });
-        renderTable();
+        renderTable(tableData);
     });
 }
 
-// 3. SECURITY & AUDIT
-async function securityAudit(order) {
-    try {
-        const userSnap = await db.ref(`users/${order.uid}`).get();
-        const userData = userSnap.val();
-        const balance = parseFloat(userData.wallet || userData.balance || 0);
-        
-        if (balance < 0) {
-            updateStatusInDb(order.uid, order.id, "Flagged");
-            writeLog(`SECURITY ALERT: User ${order.email} has negative balance!`, true);
-            return;
-        }
-        
-        fulfillOrder(order);
-    } catch (e) { 
-        writeLog("Audit Engine Error", true); 
-    }
-}
-
-// 4. API FULFILLMENT
-async function fulfillOrder(order) {
-    isProcessingOrder = true;
-    updateStatusInDb(order.uid, order.id, "Processing");
-    writeLog(`Processing Order #${order.id.slice(-6)}...`);
+async function processOrder(order) {
+    writeLog(`NEW ORDER DETECTED: #${order.orderId.slice(-6)} for ${order.recipient}`);
+    updateStatus(order.uid, order.orderId, "Processing");
 
     try {
-        // Fetch Hidden Key from your Secure Database Node
+        // Fetch API Key from your Secure Node
         const keySnap = await db.ref('admin_settings/idata_key').get();
-        const SECURE_API_KEY = keySnap.val();
+        const apiKey = keySnap.val();
 
-        if (!SECURE_API_KEY) {
-            writeLog("CRITICAL: iDataGH Key missing in admin_settings!", true);
-            isProcessingOrder = false;
+        if (!apiKey) {
+            writeLog("CRITICAL: API Key missing in DB!", false, true);
             return;
         }
 
+        // Format Network
         let net = order.network.toLowerCase();
         if (net.includes("at")) net = "at";
         else if (net.includes("telecel")) net = "telecel";
         else net = "mtn";
 
-        const planID = parseInt(order.plan.replace(/[^0-9]/g, '')) || 5;
+        // Extract numeric Plan ID (Logic: 1GB -> 1, 5GB -> 5)
+        const planID = parseInt(order.plan.replace(/[^0-9]/g, '')) || 1;
 
         const payload = {
             "network": net,
@@ -197,7 +174,7 @@ async function fulfillOrder(order) {
         const response = await fetch(PROXY + encodeURIComponent(API_URL), {
             method: 'POST',
             headers: { 
-                'Authorization': `Bearer ${SECURE_API_KEY}`, 
+                'Authorization': `Bearer ${apiKey}`, 
                 'Content-Type': 'application/json' 
             },
             body: JSON.stringify(payload)
@@ -205,72 +182,55 @@ async function fulfillOrder(order) {
 
         const result = await response.json();
         
-        if (result.status === "success" || response.ok) {
-            writeLog(`SUCCESS: #${order.id.slice(-6)} fulfilled.`);
-            updateStatusInDb(order.uid, order.id, "Completed");
+        if (response.ok || result.status === "success") {
+            writeLog(`FULFILLED: Order #${order.orderId.slice(-6)} Success.`, true);
+            updateStatus(order.uid, order.orderId, "Completed");
         } else {
-            writeLog(`API REJECTED: ${result.message || 'Check iDataGH balance'}`, true);
-            updateStatusInDb(order.uid, order.id, "Failed");
+            writeLog(`REJECTED: ${result.message || 'Check iData Balance'}`, false, true);
+            updateStatus(order.uid, order.orderId, "Failed");
         }
     } catch (err) {
-        writeLog(`PROXY/API TIMEOUT: Check internet or iDataGH status.`, true);
-        updateStatusInDb(order.uid, order.id, "Pending"); // Reset to try again later
-    } finally {
-        // Anti-Spam Wait: Wait 2 seconds before allowing the next automation
-        setTimeout(() => { isProcessingOrder = false; }, 2000);
+        writeLog("CONNECTION ERROR: Proxy or API unreachable.", false, true);
+        updateStatus(order.uid, order.orderId, "Failed");
     }
 }
 
-function updateStatusInDb(uid, orderId, status) {
+function updateStatus(uid, orderId, status) {
     const updates = {};
     updates[`user_orders/${uid}/${orderId}/status`] = status;
-    updates[`orders/${orderId}/status`] = status;
+    updates[`orders/${orderId}/status`] = status; // Keep master list in sync
     db.ref().update(updates);
 }
 
-window.manualStatusUpdate = function(uid, orderId, newStatus) {
-    if(!newStatus) return;
-    writeLog(`Manual Override: Updating #${orderId.slice(-6)} to ${newStatus}`);
-    updateStatusInDb(uid, orderId, newStatus);
-};
-
-window.deleteOrder = (id, uid) => {
-    if(confirm("Permanently delete this order record?")){
-        db.ref(`user_orders/${uid}/${id}`).remove();
-        db.ref(`orders/${id}`).remove();
-        writeLog(`Record #${id.slice(-6)} deleted.`);
-    }
-}
-
-function renderTable() {
+function renderTable(data) {
     const tbody = document.getElementById("orderTbody");
     tbody.innerHTML = "";
     
-    // Sort by newest first
-    allOrders.sort((a,b) => b.timestamp - a.timestamp).forEach(o => {
-        const tr = document.createElement("tr");
-        const sClass = (o.status || "Pending").replace(" ", "-");
-        tr.innerHTML = `
-            <td><b>#${o.id.slice(-6)}</b><br><small>${new Date(o.timestamp).toLocaleTimeString()}</small></td>
-            <td><b>${(o.network || "").toUpperCase()}</b><br>${o.plan}</td>
-            <td>₵${parseFloat(o.amount || 0).toFixed(2)}</td>
-            <td>${o.recipient}</td>
-            <td style="font-size:11px;">${o.email}</td>
-            <td><span class="status-badge status-${sClass}">${o.status}</span></td>
-            <td style="text-align:right">
-                <select class="status-select" onchange="manualStatusUpdate('${o.uid}', '${o.id}', this.value)">
-                    <option value="" selected disabled>Update</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Processing">Processing</option>
-                    <option value="Failed">Failed</option>
-                    <option value="Canceled">Canceled</option>
-                </select>
-                <button onclick="deleteOrder('${o.id}','${o.uid}')" style="border:none; background:none; cursor:pointer; color:#94a3b8; margin-left:10px;"><i class="fas fa-trash-alt"></i></button>
-            </td>
+    // Show newest orders on top
+    data.sort((a,b) => b.timestamp - a.timestamp).forEach(o => {
+        const timeStr = new Date(o.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        tbody.innerHTML += `
+            <tr>
+                <td><small>${timeStr}</small></td>
+                <td><b>${o.network.toUpperCase()}</b></td>
+                <td><b>${o.recipient}</b></td>
+                <td>${o.plan}</td>
+                <td style="font-size:10px;">${o.email}</td>
+                <td><span class="status-badge status-${o.status}">${o.status}</span></td>
+                <td style="text-align:right">
+                    <button onclick="deleteRow('${o.orderId}', '${o.uid}')" style="background:none; border:none; color:#cbd5e1; cursor:pointer;"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>
         `;
-        tbody.appendChild(tr);
     });
 }
+
+window.deleteRow = (oid, uid) => {
+    if(confirm("Delete record?")) {
+        db.ref(`user_orders/${uid}/${oid}`).remove();
+        db.ref(`orders/${oid}`).remove();
+    }
+};
 
 setInterval(() => { document.getElementById('apiClock').innerText = new Date().toLocaleTimeString(); }, 1000);
 </script>
