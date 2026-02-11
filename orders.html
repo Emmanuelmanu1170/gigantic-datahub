@@ -105,7 +105,6 @@ const db = firebase.database();
 
 let userCache = {};
 
-// --- PERSISTENT AUTH GUARD ---
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
     .then(() => {
         return auth.onAuthStateChanged(user => {
@@ -128,26 +127,29 @@ function writeLog(msg, isSuccess = false, isError = false) {
 }
 
 function initAutomation() {
-    // Sync Users
     db.ref("users").on("value", snap => { 
         userCache = snap.val() || {}; 
         writeLog("User directory mapped.");
     });
 
-    // Unified listener for history and live triggers
-    db.ref("pending_orders").on("value", snapshot => {
-        const pendingData = snapshot.val() || {};
-        db.ref("orders").limitToLast(50).on("value", historySnap => {
-            const historyData = historySnap.val() || {};
+    // Listen to Master Orders node primarily for history and status
+    db.ref("orders").limitToLast(50).on("value", snapshot => {
+        const ordersData = snapshot.val() || {};
+        
+        // Also check pending orders to ensure real-time visibility
+        db.ref("pending_orders").once("value", pendingSnap => {
+            const pendingData = pendingSnap.val() || {};
             let combinedData = [];
 
-            Object.entries(historyData).forEach(([oid, data]) => {
+            // Add Master Orders
+            Object.entries(ordersData).forEach(([oid, data]) => {
                 combinedData.push({ ...data, orderId: oid });
             });
 
+            // Add Pending if not in Master
             Object.entries(pendingData).forEach(([oid, data]) => {
-                if(!historyData[oid]) {
-                    combinedData.push({ ...data, orderId: oid, status: data.status || 'Pending' });
+                if(!ordersData[oid]) {
+                    combinedData.push({ ...data, orderId: oid });
                 }
             });
 
@@ -205,19 +207,27 @@ window.changeStatus = (oid, uid, newStatus) => {
         return;
     }
     
+    // IMPORTANT: Atomic update across all relevant nodes
     const updates = {};
     updates[`orders/${oid}/status`] = newStatus;
     updates[`user_orders/${uid}/${oid}/status`] = newStatus;
     
-    // Clear from active trigger node if finalized
-    if(newStatus !== "Pending" && newStatus !== "Processing") {
+    // If the status is finalized, remove it from the trigger node
+    if(newStatus === "Successful" || newStatus === "Failed" || newStatus === "Refunded") {
         updates[`pending_orders/${oid}`] = null;
+    } else {
+        // Keep it in pending_orders if still processing or pending
+        db.ref(`pending_orders/${oid}`).once('value', snap => {
+            if(snap.exists()) {
+                db.ref(`pending_orders/${oid}`).update({ status: newStatus });
+            }
+        });
     }
 
     db.ref().update(updates).then(() => {
-        writeLog(`STATUS UPDATE: Order #${oid.slice(-6)} set to ${newStatus}`, true);
+        writeLog(`STATUS CHANGED: Order #${oid.slice(-6)} is now ${newStatus}`, true);
     }).catch(err => {
-        writeLog(`Sync Error: ${err.message}`, false, true);
+        writeLog(`Status update failed: ${err.message}`, false, true);
     });
 };
 
@@ -227,7 +237,7 @@ window.deleteRecord = (oid, uid) => {
         updates[`orders/${oid}`] = null;
         updates[`user_orders/${uid}/${oid}`] = null;
         updates[`pending_orders/${oid}`] = null;
-        db.ref().update(updates).then(() => writeLog(`PURGE: Record #${oid.slice(-6)} deleted.`));
+        db.ref().update(updates).then(() => writeLog(`Record #${oid.slice(-6)} deleted.`));
     }
 };
 
