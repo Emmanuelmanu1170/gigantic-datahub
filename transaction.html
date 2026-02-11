@@ -9,7 +9,7 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Activity History - Gigantic Data</title>
+    <title>Activity History | Gigantic Data</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -19,30 +19,22 @@
             --purple: #a855f7; --card-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
         [data-theme="dark"] { --bg: #02040a; --primary: #010409; }
-
         * { margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif; }
         body { background: var(--bg); color: #1e293b; padding-bottom: 30px; }
-
         header { background: var(--primary); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
-        
         .stats-ribbon { background: white; padding: 15px; display: flex; justify-content: space-around; border-bottom: 1px solid #e2e8f0; position: sticky; top: 65px; z-index: 98; }
         [data-theme="dark"] .stats-ribbon { background: #0d1117; border-color: #30363d; }
-
         .container { padding: 15px; max-width: 650px; margin: auto; }
         .date-divider { font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin: 20px 0 10px 5px; letter-spacing: 1px; }
-
         .tx-card { background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px; display: flex; gap: 12px; align-items: center; box-shadow: var(--card-shadow); border: 1px solid transparent; }
         [data-theme="dark"] .tx-card { background: #0d1117; color: white; border-color: #30363d; }
-
         .icon-box { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
         .icon-purchase { background: #fee2e2; color: var(--danger); }
         .icon-topup { background: #dcfce7; color: var(--success); }
-
         .tx-info { flex: 1; }
         .tx-info h4 { font-size: 0.85rem; font-weight: 700; margin-bottom: 2px; }
         .user-tag { font-family: monospace; font-size: 9px; color: #6366f1; font-weight: 700; background: #eef2ff; padding: 2px 4px; border-radius: 4px; display: inline-block; margin-top: 4px; }
         [data-theme="dark"] .user-tag { background: #1e293b; color: #818cf8; }
-
         .tx-amount { text-align: right; }
         .amount-val { font-weight: 800; font-size: 0.95rem; display: block; }
     </style>
@@ -54,7 +46,7 @@
         <a href="dashboard.html" style="color:white;"><i class="fas fa-chevron-left"></i></a>
         <h3 id="headerTitle" style="font-size:1.1rem; font-weight: 800;">Activity History</h3>
     </div>
-    <i class="fas fa-sync-alt" onclick="location.reload()"></i>
+    <i class="fas fa-sync-alt" style="cursor: pointer;" onclick="location.reload()"></i>
 </header>
 
 <div class="stats-ribbon">
@@ -102,15 +94,20 @@ onAuthStateChanged(auth, (user) => {
 function loadData(user) {
     let txRef;
     const isAdmin = user.email === ADMIN_EMAIL;
-
-    // RULE COMPLIANCE LOGIC:
-    // Admin reads the whole node. User MUST query by UID to pass security rules.
-    if (isAdmin) {
+    
+    // Check if we are in admin audit mode (viewing another user's history)
+    const impersonateUid = sessionStorage.getItem('impersonate_uid');
+    const isImpersonating = sessionStorage.getItem('isAdminImpersonating') === 'true';
+    
+    // If Admin is viewing their own page, show EVERYTHING. 
+    // If Admin is auditing a user OR a regular user is logged in, show specific UID.
+    if (isAdmin && !isImpersonating) {
         document.getElementById('headerTitle').innerText = "Global Transactions";
-        txRef = ref(db, 'transactions');
+        txRef = ref(db, 'transactions'); 
     } else {
-        document.getElementById('headerTitle').innerText = "My Activity History";
-        txRef = query(ref(db, 'transactions'), orderByChild('uid'), equalTo(user.uid));
+        const targetUid = isImpersonating ? impersonateUid : user.uid;
+        document.getElementById('headerTitle').innerText = isImpersonating ? "User Audit History" : "My Activity History";
+        txRef = query(ref(db, 'transactions'), orderByChild('uid'), equalTo(targetUid));
     }
 
     onValue(txRef, (snap) => {
@@ -143,7 +140,8 @@ function loadData(user) {
                 lastDate = dateLabel;
             }
 
-            const isCredit = log.type === "Credit" || log.type === "Top-up";
+            // Logic to determine if it's a Top-up (Credit) or Purchase (Deduct)
+            const isCredit = log.type === "Credit" || log.type === "Top-up" || log.description?.toLowerCase().includes("top-up");
             const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
             listDiv.innerHTML += `
@@ -152,9 +150,9 @@ function loadData(user) {
                         <i class="fas ${isCredit ? 'fa-arrow-up' : 'fa-shopping-cart'}"></i>
                     </div>
                     <div class="tx-info">
-                        <h4>${log.description || 'Service Transaction'}</h4>
-                        <p class="text-[10px] text-slate-400">${time} • Ref: ${log.id.substring(0,8)}</p>
-                        ${isAdmin ? `<span class="user-tag">UID: ${log.uid}</span>` : ''}
+                        <h4>${log.description || (isCredit ? 'Wallet Top-up' : 'Data Purchase')}</h4>
+                        <p class="text-[10px] text-slate-400">${time} • Ref: ${log.id.substring(0,10)}</p>
+                        ${isAdmin && !isImpersonating ? `<span class="user-tag">UID: ${log.uid}</span>` : ''}
                     </div>
                     <div class="tx-amount">
                         <span class="amount-val" style="color: ${isCredit ? '#10b981' : '#ef4444'}">
@@ -168,7 +166,7 @@ function loadData(user) {
         document.getElementById('totalVol').innerText = `₵${totalVal.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
     }, (error) => {
         console.error("Security Error:", error);
-        document.getElementById('historyList').innerHTML = `<div class="text-center py-20 text-red-500">Permission Denied: Ensure you are logged in.</div>`;
+        document.getElementById('historyList').innerHTML = `<div class="text-center py-20 text-red-500">Permission Denied: Check Security Rules.</div>`;
     });
 }
 </script>
