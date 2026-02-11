@@ -28,39 +28,42 @@
         .table-card { background: white; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; min-width: 1000px; }
         th { background: #f8fafc; color: #64748b; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; padding: 15px; text-align: left; }
-        td { padding: 15px; font-size: 0.85rem; border-bottom: 1px solid #f1f5f9; }
+        td { padding: 15px; font-size: 0.85rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
         
         .status-badge { font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; display: inline-block; margin-bottom: 5px; }
         .status-Pending { background: #fffbeb; color: #b45309; }
-        .status-Completed, .status-Successful { background: #ecfdf5; color: #047857; }
-        .status-Processing { background: #eff6ff; color: #1e40af; }
+        .status-Successful { background: #ecfdf5; color: #047857; }
+        .status-Processing { background: #eff6ff; color: #1e40af; animation: pulse 1.5s infinite; }
         .status-Failed { background: #fdf2f2; color: #ef4444; }
         .status-Refunded { background: #f1f5f9; color: #475569; }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         
-        .status-select { padding: 5px; font-size: 11px; border-radius: 5px; border: 1px solid #e2e8f0; background: #f8fafc; outline: none; cursor: pointer; display: block; width: 120px; }
+        .status-select { padding: 6px; font-size: 11px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; outline: none; cursor: pointer; display: block; width: 130px; font-weight: 600; }
 
         .log-card { background: #1e293b; color: #94a3b8; padding: 20px; border-radius: 15px; font-family: monospace; font-size: 12px; height: 180px; overflow-y: auto; border: 1px solid #334155; }
         .log-entry { border-bottom: 1px solid #334155; padding: 5px 0; }
         .log-success { color: #4ade80; }
         .log-err { color: #ef4444; }
         
-        .admin-info { font-size: 10px; color: #94a3b8; font-weight: bold; }
-        .user-info-cell { display: flex; flex-direction: column; gap: 2px; }
-        .user-email { font-size: 10px; color: #64748b; }
-        .action-btns { display: flex; align-items: center; justify-content: flex-end; gap: 15px; }
+        .data-label { font-size: 10px; color: #94a3b8; display: block; text-transform: uppercase; font-weight: 700; margin-bottom: 2px; }
+        .data-value { font-weight: 700; color: var(--text-main); }
+        .price-tag { color: var(--primary-blue); font-weight: 900; }
     </style>
 </head>
 <body>
 
 <div class="api-banner">
-    <div><span class="pulse"></span> GIGANTIC AUTO-FULFILLMENT ENGINE: ONLINE</div>
-    <div class="admin-info" id="adminDisplay">Handshaking...</div>
+    <div><span class="pulse"></span> GIGANTIC MASTER ENGINE: DATABASE SYNC ACTIVE</div>
+    <div class="admin-info" id="adminDisplay">Connecting...</div>
     <div id="apiClock">00:00:00</div>
 </div>
 
 <header>
-    <h1><i class="fas fa-microchip"></i> COMMAND CENTER</h1>
-    <a href="admin_dashboard.html" style="color:white; text-decoration:none; font-weight:bold; font-size:13px;"><i class="fas fa-home"></i> Dashboard</a>
+    <h1><i class="fas fa-terminal"></i> COMMAND CENTER</h1>
+    <div style="display:flex; gap:15px; align-items:center;">
+        <a href="admin_dashboard.html" style="color:white; text-decoration:none; font-weight:bold; font-size:13px;"><i class="fas fa-home"></i> Home</a>
+    </div>
 </header>
 
 <div class="container">
@@ -69,17 +72,17 @@
             <table id="ordersTable">
                 <thead>
                     <tr>
-                        <th>Time</th>
-                        <th>Network</th>
-                        <th>Recipient</th>
-                        <th>Plan</th>
-                        <th>Customer Details</th>
+                        <th>Order Identity</th>
+                        <th>Network & Plan</th>
+                        <th>Recipient Details</th>
+                        <th>Price (GHS)</th>
+                        <th>Customer Info</th>
                         <th>Status Control</th>
-                        <th style="text-align:right">Action</th>
+                        <th style="text-align:right">Purge</th>
                     </tr>
                 </thead>
                 <tbody id="orderTbody">
-                    <tr><td colspan="7" style="text-align:center; padding:50px;">Syncing with Data nodes...</td></tr>
+                    <tr><td colspan="7" style="text-align:center; padding:50px;">Initializing secure handshake...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -105,19 +108,17 @@ const db = firebase.database();
 
 let userCache = {};
 
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-    .then(() => {
-        return auth.onAuthStateChanged(user => {
-            if(user && user.email === "alenacloft0@gmail.com"){
-                document.getElementById('adminDisplay').innerText = `ADMIN: ${user.email}`;
-                writeLog(`Security cleared. Admin session active.`, true);
-                initAutomation();
-            } else { 
-                writeLog("Unauthorized Access Attempt.", false, true);
-                setTimeout(() => { window.location.href = "login.html"; }, 2000);
-            }
-        });
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(() => {
+    return auth.onAuthStateChanged(user => {
+        if(user && user.email === "alenacloft0@gmail.com"){
+            document.getElementById('adminDisplay').innerText = `MASTER ADMIN: ${user.email}`;
+            writeLog(`System Ready. Admin authenticated.`, true);
+            initAutomation();
+        } else { 
+            window.location.href = "login.html";
+        }
     });
+});
 
 function writeLog(msg, isSuccess = false, isError = false) {
     const logDiv = document.getElementById("logEntries");
@@ -127,33 +128,29 @@ function writeLog(msg, isSuccess = false, isError = false) {
 }
 
 function initAutomation() {
-    db.ref("users").on("value", snap => { 
-        userCache = snap.val() || {}; 
-        writeLog("User directory mapped.");
-    });
+    // 1. Map Users for details
+    db.ref("users").on("value", snap => { userCache = snap.val() || {}; });
 
-    // Listen to Master Orders node primarily for history and status
-    db.ref("orders").limitToLast(50).on("value", snapshot => {
+    // 2. Real-time Master Listener
+    db.ref("orders").orderByChild("timestamp").limitToLast(100).on("value", snapshot => {
         const ordersData = snapshot.val() || {};
         
-        // Also check pending orders to ensure real-time visibility
+        // Fetch pending orders to ensure we don't miss anything in the trigger node
         db.ref("pending_orders").once("value", pendingSnap => {
             const pendingData = pendingSnap.val() || {};
-            let combinedData = [];
+            let combined = [];
 
-            // Add Master Orders
-            Object.entries(ordersData).forEach(([oid, data]) => {
-                combinedData.push({ ...data, orderId: oid });
+            // Merge Master
+            Object.entries(ordersData).forEach(([oid, val]) => {
+                combined.push({ ...val, orderId: oid });
             });
 
-            // Add Pending if not in Master
-            Object.entries(pendingData).forEach(([oid, data]) => {
-                if(!ordersData[oid]) {
-                    combinedData.push({ ...data, orderId: oid });
-                }
+            // Merge Pending (if not already in master)
+            Object.entries(pendingData).forEach(([oid, val]) => {
+                if(!ordersData[oid]) combined.push({ ...val, orderId: oid });
             });
 
-            renderTable(combinedData);
+            renderTable(combined);
         });
     });
 }
@@ -163,38 +160,47 @@ function renderTable(data) {
     tbody.innerHTML = "";
     
     data.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)).forEach(o => {
-        const timeStr = o.timestamp ? new Date(o.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'N/A';
-        const u = userCache[o.uid] || {};
-        const userName = u.fullName || u.email || "Unknown User";
-        const userEmail = u.email || "No Email";
+        const ts = o.timestamp ? new Date(o.timestamp).toLocaleString() : 'N/A';
+        const user = userCache[o.uid] || {};
+        const amount = parseFloat(o.amount || 0).toFixed(2);
 
         tbody.innerHTML += `
             <tr>
-                <td><small>${timeStr}</small></td>
-                <td><b>${o.network ? o.network.toUpperCase() : 'N/A'}</b></td>
-                <td><b>${o.recipient || 'N/A'}</b></td>
-                <td>${o.plan || 'N/A'}</td>
                 <td>
-                    <div class="user-info-cell">
-                        <span style="font-weight:700">${userName}</span>
-                        <span class="user-email">${userEmail}</span>
-                    </div>
+                    <span class="data-label">ORDER ID / TIME</span>
+                    <span class="data-value" style="font-family:monospace; color:#6366f1">#${o.orderId.slice(-8)}</span>
+                    <div style="font-size:9px; color:#94a3b8; margin-top:4px">${ts}</div>
+                </td>
+                <td>
+                    <span class="data-label">NETWORK / BUNDLE</span>
+                    <span class="data-value">${(o.network || 'N/A').toUpperCase()}</span>
+                    <div style="font-size:11px; font-weight:bold; color:#0052cc">${o.plan || 'N/A'}</div>
+                </td>
+                <td>
+                    <span class="data-label">RECIPIENT NUMBER</span>
+                    <span class="data-value" style="letter-spacing:1px">${o.recipient || 'N/A'}</span>
+                </td>
+                <td class="price-tag">₵${amount}</td>
+                <td>
+                    <span class="data-label">USER: ${user.fullName || 'Unknown'}</span>
+                    <span class="user-email" style="font-size:10px">${user.email || 'N/A'}</span>
+                    <div style="font-size:8px; font-family:monospace; margin-top:3px">UID: ${o.uid}</div>
                 </td>
                 <td>
                     <span class="status-badge status-${o.status}">${o.status}</span>
                     <select class="status-select" onchange="changeStatus('${o.orderId}', '${o.uid}', this.value)">
-                        <option value="" disabled selected>Change Status</option>
-                        <option value="Pending" ${o.status === 'Pending' ? 'selected' : ''}>Pending</option>
-                        <option value="Processing" ${o.status === 'Processing' ? 'selected' : ''}>Processing</option>
-                        <option value="Successful" ${o.status === 'Successful' ? 'selected' : ''}>Successful</option>
-                        <option value="Failed" ${o.status === 'Failed' ? 'selected' : ''}>Failed</option>
-                        <option value="Refunded" ${o.status === 'Refunded' ? 'selected' : ''}>Refunded</option>
+                        <option value="" disabled selected>SET STATUS</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Processing">Processing</option>
+                        <option value="Successful">Successful</option>
+                        <option value="Failed">Failed</option>
+                        <option value="Refunded">Refunded</option>
                     </select>
                 </td>
                 <td style="text-align:right">
-                    <div class="action-btns">
-                        <button onclick="deleteRecord('${o.orderId}', '${o.uid}')" style="background:none; border:none; color:#cbd5e1; cursor:pointer;"><i class="fas fa-trash"></i></button>
-                    </div>
+                    <button onclick="deleteRecord('${o.orderId}', '${o.uid}')" style="background:none; border:none; color:#cbd5e1; cursor:pointer; font-size:14px;">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
                 </td>
             </tr>
         `;
@@ -203,41 +209,37 @@ function renderTable(data) {
 
 window.changeStatus = (oid, uid, newStatus) => {
     if(!uid || uid === "undefined") {
-        writeLog(`Error: Missing UID for Order #${oid}`, false, true);
+        writeLog(`Crit Error: UID missing for order #${oid}`, false, true);
         return;
     }
     
-    // IMPORTANT: Atomic update across all relevant nodes
+    // ATOMIC SYNC
     const updates = {};
     updates[`orders/${oid}/status`] = newStatus;
     updates[`user_orders/${uid}/${oid}/status`] = newStatus;
     
-    // If the status is finalized, remove it from the trigger node
-    if(newStatus === "Successful" || newStatus === "Failed" || newStatus === "Refunded") {
+    // Cleanup pending node on finalization
+    if(["Successful", "Failed", "Refunded"].includes(newStatus)) {
         updates[`pending_orders/${oid}`] = null;
     } else {
-        // Keep it in pending_orders if still processing or pending
-        db.ref(`pending_orders/${oid}`).once('value', snap => {
-            if(snap.exists()) {
-                db.ref(`pending_orders/${oid}`).update({ status: newStatus });
-            }
-        });
+        // Sync pending status if still active
+        updates[`pending_orders/${oid}/status`] = newStatus;
     }
 
     db.ref().update(updates).then(() => {
-        writeLog(`STATUS CHANGED: Order #${oid.slice(-6)} is now ${newStatus}`, true);
+        writeLog(`Update Verified: #${oid.slice(-6)} set to ${newStatus}`, true);
     }).catch(err => {
-        writeLog(`Status update failed: ${err.message}`, false, true);
+        writeLog(`Database Error: ${err.message}`, false, true);
     });
 };
 
 window.deleteRecord = (oid, uid) => {
-    if(confirm("Permanently delete this order record?")) {
+    if(confirm(`Purge order #${oid} from all nodes? This cannot be undone.`)) {
         const updates = {};
         updates[`orders/${oid}`] = null;
         updates[`user_orders/${uid}/${oid}`] = null;
         updates[`pending_orders/${oid}`] = null;
-        db.ref().update(updates).then(() => writeLog(`Record #${oid.slice(-6)} deleted.`));
+        db.ref().update(updates).then(() => writeLog(`Purge Complete: #${oid}`, true));
     }
 };
 
