@@ -9,60 +9,75 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Activity History | Gigantic Data</title>
+    <title>Activity Ledger - Gigantic Data Hub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
-            --primary: #003366; --accent: #ff8c00; --bg: #f4f7fe;
-            --success: #10b981; --danger: #ef4444; --info: #3b82f6;
-            --purple: #a855f7; --card-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            --primary: #001f3f; --accent: #ff8c00; --bg: #f8fafc;
+            --success: #10b981; --danger: #ef4444; --card-bg: #ffffff;
         }
-        [data-theme="dark"] { --bg: #02040a; --primary: #010409; }
-        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg); color: #1e293b; padding-bottom: 30px; }
-        header { background: var(--primary); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
-        .stats-ribbon { background: white; padding: 15px; display: flex; justify-content: space-around; border-bottom: 1px solid #e2e8f0; position: sticky; top: 65px; z-index: 98; }
-        [data-theme="dark"] .stats-ribbon { background: #0d1117; border-color: #30363d; }
-        .container { padding: 15px; max-width: 650px; margin: auto; }
-        .date-divider { font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin: 20px 0 10px 5px; letter-spacing: 1px; }
-        .tx-card { background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px; display: flex; gap: 12px; align-items: center; box-shadow: var(--card-shadow); border: 1px solid transparent; }
-        [data-theme="dark"] .tx-card { background: #0d1117; color: white; border-color: #30363d; }
-        .icon-box { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-        .icon-purchase { background: #fee2e2; color: var(--danger); }
-        .icon-topup { background: #dcfce7; color: var(--success); }
-        .tx-info { flex: 1; }
-        .tx-info h4 { font-size: 0.85rem; font-weight: 700; margin-bottom: 2px; }
-        .user-tag { font-family: monospace; font-size: 9px; color: #6366f1; font-weight: 700; background: #eef2ff; padding: 2px 4px; border-radius: 4px; display: inline-block; margin-top: 4px; }
-        [data-theme="dark"] .user-tag { background: #1e293b; color: #818cf8; }
-        .tx-amount { text-align: right; }
-        .amount-val { font-weight: 800; font-size: 0.95rem; display: block; }
+        [data-theme="dark"] {
+            --bg: #0b0e14; --card-bg: #161b22; --primary: #010409;
+        }
+        body { background: var(--bg); color: #1e293b; font-family: 'Inter', sans-serif; }
+        [data-theme="dark"] body { color: #c9d1d9; }
+
+        header { background: var(--primary); color: white; padding: 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        
+        .stats-ribbon { 
+            background: var(--card-bg); padding: 15px; display: flex; justify-content: space-around; 
+            border-bottom: 1px solid rgba(0,0,0,0.05); position: sticky; top: 68px; z-index: 90;
+        }
+
+        .container { padding: 15px; max-width: 600px; margin: auto; }
+        
+        .tx-card { 
+            background: var(--card-bg); border-radius: 16px; padding: 16px; margin-bottom: 12px; 
+            display: flex; gap: 12px; align-items: center; border: 1px solid rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        .tx-card:hover { transform: translateY(-2px); }
+
+        .icon-box { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+        .bg-deposit { background: #dcfce7; color: var(--success); }
+        .bg-purchase { background: #fee2e2; color: var(--danger); }
+
+        .tx-info { flex: 1; min-width: 0; }
+        .tx-info h4 { font-size: 0.85rem; font-weight: 800; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .uid-pill { font-family: monospace; font-size: 9px; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #64748b; }
+        [data-theme="dark"] .uid-pill { background: #30363d; color: #8b949e; }
+
+        .date-divider { font-size: 0.7rem; font-weight: 900; color: #94a3b8; text-transform: uppercase; margin: 25px 0 10px 5px; letter-spacing: 1px; }
     </style>
 </head>
 <body>
 
-<header>
-    <div style="display: flex; align-items: center; gap: 15px;">
-        <a href="dashboard.html" style="color:white;"><i class="fas fa-chevron-left"></i></a>
-        <h3 id="headerTitle" style="font-size:1.1rem; font-weight: 800;">Activity History</h3>
+<header class="flex justify-between items-center">
+    <div class="flex items-center gap-4">
+        <a href="dashboard.html" class="text-white"><i class="fas fa-arrow-left"></i></a>
+        <h3 id="pageHeader" class="font-black text-lg">Activity Ledger</h3>
     </div>
-    <i class="fas fa-sync-alt" style="cursor: pointer;" onclick="location.reload()"></i>
+    <i class="fas fa-sync-alt cursor-pointer" onclick="location.reload()"></i>
 </header>
 
 <div class="stats-ribbon">
     <div class="text-center">
-        <p class="text-[10px] font-bold text-slate-400 uppercase">Volume</p>
-        <h2 id="totalVol" class="font-black text-blue-600">₵0.00</h2>
+        <p class="text-[10px] font-bold text-slate-400 uppercase">Cash Flow</p>
+        <h2 id="totalFlow" class="font-black text-blue-600">₵0.00</h2>
     </div>
     <div class="text-center">
-        <p class="text-[10px] font-bold text-slate-400 uppercase">Entries</p>
-        <h2 id="totalEntries" class="font-black text-orange-500">0</h2>
+        <p class="text-[10px] font-bold text-slate-400 uppercase">Records</p>
+        <h2 id="recordCount" class="font-black text-orange-500">0</h2>
     </div>
 </div>
 
 <div class="container">
-    <div id="loader" class="text-center py-20 text-primary"><i class="fas fa-circle-notch fa-spin fa-2x"></i></div>
-    <div id="historyList"></div>
+    <div id="loading" class="text-center py-20 text-slate-400">
+        <i class="fas fa-spinner fa-spin fa-2x"></i>
+        <p class="mt-2 text-sm font-bold">Fetching Transactions...</p>
+    </div>
+    <div id="txList"></div>
 </div>
 
 <script type="module">
@@ -85,88 +100,86 @@ const ADMIN_EMAIL = "alenacloft0@gmail.com";
 
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        loadData(user);
+        setupLedger(user);
     } else {
-        window.location.replace("login.html");
+        window.location.href = "login.html";
     }
 });
 
-function loadData(user) {
-    let txRef;
+function setupLedger(user) {
     const isAdmin = user.email === ADMIN_EMAIL;
-    
-    // Check if we are in admin audit mode (viewing another user's history)
     const impersonateUid = sessionStorage.getItem('impersonate_uid');
-    const isImpersonating = sessionStorage.getItem('isAdminImpersonating') === 'true';
+    const isAuditing = sessionStorage.getItem('isAdminImpersonating') === 'true';
+
+    let txRef;
     
-    // If Admin is viewing their own page, show EVERYTHING. 
-    // If Admin is auditing a user OR a regular user is logged in, show specific UID.
-    if (isAdmin && !isImpersonating) {
-        document.getElementById('headerTitle').innerText = "Global Transactions";
-        txRef = ref(db, 'transactions'); 
+    // DECISION ENGINE: What data are we allowed to see?
+    if (isAdmin && !isAuditing) {
+        document.getElementById('pageHeader').innerText = "Global Activity";
+        txRef = ref(db, 'transactions'); // Admin sees everything
     } else {
-        const targetUid = isImpersonating ? impersonateUid : user.uid;
-        document.getElementById('headerTitle').innerText = isImpersonating ? "User Audit History" : "My Activity History";
+        const targetUid = isAuditing ? impersonateUid : user.uid;
+        document.getElementById('pageHeader').innerText = isAuditing ? "User Audit" : "My History";
         txRef = query(ref(db, 'transactions'), orderByChild('uid'), equalTo(targetUid));
     }
 
     onValue(txRef, (snap) => {
-        const listDiv = document.getElementById('historyList');
-        document.getElementById('loader').style.display = 'none';
+        const listDiv = document.getElementById('txList');
+        document.getElementById('loading').style.display = 'none';
         
         if (!snap.exists()) {
-            listDiv.innerHTML = `<div class="text-center py-20 text-slate-400">No activity records found</div>`;
+            listDiv.innerHTML = `<div class="text-center py-20 opacity-50"><i class="fas fa-box-open fa-3x mb-4"></i><p>No transactions found</p></div>`;
             return;
         }
 
-        let logs = Object.entries(snap.val()).map(([id, v]) => ({
+        const data = snap.val();
+        let logs = Object.entries(data).map(([id, v]) => ({
             id, ...v, ts: v.timestamp || v.date || 0
         })).sort((a, b) => b.ts - a.ts);
 
-        let totalVal = 0;
-        document.getElementById('totalEntries').innerText = logs.length;
+        let totalVolume = 0;
+        document.getElementById('recordCount').innerText = logs.length;
         listDiv.innerHTML = "";
 
         let lastDate = "";
         logs.forEach(log => {
             const amount = parseFloat(log.amount || 0);
-            totalVal += amount;
+            totalVolume += amount;
 
-            const dateObj = new Date(log.ts);
-            let dateLabel = dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+            const d = new Date(log.ts);
+            const dateLabel = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
             
             if (dateLabel !== lastDate) {
                 listDiv.innerHTML += `<div class="date-divider">${dateLabel}</div>`;
                 lastDate = dateLabel;
             }
 
-            // Logic to determine if it's a Top-up (Credit) or Purchase (Deduct)
-            const isCredit = log.type === "Credit" || log.type === "Top-up" || log.description?.toLowerCase().includes("top-up");
-            const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const isDeposit = log.type === "Credit" || log.type === "Top-up" || log.description?.toLowerCase().includes("top-up");
+            const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
             listDiv.innerHTML += `
                 <div class="tx-card">
-                    <div class="icon-box ${isCredit ? 'icon-topup' : 'icon-purchase'}">
-                        <i class="fas ${isCredit ? 'fa-arrow-up' : 'fa-shopping-cart'}"></i>
+                    <div class="icon-box ${isDeposit ? 'bg-deposit' : 'bg-purchase'}">
+                        <i class="fas ${isDeposit ? 'fa-wallet' : 'fa-shopping-bag'}"></i>
                     </div>
                     <div class="tx-info">
-                        <h4>${log.description || (isCredit ? 'Wallet Top-up' : 'Data Purchase')}</h4>
-                        <p class="text-[10px] text-slate-400">${time} • Ref: ${log.id.substring(0,10)}</p>
-                        ${isAdmin && !isImpersonating ? `<span class="user-tag">UID: ${log.uid}</span>` : ''}
+                        <h4>${log.description || (isDeposit ? 'Wallet Top-up' : 'Service Payment')}</h4>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase">${time} • REF: ${log.id.substring(0,10)}</p>
+                        ${isAdmin && !isAuditing ? `<span class="uid-pill">UID: ${log.uid}</span>` : ''}
                     </div>
-                    <div class="tx-amount">
-                        <span class="amount-val" style="color: ${isCredit ? '#10b981' : '#ef4444'}">
-                            ${isCredit ? '+' : '-'}₵${amount.toFixed(2)}
+                    <div class="text-right">
+                        <span class="block font-black text-sm" style="color: ${isDeposit ? '#10b981' : '#ef4444'}">
+                            ${isDeposit ? '+' : '-'}₵${amount.toFixed(2)}
                         </span>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase">Successful</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase">Success</span>
                     </div>
                 </div>`;
         });
 
-        document.getElementById('totalVol').innerText = `₵${totalVal.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-    }, (error) => {
-        console.error("Security Error:", error);
-        document.getElementById('historyList').innerHTML = `<div class="text-center py-20 text-red-500">Permission Denied: Check Security Rules.</div>`;
+        document.getElementById('totalFlow').innerText = `₵${totalVolume.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+    }, (err) => {
+        console.error(err);
+        document.getElementById('txList').innerHTML = `<div class="p-10 text-center text-red-500 font-bold">Security Block: ${err.message}</div>`;
     });
 }
 </script>
