@@ -9,86 +9,77 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Activity & Leaderboard - Gigantic Data</title>
+    <title>Leaderboard - Gigantic Data Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
-            --primary: #003366; --accent: #ff8c00; --bg: #f4f7fe;
-            --success: #10b981; --danger: #ef4444; --info: #3b82f6;
-            --purple: #a855f7; --card-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            --primary: #001f3f; --accent: #ff8c00; --bg: #f8fafc;
+            --card-bg: #ffffff; --text: #1e293b;
         }
-        [data-theme="dark"] { --bg: #02040a; --primary: #010409; }
+        [data-theme="dark"] {
+            --bg: #0b0e14; --card-bg: #161b22; --text: #c9d1d9; --primary: #010409;
+        }
 
-        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg); color: #1e293b; padding-bottom: 30px; }
-
-        .admin-banner { background: #6366f1; color: white; padding: 10px; text-align: center; font-size: 12px; font-weight: bold; position: sticky; top: 0; z-index: 2000; display: none; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; }
         
-        header { background: var(--primary); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        /* Stats Ribbon */
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+        .stat-card { background: var(--card-bg); padding: 15px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.05); text-align: center; }
         
-        .filter-bar { display: flex; padding: 10px 20px; gap: 10px; background: white; position: sticky; top: 65px; z-index: 99; border-bottom: 1px solid #e2e8f0; overflow-x: auto; }
-        [data-theme="dark"] .filter-bar { background: #0d1117; border-color: #30363d; }
+        /* Rank Styling */
+        .rank-pill { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; }
+        .gold { background: linear-gradient(135deg, #ffd700, #b8860b); color: white; }
+        .silver { background: linear-gradient(135deg, #c0c0c0, #708090); color: white; }
+        .bronze { background: linear-gradient(135deg, #cd7f32, #8b4513); color: white; }
+        .normal { background: #f1f5f9; color: #64748b; }
+        [data-theme="dark"] .normal { background: #30363d; color: #8b949e; }
+
+        .user-row { 
+            background: var(--card-bg); border-radius: 16px; padding: 12px 16px; 
+            margin-bottom: 10px; display: flex; align-items: center; gap: 15px;
+            border: 1px solid rgba(0,0,0,0.05); transition: transform 0.2s;
+        }
+        .user-row:hover { transform: scale(1.01); }
         
-        .filter-btn { padding: 8px 18px; border-radius: 20px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 0.8rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: 0.2s; }
-        .filter-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
-
-        .container { padding: 15px; max-width: 600px; margin: auto; }
-        
-        /* Leaderboard Specific Styles */
-        .rank-badge { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 900; color: white; }
-        .rank-1 { background: #ffd700; box-shadow: 0 0 10px rgba(255,215,0,0.4); }
-        .rank-2 { background: #c0c0c0; }
-        .rank-3 { background: #cd7f32; }
-        .rank-other { background: #94a3b8; }
-
-        .user-uid { font-family: monospace; font-size: 9px; color: #94a3b8; display: block; margin-top: 2px; }
-
-        .tx-card { background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px; display: flex; gap: 12px; align-items: center; box-shadow: var(--card-shadow); transition: 0.3s; }
-        [data-theme="dark"] .tx-card { background: #0d1117; color: white; border: 1px solid #30363d; }
-        
-        .date-divider { font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin: 20px 0 10px 5px; }
-        .icon-box { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-        .icon-purchase { background: #fee2e2; color: var(--danger); }
-        .icon-topup { background: #dcfce7; color: var(--success); }
-        .icon-user { background: #e0f2fe; color: var(--info); }
-
-        .tx-info { flex: 1; }
-        .tx-amount { text-align: right; }
-        .amount-val { font-weight: 800; font-size: 1rem; }
+        .uid-tag { font-family: 'Roboto Mono', monospace; font-size: 10px; color: #94a3b8; background: rgba(0,0,0,0.03); padding: 2px 6px; border-radius: 4px; }
     </style>
 </head>
 <body>
 
-<div id="adminBanner" class="admin-banner">
-    ADMIN MODE: VIEWING USER DATA <button onclick="sessionStorage.clear(); location.reload();" class="ml-2 underline">EXIT</button>
-</div>
-
-<header>
+<header class="p-5 bg-[#001f3f] text-white sticky top-0 z-50 flex justify-between items-center">
     <div class="flex items-center gap-4">
-        <a href="dashboard.html" class="text-white"><i class="fas fa-arrow-left"></i></a>
-        <h3 class="font-bold text-lg">Platform Activity</h3>
+        <a href="dashboard.html"><i class="fas fa-arrow-left"></i></a>
+        <h1 class="text-lg font-black tracking-tight">TOP USERS</h1>
     </div>
-    <div class="flex gap-4">
-        <i class="fas fa-trophy text-yellow-400" onclick="showLeaderboard()"></i>
-        <i class="fas fa-sync-alt" onclick="location.reload()"></i>
+    <div class="bg-orange-500 px-3 py-1 rounded-full text-xs font-bold">
+        LIVE RANKINGS
     </div>
 </header>
 
-<div class="filter-bar">
-    <button id="btn-all" class="filter-btn active" onclick="setTab('all')">My History</button>
-    <button id="btn-top" class="filter-btn" onclick="setTab('top')">Top Users</button>
-</div>
+<div class="max-w-xl mx-auto p-4">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <p class="text-[10px] font-bold text-slate-400 uppercase">System Liquidity</p>
+            <h2 id="totalVault" class="text-xl font-black text-blue-600">₵0.00</h2>
+        </div>
+        <div class="stat-card">
+            <p class="text-[10px] font-bold text-slate-400 uppercase">Active Users</p>
+            <h2 id="userCount" class="text-xl font-black text-orange-500">0</h2>
+        </div>
+    </div>
 
-<div class="container">
-    <div id="loader" class="py-10 text-center text-slate-400"><i class="fas fa-spinner fa-spin fa-2x"></i></div>
-    <div id="contentList"></div>
+    <div id="leaderboardList">
+        <div class="text-center py-20 text-slate-400">
+            <i class="fas fa-circle-notch fa-spin fa-2x"></i>
+            <p class="mt-2 font-bold">Syncing Records...</p>
+        </div>
+    </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, onValue, query, orderByChild, limitToLast, equalTo, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getDatabase, ref, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
@@ -99,122 +90,69 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const auth = getAuth(app);
 
-let currentTab = 'all';
-let userCache = {};
-let masterLogs = [];
+function loadLeaderboard() {
+    // We fetch top 50 users sorted by balance
+    const topUsersQuery = query(ref(db, 'users'), orderByChild('balance'), limitToLast(50));
 
-onAuthStateChanged(auth, user => {
-    if (user) {
-        const activeUid = sessionStorage.getItem('impersonate_uid') || user.uid;
-        if (sessionStorage.getItem('isAdminImpersonating')) document.getElementById('adminBanner').style.display = 'block';
-        
-        loadUserHistory(activeUid);
-    } else {
-        window.location.replace("login.html");
-    }
-});
-
-// --- TAB SYSTEM ---
-window.setTab = (tab) => {
-    currentTab = tab;
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(`btn-${tab}`).classList.add('active');
-    
-    if (tab === 'all') renderHistory(masterLogs);
-    else loadTopUsers();
-};
-
-// --- DATA: PERSONAL HISTORY ---
-function loadUserHistory(uid) {
-    const txRef = query(ref(db, 'transactions'), orderByChild('uid'), equalTo(uid));
-    onValue(txRef, (snap) => {
-        masterLogs = snap.exists() ? Object.entries(snap.val()).map(([id, v]) => ({
-            id, ...v, ts: v.timestamp || v.date
-        })).sort((a,b) => b.ts - a.ts) : [];
-        
-        if (currentTab === 'all') renderHistory(masterLogs);
-    });
-}
-
-// --- DATA: LEADERBOARD (TOP USERS) ---
-async function loadTopUsers() {
-    const listDiv = document.getElementById('contentList');
-    listDiv.innerHTML = '<div class="py-10 text-center text-slate-400"><i class="fas fa-spinner fa-spin"></i> Loading Rankings...</div>';
-    
-    const usersRef = query(ref(db, 'users'), orderByChild('balance'), limitToLast(20));
-    const snap = await get(usersRef);
-    
-    if (snap.exists()) {
+    onValue(topUsersQuery, (snapshot) => {
+        const listDiv = document.getElementById('leaderboardList');
         let users = [];
-        snap.forEach(child => {
-            users.push({ uid: child.key, ...child.val() });
+        let totalSystemBalance = 0;
+
+        snapshot.forEach((child) => {
+            const data = child.val();
+            users.push({ uid: child.key, ...data });
+            totalSystemBalance += parseFloat(data.balance || 0);
         });
-        // Firebase sorts ascending, we want descending
-        renderLeaderboard(users.reverse());
-    }
-}
 
-// --- RENDER: HISTORY ---
-function renderHistory(logs) {
-    const listDiv = document.getElementById('contentList');
-    document.getElementById('loader').style.display = 'none';
-    listDiv.innerHTML = logs.length === 0 ? '<div class="empty-state">No records</div>' : '';
+        // Reverse to get highest balance first
+        users.reverse();
 
-    let lastDate = "";
-    logs.forEach(log => {
-        const d = new Date(log.ts);
-        const dateLabel = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+        document.getElementById('totalVault').innerText = `₵${totalSystemBalance.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+        document.getElementById('userCount').innerText = users.length;
+
+        listDiv.innerHTML = "";
         
-        if (dateLabel !== lastDate) {
-            listDiv.innerHTML += `<div class="date-divider">${dateLabel}</div>`;
-            lastDate = dateLabel;
-        }
+        users.forEach((user, index) => {
+            const rank = index + 1;
+            let rankClass = "normal";
+            if (rank === 1) rankClass = "gold";
+            else if (rank === 2) rankClass = "silver";
+            else if (rank === 3) rankClass = "bronze";
 
-        const isCredit = log.type === "Credit";
-        listDiv.innerHTML += `
-            <div class="tx-card">
-                <div class="icon-box ${isCredit ? 'icon-topup' : 'icon-purchase'}">
-                    <i class="fas ${isCredit ? 'fa-arrow-up' : 'fa-shopping-cart'}"></i>
+            const card = document.createElement('div');
+            card.className = "user-row";
+            card.innerHTML = `
+                <div class="rank-pill ${rankClass}">${rank}</div>
+                <div class="flex-1">
+                    <div class="flex justify-between items-start">
+                        <h4 class="font-black text-sm uppercase">${user.name || 'Anonymous'}</h4>
+                        <span class="font-black text-blue-600">₵${parseFloat(user.balance || 0).toFixed(2)}</span>
+                    </div>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="uid-tag">ID: ${user.uid}</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase">${user.role || 'Member'}</span>
+                    </div>
                 </div>
-                <div class="tx-info">
-                    <h4 class="font-bold text-sm">${log.description || 'Data Purchase'}</h4>
-                    <span class="user-uid">Ref: ${log.id.substring(0,10)}</span>
+                <div class="text-slate-300">
+                    <i class="fas fa-chevron-right text-xs"></i>
                 </div>
-                <div class="tx-amount">
-                    <span class="amount-val" style="color:${isCredit ? '#10b981':'#ef4444'}">
-                        ${isCredit ? '+':'-'}₵${parseFloat(log.amount || 0).toFixed(2)}
-                    </span>
-                </div>
-            </div>`;
+            `;
+            
+            // Allow admin to click and audit specific user
+            card.onclick = () => {
+                sessionStorage.setItem('impersonate_uid', user.uid);
+                sessionStorage.setItem('isAdminImpersonating', 'true');
+                window.location.href = 'activity.html'; // Goes to the history page we built
+            };
+
+            listDiv.appendChild(card);
+        });
     });
 }
 
-// --- RENDER: LEADERBOARD ---
-function renderLeaderboard(users) {
-    const listDiv = document.getElementById('contentList');
-    listDiv.innerHTML = `<h2 class="font-black text-slate-400 text-xs uppercase mb-4 tracking-widest">Top 20 Balance Holders</h2>`;
-
-    users.forEach((user, index) => {
-        const rank = index + 1;
-        const rankClass = rank <= 3 ? `rank-${rank}` : 'rank-other';
-        
-        listDiv.innerHTML += `
-            <div class="tx-card border-l-4" style="border-color: ${rank <= 3 ? 'var(--accent)' : 'transparent'}">
-                <div class="rank-badge ${rankClass}">${rank}</div>
-                <div class="icon-box icon-user"><i class="fas fa-user"></i></div>
-                <div class="tx-info">
-                    <h4 class="font-bold text-sm">${user.name || 'Anonymous User'}</h4>
-                    <span class="user-uid">UID: ${user.uid}</span>
-                </div>
-                <div class="tx-amount">
-                    <span class="amount-val text-slate-800">₵${parseFloat(user.balance || 0).toFixed(2)}</span>
-                    <span class="block text-[10px] text-slate-400 font-bold uppercase">${user.role || 'Member'}</span>
-                </div>
-            </div>`;
-    });
-}
+loadLeaderboard();
 </script>
 </body>
 </html>
