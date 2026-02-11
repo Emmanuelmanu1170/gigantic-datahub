@@ -9,7 +9,7 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Activity - Gigantic Data</title>
+    <title>Activity History - Gigantic Data</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -52,14 +52,14 @@
 <header>
     <div style="display: flex; align-items: center; gap: 15px;">
         <a href="dashboard.html" style="color:white;"><i class="fas fa-chevron-left"></i></a>
-        <h3 style="font-size:1.1rem; font-weight: 800;">Global Transactions</h3>
+        <h3 id="headerTitle" style="font-size:1.1rem; font-weight: 800;">Activity History</h3>
     </div>
     <i class="fas fa-sync-alt" onclick="location.reload()"></i>
 </header>
 
 <div class="stats-ribbon">
     <div class="text-center">
-        <p class="text-[10px] font-bold text-slate-400 uppercase">Total Volume</p>
+        <p class="text-[10px] font-bold text-slate-400 uppercase">Volume</p>
         <h2 id="totalVol" class="font-black text-blue-600">₵0.00</h2>
     </div>
     <div class="text-center">
@@ -75,7 +75,8 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, onValue, query, orderByChild } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
@@ -86,17 +87,38 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+const auth = getAuth(app);
 
-function loadAllTransactions() {
-    // Reference the entire transactions path
-    const globalTxRef = ref(db, 'transactions');
+const ADMIN_EMAIL = "alenacloft0@gmail.com";
 
-    onValue(globalTxRef, (snap) => {
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        loadData(user);
+    } else {
+        window.location.replace("login.html");
+    }
+});
+
+function loadData(user) {
+    let txRef;
+    const isAdmin = user.email === ADMIN_EMAIL;
+
+    // RULE COMPLIANCE LOGIC:
+    // Admin reads the whole node. User MUST query by UID to pass security rules.
+    if (isAdmin) {
+        document.getElementById('headerTitle').innerText = "Global Transactions";
+        txRef = ref(db, 'transactions');
+    } else {
+        document.getElementById('headerTitle').innerText = "My Activity History";
+        txRef = query(ref(db, 'transactions'), orderByChild('uid'), equalTo(user.uid));
+    }
+
+    onValue(txRef, (snap) => {
         const listDiv = document.getElementById('historyList');
         document.getElementById('loader').style.display = 'none';
         
         if (!snap.exists()) {
-            listDiv.innerHTML = `<div class="text-center py-20 text-slate-400">No transactions found</div>`;
+            listDiv.innerHTML = `<div class="text-center py-20 text-slate-400">No activity records found</div>`;
             return;
         }
 
@@ -130,24 +152,25 @@ function loadAllTransactions() {
                         <i class="fas ${isCredit ? 'fa-arrow-up' : 'fa-shopping-cart'}"></i>
                     </div>
                     <div class="tx-info">
-                        <h4>${log.description || 'System Entry'}</h4>
+                        <h4>${log.description || 'Service Transaction'}</h4>
                         <p class="text-[10px] text-slate-400">${time} • Ref: ${log.id.substring(0,8)}</p>
-                        <span class="user-tag">USER ID: ${log.uid || 'Unknown'}</span>
+                        ${isAdmin ? `<span class="user-tag">UID: ${log.uid}</span>` : ''}
                     </div>
                     <div class="tx-amount">
                         <span class="amount-val" style="color: ${isCredit ? '#10b981' : '#ef4444'}">
                             ${isCredit ? '+' : '-'}₵${amount.toFixed(2)}
                         </span>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase">Success</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase">Successful</span>
                     </div>
                 </div>`;
         });
 
         document.getElementById('totalVol').innerText = `₵${totalVal.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+    }, (error) => {
+        console.error("Security Error:", error);
+        document.getElementById('historyList').innerHTML = `<div class="text-center py-20 text-red-500">Permission Denied: Ensure you are logged in.</div>`;
     });
 }
-
-loadAllTransactions();
 </script>
 </body>
 </html>
