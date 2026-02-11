@@ -44,7 +44,7 @@
         }
         .user-row:hover { border-color: var(--accent); }
         
-        .uid-tag { font-family: 'Roboto Mono', monospace; font-size: 9px; color: #6366f1; background: #eef2ff; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+        .uid-tag { font-family: 'Roboto Mono', monospace; font-size: 9px; color: #6366f1; background: #eef2ff; padding: 2px 6px; border-radius: 4px; font-weight: bold; cursor: copy; }
         [data-theme="dark"] .uid-tag { background: #1e293b; color: #818cf8; }
         
         .login-time { font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
@@ -177,7 +177,6 @@ function createUserCard(user, rank, isRanked) {
     const card = document.createElement('div');
     card.className = "user-row";
     
-    // Last Login Logic (30 days = 2592000000 ms)
     const now = Date.now();
     const lastLoginTs = user.lastLogin || 0;
     const diff = now - lastLoginTs;
@@ -203,7 +202,7 @@ function createUserCard(user, rank, isRanked) {
             </div>
         </div>
         <div class="flex justify-between items-center pt-3 border-t border-slate-100 dark:border-slate-800">
-            <span class="uid-tag">ID: ${user.uid.substring(0,10)}...</span>
+            <span class="uid-tag" onclick="copyUID('${user.uid}', this)">ID: ${user.uid.substring(0,10)}... <i class="far fa-copy ml-1"></i></span>
             <div class="flex gap-2">
                 <button onclick="toggleRole('${user.uid}', '${user.role}')" class="role-btn ${user.role === 'agent' ? 'role-agent' : 'role-member'}">
                     ${user.role === 'agent' ? 'Agent' : 'Member'} <i class="fas fa-sync-alt ml-1"></i>
@@ -212,6 +211,18 @@ function createUserCard(user, rank, isRanked) {
         </div>
     `;
     return card;
+}
+
+window.copyUID = (uid, el) => {
+    navigator.clipboard.writeText(uid).then(() => {
+        const originalText = el.innerHTML;
+        el.innerHTML = "Copied! <i class='fas fa-check'></i>";
+        el.style.color = "#10b981";
+        setTimeout(() => {
+            el.innerHTML = originalText;
+            el.style.color = "";
+        }, 1500);
+    });
 }
 
 window.toggleRole = (uid, currentRole) => {
