@@ -120,7 +120,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, onValue, update, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, update, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = { 
             apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA", 
@@ -154,11 +154,18 @@
 
         onAuthStateChanged(auth, user => {
             if (user) {
-                activeUid = user.uid;
+                // Check if admin is auditing
+                const impersonateUid = sessionStorage.getItem('impersonate_uid');
+                const isImpersonating = sessionStorage.getItem('isAdminImpersonating');
+                activeUid = (isImpersonating === 'true' && impersonateUid) ? impersonateUid : user.uid;
+
                 onValue(ref(db, 'users/' + activeUid), (snapshot) => {
                     const data = snapshot.val() || {};
                     isAgent = (data.userType === "agent" || data.status === "Agent");
+                    
+                    // CRITICAL FIX: Match Dashboard logic for rawBalance
                     currentBalance = Number(data.balance || data.wallet || 0);
+                    
                     document.getElementById('walletBalance').innerText = `GH₵ ${currentBalance.toFixed(2)}`;
                     document.getElementById('userTypeBadge').innerText = isAgent ? "AGENT" : "NORMAL USER";
                     if(window.selectedNet) updatePlans();
@@ -227,20 +234,20 @@
                     plan: planName,
                     recipient: num,
                     status: "Processing",
-                    timestamp: serverTimestamp() 
+                    timestamp: serverTimestamp(),
+                    oldBalance: currentBalance, // Audit: Balance before
+                    newBalance: newBalance      // Audit: Balance after
                 };
 
-                // --- ATOMIC MULTI-PATH UPDATE ---
-                // Updates balance, triggers automation, and creates history simultaneously
                 const updates = {};
+                // Force sync both balance and wallet keys to match dashboard
                 updates[`users/${activeUid}/balance`] = newBalance;
                 updates[`users/${activeUid}/wallet`] = newBalance;
                 updates[`pending_orders/${orderId}`] = automationData;
-                updates[`orders/${orderId}`] = automationData; // Master Record
-                updates[`user_orders/${activeUid}/${orderId}`] = automationData; // User History
+                updates[`orders/${orderId}`] = automationData;
+                updates[`user_orders/${activeUid}/${orderId}`] = automationData;
 
                 await update(ref(db), updates);
-                
                 document.getElementById('successOverlay').style.display = 'flex';
             } catch (err) {
                 alert("Order Error: " + err.message);
