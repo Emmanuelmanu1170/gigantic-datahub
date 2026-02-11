@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <script>
-        // Theme Persistence Script
         (function() {
             const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
@@ -10,7 +9,7 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Activity - Gigantic Data</title>
+    <title>Activity & Leaderboard - Gigantic Data</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -24,74 +23,73 @@
         * { margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif; }
         body { background: var(--bg); color: #1e293b; padding-bottom: 30px; }
 
-        /* Impersonation Banner */
         .admin-banner { background: #6366f1; color: white; padding: 10px; text-align: center; font-size: 12px; font-weight: bold; position: sticky; top: 0; z-index: 2000; display: none; }
-        .btn-exit-admin { background: white; color: #6366f1; border: none; padding: 4px 10px; border-radius: 5px; margin-left: 10px; cursor: pointer; font-weight: 800; }
-
+        
         header { background: var(--primary); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        
         .filter-bar { display: flex; padding: 10px 20px; gap: 10px; background: white; position: sticky; top: 65px; z-index: 99; border-bottom: 1px solid #e2e8f0; overflow-x: auto; }
         [data-theme="dark"] .filter-bar { background: #0d1117; border-color: #30363d; }
         
-        .filter-btn { padding: 6px 15px; border-radius: 20px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 0.8rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
-        .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .filter-btn { padding: 8px 18px; border-radius: 20px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 0.8rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: 0.2s; }
+        .filter-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
 
         .container { padding: 15px; max-width: 600px; margin: auto; }
-        .date-divider { font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin: 20px 0 10px 5px; letter-spacing: 1px; }
+        
+        /* Leaderboard Specific Styles */
+        .rank-badge { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 900; color: white; }
+        .rank-1 { background: #ffd700; box-shadow: 0 0 10px rgba(255,215,0,0.4); }
+        .rank-2 { background: #c0c0c0; }
+        .rank-3 { background: #cd7f32; }
+        .rank-other { background: #94a3b8; }
 
-        .tx-card { background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px; display: flex; gap: 12px; align-items: center; box-shadow: var(--card-shadow); }
+        .user-uid { font-family: monospace; font-size: 9px; color: #94a3b8; display: block; margin-top: 2px; }
+
+        .tx-card { background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px; display: flex; gap: 12px; align-items: center; box-shadow: var(--card-shadow); transition: 0.3s; }
         [data-theme="dark"] .tx-card { background: #0d1117; color: white; border: 1px solid #30363d; }
-
+        
+        .date-divider { font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin: 20px 0 10px 5px; }
         .icon-box { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
         .icon-purchase { background: #fee2e2; color: var(--danger); }
         .icon-topup { background: #dcfce7; color: var(--success); }
-        .icon-agent { background: #f3e8ff; color: var(--purple); }
-        .icon-bonus { background: #e0f2fe; color: #0052cc; }
+        .icon-user { background: #e0f2fe; color: var(--info); }
 
         .tx-info { flex: 1; }
-        .tx-info h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 2px; }
-        .tx-ref { font-family: monospace; font-size: 10px; background: #f1f5f9; padding: 2px 5px; border-radius: 4px; color: #64748b; }
-        [data-theme="dark"] .tx-ref { background: #161b22; }
-
         .tx-amount { text-align: right; }
-        .amount-val { font-weight: 800; font-size: 1rem; display: block; }
-        .bal-val { font-size: 0.65rem; color: #94a3b8; font-weight: 600; }
-
-        .empty-state { text-align: center; padding: 80px 20px; color: #94a3b8; }
-        .loader { text-align: center; padding: 60px; color: var(--primary); }
+        .amount-val { font-weight: 800; font-size: 1rem; }
     </style>
 </head>
 <body>
 
 <div id="adminBanner" class="admin-banner">
-    VIEWING USER ACTIVITY <button class="btn-exit-admin" onclick="exitImpersonation()">EXIT TO ADMIN</button>
+    ADMIN MODE: VIEWING USER DATA <button onclick="sessionStorage.clear(); location.reload();" class="ml-2 underline">EXIT</button>
 </div>
 
 <header>
-    <div style="display: flex; align-items: center; gap: 15px;">
-        <a href="dashboard.html" style="color:white;"><i class="fas fa-chevron-left"></i></a>
-        <h3 style="font-size:1.1rem; font-weight: 800;">Activity History</h3>
+    <div class="flex items-center gap-4">
+        <a href="dashboard.html" class="text-white"><i class="fas fa-arrow-left"></i></a>
+        <h3 class="font-bold text-lg">Platform Activity</h3>
     </div>
-    <i class="fas fa-sync-alt" style="cursor: pointer;" onclick="location.reload()"></i>
+    <div class="flex gap-4">
+        <i class="fas fa-trophy text-yellow-400" onclick="showLeaderboard()"></i>
+        <i class="fas fa-sync-alt" onclick="location.reload()"></i>
+    </div>
 </header>
 
 <div class="filter-bar">
-    <button class="filter-btn active" onclick="filterLogs('all', this)">All</button>
-    <button class="filter-btn" onclick="filterLogs('purchase', this)">Purchases</button>
-    <button class="filter-btn" onclick="filterLogs('topup', this)">Deposits</button>
-    <button class="filter-btn" onclick="filterLogs('agent', this)">Agent Upgrades</button>
+    <button id="btn-all" class="filter-btn active" onclick="setTab('all')">My History</button>
+    <button id="btn-top" class="filter-btn" onclick="setTab('top')">Top Users</button>
 </div>
 
 <div class="container">
-    <div id="loader" class="loader"><i class="fas fa-circle-notch fa-spin fa-2x"></i></div>
-    <div id="historyList"></div>
+    <div id="loader" class="py-10 text-center text-slate-400"><i class="fas fa-spinner fa-spin fa-2x"></i></div>
+    <div id="contentList"></div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getDatabase, ref, onValue, query, orderByChild, limitToLast, equalTo, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-// UNIFIED SECURE CONFIG
 const firebaseConfig = {
     apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
     authDomain: "gigantic-data.firebaseapp.com",
@@ -103,122 +101,119 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
 
-// --- MASTER UID BRIDGE ---
-const impersonateUid = sessionStorage.getItem('impersonate_uid');
-const isImpersonating = sessionStorage.getItem('isAdminImpersonating');
-let activeUid;
-
-window.exitImpersonation = function() {
-    sessionStorage.clear();
-    window.location.href = "admin_user_audit.html";
-};
-
+let currentTab = 'all';
+let userCache = {};
 let masterLogs = [];
 
-setPersistence(auth, browserLocalPersistence).then(() => {
-    onAuthStateChanged(auth, user => {
-        if (user) {
-            activeUid = (isImpersonating === 'true' && impersonateUid) ? impersonateUid : user.uid;
-            
-            if (isImpersonating === 'true') {
-                document.getElementById('adminBanner').style.display = 'block';
-            }
-            loadData(activeUid);
-        } else {
-            window.location.replace("login.html");
-        }
-    });
+onAuthStateChanged(auth, user => {
+    if (user) {
+        const activeUid = sessionStorage.getItem('impersonate_uid') || user.uid;
+        if (sessionStorage.getItem('isAdminImpersonating')) document.getElementById('adminBanner').style.display = 'block';
+        
+        loadUserHistory(activeUid);
+    } else {
+        window.location.replace("login.html");
+    }
 });
 
-function loadData(uid) {
+// --- TAB SYSTEM ---
+window.setTab = (tab) => {
+    currentTab = tab;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`btn-${tab}`).classList.add('active');
+    
+    if (tab === 'all') renderHistory(masterLogs);
+    else loadTopUsers();
+};
+
+// --- DATA: PERSONAL HISTORY ---
+function loadUserHistory(uid) {
     const txRef = query(ref(db, 'transactions'), orderByChild('uid'), equalTo(uid));
-    const topupRef = ref(db, `topupNotes/${uid}`);
-
-    let txData = [], topData = [];
-
     onValue(txRef, (snap) => {
-        txData = snap.exists() ? Object.entries(snap.val()).map(([id, v]) => {
-            let isAgent = (parseFloat(v.amount) === 45 && v.type === "Deduct") || v.category === "agent";
-            return { id, ...v, ts: v.date || v.timestamp, src: isAgent ? 'agent' : 'purchase' };
-        }) : [];
-        combineAndRender(txData, topData);
-    });
-
-    onValue(topupRef, (snap) => {
-        topData = snap.exists() ? Object.entries(snap.val()).map(([id, v]) => ({ 
-            id, ...v, ts: v.timestamp || v.date, src: 'topup' 
-        })) : [];
-        combineAndRender(txData, topData);
+        masterLogs = snap.exists() ? Object.entries(snap.val()).map(([id, v]) => ({
+            id, ...v, ts: v.timestamp || v.date
+        })).sort((a,b) => b.ts - a.ts) : [];
+        
+        if (currentTab === 'all') renderHistory(masterLogs);
     });
 }
 
-function combineAndRender(txs, tops) {
-    masterLogs = [...txs, ...tops].sort((a, b) => (Number(b.ts) || 0) - (Number(a.ts) || 0));
-    render(masterLogs);
-}
-
-function render(logs) {
-    const listDiv = document.getElementById('historyList');
-    if (document.getElementById('loader')) document.getElementById('loader').style.display = 'none';
-    listDiv.innerHTML = "";
-
-    if (logs.length === 0) {
-        listDiv.innerHTML = `<div class="empty-state"><i class="fas fa-folder-open"></i><p>No activity records found</p></div>`;
-        return;
+// --- DATA: LEADERBOARD (TOP USERS) ---
+async function loadTopUsers() {
+    const listDiv = document.getElementById('contentList');
+    listDiv.innerHTML = '<div class="py-10 text-center text-slate-400"><i class="fas fa-spinner fa-spin"></i> Loading Rankings...</div>';
+    
+    const usersRef = query(ref(db, 'users'), orderByChild('balance'), limitToLast(20));
+    const snap = await get(usersRef);
+    
+    if (snap.exists()) {
+        let users = [];
+        snap.forEach(child => {
+            users.push({ uid: child.key, ...child.val() });
+        });
+        // Firebase sorts ascending, we want descending
+        renderLeaderboard(users.reverse());
     }
+}
+
+// --- RENDER: HISTORY ---
+function renderHistory(logs) {
+    const listDiv = document.getElementById('contentList');
+    document.getElementById('loader').style.display = 'none';
+    listDiv.innerHTML = logs.length === 0 ? '<div class="empty-state">No records</div>' : '';
 
     let lastDate = "";
     logs.forEach(log => {
-        const dateObj = new Date(log.ts);
-        let dateLabel = dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+        const d = new Date(log.ts);
+        const dateLabel = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
         
         if (dateLabel !== lastDate) {
-            const divider = document.createElement('div');
-            divider.className = "date-divider";
-            divider.innerText = dateLabel;
-            listDiv.appendChild(divider);
+            listDiv.innerHTML += `<div class="date-divider">${dateLabel}</div>`;
             lastDate = dateLabel;
         }
 
-        const isPurchase = log.src === 'purchase';
-        const isAgent = log.src === 'agent';
-        const isTopup = log.src === 'topup';
-        const isCredit = log.type === "Credit" || isTopup;
-        const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-        const card = document.createElement('div');
-        card.className = "tx-card";
-        
-        let icon = isAgent ? 'fa-user-tie' : (isTopup ? 'fa-wallet' : (isCredit ? 'fa-gift' : 'fa-bolt'));
-        let iconClass = isAgent ? 'icon-agent' : (isTopup ? 'icon-topup' : (isCredit ? 'icon-bonus' : 'icon-purchase'));
-        let title = isAgent ? 'Agent Upgrade' : (isTopup ? 'Wallet Deposit' : (isCredit ? 'Referral Bonus' : (log.plan ? log.plan + ' Data' : 'Data Bundle')));
-        let amountColor = isAgent ? '#a855f7' : (isCredit ? '#10b981' : '#ef4444');
-
-        card.innerHTML = `
-            <div class="icon-box ${iconClass}"><i class="fas ${icon}"></i></div>
-            <div class="tx-info">
-                <h4>${title}</h4>
-                <p>${time} • <span class="tx-ref" onclick="copyRef('${log.id}')">${log.id.substring(0,8)}...</span></p>
-            </div>
-            <div class="tx-amount">
-                <span class="amount-val" style="color: ${amountColor}">${isCredit ? '+' : '-'}₵${parseFloat(log.amount || log.price || 0).toFixed(2)}</span>
-                <span class="bal-val">${log.newBalance ? 'Bal: ₵'+parseFloat(log.newBalance).toFixed(2) : 'Successful'}</span>
-            </div>
-        `;
-        listDiv.appendChild(card);
+        const isCredit = log.type === "Credit";
+        listDiv.innerHTML += `
+            <div class="tx-card">
+                <div class="icon-box ${isCredit ? 'icon-topup' : 'icon-purchase'}">
+                    <i class="fas ${isCredit ? 'fa-arrow-up' : 'fa-shopping-cart'}"></i>
+                </div>
+                <div class="tx-info">
+                    <h4 class="font-bold text-sm">${log.description || 'Data Purchase'}</h4>
+                    <span class="user-uid">Ref: ${log.id.substring(0,10)}</span>
+                </div>
+                <div class="tx-amount">
+                    <span class="amount-val" style="color:${isCredit ? '#10b981':'#ef4444'}">
+                        ${isCredit ? '+':'-'}₵${parseFloat(log.amount || 0).toFixed(2)}
+                    </span>
+                </div>
+            </div>`;
     });
 }
 
-window.filterLogs = (type, btn) => {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    if (type === 'all') render(masterLogs);
-    else render(masterLogs.filter(l => l.src === type));
-};
+// --- RENDER: LEADERBOARD ---
+function renderLeaderboard(users) {
+    const listDiv = document.getElementById('contentList');
+    listDiv.innerHTML = `<h2 class="font-black text-slate-400 text-xs uppercase mb-4 tracking-widest">Top 20 Balance Holders</h2>`;
 
-window.copyRef = (text) => {
-    navigator.clipboard.writeText(text);
-    alert("Reference copied!");
+    users.forEach((user, index) => {
+        const rank = index + 1;
+        const rankClass = rank <= 3 ? `rank-${rank}` : 'rank-other';
+        
+        listDiv.innerHTML += `
+            <div class="tx-card border-l-4" style="border-color: ${rank <= 3 ? 'var(--accent)' : 'transparent'}">
+                <div class="rank-badge ${rankClass}">${rank}</div>
+                <div class="icon-box icon-user"><i class="fas fa-user"></i></div>
+                <div class="tx-info">
+                    <h4 class="font-bold text-sm">${user.name || 'Anonymous User'}</h4>
+                    <span class="user-uid">UID: ${user.uid}</span>
+                </div>
+                <div class="tx-amount">
+                    <span class="amount-val text-slate-800">₵${parseFloat(user.balance || 0).toFixed(2)}</span>
+                    <span class="block text-[10px] text-slate-400 font-bold uppercase">${user.role || 'Member'}</span>
+                </div>
+            </div>`;
+    });
 }
 </script>
 </body>
