@@ -75,7 +75,7 @@
 <div class="container">
     <div id="loading" class="text-center py-20 text-slate-400">
         <i class="fas fa-spinner fa-spin fa-2x"></i>
-        <p class="mt-2 text-sm font-bold">Fetching Transactions...</p>
+        <p class="mt-2 text-sm font-bold">Syncing Records...</p>
     </div>
     <div id="txList"></div>
 </div>
@@ -110,77 +110,104 @@ function setupLedger(user) {
     const isAdmin = user.email === ADMIN_EMAIL;
     const impersonateUid = sessionStorage.getItem('impersonate_uid');
     const isAuditing = sessionStorage.getItem('isAdminImpersonating') === 'true';
+    const activeUid = isAuditing ? impersonateUid : user.uid;
 
-    let txRef;
-    
-    // DECISION ENGINE: What data are we allowed to see?
     if (isAdmin && !isAuditing) {
-        document.getElementById('pageHeader').innerText = "Global Activity";
-        txRef = ref(db, 'transactions'); // Admin sees everything
+        document.getElementById('pageHeader').innerText = "Global activity";
     } else {
-        const targetUid = isAuditing ? impersonateUid : user.uid;
         document.getElementById('pageHeader').innerText = isAuditing ? "User Audit" : "My History";
-        txRef = query(ref(db, 'transactions'), orderByChild('uid'), equalTo(targetUid));
     }
 
+    // Reference paths based on your screenshots
+    const txRef = isAdmin && !isAuditing ? ref(db, 'transactions') : query(ref(db, 'transactions'), orderByChild('uid'), equalTo(activeUid));
+    const topupRef = isAdmin && !isAuditing ? ref(db, 'topupNotes') : ref(db, `topupNotes/${activeUid}`);
+
+    let txData = [], topData = [];
+
+    // Pull from transactions node
     onValue(txRef, (snap) => {
-        const listDiv = document.getElementById('txList');
-        document.getElementById('loading').style.display = 'none';
+        txData = snap.exists() ? Object.entries(snap.val()).map(([id, v]) => ({
+            id, ...v, ts: v.timestamp || v.date || 0, isDeposit: false
+        })) : [];
+        combineAndRender(txData, topData, isAdmin, isAuditing);
+    });
+
+    // Pull from topupNotes node (shown in your screenshot)
+    onValue(topupRef, (snap) => {
+        if (snap.exists()) {
+            if (isAdmin && !isAuditing) {
+                // Admin view: iterate through all user UIDs in topupNotes
+                topData = [];
+                snap.forEach((userSnap) => {
+                    const uUid = userSnap.key;
+                    userSnap.forEach((noteSnap) => {
+                        topData.push({ id: noteSnap.key, ...noteSnap.val(), ts: noteSnap.val().timestamp, isDeposit: true, uid: uUid });
+                    });
+                });
+            } else {
+                // User view: iterate through notes under their own UID
+                topData = Object.entries(snap.val()).map(([id, v]) => ({
+                    id, ...v, ts: v.timestamp || 0, isDeposit: true, uid: activeUid
+                }));
+            }
+        } else {
+            topData = [];
+        }
+        combineAndRender(txData, topData, isAdmin, isAuditing);
+    });
+}
+
+function combineAndRender(txs, tops, isAdmin, isAuditing) {
+    const listDiv = document.getElementById('txList');
+    document.getElementById('loading').style.display = 'none';
+
+    // Combine and sort by timestamp
+    let logs = [...txs, ...tops].sort((a, b) => b.ts - a.ts);
+
+    if (logs.length === 0) {
+        listDiv.innerHTML = `<div class="text-center py-20 opacity-50"><i class="fas fa-box-open fa-3x mb-4"></i><p>No activity found</p></div>`;
+        return;
+    }
+
+    let totalVolume = 0;
+    document.getElementById('recordCount').innerText = logs.length;
+    listDiv.innerHTML = "";
+
+    let lastDate = "";
+    logs.forEach(log => {
+        const amount = parseFloat(log.amount || 0);
+        totalVolume += amount;
+
+        const d = new Date(log.ts);
+        const dateLabel = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
         
-        if (!snap.exists()) {
-            listDiv.innerHTML = `<div class="text-center py-20 opacity-50"><i class="fas fa-box-open fa-3x mb-4"></i><p>No transactions found</p></div>`;
-            return;
+        if (dateLabel !== lastDate) {
+            listDiv.innerHTML += `<div class="date-divider">${dateLabel}</div>`;
+            lastDate = dateLabel;
         }
 
-        const data = snap.val();
-        let logs = Object.entries(data).map(([id, v]) => ({
-            id, ...v, ts: v.timestamp || v.date || 0
-        })).sort((a, b) => b.ts - a.ts);
+        const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-        let totalVolume = 0;
-        document.getElementById('recordCount').innerText = logs.length;
-        listDiv.innerHTML = "";
-
-        let lastDate = "";
-        logs.forEach(log => {
-            const amount = parseFloat(log.amount || 0);
-            totalVolume += amount;
-
-            const d = new Date(log.ts);
-            const dateLabel = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-            
-            if (dateLabel !== lastDate) {
-                listDiv.innerHTML += `<div class="date-divider">${dateLabel}</div>`;
-                lastDate = dateLabel;
-            }
-
-            const isDeposit = log.type === "Credit" || log.type === "Top-up" || log.description?.toLowerCase().includes("top-up");
-            const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-            listDiv.innerHTML += `
-                <div class="tx-card">
-                    <div class="icon-box ${isDeposit ? 'bg-deposit' : 'bg-purchase'}">
-                        <i class="fas ${isDeposit ? 'fa-wallet' : 'fa-shopping-bag'}"></i>
-                    </div>
-                    <div class="tx-info">
-                        <h4>${log.description || (isDeposit ? 'Wallet Top-up' : 'Service Payment')}</h4>
-                        <p class="text-[10px] text-slate-400 font-bold uppercase">${time} • REF: ${log.id.substring(0,10)}</p>
-                        ${isAdmin && !isAuditing ? `<span class="uid-pill">UID: ${log.uid}</span>` : ''}
-                    </div>
-                    <div class="text-right">
-                        <span class="block font-black text-sm" style="color: ${isDeposit ? '#10b981' : '#ef4444'}">
-                            ${isDeposit ? '+' : '-'}₵${amount.toFixed(2)}
-                        </span>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase">Success</span>
-                    </div>
-                </div>`;
-        });
-
-        document.getElementById('totalFlow').innerText = `₵${totalVolume.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-    }, (err) => {
-        console.error(err);
-        document.getElementById('txList').innerHTML = `<div class="p-10 text-center text-red-500 font-bold">Security Block: ${err.message}</div>`;
+        listDiv.innerHTML += `
+            <div class="tx-card">
+                <div class="icon-box ${log.isDeposit ? 'bg-deposit' : 'bg-purchase'}">
+                    <i class="fas ${log.isDeposit ? 'fa-wallet' : 'fa-shopping-bag'}"></i>
+                </div>
+                <div class="tx-info">
+                    <h4>${log.isDeposit ? 'Wallet Deposit (Paystack)' : (log.description || 'Service Payment')}</h4>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase">${time} • REF: ${log.reference || log.id.substring(0,10)}</p>
+                    ${isAdmin && !isAuditing ? `<span class="uid-pill">UID: ${log.uid}</span>` : ''}
+                </div>
+                <div class="text-right">
+                    <span class="block font-black text-sm" style="color: ${log.isDeposit ? '#10b981' : '#ef4444'}">
+                        ${log.isDeposit ? '+' : '-'}₵${amount.toFixed(2)}
+                    </span>
+                    <span class="text-[9px] font-bold text-slate-400 uppercase">Success</span>
+                </div>
+            </div>`;
     });
+
+    document.getElementById('totalFlow').innerText = `₵${totalVolume.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
 }
 </script>
 </body>
