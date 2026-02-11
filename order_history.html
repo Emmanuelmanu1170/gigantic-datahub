@@ -54,12 +54,18 @@
         .detail-row { display: flex; justify-content: space-between; align-items: center; }
         .detail-row span { font-size: 12px; color: var(--text-gray); }
         .detail-row b { font-size: 13px; color: var(--text-main); }
+        
+        /* Balance Tracking Styles */
+        .balance-audit { margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.02); border-radius: 10px; display: flex; justify-content: space-between; border-left: 3px solid var(--primary-blue); }
+        [data-theme="dark"] .balance-audit { background: rgba(255,255,255,0.03); }
+        .audit-item { display: flex; flex-direction: column; }
+        .audit-item label { font-size: 9px; text-transform: uppercase; font-weight: 800; color: var(--text-gray); }
+        .audit-item val { font-family: monospace; font-size: 11px; font-weight: 700; }
 
         .order-footer { margin-top: 15px; padding-top: 15px; border-top: 1.5px dashed #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
         .amount-paid { font-size: 18px; font-weight: 900; color: var(--primary-blue); }
         .status-pill { font-size: 10px; font-weight: 800; padding: 4px 12px; border-radius: 30px; text-transform: uppercase; }
         
-        /* Dynamic Status Coloring */
         .status-successful, .status-completed { background: #ecfdf5; color: #047857; }
         .status-pending { background: #fffbeb; color: #b45309; }
         .status-processing { background: #eff6ff; color: #1e40af; animation: pulse 1.5s infinite; }
@@ -102,7 +108,6 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getDatabase, ref, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // UNIFIED CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
             authDomain: "gigantic-data.firebaseapp.com",
@@ -114,7 +119,6 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // --- MASTER UID BRIDGE ---
         const impersonateUid = sessionStorage.getItem('impersonate_uid');
         const isImpersonating = sessionStorage.getItem('isAdminImpersonating');
         let activeUid;
@@ -126,14 +130,10 @@
 
         onAuthStateChanged(auth, user => {
             if (user) {
-                // Determine whose history to load
                 activeUid = (isImpersonating === 'true' && impersonateUid) ? impersonateUid : user.uid;
-                
                 if (isImpersonating === 'true') {
                     document.getElementById('adminBanner').style.display = 'block';
                 }
-
-                // TRIGGER THE LIVE STREAM
                 loadHistoryStream(activeUid);
             } else {
                 window.location.href = "login.html";
@@ -141,50 +141,41 @@
         });
 
         function loadHistoryStream(uid) {
-            // Path: Master 'orders' node filtered by UID
             const ordersRef = ref(db, 'orders');
             const userQuery = query(ordersRef, orderByChild('uid'), equalTo(uid));
 
-            // onValue creates a persistent listener (Socket connection)
             onValue(userQuery, (snapshot) => {
                 const container = document.getElementById('orderList');
                 const data = snapshot.val();
 
                 if (!data) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-receipt fa-4x opacity-20"></i>
-                            <p class="mt-4">You haven't placed any orders yet.</p>
-                            <a href="buy-data.html" class="text-blue-500 font-bold text-sm underline mt-2 block">Buy Data Now</a>
-                        </div>`;
+                    container.innerHTML = `<div class="empty-state"><i class="fas fa-receipt fa-4x opacity-20"></i><p class="mt-4">No records found.</p></div>`;
                     resetStats();
                     return;
                 }
 
-                // Convert to array and sort (Newest First)
                 const entries = Object.entries(data).sort((a,b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
                 
                 let html = "";
-                let totalOrdersCount = 0;
                 let totalSpentSum = 0;
                 let spentTodaySum = 0;
                 const startOfToday = new Date().setHours(0,0,0,0);
-
-                totalOrdersCount = entries.length;
 
                 entries.forEach(([id, order]) => {
                     const amount = parseFloat(order.amount || 0);
                     const ts = order.timestamp || Date.now();
                     const status = order.status || 'Pending';
                     const statusClass = `status-${status.toLowerCase().split(' ')[0]}`;
+                    
+                    // Retrieve balance before and after from database record
+                    const beforeBal = parseFloat(order.oldBalance || order.beforeBalance || 0).toFixed(2);
+                    const afterBal = parseFloat(order.newBalance || order.afterBalance || 0).toFixed(2);
 
-                    // Update stats (Successful + Processing counts towards spending)
                     if (status === "Successful" || status === "Completed" || status === "Processing") {
                         totalSpentSum += amount;
                         if (ts >= startOfToday) spentTodaySum += amount;
                     }
 
-                    // Network Badges logic
                     const net = (order.network || 'MTN').toUpperCase();
                     let netClass = 'mtn-bg';
                     if(net.includes('TEL')) netClass = 'tel-bg';
@@ -202,6 +193,20 @@
                             <div class="order-details">
                                 <div class="detail-row"><span>Plan</span><b>${order.plan || 'N/A'}</b></div>
                                 <div class="detail-row"><span>Recipient</span><b>${order.recipient || 'N/A'}</b></div>
+                                
+                                <div class="balance-audit">
+                                    <div class="audit-item">
+                                        <label>Before</label>
+                                        <val>₵${beforeBal}</val>
+                                    </div>
+                                    <div class="audit-item" style="text-align:center;">
+                                        <i class="fas fa-arrow-right text-xs opacity-30 mt-2"></i>
+                                    </div>
+                                    <div class="audit-item" style="text-align:right;">
+                                        <label>After</label>
+                                        <val>₵${afterBal}</val>
+                                    </div>
+                                </div>
                             </div>
                             <div class="order-footer">
                                 <div class="amount-paid">₵${amount.toFixed(2)}</div>
@@ -211,7 +216,7 @@
                     `;
                 });
 
-                document.getElementById('totalOrders').innerText = totalOrdersCount;
+                document.getElementById('totalOrders').innerText = entries.length;
                 document.getElementById('totalSales').innerText = `₵${totalSpentSum.toFixed(2)}`;
                 document.getElementById('spentToday').innerText = `₵${spentTodaySum.toFixed(2)}`;
                 container.innerHTML = html;
