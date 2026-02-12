@@ -2,125 +2,153 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Ads Manager - GiganticData</title>
+    <title>Ads Manager - GiganticData Hub</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --primary: #0f172a;
-            --accent: #3b82f6;
-            --success: #22c55e;
+            --primary: #003366;
+            --deep-navy: #050816;
+            --accent: #f06529;
+            --success: #10b981;
             --danger: #ef4444;
-            --bg: #f8fafc;
+            --bg: #f4f7fe;
+            --card: #ffffff;
+            --text-main: #1e293b;
         }
 
-        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 0; color: var(--text-main); }
+        .admin-header { background: var(--deep-navy); color: white; padding: 20px; text-align: center; position: sticky; top: 0; z-index: 50; }
+        
+        .container { max-width: 600px; margin: 20px auto; padding: 0 15px; }
         
         /* FORM STYLING */
         .ad-form { 
-            background: white; padding: 25px; border-radius: 15px; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 30px;
-            border: 2px solid transparent; transition: border 0.3s;
+            background: var(--card); padding: 25px; border-radius: 24px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-bottom: 30px;
+            border: 2px solid transparent; transition: 0.3s;
         }
-        .ad-form.edit-mode { border-color: var(--accent); }
-        .ad-form h2 { margin-top: 0; font-size: 18px; color: var(--primary); }
-        .input-group { margin-bottom: 15px; }
-        label { display: block; font-size: 12px; font-weight: 700; color: #64748b; margin-bottom: 5px; }
+        .ad-form.edit-mode { border-color: var(--primary); background: #f0f7ff; }
+        .ad-form h2 { margin-top: 0; font-size: 18px; font-weight: 900; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .input-group { margin-bottom: 18px; }
+        label { display: block; font-size: 11px; font-weight: 800; color: var(--primary); margin-bottom: 6px; text-transform: uppercase; }
         input, textarea, select { 
-            width: 100%; padding: 12px; border: 1px solid #e2e8f0; 
-            border-radius: 10px; box-sizing: border-box; outline: none;
+            width: 100%; padding: 14px; border: 1px solid #e2e8f0; 
+            border-radius: 12px; box-sizing: border-box; outline: none; font-family: inherit;
+            background: #f8fafc; transition: 0.2s;
         }
+        input:focus, textarea:focus { border-color: var(--accent); background: white; }
 
         .btn-save { 
-            background: var(--primary); color: white; border: none; 
-            padding: 15px; width: 100%; border-radius: 10px; 
-            font-weight: 700; cursor: pointer; 
+            background: linear-gradient(135deg, #f06529 0%, #c02425 100%); color: white; border: none; 
+            padding: 16px; width: 100%; border-radius: 14px; 
+            font-weight: 800; cursor: pointer; font-size: 14px; text-transform: uppercase;
+            box-shadow: 0 5px 15px rgba(240, 101, 41, 0.3);
         }
         .btn-cancel {
             background: #e2e8f0; color: var(--primary); border: none;
-            padding: 10px; width: 100%; border-radius: 10px; margin-top: 10px;
-            font-weight: 600; cursor: pointer; display: none;
+            padding: 12px; width: 100%; border-radius: 12px; margin-top: 10px;
+            font-weight: 700; cursor: pointer; display: none;
         }
 
         /* ADS LIST STYLING */
+        .section-title { font-size: 12px; font-weight: 900; color: #64748b; margin: 25px 0 15px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
+        
         .ad-card {
-            background: white; padding: 15px; border-radius: 12px;
+            background: var(--card); padding: 18px; border-radius: 20px;
             margin-bottom: 15px; display: flex; align-items: center; gap: 15px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02); border: 1px solid #eef2f6;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #eef2f6;
+            transition: 0.3s;
         }
+        .ad-card:hover { transform: scale(1.02); }
+        
         .ad-icon-preview {
-            width: 50px; height: 50px; background: #f1f5f9; border-radius: 10px;
-            display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--accent);
+            width: 55px; height: 55px; background: rgba(0, 51, 102, 0.05); border-radius: 15px;
+            display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--accent);
         }
-        .ad-info { flex: 1; }
-        .ad-info h4 { margin: 0; font-size: 14px; }
-        .ad-info p { margin: 4px 0; font-size: 11px; color: #64748b; }
+        .ad-info { flex: 1; overflow: hidden; }
+        .ad-info h4 { margin: 0; font-size: 15px; font-weight: 800; color: var(--primary); }
+        .ad-info p { margin: 4px 0; font-size: 12px; color: var(--text-gray); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        .badge-row { display: flex; gap: 8px; margin-top: 8px; }
         .stats-pill {
-            background: #dcfce7; color: #166534; padding: 4px 8px; 
-            border-radius: 6px; font-size: 10px; font-weight: 800;
+            background: #e0f2fe; color: #0369a1; padding: 3px 8px; 
+            border-radius: 6px; font-size: 10px; font-weight: 900;
         }
+        .status-pill { padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 900; }
+        .status-active { background: #dcfce7; color: #166534; }
+        .status-hidden { background: #fee2e2; color: #991b1b; }
 
-        .actions { display: flex; gap: 8px; }
-        .btn-action { border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+        .actions { display: flex; flex-direction: column; gap: 6px; }
+        .btn-action { border: none; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
         .btn-del { color: var(--danger); background: #fee2e2; }
-        .btn-toggle { color: var(--accent); background: #dbeafe; }
-        .btn-edit { color: #1e293b; background: #f1f5f9; }
+        .btn-toggle { color: #0369a1; background: #e0f2fe; }
+        .btn-edit { color: var(--primary); background: #f1f5f9; }
+        .btn-action:active { transform: scale(0.9); }
 
         #loadingOverlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: white; display: flex; justify-content: center; align-items: center; z-index: 100;
+            position: fixed; inset: 0; background: white; display: flex; 
+            flex-direction: column; justify-content: center; align-items: center; z-index: 1000;
         }
     </style>
 </head>
 <body>
 
     <div id="loadingOverlay">
-        <div style="text-align:center;">
-            <i class="fas fa-circle-notch fa-spin fa-2x" style="color: var(--accent);"></i>
-            <p>Verifying Admin Terminal...</p>
-        </div>
+        <i class="fas fa-rocket fa-spin fa-3x" style="color: var(--accent); margin-bottom: 15px;"></i>
+        <p style="font-weight: 800; color: var(--primary); text-transform: uppercase; font-size: 12px; letter-spacing: 1px;">Authenticating Ad Terminal...</p>
+    </div>
+
+    <div class="admin-header">
+        <h1 style="margin: 0; font-size: 18px; font-weight: 900; letter-spacing: -0.5px;">GIGANTIC ADS MANAGER</h1>
     </div>
 
     <div class="container">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h1 style="font-size: 20px; color: var(--primary);">Ads Management</h1>
-            <a href="admin_dashboard.html" style="text-decoration: none; font-size: 13px; color: var(--accent); font-weight: 700;">Back to Dashboard</a>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 10px 0 20px;">
+            <a href="admin_dashboard.html" style="text-decoration: none; font-size: 12px; color: var(--text-gray); font-weight: 700;">
+                <i class="fas fa-arrow-left"></i> EXIT TERMINAL
+            </a>
         </div>
 
         <div class="ad-form" id="adForm">
-            <h2 id="formTitle">Create New Sponsored Ad</h2>
+            <h2 id="formTitle">Launch New Campaign</h2>
             <input type="hidden" id="editAdId">
+            
             <div class="input-group">
-                <label>AD TITLE</label>
-                <input type="text" id="adTitle" placeholder="e.g. Join Affiliate Mastery">
+                <label>Campaign Title</label>
+                <input type="text" id="adTitle" placeholder="Enter headline...">
             </div>
+            
             <div class="input-group">
-                <label>DESCRIPTION</label>
-                <textarea id="adDesc" rows="2" placeholder="Briefly describe the offer..."></textarea>
+                <label>Description / Subtext</label>
+                <textarea id="adDesc" rows="2" placeholder="Describe the offer clearly..."></textarea>
             </div>
+            
             <div class="input-group">
-                <label>TARGET LINK (URL)</label>
-                <input type="text" id="adLink" placeholder="https://wa.me/...">
+                <label>Target URL (Link)</label>
+                <input type="text" id="adLink" placeholder="https://">
             </div>
+            
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                 <div class="input-group">
-                    <label>ICON CLASS (FontAwesome)</label>
-                    <input type="text" id="adIcon" placeholder="fa-rocket">
+                    <label>Icon (FontAwesome)</label>
+                    <input type="text" id="adIcon" placeholder="fa-gift">
                 </div>
                 <div class="input-group">
-                    <label>STATUS</label>
+                    <label>Initial Status</label>
                     <select id="adStatus">
-                        <option value="true">Active</option>
-                        <option value="false">Hidden</option>
+                        <option value="true">Live / Visible</option>
+                        <option value="false">Hidden / Draft</option>
                     </select>
                 </div>
             </div>
-            <button class="btn-save" id="submitBtn" onclick="saveAd()">UPLOAD AD CAMPAIGN</button>
-            <button class="btn-cancel" id="cancelBtn" onclick="resetForm()">Cancel Editing</button>
+            
+            <button class="btn-save" id="submitBtn" onclick="saveAd()">Publish Ad Campaign</button>
+            <button class="btn-cancel" id="cancelBtn" onclick="resetForm()">Discard Changes</button>
         </div>
 
-        <h3 style="font-size: 14px; color: #64748b; margin-bottom: 15px;">LIVE CAMPAIGNS</h3>
+        <div class="section-title"><i class="fas fa-layer-group"></i> Active Campaigns</div>
         <div id="adsContainer"></div>
     </div>
 
@@ -129,7 +157,6 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getDatabase, ref, onValue, push, set, remove, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // UNIFIED SECURE CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
             authDomain: "gigantic-data.firebaseapp.com",
@@ -158,8 +185,9 @@
                 const container = document.getElementById('adsContainer');
                 container.innerHTML = "";
 
-                Object.keys(data).forEach(id => {
+                Object.keys(data).sort((a,b) => data[b].timestamp - data[a].timestamp).forEach(id => {
                     const ad = data[id];
+                    const isActive = ad.active !== false;
                     const card = document.createElement('div');
                     card.className = "ad-card";
                     card.innerHTML = `
@@ -169,22 +197,22 @@
                         <div class="ad-info">
                             <h4>${ad.title}</h4>
                             <p>${ad.description}</p>
-                            <div style="display:flex; gap:10px; align-items:center;">
-                                <span class="stats-pill">${ad.clicks || 0} CLICKS</span>
-                                <span style="font-size:10px; color:${ad.active !== false ? '#22c55e' : '#ef4444'}">
-                                    ● ${ad.active !== false ? 'Active' : 'Hidden'}
+                            <div class="badge-row">
+                                <span class="stats-pill"><i class="fas fa-mouse-pointer"></i> ${ad.clicks || 0}</span>
+                                <span class="status-pill ${isActive ? 'status-active' : 'status-hidden'}">
+                                    ${isActive ? 'LIVE' : 'HIDDEN'}
                                 </span>
                             </div>
                         </div>
                         <div class="actions">
-                            <button class="btn-action btn-edit" onclick='prepareEdit("${id}", ${JSON.stringify(ad).replace(/'/g, "&apos;")})'>
-                                <i class="fas fa-edit"></i>
+                            <button class="btn-action btn-edit" title="Edit" onclick='prepareEdit("${id}", ${JSON.stringify(ad).replace(/'/g, "&apos;")})'>
+                                <i class="fas fa-pen"></i>
                             </button>
-                            <button class="btn-action btn-toggle" onclick="toggleAd('${id}', ${ad.active !== false})">
-                                <i class="fas ${ad.active !== false ? 'fa-eye-slash' : 'fa-eye'}"></i>
+                            <button class="btn-action btn-toggle" title="Toggle Visibility" onclick="toggleAd('${id}', ${isActive})">
+                                <i class="fas ${isActive ? 'fa-eye-slash' : 'fa-eye'}"></i>
                             </button>
-                            <button class="btn-action btn-del" onclick="deleteAd('${id}')">
-                                <i class="fas fa-trash"></i>
+                            <button class="btn-action btn-del" title="Delete" onclick="deleteAd('${id}')">
+                                <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
                     `;
@@ -201,9 +229,9 @@
             document.getElementById('adIcon').value = data.icon;
             document.getElementById('adStatus').value = data.active !== false ? "true" : "false";
             
-            document.getElementById('formTitle').innerText = "Edit Ad Campaign";
-            document.getElementById('submitBtn').innerText = "UPDATE AD CAMPAIGN";
-            document.getElementById('submitBtn').style.background = "#3b82f6";
+            document.getElementById('formTitle').innerText = "Edit Campaign";
+            document.getElementById('submitBtn').innerText = "Update Campaign";
+            document.getElementById('submitBtn').style.background = "var(--primary)";
             document.getElementById('adForm').classList.add('edit-mode');
             document.getElementById('cancelBtn').style.display = "block";
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -215,9 +243,9 @@
             document.getElementById('adDesc').value = "";
             document.getElementById('adLink').value = "";
             document.getElementById('adIcon').value = "";
-            document.getElementById('formTitle').innerText = "Create New Sponsored Ad";
-            document.getElementById('submitBtn').innerText = "UPLOAD AD CAMPAIGN";
-            document.getElementById('submitBtn').style.background = "#0f172a";
+            document.getElementById('formTitle').innerText = "Launch New Campaign";
+            document.getElementById('submitBtn').innerText = "Publish Ad Campaign";
+            document.getElementById('submitBtn').style.background = "linear-gradient(135deg, #f06529 0%, #c02425 100%)";
             document.getElementById('adForm').classList.remove('edit-mode');
             document.getElementById('cancelBtn').style.display = "none";
         };
@@ -243,21 +271,23 @@
 
             if (editId) {
                 update(ref(db, `adsList/${editId}`), adData).then(() => {
-                    alert("Ad Updated!");
+                    alert("Campaign Updated Successfully!");
                     resetForm();
                 });
             } else {
                 adData.clicks = 0;
                 const newAdRef = push(ref(db, 'adsList'));
                 set(newAdRef, adData).then(() => {
-                    alert("Ad Published!");
+                    alert("Campaign Launched Successfully!");
                     resetForm();
                 });
             }
         };
 
         window.deleteAd = function(id) {
-            if(confirm("Delete this campaign?")) remove(ref(db, `adsList/${id}`));
+            if(confirm("Permanently delete this campaign? This cannot be undone.")) {
+                remove(ref(db, `adsList/${id}`));
+            }
         };
 
         window.toggleAd = function(id, currentStatus) {
