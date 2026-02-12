@@ -54,6 +54,7 @@
         .role-btn { font-size: 0.65rem; font-weight: 800; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
         .role-agent { background: #a855f7; color: white; }
         .role-member { background: #64748b; color: white; }
+        .btn-delete { color: #ef4444; background: rgba(239,68,68,0.1); padding: 5px 10px; border-radius: 6px; font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -101,7 +102,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -150,12 +151,10 @@ function renderLists(users) {
     const topDiv = document.getElementById('topRankings');
     const fullDiv = document.getElementById('fullDirectory');
     
-    // Top 10
     const top10 = [...users].sort((a,b) => (b.balance || 0) - (a.balance || 0)).slice(0, 10);
     topDiv.innerHTML = "";
     top10.forEach((u, i) => topDiv.appendChild(createUserCard(u, i+1, true)));
 
-    // Full List
     fullDiv.innerHTML = "";
     users.sort((a,b) => (a.name || '').localeCompare(b.name || '')).forEach(u => fullDiv.appendChild(createUserCard(u, null, false)));
 }
@@ -178,9 +177,10 @@ function createUserCard(user, rank, isRanked) {
     card.className = "user-row";
     
     const now = Date.now();
-    const lastLoginTs = user.lastLogin || 0;
+    // Check both lastLogin and lastActive for status
+    const lastLoginTs = user.lastLogin || user.lastActive || 0;
     const diff = now - lastLoginTs;
-    const isInactive = diff > 2592000000;
+    const isInactive = diff > 2592000000; // 30 Days
     const timeString = lastLoginTs ? new Date(lastLoginTs).toLocaleDateString() : 'Never';
 
     let rankIcon = isRanked ? 
@@ -197,7 +197,7 @@ function createUserCard(user, rank, isRanked) {
             <div class="text-right">
                 <span class="font-black text-blue-600 text-sm">₵${parseFloat(user.balance || 0).toFixed(2)}</span>
                 <div class="login-time ${isInactive ? 'inactive-user' : 'active-user'} mt-1">
-                    ${isInactive ? 'Inactive' : 'Active'} (${timeString})
+                    ${isInactive ? 'OFFLINE' : 'ACTIVE'} (${timeString})
                 </div>
             </div>
         </div>
@@ -206,6 +206,9 @@ function createUserCard(user, rank, isRanked) {
             <div class="flex gap-2">
                 <button onclick="toggleRole('${user.uid}', '${user.role}')" class="role-btn ${user.role === 'agent' ? 'role-agent' : 'role-member'}">
                     ${user.role === 'agent' ? 'Agent' : 'Member'} <i class="fas fa-sync-alt ml-1"></i>
+                </button>
+                <button onclick="deleteUser('${user.uid}', '${user.name}')" class="btn-delete">
+                    <i class="fas fa-trash"></i>
                 </button>
             </div>
         </div>
@@ -231,6 +234,18 @@ window.toggleRole = (uid, currentRole) => {
         update(ref(db, `users/${uid}`), { role: newRole })
         .then(() => alert("Role Updated"))
         .catch(e => alert("Error: " + e.message));
+    }
+}
+
+window.deleteUser = (uid, name) => {
+    if(confirm(`⚠️ PERMANENT DELETE: Are you sure you want to completely erase ${name || 'this user'} from the database? This cannot be undone.`)) {
+        const updates = {};
+        updates[`users/${uid}`] = null;
+        updates[`user_orders/${uid}`] = null;
+        
+        update(ref(db), updates)
+        .then(() => alert("User successfully removed from system."))
+        .catch(e => alert("Delete Error: " + e.message));
     }
 }
 
