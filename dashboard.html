@@ -6,9 +6,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --bg-body: #f4f7fe; --bg-card: #ffffff; --text-main: #1e293b; --text-gray: #64748b; --header-bg: #003366; --deep-navy: #050816; --primary-blue: #0052cc; --accent-orange: #f06529; --orange-gradient: linear-gradient(135deg, #f06529 0%, #c02425 100%); --border-color: #e2e8f0; --nav-bg: rgba(255, 255, 255, 0.9); --online-status: #10b981; } [data-theme="dark"] { --bg-body: #02040a; --bg-card: #0d1117; --text-main: #f0f6fc; --text-gray: #8b949e; --header-bg: #010409; --deep-navy: #000000; --primary-blue: #1f6feb; --border-color: #30363d; --nav-bg: rgba(13, 17, 23, 0.9); } body { margin: 0; font-family: 'Inter', -apple-system, sans-serif; background-color: var(--bg-body); color: var(--text-main); padding-bottom: 120px; transition: background 0.3s, color 0.3s; } .status-header { background: rgba(16, 185, 129, 0.1); color: var(--online-status); padding: 8px; font-size: 11px; text-align: center; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; } .status-dot { width: 8px; height: 8px; background: var(--online-status); border-radius: 50%; animation: blink 1.5s infinite; } @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } } .app-top-bar { background: var(--deep-navy); padding: 12px 15px; display: flex; justify-content: center; } .app-link-box { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 8px 18px; display: flex; align-items: center; gap: 12px; text-decoration: none; width: 100%; max-width: 400px; cursor: pointer; } .play-store-icon { color: #3DDC84; font-size: 22px; } .app-link-text { color: white; font-size: 13px; font-weight: 600; } .header { background-color: var(--header-bg); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.2); } .header-logo { font-weight: 900; font-size: 18px; display: flex; align-items: center; gap: 8px; } .theme-toggle { font-size: 20px; cursor: pointer; color: var(--accent-orange); padding: 5px; } .greeting-container { padding: 25px 20px; background: linear-gradient(180deg, var(--header-bg) 0%, var(--bg-body) 100%); } .user-greeting { font-size: 20px; font-weight: 800; color: white; margin-bottom: 4px; } .sweet-words { font-size: 13px; color: rgba(255,255,255,0.7); } .wallet-container { padding: 0 18px; display: grid; gap: 18px; margin-top: -15px; } .wallet-card { background: linear-gradient(135deg, #003366 0%, var(--primary-blue) 100%); border-radius: 24px; padding: 25px; color: white; box-shadow: 0 10px 20px rgba(0,0,0,0.2); position: relative; overflow: hidden; } .wallet-card::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%); pointer-events: none; } .balance { font-size: 32px; font-weight: 900; margin: 10px 0 20px; display: flex; align-items: center; gap: 12px; } .wallet-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; display: flex; align-items: center; justify-content: space-between; } .toggle-balance { cursor: pointer; font-size: 18px; opacity: 0.8; padding: 5px; } .btn { flex: 1; padding: 14px; border-radius: 14px; border: none; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; cursor: pointer; } .btn-orange { background: var(--orange-gradient); color: white; } .btn-white { background: white; color: #003366; } .upgrade-card { margin: 20px 18px; padding: 20px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; text-align: center; } .upgrade-card h4 { margin: 0; color: var(--header-bg); } .upgrade-card p { font-size: 11px; color: var(--text-gray); margin: 5px 0 15px; } .btn-upgrade { background: var(--header-bg); color: white; padding: 10px 20px; border-radius: 12px; border: none; font-weight: 700; font-size: 12px; cursor: pointer; width: 100%; } .insights-card { margin: 20px 18px; padding: 20px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; } .insights-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; } .insights-title { font-size: 14px; font-weight: 700; color: var(--text-gray); } .spending-bar-container { display: flex; align-items: flex-end; gap: 8px; height: 60px; padding-top: 10px; } .spending-bar { flex: 1; background: var(--bg-body); border-radius: 4px; position: relative; transition: 0.5s; } .spending-bar.active { background: var(--accent-orange); } .boost-service-btn { margin: 20px 18px; padding: 18px; background: var(--bg-card); border: 2px solid var(--accent-orange); border-radius: 20px; display: flex; align-items: center; justify-content: space-between; text-decoration: none; color: var(--text-main); position: relative; cursor: pointer; animation: pulse-border 2s infinite; } .new-badge { position: absolute; top: -10px; right: 15px; background: var(--accent-orange); color: white; font-size: 10px; font-weight: 900; padding: 2px 10px; border-radius: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); } @keyframes pulse-border { 0% { box-shadow: 0 0 0 0 rgba(240, 101, 41, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(240, 101, 41, 0); } 100% { box-shadow: 0 0 0 0 rgba(240, 101, 41, 0); } } .ad-slot { margin: 20px 18px; padding: 18px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; } .ad-badge { font-size: 10px; background: var(--accent-orange); color: white; padding: 2px 8px; border-radius: 5px; font-weight: bold; } .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 18px; } .grid-item { background: var(--bg-card); padding: 25px 15px; border-radius: 20px; text-align: center; text-decoration: none; color: inherit; border: 1px solid var(--border-color); transition: 0.3s; cursor: pointer; } .grid-item:active { transform: translateY(-5px); border-color: var(--accent-orange); } .grid-item i { font-size: 28px; color: var(--accent-orange); margin-bottom: 10px; display: block; } .bottom-nav { position: fixed; bottom: 0; width: 100%; background: var(--nav-bg); backdrop-filter: blur(10px); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid var(--border-color); z-index: 1000; } .nav-item { text-align: center; color: var(--text-gray); text-decoration: none; font-size: 11px; cursor: pointer; } .nav-item i { font-size: 22px; margin-bottom: 4px; display: block; } .nav-item.active { color: var(--accent-orange); }
+        :root { --bg-body: #f4f7fe; --bg-card: #ffffff; --text-main: #1e293b; --text-gray: #64748b; --header-bg: #003366; --deep-navy: #050816; --primary-blue: #0052cc; --accent-orange: #f06529; --orange-gradient: linear-gradient(135deg, #f06529 0%, #c02425 100%); --border-color: #e2e8f0; --nav-bg: rgba(255, 255, 255, 0.9); --online-status: #10b981; } [data-theme="dark"] { --bg-body: #02040a; --bg-card: #0d1117; --text-main: #f0f6fc; --text-gray: #8b949e; --header-bg: #010409; --deep-navy: #000000; --primary-blue: #1f6feb; --border-color: #30363d; --nav-bg: rgba(13, 17, 23, 0.9); } body { margin: 0; font-family: 'Inter', -apple-system, sans-serif; background-color: var(--bg-body); color: var(--text-main); padding-bottom: 120px; transition: background 0.3s, color 0.3s; } .status-header { background: rgba(16, 185, 129, 0.1); color: var(--online-status); padding: 8px; font-size: 11px; text-align: center; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; } .status-dot { width: 8px; height: 8px; background: var(--online-status); border-radius: 50%; animation: blink 1.5s infinite; } @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } } .app-top-bar { background: var(--deep-navy); padding: 12px 15px; display: flex; justify-content: center; } .app-link-box { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 8px 18px; display: flex; align-items: center; gap: 12px; text-decoration: none; width: 100%; max-width: 400px; cursor: pointer; } .play-store-icon { color: #3DDC84; font-size: 22px; } .app-link-text { color: white; font-size: 13px; font-weight: 600; } .header { background-color: var(--header-bg); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.2); } .header-logo { font-weight: 900; font-size: 18px; display: flex; align-items: center; gap: 8px; } .theme-toggle { font-size: 20px; cursor: pointer; color: var(--accent-orange); padding: 5px; } .greeting-container { padding: 25px 20px; background: linear-gradient(180deg, var(--header-bg) 0%, var(--bg-body) 100%); } .user-greeting { font-size: 20px; font-weight: 800; color: white; margin-bottom: 4px; } .sweet-words { font-size: 13px; color: rgba(255,255,255,0.7); } .wallet-container { padding: 0 18px; display: grid; gap: 18px; margin-top: -15px; } .wallet-card { background: linear-gradient(135deg, #003366 0%, var(--primary-blue) 100%); border-radius: 24px; padding: 25px; color: white; box-shadow: 0 10px 20px rgba(0,0,0,0.2); position: relative; overflow: hidden; } .wallet-card::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%); pointer-events: none; } .balance { font-size: 32px; font-weight: 900; margin: 10px 0 20px; display: flex; align-items: center; gap: 12px; } .wallet-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; display: flex; align-items: center; justify-content: space-between; } .toggle-balance { cursor: pointer; font-size: 18px; opacity: 0.8; padding: 5px; } .btn { flex: 1; padding: 14px; border-radius: 14px; border: none; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; cursor: pointer; } .btn-orange { background: var(--orange-gradient); color: white; } .btn-white { background: white; color: #003366; } .upgrade-card { margin: 20px 18px; padding: 20px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; text-align: center; } .upgrade-card h4 { margin: 0; color: var(--header-bg); } .upgrade-card p { font-size: 11px; color: var(--text-gray); margin: 5px 0 15px; } .btn-upgrade { background: var(--header-bg); color: white; padding: 10px 20px; border-radius: 12px; border: none; font-weight: 700; font-size: 12px; cursor: pointer; width: 100%; } .insights-card { margin: 20px 18px; padding: 20px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; } .insights-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; } .insights-title { font-size: 14px; font-weight: 700; color: var(--text-gray); } .spending-bar-container { display: flex; align-items: flex-end; gap: 8px; height: 60px; padding-top: 10px; } .spending-bar { flex: 1; background: var(--bg-body); border-radius: 4px; position: relative; transition: 0.5s; } .spending-bar.active { background: var(--accent-orange); } .boost-service-btn { margin: 20px 18px; padding: 18px; background: var(--bg-card); border: 2px solid var(--accent-orange); border-radius: 20px; display: flex; align-items: center; justify-content: space-between; text-decoration: none; color: var(--text-main); position: relative; cursor: pointer; animation: pulse-border 2s infinite; } .new-badge { position: absolute; top: -10px; right: 15px; background: var(--accent-orange); color: white; font-size: 10px; font-weight: 900; padding: 2px 10px; border-radius: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); } @keyframes pulse-border { 0% { box-shadow: 0 0 0 0 rgba(240, 101, 41, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(240, 101, 41, 0); } 100% { box-shadow: 0 0 0 0 rgba(240, 101, 41, 0); } } 
+        
+        /* IMPROVED ADS STYLING */
+        .ad-slot { 
+            margin: 20px 18px; 
+            padding: 2px; 
+            background: linear-gradient(135deg, var(--accent-orange), var(--primary-blue)); 
+            border-radius: 22px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            animation: ad-float 3s ease-in-out infinite;
+        } 
+        .ad-inner {
+            background: var(--bg-card);
+            padding: 18px;
+            border-radius: 20px;
+            display: block;
+            text-decoration: none;
+        }
+        .ad-badge { 
+            font-size: 9px; 
+            background: var(--accent-orange); 
+            color: white; 
+            padding: 3px 10px; 
+            border-radius: 50px; 
+            font-weight: 900; 
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            display: inline-block;
+        }
+        @keyframes ad-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 18px; } .grid-item { background: var(--bg-card); padding: 25px 15px; border-radius: 20px; text-align: center; text-decoration: none; color: inherit; border: 1px solid var(--border-color); transition: 0.3s; cursor: pointer; } .grid-item:active { transform: translateY(-5px); border-color: var(--accent-orange); } .grid-item i { font-size: 28px; color: var(--accent-orange); margin-bottom: 10px; display: block; } .bottom-nav { position: fixed; bottom: 0; width: 100%; background: var(--nav-bg); backdrop-filter: blur(10px); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid var(--border-color); z-index: 1000; } .nav-item { text-align: center; color: var(--text-gray); text-decoration: none; font-size: 11px; cursor: pointer; } .nav-item i { font-size: 22px; margin-bottom: 4px; display: block; } .nav-item.active { color: var(--accent-orange); }
         .admin-banner { background: #6366f1; color: white; padding: 10px; text-align: center; font-size: 12px; font-weight: bold; position: sticky; top: 0; z-index: 2000; display: none; }
-        .btn-exit-admin { background: white; color: #6366f1; border: none; padding: 4px 10px; border-radius: 5px; margin-left: 10px; cursor: pointer; }
+        .btn-exit-admin { background: white; color: #6366f1; border: none; padding: 4px 10px; border-radius: 50px; margin-left: 10px; cursor: pointer; font-weight: 800; font-size: 10px; }
     </style>
 </head>
 <body>
@@ -17,23 +51,89 @@
     </div>
     <div class="status-header"><div class="status-dot"></div>SYSTEM ONLINE: INSTANT DELIVERY ACTIVE</div>
     <div class="app-top-bar"><a href="https://files.appsgeyser.com/Gigantic%20Data%20Hub_19462747.apk" class="app-link-box"><i class="fab fa-google-play play-store-icon"></i><span class="app-link-text">Download Official App (v2.0)</span></a></div>
-    <div class="header"><div class="header-logo"><i class="fas fa-bolt"></i> GIGANTICDATAHUB</div><div style="display: flex; gap: 15px; align-items: center;"><i class="fas fa-moon theme-toggle" id="themeBtn" onclick="toggleTheme()"></i><a href="javascript:void(0)" onclick="logoutUser()" style="color:white; padding: 5px;"><i class="fas fa-sign-out-alt"></i></a></div></div>
-    <div class="greeting-container"><div class="user-greeting" id="userGreeting">Loading...</div><div class="sweet-words" id="sweetWords">Your reliable partner for affordable data.</div></div>
-    <div class="wallet-container"><div class="wallet-card"><div class="wallet-label"><span>Main Balance</span><i class="fas fa-eye toggle-balance" id="toggleBalance" onclick="toggleBalanceVisibility()"></i></div><div class="balance" id="walletBalance">GH₵ 0.00</div><div style="display:flex; gap:10px;"><a href="toppup.html" class="btn btn-white"><i class="fas fa-plus"></i> Top Up</a><a href="javascript:void(0)" onclick="navigateToOrder()" class="btn btn-orange"><i class="fas fa-wifi"></i> Buy Data</a></div></div></div>
-    <div class="upgrade-card" id="agentUpgradeBox"><h4><i class="fas fa-user-tie"></i> Agent Access</h4><p>Activate Agent pricing system for just <b>GH₵ 45.00</b> and save more on every data purchase.</p><button class="btn-upgrade" onclick="activateAgent()">Activate Agent Now</button></div>
-    <div class="insights-card"><div class="insights-header"><span class="insights-title">Usage Insights</span><span style="font-size: 10px; color: var(--online-status); font-weight: bold;">LAST 7 DAYS</span></div><div class="spending-bar-container"><div class="spending-bar" style="height: 30%;"></div><div class="spending-bar" style="height: 50%;"></div><div class="spending-bar" style="height: 40%;"></div><div class="spending-bar active" style="height: 90%;"></div><div class="spending-bar" style="height: 60%;"></div><div class="spending-bar" style="height: 45%;"></div><div class="spending-bar" style="height: 70%;"></div></div><div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 9px; color: var(--text-gray);"><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span></div></div>
-    <a href="https://Giganticboost.shop" class="boost-service-btn"><span class="new-badge">NEW</span><div style="display: flex; align-items: center; gap: 15px;"><div style="font-size: 24px; color: #1DA1F2;"><i class="fas fa-rocket"></i></div><div><b style="font-size: 15px;">Gigantic Social Boost</b><p style="font-size: 11px; color: var(--text-gray); margin: 2px 0;">Grow your TikTok, IG, & YouTube fast!</p></div></div><i class="fas fa-chevron-right" style="color: var(--accent-orange);"></i></a>
-    <div class="grid"><a href="javascript:void(0)" onclick="navigateToOrder()" class="grid-item"><i class="fas fa-mobile-alt"></i><b>Buy Data</b></a><a href="transaction.html" class="grid-item"><i class="fas fa-history"></i><b>History</b></a><a href="referral.html" class="grid-item"><i class="fas fa-hand-holding-dollar"></i><b>Earnings</b></a><a href="profile.html" class="grid-item"><i class="fas fa-user-shield"></i><b>Profile</b></a></div>
-    <div class="ad-slot" id="sponsoredSlot" style="display:none;"><span class="ad-badge">SPONSORED</span><a id="adLink" href="#" target="_blank" style="text-decoration:none; display:flex; align-items:center; gap:15px; margin-top:10px;"><div id="adIcon" style="font-size:24px; color:var(--primary-blue);"><i class="fas fa-star"></i></div><div><b id="adTitle" style="color:var(--text-main); font-size:14px;">...</b><p id="adDesc" style="color:var(--text-gray); font-size:11px; margin:2px 0;">...</p></div></a></div>
+    
+    <div class="header">
+        <div class="header-logo"><i class="fas fa-bolt"></i> GIGANTICDATAHUB</div>
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <i class="fas fa-moon theme-toggle" id="themeBtn" onclick="toggleTheme()"></i>
+            <a href="javascript:void(0)" onclick="logoutUser()" style="color:white; padding: 5px;"><i class="fas fa-sign-out-alt"></i></a>
+        </div>
+    </div>
+
+    <div class="greeting-container">
+        <div class="user-greeting" id="userGreeting">Loading...</div>
+        <div class="sweet-words" id="sweetWords">Your reliable partner for affordable data.</div>
+    </div>
+
+    <div class="wallet-container">
+        <div class="wallet-card">
+            <div class="wallet-label"><span>Main Balance</span><i class="fas fa-eye toggle-balance" id="toggleBalance" onclick="toggleBalanceVisibility()"></i></div>
+            <div class="balance" id="walletBalance">GH₵ 0.00</div>
+            <div style="display:flex; gap:10px;">
+                <a href="toppup.html" class="btn btn-white"><i class="fas fa-plus"></i> Top Up</a>
+                <a href="javascript:void(0)" onclick="navigateToOrder()" class="btn btn-orange"><i class="fas fa-wifi"></i> Buy Data</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="upgrade-card" id="agentUpgradeBox">
+        <h4><i class="fas fa-user-tie"></i> Agent Access</h4>
+        <p>Activate Agent pricing system for just <b>GH₵ 45.00</b> and save more on every data purchase.</p>
+        <button class="btn-upgrade" onclick="activateAgent()">Activate Agent Now</button>
+    </div>
+
+    <div class="ad-slot" id="sponsoredSlot" style="display:none;">
+        <div class="ad-inner">
+            <span class="ad-badge"><i class="fas fa-ad mr-1"></i> SPONSORED</span>
+            <a id="adLink" href="#" target="_blank" style="text-decoration:none; display:flex; align-items:center; gap:15px;">
+                <div id="adIcon" style="font-size:32px; color:var(--accent-orange); background: rgba(240,101,41,0.1); width: 60px; height: 60px; border-radius: 15px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div style="flex: 1;">
+                    <b id="adTitle" style="color:var(--text-main); font-size:16px; display: block;">...</b>
+                    <p id="adDesc" style="color:var(--text-gray); font-size:12px; margin:4px 0 0; line-height: 1.4;">...</p>
+                </div>
+                <i class="fas fa-external-link-alt" style="color: var(--text-gray); font-size: 14px;"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="insights-card">
+        <div class="insights-header"><span class="insights-title">Usage Insights</span><span style="font-size: 10px; color: var(--online-status); font-weight: bold;">LAST 7 DAYS</span></div>
+        <div class="spending-bar-container"><div class="spending-bar" style="height: 30%;"></div><div class="spending-bar" style="height: 50%;"></div><div class="spending-bar" style="height: 40%;"></div><div class="spending-bar active" style="height: 90%;"></div><div class="spending-bar" style="height: 60%;"></div><div class="spending-bar" style="height: 45%;"></div><div class="spending-bar" style="height: 70%;"></div></div>
+        <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 9px; color: var(--text-gray);"><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span></div>
+    </div>
+
+    <a href="https://Giganticboost.shop" class="boost-service-btn">
+        <span class="new-badge">NEW</span>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div style="font-size: 24px; color: #1DA1F2;"><i class="fas fa-rocket"></i></div>
+            <div><b style="font-size: 15px;">Gigantic Social Boost</b><p style="font-size: 11px; color: var(--text-gray); margin: 2px 0;">Grow your TikTok, IG, & YouTube fast!</p></div>
+        </div>
+        <i class="fas fa-chevron-right" style="color: var(--accent-orange);"></i>
+    </a>
+
+    <div class="grid">
+        <a href="javascript:void(0)" onclick="navigateToOrder()" class="grid-item"><i class="fas fa-mobile-alt"></i><b>Buy Data</b></a>
+        <a href="transaction.html" class="grid-item"><i class="fas fa-history"></i><b>History</b></a>
+        <a href="referral.html" class="grid-item"><i class="fas fa-hand-holding-dollar"></i><b>Earnings</b></a>
+        <a href="profile.html" class="grid-item"><i class="fas fa-user-shield"></i><b>Profile</b></a>
+    </div>
+
     <a href="https://chat.whatsapp.com/DyyaJcgZKBMHnO2nRScmZ2" target="_blank" class="btn btn-orange" style="margin: 0 18px; border-radius:15px; text-decoration: none;"><i class="fab fa-whatsapp"></i> JOIN COMMUNITY</a>
-    <nav class="bottom-nav"><a href="dashboard.html" class="nav-item active"><i class="fas fa-home"></i>Home</a><a href="order_history.html" class="nav-item"><i class="fas fa-receipt"></i>Orders</a><a href="referral.html" class="nav-item"><i class="fas fa-users"></i>Referral</a><a href="profile.html" class="nav-item"><i class="fas fa-user-circle"></i>Profile</a></nav>
+    
+    <nav class="bottom-nav">
+        <a href="dashboard.html" class="nav-item active"><i class="fas fa-home"></i>Home</a>
+        <a href="order_history.html" class="nav-item"><i class="fas fa-receipt"></i>Orders</a>
+        <a href="referral.html" class="nav-item"><i class="fas fa-users"></i>Referral</a>
+        <a href="profile.html" class="nav-item"><i class="fas fa-user-circle"></i>Profile</a>
+    </nav>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getDatabase, ref, onValue, runTransaction, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // UNIFIED SECURE CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
             authDomain: "gigantic-data.firebaseapp.com",
