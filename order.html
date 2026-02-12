@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Buy Data Bundle - GiganticDataHub</title>
@@ -21,13 +27,21 @@
         .container { width: 100%; max-width: 480px; padding: 16px; min-height: 100vh; }
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
         .back-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-main); text-decoration: none;}
+        
         .balance-card {
             background: linear-gradient(135deg, var(--primary-purple) 0%, var(--secondary-purple) 100%);
             color: white; padding: 24px; border-radius: 20px; margin-bottom: 15px;
             box-shadow: 0 10px 20px rgba(106, 90, 249, 0.2);
+            position: relative;
         }
         .balance-card h2 { margin: 8px 0 0; font-size: 1.75rem; font-weight: 800; }
         .user-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; background: rgba(255,255,255,0.2); font-size: 0.65rem; font-weight: 700; margin-top: 10px; }
+        
+        /* New Security Identity Styles */
+        .auth-identity { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.15); font-size: 0.7rem; }
+        .id-row { display: flex; justify-content: space-between; opacity: 0.9; margin-bottom: 3px; font-weight: 600; }
+        .verified-tick { color: #34d399; margin-left: 4px; }
+
         .step { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; margin-bottom: 16px; }
         .active-step { border: 2px solid var(--primary-purple) !important; opacity: 1 !important; }
         .disabled { opacity: 0.5; pointer-events: none; filter: grayscale(1); }
@@ -65,6 +79,11 @@
             <p style="margin:0; font-size: 0.75rem; opacity: 0.8;">Wallet Balance</p>
             <h2 id="walletBalance">GH₵ 0.00</h2>
             <div class="user-badge" id="userTypeBadge">USER</div>
+
+            <div class="auth-identity">
+                <div class="id-row"><span>AUTH:</span> <span id="authEmail">...</span> <i class="fas fa-check-circle verified-tick"></i></div>
+                <div class="id-row"><span>S-ID:</span> <span id="authUid">...</span></div>
+            </div>
         </div>
 
         <div class="step active-step" id="step1">
@@ -154,16 +173,18 @@
 
         onAuthStateChanged(auth, user => {
             if (user) {
-                // Check if admin is auditing
+                // Identity checks
                 const impersonateUid = sessionStorage.getItem('impersonate_uid');
                 const isImpersonating = sessionStorage.getItem('isAdminImpersonating');
                 activeUid = (isImpersonating === 'true' && impersonateUid) ? impersonateUid : user.uid;
 
+                // UI Display of authenticated identity
+                document.getElementById('authEmail').innerText = user.email;
+                document.getElementById('authUid').innerText = activeUid.substring(0, 5) + "***";
+
                 onValue(ref(db, 'users/' + activeUid), (snapshot) => {
                     const data = snapshot.val() || {};
                     isAgent = (data.userType === "agent" || data.status === "Agent");
-                    
-                    // CRITICAL FIX: Match Dashboard logic for rawBalance
                     currentBalance = Number(data.balance || data.wallet || 0);
                     
                     document.getElementById('walletBalance').innerText = `GH₵ ${currentBalance.toFixed(2)}`;
@@ -235,12 +256,11 @@
                     recipient: num,
                     status: "Processing",
                     timestamp: serverTimestamp(),
-                    oldBalance: currentBalance, // Audit: Balance before
-                    newBalance: newBalance      // Audit: Balance after
+                    oldBalance: currentBalance,
+                    newBalance: newBalance
                 };
 
                 const updates = {};
-                // Force sync both balance and wallet keys to match dashboard
                 updates[`users/${activeUid}/balance`] = newBalance;
                 updates[`users/${activeUid}/wallet`] = newBalance;
                 updates[`pending_orders/${orderId}`] = automationData;
