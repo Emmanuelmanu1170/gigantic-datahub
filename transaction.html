@@ -9,7 +9,7 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Ledger - Gigantic Data Hub</title>
+    <title>Finance Ledger - Gigantic Data Hub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -25,13 +25,22 @@
 
         header { background: var(--primary); color: white; padding: 20px; position: sticky; top: 0; z-index: 100; }
         
+        /* Identity Card Styling */
+        .auth-card {
+            background: linear-gradient(135deg, var(--primary) 0%, #003366 100%);
+            margin: 15px; padding: 15px; border-radius: 16px; color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .auth-label { font-size: 10px; font-weight: 800; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px; }
+        .auth-value { font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+
         .stats-ribbon { 
             background: var(--card-bg); padding: 15px; display: flex; justify-content: space-around; 
             border-bottom: 1px solid rgba(0,0,0,0.05); position: sticky; top: 68px; z-index: 90;
             backdrop-filter: blur(10px); background: rgba(var(--card-bg), 0.8);
         }
 
-        .container { padding: 15px; max-width: 600px; margin: auto; }
+        .container { padding: 10px 15px; max-width: 600px; margin: auto; }
         
         .tx-card { 
             background: var(--card-bg); border-radius: 18px; padding: 14px; margin-bottom: 10px; 
@@ -42,7 +51,6 @@
         .icon-box { width: 45px; height: 45px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
         .bg-deposit { background: #dcfce7; color: var(--success); }
         .bg-purchase { background: #fee2e2; color: var(--danger); }
-        .bg-commission { background: #e0f2fe; color: #0ea5e9; }
 
         .tx-info { flex: 1; min-width: 0; }
         .tx-info h4 { font-size: 0.85rem; font-weight: 800; margin-bottom: 2px; text-transform: uppercase; letter-spacing: -0.3px; }
@@ -61,10 +69,26 @@
         <h3 id="pageHeader" class="font-black text-lg uppercase tracking-tighter">Finance Ledger</h3>
     </div>
     <div class="flex gap-4">
-        <i class="fas fa-filter opacity-50"></i>
         <i class="fas fa-redo-alt cursor-pointer" onclick="location.reload()"></i>
     </div>
 </header>
+
+<div class="auth-card" id="identityCard">
+    <div class="flex justify-between items-center mb-3">
+        <span class="auth-label">Authenticated Session</span>
+        <i class="fas fa-shield-alt text-emerald-400"></i>
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+        <div>
+            <p class="auth-label">Email</p>
+            <p class="auth-value" id="authEmail">...</p>
+        </div>
+        <div>
+            <p class="auth-label">Identity SID</p>
+            <p class="auth-value" id="authUid">...</p>
+        </div>
+    </div>
+</div>
 
 <div class="stats-ribbon">
     <div class="text-center">
@@ -104,16 +128,23 @@ const auth = getAuth(app);
 const ADMIN_EMAIL = "alenacloft0@gmail.com";
 
 onAuthStateChanged(auth, (user) => {
-    if (user) setupUnifiedLedger(user);
-    else window.location.href = "login.html";
+    if (user) {
+        // Display user details for authenticity
+        document.getElementById('authEmail').innerText = user.email;
+        const impersonateUid = sessionStorage.getItem('impersonate_uid');
+        const isAuditing = sessionStorage.getItem('isAdminImpersonating') === 'true';
+        const activeUid = isAuditing ? impersonateUid : user.uid;
+        
+        document.getElementById('authUid').innerText = activeUid.substring(0, 8) + "...";
+        
+        setupUnifiedLedger(user, activeUid, isAuditing);
+    } else {
+        window.location.href = "login.html";
+    }
 });
 
-function setupUnifiedLedger(user) {
+function setupUnifiedLedger(user, activeUid, isAuditing) {
     const isAdmin = user.email === ADMIN_EMAIL;
-    const impersonateUid = sessionStorage.getItem('impersonate_uid');
-    const isAuditing = sessionStorage.getItem('isAdminImpersonating') === 'true';
-    const activeUid = isAuditing ? impersonateUid : user.uid;
-
     document.getElementById('pageHeader').innerText = isAuditing ? "Audit Trace" : (isAdmin ? "Global Ledger" : "Transaction History");
 
     const dataPaths = [
@@ -126,15 +157,22 @@ function setupUnifiedLedger(user) {
     let loadedCount = 0;
 
     dataPaths.forEach(source => {
-        const dbRef = (isAdmin && !isAuditing) 
-            ? ref(db, source.path) 
-            : (source.path === 'topupNotes' ? ref(db, `${source.path}/${activeUid}`) : query(ref(db, source.path), orderByChild('uid'), equalTo(activeUid)));
+        let dbRef;
+        if (isAdmin && !isAuditing) {
+            dbRef = ref(db, source.path);
+        } else {
+            // Rule compliant query: Filter by UID unless it's topupNotes which is nested
+            if (source.path === 'topupNotes') {
+                dbRef = ref(db, `${source.path}/${activeUid}`);
+            } else {
+                dbRef = query(ref(db, source.path), orderByChild('uid'), equalTo(activeUid));
+            }
+        }
 
         onValue(dbRef, (snap) => {
             if (snap.exists()) {
                 const data = snap.val();
                 
-                // Deep parsing for nested structures (like topupNotes/uid/pushKey)
                 if (source.path === 'topupNotes' && isAdmin && !isAuditing) {
                     Object.entries(data).forEach(([uId, notes]) => {
                         Object.entries(notes).forEach(([key, val]) => {
@@ -164,7 +202,7 @@ function formatEntry(id, val, type, uid) {
         desc: val.description || val.plan || val.method || (type === 'deposit' ? 'Wallet Top-up' : 'Service Payment'),
         ts: val.timestamp || val.date || Date.now(),
         ref: val.reference || val.orderId || id.substring(0, 12),
-        type: type, // 'deposit' or 'purchase'
+        type: type,
         status: val.status || 'Success'
     };
 }
@@ -173,7 +211,6 @@ function renderLogs(logs, isAdmin, isAuditing) {
     const listDiv = document.getElementById('txList');
     document.getElementById('loading').style.display = 'none';
 
-    // Remove duplicates and sort
     const uniqueLogs = Array.from(new Map(logs.map(item => [item.id, item])).values())
                             .sort((a, b) => b.ts - a.ts);
 
