@@ -31,7 +31,7 @@
         }
         .summary-item { display: flex; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid rgba(0,0,0,0.05); }
         .btn-confirm {
-            background: linear-gradient(135deg, #6a5af9 0%, #4f46e5 100%);
+            background: linear-gradient(135deg, #6a5af9) 0%, #4f46e5 100%);
             box-shadow: 0 10px 20px rgba(106, 90, 249, 0.3);
         }
         #successOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 5000; align-items: center; justify-content: center; }
@@ -46,20 +46,20 @@
         </div>
 
         <div class="glass-card rounded-[32px] p-8">
-            <div class="flex justify-between items-center mb-8 pb-6 border-bottom border-dashed border-slate-200">
+            <div class="flex justify-between items-center mb-8 pb-6 border-b border-dashed border-slate-200">
                 <div>
                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Transaction Mode</p>
                     <p class="text-xs font-bold text-emerald-500 flex items-center gap-1">
                         <i class="fas fa-shield-check"></i> SECURE ENCRYPTED
                     </p>
                 </div>
-                <div id="netPill" class="network-pill">MTN</div>
+                <div id="netPill" class="network-pill">...</div>
             </div>
 
             <div class="space-y-1">
                 <div class="summary-item">
                     <span class="text-slate-400 text-sm">Recipient Number</span>
-                    <span id="dispPhone" class="font-bold text-sm tracking-widest">0000000000</span>
+                    <span id="dispPhone" class="font-bold text-sm tracking-widest">...</span>
                 </div>
                 <div class="summary-item">
                     <span class="text-slate-400 text-sm">SIM Verification</span>
@@ -67,7 +67,7 @@
                 </div>
                 <div class="summary-item">
                     <span class="text-slate-400 text-sm">Data Bundle</span>
-                    <span id="dispPlan" class="font-bold text-sm">0.0GB</span>
+                    <span id="dispPlan" class="font-bold text-sm">...</span>
                 </div>
                 <div class="summary-item border-none">
                     <span class="text-slate-400 text-sm">Payment Amount</span>
@@ -107,7 +107,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // CONFIG (Ensure this matches your setup)
         const firebaseConfig = { 
             apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA", 
             authDomain: "gigantic-data.firebaseapp.com", 
@@ -117,7 +116,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Retrieve Data from Session
         const order = JSON.parse(sessionStorage.getItem('pending_checkout'));
 
         if (!order) {
@@ -128,40 +126,54 @@
             document.getElementById('dispName').innerText = order.simName;
             document.getElementById('dispPlan').innerText = order.plan;
             document.getElementById('dispCost').innerText = "GH₵ " + Number(order.amount).toFixed(2);
-            document.getElementById('dispNewBal').innerText = "GH₵ " + (order.currentBalance - order.amount).toFixed(2);
+            document.getElementById('dispNewBal').innerText = "GH₵ " + (Number(order.currentBalance) - Number(order.amount)).toFixed(2);
         }
 
         window.executeOrder = async () => {
             const btn = document.getElementById('mainBtn');
             btn.disabled = true;
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> ACTIVING...`;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> ACTIVATING...`;
 
             try {
                 const orderId = "GID-" + Date.now();
-                const newBalance = Number((order.currentBalance - order.amount).toFixed(2));
+                const ts = Date.now();
+                const newBalance = Number((Number(order.currentBalance) - Number(order.amount)).toFixed(2));
 
-                // Matches your Strict Security Rules perfectly
-                const finalData = {
+                // 1. Core Order Object (Matches Rule 7 & 8)
+                const orderObject = {
                     network: String(order.network),
                     plan: String(order.plan),
                     recipient: String(order.recipient),
                     amount: Number(order.amount),
                     uid: String(order.activeUid),
                     status: "Processing",
-                    timestamp: Number(Date.now())
+                    timestamp: Number(ts)
+                };
+
+                // 2. Transaction Record (Matches Rule 4)
+                // IMPORTANT: Must contain 'uid' child for the Rule 4 validation to pass
+                const txObject = {
+                    uid: String(order.activeUid),
+                    amount: Number(order.amount),
+                    description: `Data: ${order.network} ${order.plan} (${order.recipient})`,
+                    type: "purchase",
+                    status: "Success",
+                    timestamp: Number(ts)
                 };
 
                 const updates = {};
+                
+                // Write balance to both paths
                 updates[`users/${order.activeUid}/balance`] = newBalance;
                 updates[`users/${order.activeUid}/wallet`] = newBalance;
-                updates[`pending_orders/${orderId}`] = finalData;
-                updates[`orders/${orderId}`] = finalData;
-                updates[`user_orders/${order.activeUid}/${orderId}`] = finalData;
-                updates[`transactions/${orderId}`] = {
-                    ...finalData,
-                    description: `Data Bundle (${order.network} ${order.plan})`,
-                    type: "purchase"
-                };
+                
+                // Write order to all tracking paths
+                updates[`pending_orders/${orderId}`] = orderObject;
+                updates[`orders/${orderId}`] = orderObject;
+                updates[`user_orders/${order.activeUid}/${orderId}`] = orderObject;
+                
+                // Write to global transaction ledger
+                updates[`transactions/${orderId}`] = txObject;
 
                 await update(ref(db), updates);
 
@@ -170,10 +182,11 @@
                 
                 setTimeout(() => {
                     window.location.replace("dashboard.html");
-                }, 2500);
+                }, 2000);
 
             } catch (err) {
-                alert("Order Failed: " + err.message);
+                console.error("Firebase Error:", err);
+                alert("Permission Denied: Please check your internet connection or balance.");
                 btn.disabled = false;
                 btn.innerText = "Confirm & Activate";
             }
