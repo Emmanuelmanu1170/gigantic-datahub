@@ -50,7 +50,7 @@
                 <div>
                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Live Wallet Status</p>
                     <p class="text-xs font-bold text-emerald-500 flex items-center gap-1">
-                        <i class="fas fa-wallet"></i> <span id="dispCurrentBal">Loading...</span>
+                        <i class="fas fa-wallet"></i> <span id="dispCurrentBal">Fetching...</span>
                     </p>
                 </div>
                 <div id="netPill" class="network-pill">...</div>
@@ -60,6 +60,10 @@
                 <div class="summary-item">
                     <span class="text-slate-400 text-sm">Recipient Number</span>
                     <span id="dispPhone" class="font-bold text-sm tracking-widest">...</span>
+                </div>
+                <div class="summary-item">
+                    <span class="text-slate-400 text-sm">SIM Verification</span>
+                    <span id="dispName" class="font-bold text-sm text-blue-500 uppercase">Searching...</span>
                 </div>
                 <div class="summary-item">
                     <span class="text-slate-400 text-sm">Data Bundle</span>
@@ -84,6 +88,7 @@
             <button onclick="executeOrder()" id="mainBtn" disabled class="btn-confirm w-full py-5 rounded-2xl text-white font-black text-sm uppercase tracking-widest mt-8 transition active:scale-95 opacity-50 cursor-not-allowed">
                 Confirm & Activate
             </button>
+            <p class="text-center text-[10px] text-slate-400 mt-4 uppercase font-bold tracking-widest">Instant Activation Guaranteed</p>
         </div>
     </div>
 
@@ -116,13 +121,14 @@
         if (!order) {
             window.location.replace("order.html");
         } else {
-            // Display Static Info
+            // UI Static Setup
             document.getElementById('netPill').innerText = order.network;
             document.getElementById('dispPhone').innerText = order.recipient;
+            document.getElementById('dispName').innerText = order.simName;
             document.getElementById('dispPlan').innerText = order.plan;
             document.getElementById('dispCost').innerText = "GH₵ " + Number(order.amount).toFixed(2);
 
-            // Fetch LIVE Balance to prevent "Permission Denied"
+            // Fetch LIVE Balance from Database
             onValue(ref(db, `users/${order.activeUid}`), (snapshot) => {
                 const data = snapshot.val() || {};
                 liveBalance = Number(data.balance || data.wallet || 0);
@@ -131,13 +137,15 @@
                 const postBalance = (liveBalance - Number(order.amount)).toFixed(2);
                 document.getElementById('dispNewBal').innerText = "GH₵ " + postBalance;
 
-                // Enable Button only if balance is enough
                 const btn = document.getElementById('mainBtn');
                 if (liveBalance >= Number(order.amount)) {
                     btn.disabled = false;
                     btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    btn.innerHTML = "Confirm & Activate";
                 } else {
-                    btn.innerText = "INSUFFICIENT FUNDS";
+                    btn.disabled = true;
+                    btn.classList.add('opacity-50', 'cursor-not-allowed');
+                    btn.innerHTML = "INSUFFICIENT FUNDS";
                 }
             });
         }
@@ -145,7 +153,7 @@
         window.executeOrder = async () => {
             const btn = document.getElementById('mainBtn');
             btn.disabled = true;
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> PROCESSING...`;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> ACTIVATING...`;
 
             try {
                 const orderId = "GID-" + Date.now();
@@ -153,7 +161,8 @@
                 const amount = Number(order.amount);
                 const finalBalance = Number((liveBalance - amount).toFixed(2));
 
-                const finalData = {
+                // 1. Order Object (Matches Rule 7 & 8)
+                const orderObject = {
                     network: String(order.network),
                     plan: String(order.plan),
                     recipient: String(order.recipient),
@@ -163,6 +172,7 @@
                     timestamp: Number(ts)
                 };
 
+                // 2. Transaction Record (Matches Rule 4)
                 const txObject = {
                     uid: String(order.activeUid),
                     amount: amount,
@@ -173,11 +183,17 @@
                 };
 
                 const updates = {};
+                
+                // Deduct Balance
                 updates[`users/${order.activeUid}/balance`] = finalBalance;
                 updates[`users/${order.activeUid}/wallet`] = finalBalance;
-                updates[`pending_orders/${orderId}`] = finalData;
-                updates[`orders/${orderId}`] = finalData;
-                updates[`user_orders/${order.activeUid}/${orderId}`] = finalData;
+                
+                // Place Order in all nodes
+                updates[`pending_orders/${orderId}`] = orderObject;
+                updates[`orders/${orderId}`] = orderObject;
+                updates[`user_orders/${order.activeUid}/${orderId}`] = orderObject;
+                
+                // Add to Global History
                 updates[`transactions/${orderId}`] = txObject;
 
                 await update(ref(db), updates);
@@ -190,8 +206,8 @@
                 }, 2000);
 
             } catch (err) {
-                console.error("Firebase Error:", err);
-                alert("Permission Denied: Please refresh and try again.");
+                console.error("Firebase Permission Error:", err);
+                alert("Transaction Failed: Ensure your rules allow writing and you have sufficient balance.");
                 btn.disabled = false;
                 btn.innerHTML = "Confirm & Activate";
             }
