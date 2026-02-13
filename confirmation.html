@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Order | GiganticDataHub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --primary: #6a5af9; --bg: #f8fafc; --card: #ffffff; --text: #1e293b;
+        }
+        [data-theme="dark"] {
+            --bg: #02040a; --card: #0d1117; --text: #f0f6fc;
+        }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; }
+        .glass-card {
+            background: var(--card);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .network-pill {
+            background: linear-gradient(135deg, var(--primary) 0%, #a855f7 100%);
+            padding: 4px 12px; border-radius: 20px; color: white; font-size: 10px; font-weight: 800;
+        }
+        .summary-item { display: flex; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .btn-confirm {
+            background: linear-gradient(135deg, #6a5af9 0%, #4f46e5 100%);
+            box-shadow: 0 10px 20px rgba(106, 90, 249, 0.3);
+        }
+        #successOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 5000; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="max-w-md w-full">
+        <div class="flex items-center gap-3 mb-6">
+            <a href="order.html" class="text-slate-400 hover:text-slate-600"><i class="fas fa-chevron-left text-xl"></i></a>
+            <h1 class="text-xl font-black uppercase tracking-tighter">Order Summary</h1>
+        </div>
+
+        <div class="glass-card rounded-[32px] p-8">
+            <div class="flex justify-between items-center mb-8 pb-6 border-bottom border-dashed border-slate-200">
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Transaction Mode</p>
+                    <p class="text-xs font-bold text-emerald-500 flex items-center gap-1">
+                        <i class="fas fa-shield-check"></i> SECURE ENCRYPTED
+                    </p>
+                </div>
+                <div id="netPill" class="network-pill">MTN</div>
+            </div>
+
+            <div class="space-y-1">
+                <div class="summary-item">
+                    <span class="text-slate-400 text-sm">Recipient Number</span>
+                    <span id="dispPhone" class="font-bold text-sm tracking-widest">0000000000</span>
+                </div>
+                <div class="summary-item">
+                    <span class="text-slate-400 text-sm">SIM Verification</span>
+                    <span id="dispName" class="font-bold text-sm text-blue-500 uppercase">Searching...</span>
+                </div>
+                <div class="summary-item">
+                    <span class="text-slate-400 text-sm">Data Bundle</span>
+                    <span id="dispPlan" class="font-bold text-sm">0.0GB</span>
+                </div>
+                <div class="summary-item border-none">
+                    <span class="text-slate-400 text-sm">Payment Amount</span>
+                    <span id="dispCost" class="font-black text-lg text-slate-900 dark:text-white">GH₵ 0.00</span>
+                </div>
+            </div>
+
+            <div class="mt-6 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-wallet text-slate-400"></i>
+                    <div>
+                        <p class="text-[9px] font-black text-slate-400 uppercase">Balance After</p>
+                        <p id="dispNewBal" class="text-xs font-bold text-slate-600 dark:text-slate-300">GH₵ 0.00</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-[10px] text-slate-300"></i>
+            </div>
+
+            <button onclick="executeOrder()" id="mainBtn" class="btn-confirm w-full py-5 rounded-2xl text-white font-black text-sm uppercase tracking-widest mt-8 transition active:scale-95">
+                Confirm & Activate
+            </button>
+            <p class="text-center text-[10px] text-slate-400 mt-4 uppercase font-bold tracking-widest">Instant Activation Guaranteed</p>
+        </div>
+    </div>
+
+    <div id="successOverlay">
+        <div class="text-center">
+            <div class="w-20 h-20 bg-emerald-500 text-white rounded-full flex items-center justify-center text-3xl mx-auto mb-6 shadow-2xl shadow-emerald-500/40">
+                <i class="fas fa-check"></i>
+            </div>
+            <h2 class="text-white text-2xl font-black uppercase tracking-tighter">Order Placed!</h2>
+            <p class="text-slate-400 text-sm mt-2">Bundle is being provisioned...</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // CONFIG (Ensure this matches your setup)
+        const firebaseConfig = { 
+            apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA", 
+            authDomain: "gigantic-data.firebaseapp.com", 
+            databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com", 
+            projectId: "gigantic-data"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Retrieve Data from Session
+        const order = JSON.parse(sessionStorage.getItem('pending_checkout'));
+
+        if (!order) {
+            window.location.replace("order.html");
+        } else {
+            document.getElementById('netPill').innerText = order.network;
+            document.getElementById('dispPhone').innerText = order.recipient;
+            document.getElementById('dispName').innerText = order.simName;
+            document.getElementById('dispPlan').innerText = order.plan;
+            document.getElementById('dispCost').innerText = "GH₵ " + Number(order.amount).toFixed(2);
+            document.getElementById('dispNewBal').innerText = "GH₵ " + (order.currentBalance - order.amount).toFixed(2);
+        }
+
+        window.executeOrder = async () => {
+            const btn = document.getElementById('mainBtn');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> ACTIVING...`;
+
+            try {
+                const orderId = "GID-" + Date.now();
+                const newBalance = Number((order.currentBalance - order.amount).toFixed(2));
+
+                // Matches your Strict Security Rules perfectly
+                const finalData = {
+                    network: String(order.network),
+                    plan: String(order.plan),
+                    recipient: String(order.recipient),
+                    amount: Number(order.amount),
+                    uid: String(order.activeUid),
+                    status: "Processing",
+                    timestamp: Number(Date.now())
+                };
+
+                const updates = {};
+                updates[`users/${order.activeUid}/balance`] = newBalance;
+                updates[`users/${order.activeUid}/wallet`] = newBalance;
+                updates[`pending_orders/${orderId}`] = finalData;
+                updates[`orders/${orderId}`] = finalData;
+                updates[`user_orders/${order.activeUid}/${orderId}`] = finalData;
+                updates[`transactions/${orderId}`] = {
+                    ...finalData,
+                    description: `Data Bundle (${order.network} ${order.plan})`,
+                    type: "purchase"
+                };
+
+                await update(ref(db), updates);
+
+                document.getElementById('successOverlay').style.display = 'flex';
+                sessionStorage.removeItem('pending_checkout');
+                
+                setTimeout(() => {
+                    window.location.replace("dashboard.html");
+                }, 2500);
+
+            } catch (err) {
+                alert("Order Failed: " + err.message);
+                btn.disabled = false;
+                btn.innerText = "Confirm & Activate";
+            }
+        };
+    </script>
+</body>
+</html>
