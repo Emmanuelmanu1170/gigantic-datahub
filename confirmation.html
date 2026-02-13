@@ -46,11 +46,11 @@
         </div>
 
         <div class="glass-card rounded-[32px] p-8">
-            <div class="flex justify-between items-center mb-8 pb-6 border-b border-dashed border-slate-200">
+            <div class="flex justify-between items-center mb-6 pb-4 border-b border-dashed border-slate-200">
                 <div>
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Transaction Mode</p>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Live Wallet Status</p>
                     <p class="text-xs font-bold text-emerald-500 flex items-center gap-1">
-                        <i class="fas fa-shield-check"></i> SECURE ENCRYPTED
+                        <i class="fas fa-wallet"></i> <span id="dispCurrentBal">Loading...</span>
                     </p>
                 </div>
                 <div id="netPill" class="network-pill">...</div>
@@ -62,34 +62,28 @@
                     <span id="dispPhone" class="font-bold text-sm tracking-widest">...</span>
                 </div>
                 <div class="summary-item">
-                    <span class="text-slate-400 text-sm">SIM Verification</span>
-                    <span id="dispName" class="font-bold text-sm text-blue-500 uppercase">Searching...</span>
-                </div>
-                <div class="summary-item">
                     <span class="text-slate-400 text-sm">Data Bundle</span>
                     <span id="dispPlan" class="font-bold text-sm">...</span>
                 </div>
                 <div class="summary-item border-none">
-                    <span class="text-slate-400 text-sm">Payment Amount</span>
+                    <span class="text-slate-400 text-sm">Total Cost</span>
                     <span id="dispCost" class="font-black text-lg text-slate-900 dark:text-white">GH₵ 0.00</span>
                 </div>
             </div>
 
             <div class="mt-6 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl flex justify-between items-center">
                 <div class="flex items-center gap-3">
-                    <i class="fas fa-wallet text-slate-400"></i>
+                    <i class="fas fa-coins text-slate-400"></i>
                     <div>
-                        <p class="text-[9px] font-black text-slate-400 uppercase">Balance After</p>
+                        <p class="text-[9px] font-black text-slate-400 uppercase">Balance After Purchase</p>
                         <p id="dispNewBal" class="text-xs font-bold text-slate-600 dark:text-slate-300">GH₵ 0.00</p>
                     </div>
                 </div>
-                <i class="fas fa-chevron-right text-[10px] text-slate-300"></i>
             </div>
 
-            <button onclick="executeOrder()" id="mainBtn" class="btn-confirm w-full py-5 rounded-2xl text-white font-black text-sm uppercase tracking-widest mt-8 transition active:scale-95">
+            <button onclick="executeOrder()" id="mainBtn" disabled class="btn-confirm w-full py-5 rounded-2xl text-white font-black text-sm uppercase tracking-widest mt-8 transition active:scale-95 opacity-50 cursor-not-allowed">
                 Confirm & Activate
             </button>
-            <p class="text-center text-[10px] text-slate-400 mt-4 uppercase font-bold tracking-widest">Instant Activation Guaranteed</p>
         </div>
     </div>
 
@@ -105,7 +99,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, update, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = { 
             apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA", 
@@ -117,36 +111,49 @@
         const db = getDatabase(app);
 
         const order = JSON.parse(sessionStorage.getItem('pending_checkout'));
+        let liveBalance = 0;
 
         if (!order) {
             window.location.replace("order.html");
         } else {
+            // Display Static Info
             document.getElementById('netPill').innerText = order.network;
             document.getElementById('dispPhone').innerText = order.recipient;
-            document.getElementById('dispName').innerText = order.simName;
             document.getElementById('dispPlan').innerText = order.plan;
             document.getElementById('dispCost').innerText = "GH₵ " + Number(order.amount).toFixed(2);
-            document.getElementById('dispNewBal').innerText = "GH₵ " + (Number(order.currentBalance) - Number(order.amount)).toFixed(2);
+
+            // Fetch LIVE Balance to prevent "Permission Denied"
+            onValue(ref(db, `users/${order.activeUid}`), (snapshot) => {
+                const data = snapshot.val() || {};
+                liveBalance = Number(data.balance || data.wallet || 0);
+                
+                document.getElementById('dispCurrentBal').innerText = "LIVE: GH₵ " + liveBalance.toFixed(2);
+                const postBalance = (liveBalance - Number(order.amount)).toFixed(2);
+                document.getElementById('dispNewBal').innerText = "GH₵ " + postBalance;
+
+                // Enable Button only if balance is enough
+                const btn = document.getElementById('mainBtn');
+                if (liveBalance >= Number(order.amount)) {
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                } else {
+                    btn.innerText = "INSUFFICIENT FUNDS";
+                }
+            });
         }
 
         window.executeOrder = async () => {
             const btn = document.getElementById('mainBtn');
             btn.disabled = true;
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> ACTIVATING...`;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> PROCESSING...`;
 
             try {
                 const orderId = "GID-" + Date.now();
                 const ts = Date.now();
-                
-                // Ensure math results in strict Numbers to satisfy .isNumber() rules
                 const amount = Number(order.amount);
-                const currentBalance = Number(order.currentBalance);
-                const newBalance = Number((currentBalance - amount).toFixed(2));
+                const finalBalance = Number((liveBalance - amount).toFixed(2));
 
-                if (newBalance < 0) throw new Error("Insufficient Balance");
-
-                // Strictly typed object for Security Rules
-                const orderObject = {
+                const finalData = {
                     network: String(order.network),
                     plan: String(order.plan),
                     recipient: String(order.recipient),
@@ -159,21 +166,18 @@
                 const txObject = {
                     uid: String(order.activeUid),
                     amount: amount,
-                    description: `Data: ${order.network} ${order.plan} (${order.recipient})`,
+                    description: `Data: ${order.network} ${order.plan} to ${order.recipient}`,
                     type: "purchase",
                     status: "Success",
                     timestamp: Number(ts)
                 };
 
                 const updates = {};
-                
-                // Atomic updates ensure balance reduction matches order placement
-                updates[`users/${order.activeUid}/balance`] = newBalance;
-                updates[`users/${order.activeUid}/wallet`] = newBalance;
-                
-                updates[`pending_orders/${orderId}`] = orderObject;
-                updates[`orders/${orderId}`] = orderObject;
-                updates[`user_orders/${order.activeUid}/${orderId}`] = orderObject;
+                updates[`users/${order.activeUid}/balance`] = finalBalance;
+                updates[`users/${order.activeUid}/wallet`] = finalBalance;
+                updates[`pending_orders/${orderId}`] = finalData;
+                updates[`orders/${orderId}`] = finalData;
+                updates[`user_orders/${order.activeUid}/${orderId}`] = finalData;
                 updates[`transactions/${orderId}`] = txObject;
 
                 await update(ref(db), updates);
@@ -187,9 +191,9 @@
 
             } catch (err) {
                 console.error("Firebase Error:", err);
-                alert("Permission Denied: Please check your internet connection or balance.");
+                alert("Permission Denied: Please refresh and try again.");
                 btn.disabled = false;
-                btn.innerText = "Confirm & Activate";
+                btn.innerHTML = "Confirm & Activate";
             }
         };
     </script>
