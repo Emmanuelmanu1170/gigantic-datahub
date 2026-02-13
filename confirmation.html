@@ -50,10 +50,15 @@
                 <div>
                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Live Wallet Status</p>
                     <p class="text-xs font-bold text-emerald-500 flex items-center gap-1">
-                        <i class="fas fa-wallet"></i> <span id="dispCurrentBal">Fetching...</span>
+                        <i class="fas fa-wallet"></i> <span id="dispCurrentBal">Authenticating...</span>
                     </p>
                 </div>
                 <div id="netPill" class="network-pill">...</div>
+            </div>
+
+            <div class="mb-6 p-3 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-between">
+                <span class="text-[10px] font-bold text-slate-500 uppercase">Account</span>
+                <span id="userEmail" class="text-[10px] font-black text-primary truncate ml-4">...</span>
             </div>
 
             <div class="space-y-1">
@@ -62,8 +67,8 @@
                     <span id="dispPhone" class="font-bold text-sm tracking-widest">...</span>
                 </div>
                 <div class="summary-item">
-                    <span class="text-slate-400 text-sm">SIM Verification</span>
-                    <span id="dispName" class="font-bold text-sm text-blue-500 uppercase">Searching...</span>
+                    <span class="text-slate-400 text-sm">SIM Name</span>
+                    <span id="dispName" class="font-bold text-sm text-blue-500 uppercase">...</span>
                 </div>
                 <div class="summary-item">
                     <span class="text-slate-400 text-sm">Data Bundle</span>
@@ -104,6 +109,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getDatabase, ref, update, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = { 
@@ -113,39 +119,51 @@
             projectId: "gigantic-data"
         };
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getDatabase(app);
 
         const order = JSON.parse(sessionStorage.getItem('pending_checkout'));
         let liveBalance = 0;
+        let activeUid = "";
 
         if (!order) {
             window.location.replace("order.html");
         } else {
-            // UI Static Setup
+            // Static UI setup from Session
             document.getElementById('netPill').innerText = order.network;
             document.getElementById('dispPhone').innerText = order.recipient;
-            document.getElementById('dispName').innerText = order.simName;
+            document.getElementById('dispName').innerText = order.simName || "VERIFIED";
             document.getElementById('dispPlan').innerText = order.plan;
             document.getElementById('dispCost').innerText = "GH₵ " + Number(order.amount).toFixed(2);
 
-            // Fetch LIVE Balance from Database
-            onValue(ref(db, `users/${order.activeUid}`), (snapshot) => {
-                const data = snapshot.val() || {};
-                liveBalance = Number(data.balance || data.wallet || 0);
-                
-                document.getElementById('dispCurrentBal').innerText = "LIVE: GH₵ " + liveBalance.toFixed(2);
-                const postBalance = (liveBalance - Number(order.amount)).toFixed(2);
-                document.getElementById('dispNewBal').innerText = "GH₵ " + postBalance;
+            // Auth Observer to load user context
+            onAuthStateChanged(auth, user => {
+                if (user) {
+                    activeUid = order.activeUid || user.uid; // Use session UID or current auth UID
+                    document.getElementById('userEmail').innerText = user.email;
 
-                const btn = document.getElementById('mainBtn');
-                if (liveBalance >= Number(order.amount)) {
-                    btn.disabled = false;
-                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
-                    btn.innerHTML = "Confirm & Activate";
+                    // Fetch LIVE Balance
+                    onValue(ref(db, `users/${activeUid}`), (snapshot) => {
+                        const data = snapshot.val() || {};
+                        liveBalance = Number(data.balance || data.wallet || 0);
+                        
+                        document.getElementById('dispCurrentBal').innerText = "LIVE: GH₵ " + liveBalance.toFixed(2);
+                        const postBalance = (liveBalance - Number(order.amount)).toFixed(2);
+                        document.getElementById('dispNewBal').innerText = "GH₵ " + postBalance;
+
+                        const btn = document.getElementById('mainBtn');
+                        if (liveBalance >= Number(order.amount)) {
+                            btn.disabled = false;
+                            btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                            btn.innerHTML = "Confirm & Activate";
+                        } else {
+                            btn.disabled = true;
+                            btn.classList.add('opacity-50', 'cursor-not-allowed');
+                            btn.innerHTML = "INSUFFICIENT FUNDS";
+                        }
+                    });
                 } else {
-                    btn.disabled = true;
-                    btn.classList.add('opacity-50', 'cursor-not-allowed');
-                    btn.innerHTML = "INSUFFICIENT FUNDS";
+                    window.location.replace("login.html");
                 }
             });
         }
@@ -153,7 +171,7 @@
         window.executeOrder = async () => {
             const btn = document.getElementById('mainBtn');
             btn.disabled = true;
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> ACTIVATING...`;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> PROCESSING...`;
 
             try {
                 const orderId = "GID-" + Date.now();
@@ -161,40 +179,32 @@
                 const amount = Number(order.amount);
                 const finalBalance = Number((liveBalance - amount).toFixed(2));
 
-                // 1. Order Object (Matches Rule 7 & 8)
-                const orderObject = {
+                const orderData = {
                     network: String(order.network),
                     plan: String(order.plan),
                     recipient: String(order.recipient),
                     amount: amount, 
-                    uid: String(order.activeUid),
+                    uid: String(activeUid),
                     status: "Processing",
                     timestamp: Number(ts)
                 };
 
-                // 2. Transaction Record (Matches Rule 4)
-                const txObject = {
-                    uid: String(order.activeUid),
+                const txData = {
+                    uid: String(activeUid),
                     amount: amount,
-                    description: `Data: ${order.network} ${order.plan} to ${order.recipient}`,
+                    description: `Data: ${order.network} ${order.plan} (${order.recipient})`,
                     type: "purchase",
                     status: "Success",
                     timestamp: Number(ts)
                 };
 
                 const updates = {};
-                
-                // Deduct Balance
-                updates[`users/${order.activeUid}/balance`] = finalBalance;
-                updates[`users/${order.activeUid}/wallet`] = finalBalance;
-                
-                // Place Order in all nodes
-                updates[`pending_orders/${orderId}`] = orderObject;
-                updates[`orders/${orderId}`] = orderObject;
-                updates[`user_orders/${order.activeUid}/${orderId}`] = orderObject;
-                
-                // Add to Global History
-                updates[`transactions/${orderId}`] = txObject;
+                updates[`users/${activeUid}/balance`] = finalBalance;
+                updates[`users/${activeUid}/wallet`] = finalBalance;
+                updates[`pending_orders/${orderId}`] = orderData;
+                updates[`orders/${orderId}`] = orderData;
+                updates[`user_orders/${activeUid}/${orderId}`] = orderData;
+                updates[`transactions/${orderId}`] = txData;
 
                 await update(ref(db), updates);
 
@@ -206,8 +216,8 @@
                 }, 2000);
 
             } catch (err) {
-                console.error("Firebase Permission Error:", err);
-                alert("Transaction Failed: Ensure your rules allow writing and you have sufficient balance.");
+                console.error("Verification Error:", err);
+                alert("Security Check Failed: Please ensure you are logged in and have sufficient funds.");
                 btn.disabled = false;
                 btn.innerHTML = "Confirm & Activate";
             }
