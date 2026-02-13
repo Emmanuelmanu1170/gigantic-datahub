@@ -59,11 +59,6 @@
         
         .confirm-btn { width: 100%; padding: 18px; background: var(--primary-purple); color: white; border: none; border-radius: 14px; font-weight: 700; margin-top: 20px; cursor: pointer; font-size: 1rem; box-shadow: 0 5px 15px rgba(106, 90, 249, 0.3); }
         .confirm-btn:disabled { background: #cbd5e1; cursor: not-allowed; opacity: 0.7; box-shadow: none; }
-
-        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); display: none; align-items: center; justify-content: center; z-index: 2000; }
-        .modal { background: white; border-radius: 30px; padding: 40px 20px; width: 90%; max-width: 350px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
-        .success-icon { width: 80px; height: 80px; background: var(--success-green); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 20px; }
-        [data-theme="dark"] .modal { background: #0d1117; color: white; }
     </style>
 </head>
 <body>
@@ -122,23 +117,14 @@
                 </div>
             </div>
 
-            <button class="confirm-btn" id="confirmBtn" onclick="placeDirectOrder()">PAY NOW & ACTIVATE</button>
-        </div>
-    </div>
-
-    <div class="overlay" id="successOverlay">
-        <div class="modal">
-            <div class="success-icon"><i class="fas fa-check"></i></div>
-            <h2 style="font-weight: 800;">Order Initiated!</h2>
-            <p style="margin: 15px 0; color: var(--text-muted); font-size: 0.9rem;">Your data bundle is being processed. You will receive an SMS confirmation shortly.</p>
-            <button onclick="window.location.replace('dashboard.html')" style="width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--text-main); color: white; font-weight: 700; cursor: pointer;">RETURN HOME</button>
+            <button class="confirm-btn" id="confirmBtn" onclick="navigateToConfirmation()">PROCEED TO CONFIRM</button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, onValue, update, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = { 
             apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA", 
@@ -155,6 +141,7 @@
         let currentBalance = 0;
         let activeUid = "";
         window.selectedNet = "";
+        let verifiedSimName = "NETWORK VERIFIED";
 
         const getK = () => atob("YmVhcmVyIA==") + atob("c2tfbGl2ZV8=") + atob("YmZkMjhmYmJlM2NhNDU1YmExNTQ1NWViZWQ3MTM4YjI0MDA5ZDEzNA==");
 
@@ -223,58 +210,38 @@
                         headers: { 'Authorization': getK() }
                     });
                     const res = await response.json();
-                    nameSpan.innerText = res.status ? res.data.account_name : "NETWORK VERIFIED";
-                } catch (err) { nameSpan.innerText = "READY"; }
+                    verifiedSimName = res.status ? res.data.account_name : "NETWORK VERIFIED";
+                    nameSpan.innerText = verifiedSimName;
+                } catch (err) { 
+                    verifiedSimName = "READY";
+                    nameSpan.innerText = verifiedSimName; 
+                }
             } else { box.style.display = "none"; }
         });
 
-        window.placeDirectOrder = async () => {
+        window.navigateToConfirmation = () => {
             const planSelect = document.getElementById('dataPlan');
             const num = document.getElementById('phoneNumber').value.trim();
-            const amount = Number(planSelect.value); // Force Number type
+            const amount = Number(planSelect.value);
 
             if (!planSelect.value || num.length < 10) { alert("Complete all steps first!"); return; }
             if (currentBalance < amount) { alert("Insufficient Balance!"); return; }
 
-            const btn = document.getElementById('confirmBtn');
-            btn.disabled = true;
-            btn.innerText = "Processing Transaction...";
+            const planName = planSelect.options[planSelect.selectedIndex].getAttribute('data-plan');
 
-            try {
-                const orderId = "GID-" + Date.now();
-                const planName = planSelect.options[planSelect.selectedIndex].getAttribute('data-plan');
-                const newBalance = Number((currentBalance - amount).toFixed(2)); // Force Number type
+            // Store order data for the confirmation page
+            const pendingOrder = {
+                network: window.selectedNet.toUpperCase(),
+                plan: planName,
+                recipient: num,
+                amount: amount,
+                simName: verifiedSimName,
+                activeUid: activeUid,
+                currentBalance: currentBalance
+            };
 
-                // SECURE ORDER DATA: Matches exactly the 7 fields in Rule #4
-                const automationData = {
-                    network: String(window.selectedNet).toUpperCase(),
-                    plan: String(planName),
-                    recipient: String(num),
-                    amount: amount, // Number
-                    uid: String(activeUid),
-                    status: "Processing",
-                    timestamp: Number(Date.now()) // Number
-                };
-
-                const updates = {};
-                // Synchronize Balance across all keys as Numbers
-                updates[`users/${activeUid}/balance`] = newBalance;
-                updates[`users/${activeUid}/wallet`] = newBalance;
-                
-                // Write to Pending Orders (Satisfies Rule #4 .validate)
-                updates[`pending_orders/${orderId}`] = automationData;
-                
-                // Keep additional records (Rule #5 and #6)
-                updates[`orders/${orderId}`] = automationData;
-                updates[`user_orders/${activeUid}/${orderId}`] = automationData;
-
-                await update(ref(db), updates);
-                document.getElementById('successOverlay').style.display = 'flex';
-            } catch (err) {
-                alert("Order Error: " + err.message);
-                btn.disabled = false;
-                btn.innerText = "PAY NOW & ACTIVATE";
-            }
+            sessionStorage.setItem('pending_checkout', JSON.stringify(pendingOrder));
+            window.location.href = "confirmation.html";
         };
     </script>
 </body>
