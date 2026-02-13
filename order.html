@@ -37,7 +37,6 @@
         .balance-card h2 { margin: 8px 0 0; font-size: 1.75rem; font-weight: 800; }
         .user-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; background: rgba(255,255,255,0.2); font-size: 0.65rem; font-weight: 700; margin-top: 10px; }
         
-        /* New Security Identity Styles */
         .auth-identity { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.15); font-size: 0.7rem; }
         .id-row { display: flex; justify-content: space-between; opacity: 0.9; margin-bottom: 3px; font-weight: 600; }
         .verified-tick { color: #34d399; margin-left: 4px; }
@@ -167,18 +166,16 @@
 
         const normalPlans = {
             mtn:[{plan:"1GB",price:"4.6"},{plan:"2GB",price:"9.2"},{plan:"3GB",price:"13.8"},{plan:"4GB",price:"18"},{plan:"5GB",price:"22.2"},{plan:"6GB",price:"26.6"},{plan:"8GB",price:"36"},{plan:"10GB",price:"45.4"},{plan:"15GB",price:"66.8"},{plan:"20GB",price:"82.2"},{plan:"30GB",price:"125"},{plan:"40GB",price:"199"},{plan:"50GB",price:"210"},{plan:"100GB",price:"420"}],
-            airteltigo:[{plan:"1GB",price:"4.4"},{plan:"2GB",price:"8.6"},{plan:"3GB",price:"13"},{plan:"4GB",price:"18.1"},{plan:"5GB",price:"22.8"},{plan:"6GB",price:"26.9"},{plan:"7GB",price:"31.1"},{plan:"8GB",price:"35.4"},{plan:"10GB",price:"44.5"},{plan:"15GB",price:"67.9"},{plan:"20GB",price:"78.8"},{plan:"30GB",price:"89.7"},{plan:"40GB",price:"106"},{plan:"50GB",price:"121.5"},{plan:"60GB",price:"173"},{plan:"80GB",price:"194.5"},{plan:"100GB",price:"215.5"}],
+            airteltigo:[{plan:"1GB",price:"4.4"},{plan:"2GB",price:"8.6"},{plan:"3GB",price:"13"},{plan:"4GB",price:"18.1"},{plan:"5GB",price:"22.8"},{plan:"6GB",price:"26.9"},{plan:"7GB",price:"31.1"},{plan:"8GB",price:"35.4"},{plan:"10GB",price:"44.5"},{plan:"15GB",price:"67.9"},{plan:"20GB",price:"78.8"},{plan:"30GB",price:"89.7"},{plan:"406",price:"106"},{plan:"50GB",price:"121.5"},{plan:"60GB",price:"173"},{plan:"80GB",price:"194.5"},{plan:"100GB",price:"215.5"}],
             telecel:[{plan:"10GB",price:"46.7"},{plan:"15GB",price:"63.3"},{plan:"20GB",price:"85.1"},{plan:"25GB",price:"106.5"},{plan:"30GB",price:"121.5"},{plan:"40GB",price:"159.5"},{plan:"50GB",price:"198.4"},{plan:"100GB",price:"386.7"}]
         };
 
         onAuthStateChanged(auth, user => {
             if (user) {
-                // Identity checks
                 const impersonateUid = sessionStorage.getItem('impersonate_uid');
                 const isImpersonating = sessionStorage.getItem('isAdminImpersonating');
                 activeUid = (isImpersonating === 'true' && impersonateUid) ? impersonateUid : user.uid;
 
-                // UI Display of authenticated identity
                 document.getElementById('authEmail').innerText = user.email;
                 document.getElementById('authUid').innerText = activeUid.substring(0, 5) + "***";
 
@@ -234,7 +231,7 @@
         window.placeDirectOrder = async () => {
             const planSelect = document.getElementById('dataPlan');
             const num = document.getElementById('phoneNumber').value.trim();
-            const amount = parseFloat(planSelect.value);
+            const amount = Number(planSelect.value); // Force Number type
 
             if (!planSelect.value || num.length < 10) { alert("Complete all steps first!"); return; }
             if (currentBalance < amount) { alert("Insufficient Balance!"); return; }
@@ -246,24 +243,28 @@
             try {
                 const orderId = "GID-" + Date.now();
                 const planName = planSelect.options[planSelect.selectedIndex].getAttribute('data-plan');
-                const newBalance = parseFloat((currentBalance - amount).toFixed(2));
+                const newBalance = Number((currentBalance - amount).toFixed(2)); // Force Number type
 
+                // SECURE ORDER DATA: Matches exactly the 7 fields in Rule #4
                 const automationData = {
-                    uid: activeUid,
-                    amount: amount,
-                    network: window.selectedNet.toUpperCase(),
-                    plan: planName,
-                    recipient: num,
+                    network: String(window.selectedNet).toUpperCase(),
+                    plan: String(planName),
+                    recipient: String(num),
+                    amount: amount, // Number
+                    uid: String(activeUid),
                     status: "Processing",
-                    timestamp: serverTimestamp(),
-                    oldBalance: currentBalance,
-                    newBalance: newBalance
+                    timestamp: Number(Date.now()) // Number
                 };
 
                 const updates = {};
+                // Synchronize Balance across all keys as Numbers
                 updates[`users/${activeUid}/balance`] = newBalance;
                 updates[`users/${activeUid}/wallet`] = newBalance;
+                
+                // Write to Pending Orders (Satisfies Rule #4 .validate)
                 updates[`pending_orders/${orderId}`] = automationData;
+                
+                // Keep additional records (Rule #5 and #6)
                 updates[`orders/${orderId}`] = automationData;
                 updates[`user_orders/${activeUid}/${orderId}`] = automationData;
 
