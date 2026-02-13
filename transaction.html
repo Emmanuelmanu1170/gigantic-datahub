@@ -52,7 +52,6 @@
         .tx-info { flex: 1; min-width: 0; }
         .tx-info h4 { font-size: 0.85rem; font-weight: 800; margin-bottom: 2px; text-transform: uppercase; letter-spacing: -0.3px; }
         .sub-text { font-size: 10px; color: #64748b; font-weight: 600; }
-        .uid-tag { font-family: monospace; font-size: 9px; color: #6366f1; background: #eef2ff; padding: 2px 5px; border-radius: 4px; display: inline-block; margin-top: 4px; }
 
         .date-divider { font-size: 0.7rem; font-weight: 900; color: #94a3b8; text-transform: uppercase; margin: 25px 0 12px 5px; letter-spacing: 1.5px; display: flex; align-items: center; gap: 10px; }
         .date-divider::after { content: ""; flex: 1; height: 1px; background: rgba(0,0,0,0.05); }
@@ -70,30 +69,30 @@
     </div>
 </header>
 
-<div class="auth-card" id="identityCard">
+<div class="auth-card">
     <div class="flex justify-between items-center mb-3">
-        <span class="auth-label">Secure Authenticated Session</span>
+        <span class="auth-label">Secure Session</span>
         <i class="fas fa-shield-alt text-emerald-400"></i>
     </div>
     <div class="grid grid-cols-2 gap-4">
         <div>
-            <p class="auth-label">Email Address</p>
-            <p class="auth-value" id="authEmail">Connecting...</p>
+            <p class="auth-label">Email</p>
+            <p class="auth-value" id="authEmail">...</p>
         </div>
         <div>
             <p class="auth-label">Identity SID</p>
-            <p class="auth-value" id="authUid">Verifying...</p>
+            <p class="auth-value" id="authUid">...</p>
         </div>
     </div>
 </div>
 
 <div class="stats-ribbon">
     <div class="text-center">
-        <p class="text-[9px] font-black text-slate-400 uppercase">Cash Flow Volume</p>
+        <p class="text-[9px] font-black text-slate-400 uppercase">Cash Flow</p>
         <h2 id="totalFlow" class="text-xl font-black text-blue-600">₵0.00</h2>
     </div>
     <div class="text-center">
-        <p class="text-[9px] font-black text-slate-400 uppercase">Total Entries</p>
+        <p class="text-[9px] font-black text-slate-400 uppercase">Records</p>
         <h2 id="recordCount" class="text-xl font-black text-orange-500">0</h2>
     </div>
 </div>
@@ -101,14 +100,14 @@
 <div class="container">
     <div id="loading" class="text-center py-20 text-slate-400">
         <i class="fas fa-circle-notch fa-spin fa-2x"></i>
-        <p class="mt-4 text-xs font-bold uppercase tracking-widest">Reconciling Ledger...</p>
+        <p class="mt-4 text-xs font-bold uppercase tracking-widest">Reconciling Database...</p>
     </div>
     <div id="txList"></div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -124,7 +123,7 @@ const auth = getAuth(app);
 
 const ADMIN_EMAIL = "alenacloft0@gmail.com";
 
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
     if (user) {
         document.getElementById('authEmail').innerText = user.email;
         const impersonateUid = sessionStorage.getItem('impersonate_uid');
@@ -132,13 +131,13 @@ onAuthStateChanged(auth, (user) => {
         const activeUid = isAuditing ? impersonateUid : user.uid;
         
         document.getElementById('authUid').innerText = activeUid.substring(0, 10) + "...";
-        setupUnifiedLedger(user, activeUid, isAuditing);
+        await setupLedger(user, activeUid, isAuditing);
     } else {
         window.location.href = "login.html";
     }
 });
 
-function setupUnifiedLedger(user, activeUid, isAuditing) {
+async function setupLedger(user, activeUid, isAuditing) {
     const isAdmin = user.email === ADMIN_EMAIL;
     document.getElementById('pageHeader').innerText = isAuditing ? "Audit Trace" : (isAdmin ? "Global Ledger" : "Transaction History");
 
@@ -149,24 +148,25 @@ function setupUnifiedLedger(user, activeUid, isAuditing) {
     ];
 
     let combinedLogs = [];
-    let loadedCount = 0;
 
-    dataPaths.forEach(source => {
-        let dbRef;
-        if (isAdmin && !isAuditing) {
-            dbRef = ref(db, source.path);
-        } else {
-            // Rule compliant query for personal data
-            if (source.path === 'topupNotes') {
-                dbRef = ref(db, `${source.path}/${activeUid}`);
+    // Map through paths and fetch data
+    const fetchPromises = dataPaths.map(async (source) => {
+        try {
+            let dbRef;
+            if (isAdmin && !isAuditing) {
+                dbRef = ref(db, source.path);
             } else {
-                dbRef = query(ref(db, source.path), orderByChild('uid'), equalTo(activeUid));
+                if (source.path === 'topupNotes') {
+                    dbRef = ref(db, `topupNotes/${activeUid}`);
+                } else {
+                    dbRef = query(ref(db, source.path), orderByChild('uid'), equalTo(activeUid));
+                }
             }
-        }
 
-        onValue(dbRef, (snap) => {
-            if (snap.exists()) {
-                const data = snap.val();
+            const snapshot = await get(dbRef);
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                
                 if (source.path === 'topupNotes' && isAdmin && !isAuditing) {
                     Object.entries(data).forEach(([uId, notes]) => {
                         Object.entries(notes).forEach(([key, val]) => {
@@ -179,17 +179,21 @@ function setupUnifiedLedger(user, activeUid, isAuditing) {
                     });
                 }
             }
-            loadedCount++;
-            if (loadedCount >= dataPaths.length) renderLogs(combinedLogs, isAdmin, isAuditing);
-        });
+        } catch (e) {
+            console.warn("Path skipped or restricted:", source.path);
+        }
     });
+
+    // Wait for all paths to resolve
+    await Promise.all(fetchPromises);
+    renderLogs(combinedLogs, isAdmin, isAuditing);
 }
 
 function formatEntry(id, val, type, uid) {
     return {
         id, uid,
         amount: parseFloat(val.amount || 0),
-        desc: val.description || val.plan || val.method || (type === 'deposit' ? 'Wallet Top-up' : 'Data Bundle Payment'),
+        desc: val.description || val.plan || val.method || (type === 'deposit' ? 'Wallet Top-up' : 'Data Bundle'),
         ts: val.timestamp || val.date || Date.now(),
         ref: val.reference || val.orderId || id.substring(0, 12),
         type, 
@@ -229,12 +233,11 @@ function renderLogs(logs, isAdmin, isAuditing) {
         listDiv.innerHTML += `
             <div class="tx-card">
                 <div class="icon-box ${isDeposit ? 'bg-deposit' : 'bg-purchase'}">
-                    <i class="fas ${isDeposit ? 'fa-plus-circle' : 'fa-minus-circle'}"></i>
+                    <i class="fas ${isDeposit ? 'fa-arrow-up' : 'fa-arrow-down'}"></i>
                 </div>
                 <div class="tx-info">
                     <h4>${log.desc}</h4>
                     <p class="sub-text">${time} • REF: ${log.ref.toUpperCase()}</p>
-                    ${(isAdmin && !isAuditing) ? `<span class="uid-tag">USER: ${log.uid.substring(0,8)}...</span>` : ''}
                 </div>
                 <div class="text-right">
                     <span class="block font-black text-sm ${isDeposit ? 'text-emerald-500' : 'text-rose-500'}">
