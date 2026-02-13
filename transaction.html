@@ -48,6 +48,7 @@
         .icon-box { width: 45px; height: 45px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
         .bg-deposit { background: #dcfce7; color: var(--success); }
         .bg-purchase { background: #fee2e2; color: var(--danger); }
+        .bg-bonus { background: #e0f2fe; color: #0ea5e9; }
 
         .tx-info { flex: 1; min-width: 0; }
         .tx-info h4 { font-size: 0.85rem; font-weight: 800; margin-bottom: 2px; text-transform: uppercase; letter-spacing: -0.3px; }
@@ -144,18 +145,19 @@ async function setupLedger(user, activeUid, isAuditing) {
     const dataPaths = [
         { path: 'transactions', type: 'purchase' },
         { path: 'topupNotes', type: 'deposit' },
-        { path: 'allSuccessfulPayments', type: 'deposit' }
+        { path: 'allSuccessfulPayments', type: 'deposit' },
+        { path: 'withdrawal_requests', type: 'bonus' }
     ];
 
     let combinedLogs = [];
 
-    // Map through paths and fetch data
     const fetchPromises = dataPaths.map(async (source) => {
         try {
             let dbRef;
             if (isAdmin && !isAuditing) {
                 dbRef = ref(db, source.path);
             } else {
+                // Fixed: Users read their own nested topupNotes and query others by UID
                 if (source.path === 'topupNotes') {
                     dbRef = ref(db, `topupNotes/${activeUid}`);
                 } else {
@@ -180,11 +182,10 @@ async function setupLedger(user, activeUid, isAuditing) {
                 }
             }
         } catch (e) {
-            console.warn("Path skipped or restricted:", source.path);
+            console.warn("Skipping path:", source.path, e.message);
         }
     });
 
-    // Wait for all paths to resolve
     await Promise.all(fetchPromises);
     renderLogs(combinedLogs, isAdmin, isAuditing);
 }
@@ -193,7 +194,7 @@ function formatEntry(id, val, type, uid) {
     return {
         id, uid,
         amount: parseFloat(val.amount || 0),
-        desc: val.description || val.plan || val.method || (type === 'deposit' ? 'Wallet Top-up' : 'Data Bundle'),
+        desc: val.description || val.plan || val.network || val.method || (type === 'deposit' ? 'Wallet Deposit' : (type === 'bonus' ? 'Referral Reward' : 'Service Payment')),
         ts: val.timestamp || val.date || Date.now(),
         ref: val.reference || val.orderId || id.substring(0, 12),
         type, 
@@ -205,6 +206,7 @@ function renderLogs(logs, isAdmin, isAuditing) {
     const listDiv = document.getElementById('txList');
     document.getElementById('loading').style.display = 'none';
 
+    // Grouping same transaction IDs (preventing duplicates from multiple nodes)
     const uniqueLogs = Array.from(new Map(logs.map(item => [item.id, item])).values())
                             .sort((a, b) => b.ts - a.ts);
 
@@ -227,21 +229,25 @@ function renderLogs(logs, isAdmin, isAuditing) {
             lastDate = dateLabel;
         }
 
-        const isDeposit = log.type === 'deposit';
+        const typeClass = log.type === 'deposit' ? 'bg-deposit' : (log.type === 'bonus' ? 'bg-bonus' : 'bg-purchase');
+        const iconClass = log.type === 'deposit' ? 'fa-arrow-up' : (log.type === 'bonus' ? 'fa-gift' : 'fa-arrow-down');
+        const amountColor = (log.type === 'deposit' || log.type === 'bonus') ? 'text-emerald-500' : 'text-rose-500';
+        const sign = (log.type === 'deposit' || log.type === 'bonus') ? '+' : '-';
+
         const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
         listDiv.innerHTML += `
             <div class="tx-card">
-                <div class="icon-box ${isDeposit ? 'bg-deposit' : 'bg-purchase'}">
-                    <i class="fas ${isDeposit ? 'fa-arrow-up' : 'fa-arrow-down'}"></i>
+                <div class="icon-box ${typeClass}">
+                    <i class="fas ${iconClass}"></i>
                 </div>
                 <div class="tx-info">
                     <h4>${log.desc}</h4>
                     <p class="sub-text">${time} • REF: ${log.ref.toUpperCase()}</p>
                 </div>
                 <div class="text-right">
-                    <span class="block font-black text-sm ${isDeposit ? 'text-emerald-500' : 'text-rose-500'}">
-                        ${isDeposit ? '+' : '-'}₵${log.amount.toFixed(2)}
+                    <span class="block font-black text-sm ${amountColor}">
+                        ${sign}₵${log.amount.toFixed(2)}
                     </span>
                     <span class="text-[8px] font-black px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 uppercase">${log.status}</span>
                 </div>
