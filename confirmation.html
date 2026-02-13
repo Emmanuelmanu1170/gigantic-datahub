@@ -31,7 +31,7 @@
         }
         .summary-item { display: flex; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid rgba(0,0,0,0.05); }
         .btn-confirm {
-            background: linear-gradient(135deg, #6a5af9) 0%, #4f46e5 100%);
+            background: linear-gradient(135deg, #6a5af9 0%, #4f46e5 100%);
             box-shadow: 0 10px 20px rgba(106, 90, 249, 0.3);
         }
         #successOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 5000; align-items: center; justify-content: center; }
@@ -137,24 +137,28 @@
             try {
                 const orderId = "GID-" + Date.now();
                 const ts = Date.now();
-                const newBalance = Number((Number(order.currentBalance) - Number(order.amount)).toFixed(2));
+                
+                // Ensure math results in strict Numbers to satisfy .isNumber() rules
+                const amount = Number(order.amount);
+                const currentBalance = Number(order.currentBalance);
+                const newBalance = Number((currentBalance - amount).toFixed(2));
 
-                // 1. Core Order Object (Matches Rule 7 & 8)
+                if (newBalance < 0) throw new Error("Insufficient Balance");
+
+                // Strictly typed object for Security Rules
                 const orderObject = {
                     network: String(order.network),
                     plan: String(order.plan),
                     recipient: String(order.recipient),
-                    amount: Number(order.amount),
+                    amount: amount, 
                     uid: String(order.activeUid),
                     status: "Processing",
                     timestamp: Number(ts)
                 };
 
-                // 2. Transaction Record (Matches Rule 4)
-                // IMPORTANT: Must contain 'uid' child for the Rule 4 validation to pass
                 const txObject = {
                     uid: String(order.activeUid),
-                    amount: Number(order.amount),
+                    amount: amount,
                     description: `Data: ${order.network} ${order.plan} (${order.recipient})`,
                     type: "purchase",
                     status: "Success",
@@ -163,16 +167,13 @@
 
                 const updates = {};
                 
-                // Write balance to both paths
+                // Atomic updates ensure balance reduction matches order placement
                 updates[`users/${order.activeUid}/balance`] = newBalance;
                 updates[`users/${order.activeUid}/wallet`] = newBalance;
                 
-                // Write order to all tracking paths
                 updates[`pending_orders/${orderId}`] = orderObject;
                 updates[`orders/${orderId}`] = orderObject;
                 updates[`user_orders/${order.activeUid}/${orderId}`] = orderObject;
-                
-                // Write to global transaction ledger
                 updates[`transactions/${orderId}`] = txObject;
 
                 await update(ref(db), updates);
