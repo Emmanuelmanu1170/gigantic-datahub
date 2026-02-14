@@ -72,11 +72,9 @@
     <h1><i class="fas fa-terminal"></i> COMMAND CENTER</h1>
     <div style="display:flex; gap:15px; align-items:center;">
         <button class="purge-btn" onclick="purgeAllOrders()">
-            <i class="fas fa-radiation"></i> PURGE ALL ORDERS
+            <i class="fas fa-trash-alt"></i> DELETE ALL ORDERS
         </button>
-        <a href="admin_dashboard.html" style="color:white; text-decoration:none; font-weight:bold; font-size:13px;">
-            <i class="fas fa-home"></i> Home
-        </a>
+        <a href="admin_dashboard.html" style="color:white; text-decoration:none; font-weight:bold; font-size:13px;"><i class="fas fa-home"></i> Home</a>
     </div>
 </header>
 
@@ -160,7 +158,7 @@ function initAutomation() {
                 if(!ordersData[oid]) combined.push({ ...val, orderId: oid });
             });
 
-            // Sort descending by time
+            // Keep reference for cascade logic
             currentOrdersList = combined.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
             renderTable(currentOrdersList);
         });
@@ -177,7 +175,7 @@ function renderTable(data) {
         const amount = parseFloat(o.amount || 0).toFixed(2);
 
         tbody.innerHTML += `
-            <tr id="row-${o.orderId}">
+            <tr>
                 <td>
                     <span class="data-label">ORDER ID / TIME</span>
                     <span class="data-value" style="font-family:monospace; color:#6366f1">#${o.orderId.slice(-8)}</span>
@@ -225,7 +223,7 @@ window.changeStatus = async (oid, uid, newStatus) => {
         return;
     }
     
-    let updates = {};
+    const updates = {};
     
     // CASCADE LOGIC: If set to Successful, apply to all orders BELOW it in the sorted list
     if (newStatus === "Successful") {
@@ -238,18 +236,18 @@ window.changeStatus = async (oid, uid, newStatus) => {
                 updates[`user_orders/${order.uid}/${order.orderId}/status`] = "Successful";
                 updates[`pending_orders/${order.orderId}`] = null;
             });
-            writeLog(`Cascade Sync: #${oid.slice(-6)} and ${affectedOrders.length - 1} following orders set to Successful`, true);
+            writeLog(`Cascade: #${oid.slice(-8)} & ${affectedOrders.length - 1} older orders fulfilled.`, true);
         }
     } else {
-        // Normal Single Update
+        // Normal Update
         updates[`orders/${oid}/status`] = newStatus;
         updates[`user_orders/${uid}/${oid}/status`] = newStatus;
-        if(["Failed", "Refunded"].includes(newStatus)) {
+        if(["Successful", "Failed", "Refunded"].includes(newStatus)) {
             updates[`pending_orders/${oid}`] = null;
         } else {
             updates[`pending_orders/${oid}/status`] = newStatus;
         }
-        writeLog(`Update Verified: #${oid.slice(-6)} set to ${newStatus}`, true);
+        writeLog(`Update Verified: #${oid.slice(-8)} set to ${newStatus}`, true);
     }
 
     db.ref().update(updates).catch(err => {
@@ -258,7 +256,7 @@ window.changeStatus = async (oid, uid, newStatus) => {
 };
 
 window.deleteRecord = (oid, uid) => {
-    if(confirm(`Purge order #${oid} from all nodes? This cannot be undone.`)) {
+    if(confirm(`Purge order #${oid} from all nodes?`)) {
         const updates = {};
         updates[`orders/${oid}`] = null;
         updates[`user_orders/${uid}/${oid}`] = null;
@@ -268,17 +266,16 @@ window.deleteRecord = (oid, uid) => {
 };
 
 window.purgeAllOrders = () => {
-    const pass = prompt("DANGER ZONE: Type 'DELETE ALL' to clear order history.");
-    if(pass === "DELETE ALL") {
-        writeLog("Initiating Global Purge...", false, true);
+    const confirmation = prompt("DANGER ZONE: Type 'CONFIRM DELETE' to wipe ALL orders.");
+    if(confirmation === "CONFIRM DELETE") {
         const updates = {
             "orders": null,
             "pending_orders": null,
             "user_orders": null
         };
         db.ref().update(updates)
-          .then(() => writeLog("GLOBAL DATABASE PURGE SUCCESSFUL", true))
-          .catch(err => writeLog(`Purge Failed: ${err.message}`, false, true));
+            .then(() => writeLog("CRITICAL: ALL ORDERS DELETED FROM DATABASE", true))
+            .catch(err => writeLog(`Purge Failed: ${err.message}`, false, true));
     }
 };
 
