@@ -155,6 +155,7 @@ async function setupLedger(user, activeUid, isAuditing) {
     const fetchPromises = dataPaths.map(async (source) => {
         try {
             let dbRef;
+            // Admin Global View vs User Personalized View
             if (isAdmin && !isAuditing) {
                 dbRef = ref(db, source.path);
             } else {
@@ -169,6 +170,7 @@ async function setupLedger(user, activeUid, isAuditing) {
             if (snapshot.exists()) {
                 const data = snapshot.val();
                 
+                // Process the raw data based on structure
                 if (source.path === 'topupNotes' && isAdmin && !isAuditing) {
                     Object.entries(data).forEach(([uId, notes]) => {
                         Object.entries(notes).forEach(([key, val]) => {
@@ -182,19 +184,22 @@ async function setupLedger(user, activeUid, isAuditing) {
                 }
             }
         } catch (e) {
-            console.warn("Skipping path:", source.path, e.message);
+            console.warn("Path skipped:", source.path, e.message);
         }
     });
 
     await Promise.all(fetchPromises);
-    renderLogs(combinedLogs, isAdmin, isAuditing);
+    renderLogs(combinedLogs);
 }
 
 function formatEntry(id, val, type, uid) {
+    // Ensure numeric parsing of the real value
+    const amount = parseFloat(val.amount || 0);
+    
     return {
         id, uid,
-        amount: parseFloat(val.amount || 0),
-        desc: val.description || val.plan || val.network || val.method || (type === 'deposit' ? 'Wallet Deposit' : (type === 'bonus' ? 'Referral Reward' : 'Service Payment')),
+        amount: amount,
+        desc: val.description || val.plan || val.network || val.method || (type === 'deposit' ? 'Wallet Deposit' : (type === 'bonus' ? 'Referral Reward' : 'Purchase')),
         ts: val.timestamp || val.date || Date.now(),
         ref: val.reference || val.orderId || id.substring(0, 12),
         type, 
@@ -202,10 +207,11 @@ function formatEntry(id, val, type, uid) {
     };
 }
 
-function renderLogs(logs, isAdmin, isAuditing) {
+function renderLogs(logs) {
     const listDiv = document.getElementById('txList');
     document.getElementById('loading').style.display = 'none';
 
+    // Remove duplicates and sort by timestamp
     const uniqueLogs = Array.from(new Map(logs.map(item => [item.id, item])).values())
                             .sort((a, b) => b.ts - a.ts);
 
