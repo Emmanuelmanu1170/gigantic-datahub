@@ -106,7 +106,6 @@
 </div>
 
 <script>
-// --- CORE CONFIGURATION ---
 const firebaseConfig = {
     apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
     authDomain: "gigantic-data.firebaseapp.com",
@@ -121,16 +120,14 @@ const db = firebase.database();
 let userCache = {};
 let currentOrdersList = [];
 
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(() => {
-    return auth.onAuthStateChanged(user => {
-        if(user && user.email === "alenacloft0@gmail.com"){
-            document.getElementById('adminDisplay').innerText = `MASTER ADMIN: ${user.email}`;
-            writeLog(`System Ready. Admin authenticated.`, true);
-            initAutomation();
-        } else { 
-            window.location.href = "login.html";
-        }
-    });
+auth.onAuthStateChanged(user => {
+    if(user && user.email === "alenacloft0@gmail.com"){
+        document.getElementById('adminDisplay').innerText = `MASTER ADMIN: ${user.email}`;
+        writeLog(`System Ready. Admin authenticated.`, true);
+        initAutomation();
+    } else { 
+        window.location.href = "login.html";
+    }
 });
 
 function writeLog(msg, isSuccess = false, isError = false) {
@@ -158,7 +155,7 @@ function initAutomation() {
                 if(!ordersData[oid]) combined.push({ ...val, orderId: oid });
             });
 
-            // Keep reference for cascade logic
+            // Maintain sorting to ensure "Below" logic works correctly
             currentOrdersList = combined.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
             renderTable(currentOrdersList);
         });
@@ -225,48 +222,53 @@ window.changeStatus = async (oid, uid, newStatus) => {
     
     const updates = {};
     
-    // CASCADE LOGIC: If set to Successful, apply to all orders BELOW it in the sorted list
+    // CASCADE LOGIC: If set to Successful, apply to ALL orders BELOW it in the table
     if (newStatus === "Successful") {
         const targetIndex = currentOrdersList.findIndex(item => item.orderId === oid);
         if (targetIndex !== -1) {
+            // "Below" in a descending list means older orders (index targetIndex to end)
             const affectedOrders = currentOrdersList.slice(targetIndex);
             
             affectedOrders.forEach(order => {
-                updates[`orders/${order.orderId}/status`] = "Successful";
-                updates[`user_orders/${order.uid}/${order.orderId}/status`] = "Successful";
-                updates[`pending_orders/${order.orderId}`] = null;
+                const o_id = order.orderId;
+                const u_id = order.uid;
+                
+                updates[`orders/${o_id}/status`] = "Successful";
+                updates[`user_orders/${u_id}/${o_id}/status`] = "Successful";
+                updates[`pending_orders/${o_id}`] = null;
             });
-            writeLog(`Cascade: #${oid.slice(-8)} & ${affectedOrders.length - 1} older orders fulfilled.`, true);
+            writeLog(`Cascade Success: #${oid.slice(-8)} & ${affectedOrders.length - 1} following orders fulfilled.`, true);
         }
     } else {
-        // Normal Update
+        // Standard Single Status Update
         updates[`orders/${oid}/status`] = newStatus;
         updates[`user_orders/${uid}/${oid}/status`] = newStatus;
+        
         if(["Successful", "Failed", "Refunded"].includes(newStatus)) {
             updates[`pending_orders/${oid}`] = null;
         } else {
             updates[`pending_orders/${oid}/status`] = newStatus;
         }
-        writeLog(`Update Verified: #${oid.slice(-8)} set to ${newStatus}`, true);
+        writeLog(`Status Changed: #${oid.slice(-8)} -> ${newStatus}`, true);
     }
 
     db.ref().update(updates).catch(err => {
-        writeLog(`Database Error: ${err.message}`, false, true);
+        writeLog(`DB Error: ${err.message}`, false, true);
     });
 };
 
 window.deleteRecord = (oid, uid) => {
-    if(confirm(`Purge order #${oid} from all nodes?`)) {
+    if(confirm(`Erase order #${oid} from database?`)) {
         const updates = {};
         updates[`orders/${oid}`] = null;
         updates[`user_orders/${uid}/${oid}`] = null;
         updates[`pending_orders/${oid}`] = null;
-        db.ref().update(updates).then(() => writeLog(`Purge Complete: #${oid}`, true));
+        db.ref().update(updates).then(() => writeLog(`Order #${oid} deleted.`, true));
     }
 };
 
 window.purgeAllOrders = () => {
-    const confirmation = prompt("DANGER ZONE: Type 'CONFIRM DELETE' to wipe ALL orders.");
+    const confirmation = prompt("To DELETE ALL ORDERS, type: CONFIRM DELETE");
     if(confirmation === "CONFIRM DELETE") {
         const updates = {
             "orders": null,
@@ -274,7 +276,7 @@ window.purgeAllOrders = () => {
             "user_orders": null
         };
         db.ref().update(updates)
-            .then(() => writeLog("CRITICAL: ALL ORDERS DELETED FROM DATABASE", true))
+            .then(() => writeLog("SUCCESS: ENTIRE ORDER HISTORY PURGED.", true))
             .catch(err => writeLog(`Purge Failed: ${err.message}`, false, true));
     }
 };
