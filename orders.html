@@ -31,6 +31,9 @@
         .pulse { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; display: inline-block; margin-right: 5px; animation: blink 1.5s infinite; }
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
         
+        /* BULK BAR */
+        .bulk-action-bar { background: var(--white); padding: 15px 20px; border-radius: 12px; margin-bottom: 15px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+
         .table-card { background: white; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; min-width: 1000px; }
         th { background: #f8fafc; color: #64748b; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; padding: 15px; text-align: left; }
@@ -38,7 +41,7 @@
         
         .status-badge { font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; display: inline-block; margin-bottom: 5px; }
         .status-Pending { background: #fffbeb; color: #b45309; }
-        .status-Successful { background: #ecfdf5; color: #047857; }
+        .status-Successful, .status-Completed { background: #ecfdf5; color: #047857; }
         .status-Processing { background: #eff6ff; color: #1e40af; animation: pulse 1.5s infinite; }
         .status-Failed { background: #fdf2f2; color: #ef4444; }
         .status-Refunded { background: #f1f5f9; color: #475569; }
@@ -56,8 +59,11 @@
         .data-value { font-weight: 700; color: var(--text-main); }
         .price-tag { color: var(--primary-blue); font-weight: 900; }
 
+        .btn-bulk { background: var(--primary-blue); color: white; border: none; padding: 8px 15px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; }
         .purge-btn { background: #ef4444; color: white; border: none; padding: 8px 15px; border-radius: 8px; font-size: 11px; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
-        .purge-btn:hover { background: #b91c1c; transform: scale(1.05); }
+        
+        /* CUSTOM CHECKBOX */
+        input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary-blue); }
     </style>
 </head>
 <body>
@@ -79,11 +85,24 @@
 </header>
 
 <div class="container">
+    
+    <div class="bulk-action-bar">
+        <span style="font-size: 11px; font-weight: 900; color: #64748b;">BULK ACTIONS:</span>
+        <select id="bulkStatus" class="status-select" style="width: 160px;">
+            <option value="Successful">Mark as Completed</option>
+            <option value="Processing">Mark as Processing</option>
+            <option value="Failed">Mark as Failed</option>
+        </select>
+        <button class="btn-bulk" onclick="applyBulkStatus()">APPLY TO SELECTED</button>
+        <span id="selectedCount" style="font-size: 11px; font-weight: bold; color: var(--primary-blue);">0 items selected</span>
+    </div>
+
     <div class="table-card">
         <div style="overflow-x: auto;">
             <table id="ordersTable">
                 <thead>
                     <tr>
+                        <th style="width: 40px;"><input type="checkbox" onclick="toggleAll(this)"></th>
                         <th>Order Identity</th>
                         <th>Network & Plan</th>
                         <th>Recipient Details</th>
@@ -94,7 +113,7 @@
                     </tr>
                 </thead>
                 <tbody id="orderTbody">
-                    <tr><td colspan="7" style="text-align:center; padding:50px;">Initializing secure handshake...</td></tr>
+                    <tr><td colspan="8" style="text-align:center; padding:50px;">Initializing secure handshake...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -142,20 +161,13 @@ function initAutomation() {
 
     db.ref("orders").orderByChild("timestamp").limitToLast(100).on("value", snapshot => {
         const ordersData = snapshot.val() || {};
-        
         db.ref("pending_orders").once("value", pendingSnap => {
             const pendingData = pendingSnap.val() || {};
             let combined = [];
-
-            Object.entries(ordersData).forEach(([oid, val]) => {
-                combined.push({ ...val, orderId: oid });
-            });
-
+            Object.entries(ordersData).forEach(([oid, val]) => combined.push({ ...val, orderId: oid }));
             Object.entries(pendingData).forEach(([oid, val]) => {
                 if(!ordersData[oid]) combined.push({ ...val, orderId: oid });
             });
-
-            // Maintain sorting to ensure "Below" logic works correctly
             currentOrdersList = combined.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
             renderTable(currentOrdersList);
         });
@@ -165,14 +177,13 @@ function initAutomation() {
 function renderTable(data) {
     const tbody = document.getElementById("orderTbody");
     tbody.innerHTML = "";
-    
     data.forEach(o => {
         const ts = o.timestamp ? new Date(o.timestamp).toLocaleString() : 'N/A';
         const user = userCache[o.uid] || {};
         const amount = parseFloat(o.amount || 0).toFixed(2);
-
         tbody.innerHTML += `
-            <tr>
+            <tr id="row-${o.orderId}">
+                <td><input type="checkbox" class="order-check" data-oid="${o.orderId}" data-uid="${o.uid}" onchange="updateSelectedCount()"></td>
                 <td>
                     <span class="data-label">ORDER ID / TIME</span>
                     <span class="data-value" style="font-family:monospace; color:#6366f1">#${o.orderId.slice(-8)}</span>
@@ -191,7 +202,6 @@ function renderTable(data) {
                 <td>
                     <span class="data-label">USER: ${user.fullName || 'Unknown'}</span>
                     <span class="user-email" style="font-size:10px">${user.email || 'N/A'}</span>
-                    <div style="font-size:8px; font-family:monospace; margin-top:3px">UID: ${o.uid}</div>
                 </td>
                 <td>
                     <span class="status-badge status-${o.status}">${o.status}</span>
@@ -199,9 +209,8 @@ function renderTable(data) {
                         <option value="" disabled selected>SET STATUS</option>
                         <option value="Pending">Pending</option>
                         <option value="Processing">Processing</option>
-                        <option value="Successful">Successful</option>
+                        <option value="Successful">Successful (Completed)</option>
                         <option value="Failed">Failed</option>
-                        <option value="Refunded">Refunded</option>
                     </select>
                 </td>
                 <td style="text-align:right">
@@ -214,70 +223,84 @@ function renderTable(data) {
     });
 }
 
-window.changeStatus = async (oid, uid, newStatus) => {
-    if(!uid || uid === "undefined") {
-        writeLog(`Crit Error: UID missing for order #${oid}`, false, true);
-        return;
-    }
+window.toggleAll = (master) => {
+    document.querySelectorAll('.order-check').forEach(cb => cb.checked = master.checked);
+    updateSelectedCount();
+};
+
+window.updateSelectedCount = () => {
+    const count = document.querySelectorAll('.order-check:checked').length;
+    document.getElementById('selectedCount').innerText = `${count} items selected`;
+};
+
+window.applyBulkStatus = async () => {
+    const selected = document.querySelectorAll('.order-check:checked');
+    const newStatus = document.getElementById('bulkStatus').value;
+    if(selected.length === 0) return alert("Select orders first!");
     
+    if(!confirm(`Update ${selected.length} orders to ${newStatus}?`)) return;
+
     const updates = {};
-    
-    // CASCADE LOGIC: If set to Successful, apply to ALL orders BELOW it in the table
+    selected.forEach(cb => {
+        const oid = cb.dataset.oid;
+        const uid = cb.dataset.uid;
+        updates[`orders/${oid}/status`] = newStatus;
+        updates[`user_orders/${uid}/${oid}/status`] = newStatus;
+        if(["Successful", "Failed"].includes(newStatus)) {
+            updates[`pending_orders/${oid}`] = null;
+        } else {
+            updates[`pending_orders/${oid}/status`] = newStatus;
+        }
+    });
+
+    try {
+        await db.ref().update(updates);
+        writeLog(`Bulk Update: ${selected.length} orders set to ${newStatus}`, true);
+        document.querySelectorAll('.order-check').forEach(cb => cb.checked = false);
+        updateSelectedCount();
+    } catch(e) { writeLog(e.message, false, true); }
+};
+
+window.changeStatus = async (oid, uid, newStatus) => {
+    const updates = {};
+    // Cascade logic for "Successful"
     if (newStatus === "Successful") {
         const targetIndex = currentOrdersList.findIndex(item => item.orderId === oid);
         if (targetIndex !== -1) {
-            // "Below" in a descending list means older orders (index targetIndex to end)
             const affectedOrders = currentOrdersList.slice(targetIndex);
-            
             affectedOrders.forEach(order => {
-                const o_id = order.orderId;
-                const u_id = order.uid;
-                
-                updates[`orders/${o_id}/status`] = "Successful";
-                updates[`user_orders/${u_id}/${o_id}/status`] = "Successful";
-                updates[`pending_orders/${o_id}`] = null;
+                updates[`orders/${order.orderId}/status`] = "Successful";
+                updates[`user_orders/${order.uid}/${order.orderId}/status`] = "Successful";
+                updates[`pending_orders/${order.orderId}`] = null;
             });
-            writeLog(`Cascade Success: #${oid.slice(-8)} & ${affectedOrders.length - 1} following orders fulfilled.`, true);
+            writeLog(`Cascade Sync: #${oid.slice(-8)} & ${affectedOrders.length - 1} orders completed`, true);
         }
     } else {
-        // Standard Single Status Update
         updates[`orders/${oid}/status`] = newStatus;
         updates[`user_orders/${uid}/${oid}/status`] = newStatus;
-        
-        if(["Successful", "Failed", "Refunded"].includes(newStatus)) {
+        if(["Successful", "Failed"].includes(newStatus)) {
             updates[`pending_orders/${oid}`] = null;
         } else {
             updates[`pending_orders/${oid}/status`] = newStatus;
         }
         writeLog(`Status Changed: #${oid.slice(-8)} -> ${newStatus}`, true);
     }
-
-    db.ref().update(updates).catch(err => {
-        writeLog(`DB Error: ${err.message}`, false, true);
-    });
+    db.ref().update(updates);
 };
 
 window.deleteRecord = (oid, uid) => {
-    if(confirm(`Erase order #${oid} from database?`)) {
-        const updates = {};
-        updates[`orders/${oid}`] = null;
-        updates[`user_orders/${uid}/${oid}`] = null;
-        updates[`pending_orders/${oid}`] = null;
-        db.ref().update(updates).then(() => writeLog(`Order #${oid} deleted.`, true));
-    }
+    if(!confirm(`Erase order #${oid}?`)) return;
+    const updates = {};
+    updates[`orders/${oid}`] = null;
+    updates[`user_orders/${uid}/${oid}`] = null;
+    updates[`pending_orders/${oid}`] = null;
+    db.ref().update(updates);
 };
 
 window.purgeAllOrders = () => {
-    const confirmation = prompt("To DELETE ALL ORDERS, type: CONFIRM DELETE");
-    if(confirmation === "CONFIRM DELETE") {
-        const updates = {
-            "orders": null,
-            "pending_orders": null,
-            "user_orders": null
-        };
-        db.ref().update(updates)
-            .then(() => writeLog("SUCCESS: ENTIRE ORDER HISTORY PURGED.", true))
-            .catch(err => writeLog(`Purge Failed: ${err.message}`, false, true));
+    if(prompt("Type 'CONFIRM DELETE' to wipe ALL orders.") === "CONFIRM DELETE") {
+        db.ref().update({ "orders": null, "pending_orders": null, "user_orders": null });
+        writeLog("ALL ORDERS PURGED", true);
     }
 };
 
