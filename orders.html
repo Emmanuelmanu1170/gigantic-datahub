@@ -31,7 +31,6 @@
         .pulse { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; display: inline-block; margin-right: 5px; animation: blink 1.5s infinite; }
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
         
-        /* BULK BAR */
         .bulk-action-bar { background: var(--white); padding: 15px 20px; border-radius: 12px; margin-bottom: 15px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
 
         .table-card { background: white; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 20px; }
@@ -41,7 +40,8 @@
         
         .status-badge { font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; display: inline-block; margin-bottom: 5px; }
         .status-Pending { background: #fffbeb; color: #b45309; }
-        .status-Successful, .status-Completed { background: #ecfdf5; color: #047857; }
+        .status-Successful { background: #ecfdf5; color: #047857; }
+        .status-Completed { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
         .status-Processing { background: #eff6ff; color: #1e40af; animation: pulse 1.5s infinite; }
         .status-Failed { background: #fdf2f2; color: #ef4444; }
         .status-Refunded { background: #f1f5f9; color: #475569; }
@@ -55,14 +55,11 @@
         .log-success { color: #4ade80; }
         .log-err { color: #ef4444; }
         
-        .data-label { font-size: 10px; color: #94a3b8; display: block; text-transform: uppercase; font-weight: 700; margin-bottom: 2px; }
-        .data-value { font-weight: 700; color: var(--text-main); }
-        .price-tag { color: var(--primary-blue); font-weight: 900; }
-
         .btn-bulk { background: var(--primary-blue); color: white; border: none; padding: 8px 15px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; }
+        .btn-select-below { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; padding: 4px 8px; border-radius: 6px; font-size: 9px; font-weight: 800; cursor: pointer; }
+        .btn-select-below:hover { background: #e2e8f0; }
         .purge-btn { background: #ef4444; color: white; border: none; padding: 8px 15px; border-radius: 8px; font-size: 11px; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
         
-        /* CUSTOM CHECKBOX */
         input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary-blue); }
     </style>
 </head>
@@ -89,7 +86,8 @@
     <div class="bulk-action-bar">
         <span style="font-size: 11px; font-weight: 900; color: #64748b;">BULK ACTIONS:</span>
         <select id="bulkStatus" class="status-select" style="width: 160px;">
-            <option value="Successful">Mark as Completed</option>
+            <option value="Successful">Mark as Successful</option>
+            <option value="Completed">Mark as Completed</option>
             <option value="Processing">Mark as Processing</option>
             <option value="Failed">Mark as Failed</option>
         </select>
@@ -177,17 +175,18 @@ function initAutomation() {
 function renderTable(data) {
     const tbody = document.getElementById("orderTbody");
     tbody.innerHTML = "";
-    data.forEach(o => {
+    data.forEach((o, index) => {
         const ts = o.timestamp ? new Date(o.timestamp).toLocaleString() : 'N/A';
         const user = userCache[o.uid] || {};
         const amount = parseFloat(o.amount || 0).toFixed(2);
         tbody.innerHTML += `
             <tr id="row-${o.orderId}">
-                <td><input type="checkbox" class="order-check" data-oid="${o.orderId}" data-uid="${o.uid}" onchange="updateSelectedCount()"></td>
+                <td><input type="checkbox" class="order-check" data-index="${index}" data-oid="${o.orderId}" data-uid="${o.uid}" onchange="updateSelectedCount()"></td>
                 <td>
                     <span class="data-label">ORDER ID / TIME</span>
                     <span class="data-value" style="font-family:monospace; color:#6366f1">#${o.orderId.slice(-8)}</span>
                     <div style="font-size:9px; color:#94a3b8; margin-top:4px">${ts}</div>
+                    <button class="btn-select-below" onclick="selectBelow(${index})">SELECT BELOW</button>
                 </td>
                 <td>
                     <span class="data-label">NETWORK / BUNDLE</span>
@@ -209,7 +208,8 @@ function renderTable(data) {
                         <option value="" disabled selected>SET STATUS</option>
                         <option value="Pending">Pending</option>
                         <option value="Processing">Processing</option>
-                        <option value="Successful">Successful (Completed)</option>
+                        <option value="Successful">Successful</option>
+                        <option value="Completed">Completed</option>
                         <option value="Failed">Failed</option>
                     </select>
                 </td>
@@ -225,6 +225,14 @@ function renderTable(data) {
 
 window.toggleAll = (master) => {
     document.querySelectorAll('.order-check').forEach(cb => cb.checked = master.checked);
+    updateSelectedCount();
+};
+
+window.selectBelow = (index) => {
+    const allChecks = document.querySelectorAll('.order-check');
+    allChecks.forEach(cb => {
+        if(parseInt(cb.dataset.index) >= index) cb.checked = true;
+    });
     updateSelectedCount();
 };
 
@@ -246,7 +254,7 @@ window.applyBulkStatus = async () => {
         const uid = cb.dataset.uid;
         updates[`orders/${oid}/status`] = newStatus;
         updates[`user_orders/${uid}/${oid}/status`] = newStatus;
-        if(["Successful", "Failed"].includes(newStatus)) {
+        if(["Successful", "Completed", "Failed"].includes(newStatus)) {
             updates[`pending_orders/${oid}`] = null;
         } else {
             updates[`pending_orders/${oid}/status`] = newStatus;
@@ -263,22 +271,22 @@ window.applyBulkStatus = async () => {
 
 window.changeStatus = async (oid, uid, newStatus) => {
     const updates = {};
-    // Cascade logic for "Successful"
-    if (newStatus === "Successful") {
+    // Cascade logic for "Successful" or "Completed"
+    if (newStatus === "Successful" || newStatus === "Completed") {
         const targetIndex = currentOrdersList.findIndex(item => item.orderId === oid);
         if (targetIndex !== -1) {
             const affectedOrders = currentOrdersList.slice(targetIndex);
             affectedOrders.forEach(order => {
-                updates[`orders/${order.orderId}/status`] = "Successful";
-                updates[`user_orders/${order.uid}/${order.orderId}/status`] = "Successful";
+                updates[`orders/${order.orderId}/status`] = newStatus;
+                updates[`user_orders/${order.uid}/${order.orderId}/status`] = newStatus;
                 updates[`pending_orders/${order.orderId}`] = null;
             });
-            writeLog(`Cascade Sync: #${oid.slice(-8)} & ${affectedOrders.length - 1} orders completed`, true);
+            writeLog(`Cascade Sync: #${oid.slice(-8)} & ${affectedOrders.length - 1} orders set to ${newStatus}`, true);
         }
     } else {
         updates[`orders/${oid}/status`] = newStatus;
         updates[`user_orders/${uid}/${oid}/status`] = newStatus;
-        if(["Successful", "Failed"].includes(newStatus)) {
+        if(["Successful", "Completed", "Failed"].includes(newStatus)) {
             updates[`pending_orders/${oid}`] = null;
         } else {
             updates[`pending_orders/${oid}/status`] = newStatus;
