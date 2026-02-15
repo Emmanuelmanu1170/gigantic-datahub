@@ -102,7 +102,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -137,7 +137,7 @@ function loadAuditData() {
         snapshot.forEach((child) => {
             const data = child.val();
             allUsersRaw.push({ uid: child.key, ...data });
-            totalVault += parseFloat(data.balance || 0);
+            totalVault += parseFloat(data.balance || data.wallet || 0);
         });
 
         document.getElementById('totalVault').innerText = `₵${totalVault.toLocaleString(undefined,{minimumFractionDigits:2})}`;
@@ -151,19 +151,19 @@ function renderLists(users) {
     const topDiv = document.getElementById('topRankings');
     const fullDiv = document.getElementById('fullDirectory');
     
-    const top10 = [...users].sort((a,b) => (b.balance || 0) - (a.balance || 0)).slice(0, 10);
+    const top10 = [...users].sort((a,b) => (parseFloat(b.balance || b.wallet || 0)) - (parseFloat(a.balance || a.wallet || 0))).slice(0, 10);
     topDiv.innerHTML = "";
     top10.forEach((u, i) => topDiv.appendChild(createUserCard(u, i+1, true)));
 
     fullDiv.innerHTML = "";
-    users.sort((a,b) => (a.name || '').localeCompare(b.name || '')).forEach(u => fullDiv.appendChild(createUserCard(u, null, false)));
+    users.sort((a,b) => (a.fullName || '').localeCompare(b.fullName || '')).forEach(u => fullDiv.appendChild(createUserCard(u, null, false)));
 }
 
 window.filterUsers = () => {
     const query = document.getElementById('searchInput').value.toLowerCase();
     const topSection = document.getElementById('topRankingsSection');
     const filtered = allUsersRaw.filter(u => 
-        (u.name || '').toLowerCase().includes(query) || 
+        (u.fullName || '').toLowerCase().includes(query) || 
         (u.email || '').toLowerCase().includes(query) || 
         u.uid.toLowerCase().includes(query)
     );
@@ -177,37 +177,40 @@ function createUserCard(user, rank, isRanked) {
     card.className = "user-row";
     
     const now = Date.now();
-    // Check both lastLogin and lastActive for status
     const lastLoginTs = user.lastLogin || user.lastActive || 0;
     const diff = now - lastLoginTs;
-    const isInactive = diff > 2592000000; // 30 Days
+    const isInactive = diff > 2592000000; 
     const timeString = lastLoginTs ? new Date(lastLoginTs).toLocaleDateString() : 'Never';
 
     let rankIcon = isRanked ? 
         `<div class="rank-pill ${rank==1?'gold':rank==2?'silver':rank==3?'bronze':'normal'}">${rank}</div>` :
         `<div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400"><i class="fas fa-user-circle"></i></div>`;
 
+    // Normalizing role display for UI
+    const currentRole = user.userType || user.role || user.status || "Member";
+    const isAgent = currentRole.toLowerCase() === 'agent';
+
     card.innerHTML = `
         <div class="flex items-center gap-4 mb-3">
             ${rankIcon}
             <div class="flex-1 overflow-hidden" onclick="impersonate('${user.uid}')">
-                <h4 class="font-black text-sm uppercase truncate">${user.name || 'User'}</h4>
+                <h4 class="font-black text-sm uppercase truncate">${user.fullName || 'User'}</h4>
                 <p class="text-[10px] text-slate-500 truncate">${user.email || 'No Email'}</p>
             </div>
             <div class="text-right">
-                <span class="font-black text-blue-600 text-sm">₵${parseFloat(user.balance || 0).toFixed(2)}</span>
+                <span class="font-black text-blue-600 text-sm">₵${parseFloat(user.balance || user.wallet || 0).toFixed(2)}</span>
                 <div class="login-time ${isInactive ? 'inactive-user' : 'active-user'} mt-1">
                     ${isInactive ? 'OFFLINE' : 'ACTIVE'} (${timeString})
                 </div>
             </div>
         </div>
         <div class="flex justify-between items-center pt-3 border-t border-slate-100 dark:border-slate-800">
-            <span class="uid-tag" onclick="copyUID('${user.uid}', this)">ID: ${user.uid.substring(0,10)}... <i class="far fa-copy ml-1"></i></span>
+            <span class="uid-tag" onclick="copyUID('${user.uid}', this)">ID: ${user.uid.substring(0,8)}... <i class="far fa-copy ml-1"></i></span>
             <div class="flex gap-2">
-                <button onclick="toggleRole('${user.uid}', '${user.role}')" class="role-btn ${user.role === 'agent' ? 'role-agent' : 'role-member'}">
-                    ${user.role === 'agent' ? 'Agent' : 'Member'} <i class="fas fa-sync-alt ml-1"></i>
+                <button onclick="toggleRole('${user.uid}', '${currentRole}')" class="role-btn ${isAgent ? 'role-agent' : 'role-member'}">
+                    ${isAgent ? 'Agent' : 'Member'} <i class="fas fa-sync-alt ml-1"></i>
                 </button>
-                <button onclick="deleteUser('${user.uid}', '${user.name}')" class="btn-delete">
+                <button onclick="deleteUser('${user.uid}', '${user.fullName}')" class="btn-delete">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
@@ -229,22 +232,31 @@ window.copyUID = (uid, el) => {
 }
 
 window.toggleRole = (uid, currentRole) => {
-    const newRole = currentRole === 'agent' ? 'user' : 'agent';
-    if(confirm(`Change user to ${newRole.toUpperCase()}?`)) {
-        update(ref(db, `users/${uid}`), { role: newRole })
-        .then(() => alert("Role Updated"))
+    const isAgent = currentRole.toLowerCase() === 'agent';
+    const newRoleValue = isAgent ? 'Normal' : 'agent';
+    
+    if(confirm(`Change user to ${newRoleValue.toUpperCase()}?`)) {
+        // We update all potential status fields to ensure the user dashboard (which checks userType or status) catches it.
+        const updates = {};
+        updates[`users/${uid}/userType`] = newRoleValue;
+        updates[`users/${uid}/status`] = newRoleValue;
+        updates[`users/${uid}/role`] = newRoleValue;
+
+        update(ref(db), updates)
+        .then(() => alert("User status updated successfully."))
         .catch(e => alert("Error: " + e.message));
     }
 }
 
 window.deleteUser = (uid, name) => {
-    if(confirm(`⚠️ PERMANENT DELETE: Are you sure you want to completely erase ${name || 'this user'} from the database? This cannot be undone.`)) {
+    if(confirm(`⚠️ PERMANENT DELETE: Erase ${name || 'user'}?`)) {
         const updates = {};
         updates[`users/${uid}`] = null;
         updates[`user_orders/${uid}`] = null;
+        updates[`topupNotes/${uid}`] = null;
         
         update(ref(db), updates)
-        .then(() => alert("User successfully removed from system."))
+        .then(() => alert("User removed."))
         .catch(e => alert("Delete Error: " + e.message));
     }
 }
