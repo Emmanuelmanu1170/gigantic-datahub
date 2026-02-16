@@ -37,7 +37,7 @@
         #successOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 5000; align-items: center; justify-content: center; }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
 
     <div class="max-w-md w-full">
         <div class="flex items-center gap-3 mb-6">
@@ -95,6 +95,12 @@
             </button>
             <p class="text-center text-[10px] text-slate-400 mt-4 uppercase font-bold tracking-widest">Instant Activation Guaranteed</p>
         </div>
+
+        <div class="mt-6 text-center">
+            <a href="terms.html" style="padding: 10px 20px; background: #64748b; color: white; border-radius: 10px; text-decoration: none; font-size: 13px; font-weight: bold; display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fas fa-file-contract"></i> Terms & Conditions
+            </a>
+        </div>
     </div>
 
     <div id="successOverlay">
@@ -140,13 +146,11 @@
                     activeUid = order.activeUid || user.uid; 
                     document.getElementById('userEmail').innerText = user.email;
 
-                    // CHECK BOTH BALANCE AND WALLET: User can pay if either is enough
                     onValue(ref(db, `users/${activeUid}`), (snapshot) => {
                         const data = snapshot.val() || {};
                         const bal = Number(data.balance || 0);
                         const wal = Number(data.wallet || 0);
                         
-                        // Pick the higher one to validate the "Payable" status
                         liveBalance = Math.max(bal, wal);
                         
                         document.getElementById('dispCurrentBal').innerText = "GH₵ " + liveBalance.toFixed(2);
@@ -181,8 +185,6 @@
                 const orderId = "GID-" + Date.now();
                 const ts = Date.now();
                 const amount = Number(order.amount);
-                
-                // Final calculation for the Atomic Update
                 const finalBalance = Number((liveBalance - amount).toFixed(2));
 
                 const orderData = {
@@ -205,10 +207,8 @@
                 };
 
                 const updates = {};
-                // We sync BOTH nodes to the new balance to prevent future mismatches
                 updates[`users/${activeUid}/balance`] = finalBalance;
                 updates[`users/${activeUid}/wallet`] = finalBalance;
-                
                 updates[`pending_orders/${orderId}`] = orderData;
                 updates[`orders/${orderId}`] = orderData;
                 updates[`user_orders/${activeUid}/${orderId}`] = orderData;
