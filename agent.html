@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agent Directory — GiganticDataHub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
             --primary: #003366;
@@ -14,10 +15,11 @@
             --text-main: #1e293b;
             --text-gray: #64748b;
             --verified: #10b981;
+            --danger: #ef4444;
         }
 
         * { margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', -apple-system, sans-serif; }
-        body { background: var(--bg); color: var(--text-main); padding-bottom: 50px; }
+        body { background: var(--bg); color: var(--text-main); padding-bottom: 80px; }
 
         header { 
             background: var(--primary); color: white; padding: 25px 20px; 
@@ -26,6 +28,11 @@
         }
         header h1 { font-size: 1.4rem; font-weight: 800; margin-bottom: 5px; }
         header p { font-size: 0.8rem; opacity: 0.8; }
+
+        /* Admin Controls */
+        #adminPanel { display: none; margin: 20px; background: white; padding: 20px; border-radius: 20px; border: 2px dashed var(--primary); }
+        .admin-input { border: 1px solid #ddd; padding: 10px; border-radius: 10px; width: 100%; margin-bottom: 10px; font-size: 0.8rem; }
+        .admin-btn { width: 100%; padding: 10px; border-radius: 10px; background: var(--primary); color: white; font-weight: 800; font-size: 0.8rem; cursor: pointer; }
 
         .search-container {
             margin: -25px 20px 20px;
@@ -45,7 +52,7 @@
         .agent-card {
             background: var(--white); border-radius: 20px; padding: 20px;
             margin-bottom: 15px; display: flex; align-items: center; gap: 15px;
-            border: 1px solid rgba(0,0,0,0.03); transition: 0.3s;
+            border: 1px solid rgba(0,0,0,0.03); transition: 0.3s; position: relative;
         }
         .agent-avatar {
             width: 60px; height: 60px;
@@ -58,11 +65,16 @@
         .verified-badge { color: var(--verified); font-size: 0.8rem; }
         .agent-info p { font-size: 0.8rem; color: var(--text-gray); }
 
+        .action-group { display: flex; gap: 10px; align-items: center; }
         .contact-btn {
             background: #25d366; color: white; width: 40px; height: 40px;
             border-radius: 12px; display: flex; align-items: center; justify-content: center;
             text-decoration: none; font-size: 1.2rem;
             box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3);
+        }
+        .revoke-btn {
+            display: none; background: var(--danger); color: white; width: 40px; height: 40px;
+            border-radius: 12px; align-items: center; justify-content: center; border: none; cursor: pointer;
         }
 
         .loader { text-align: center; padding: 50px; color: var(--primary); }
@@ -79,6 +91,12 @@
     <p>Find a verified GiganticDataHub merchant near you</p>
 </header>
 
+<div id="adminPanel">
+    <h4 style="font-size: 0.7rem; font-weight: 900; color: var(--primary); text-transform: uppercase; margin-bottom: 10px;">Admin: Add New Agent</h4>
+    <input type="text" id="newAgentUid" class="admin-input" placeholder="Enter User UID">
+    <button onclick="grantAgentStatus()" class="admin-btn">PROMOTE TO AGENT</button>
+</div>
+
 <div class="search-container">
     <i class="fas fa-search"></i>
     <input type="text" id="agentSearch" placeholder="Search by name or email..." onkeyup="filterAgents()">
@@ -93,10 +111,9 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
     import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-    // UNIFIED SECURE CONFIG
     const firebaseConfig = {
         apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
         authDomain: "gigantic-data.firebaseapp.com",
@@ -108,19 +125,22 @@
     const db = getDatabase(app);
     const auth = getAuth(app);
 
+    const ADMIN_EMAIL = "alenacloft0@gmail.com";
     let allAgents = [];
     let loggedInUserEmail = "";
+    let isAdmin = false;
 
-    // Sync Auth Persistence
-    setPersistence(auth, browserLocalPersistence).then(() => {
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                loggedInUserEmail = user.email;
-                loadAgents();
-            } else {
-                window.location.replace("login.html");
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            loggedInUserEmail = user.email;
+            if (user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+                isAdmin = true;
+                document.getElementById('adminPanel').style.display = 'block';
             }
-        });
+            loadAgents();
+        } else {
+            window.location.replace("login.html");
+        }
     });
 
     function loadAgents() {
@@ -131,7 +151,7 @@
             
             const data = snapshot.val();
             if (!data) {
-                listDiv.innerHTML = `<div class="empty-state"><p>No agents found.</p></div>`;
+                listDiv.innerHTML = `<div class="empty-state"><p>No data found.</p></div>`;
                 return;
             }
 
@@ -161,6 +181,7 @@
             const initial = name.charAt(0).toUpperCase();
             const email = agent.email || "Contact for details";
             const phone = agent.phone || "";
+            const uid = agent.id;
             
             const message = `Hello Agent ${name}, I am a user on GiganticDataHub (Email: ${loggedInUserEmail}). I would like to purchase data.`;
             const waLink = phone ? `https://wa.me/${phone.replace(/\D/g,'')}?text=${encodeURIComponent(message)}` : `mailto:${email}`;
@@ -171,15 +192,52 @@
                     <div class="agent-info">
                         <h3>${name} <i class="fas fa-check-circle verified-badge" title="Verified Merchant"></i></h3>
                         <p><i class="fas fa-envelope"></i> ${email}</p>
-                        <p><i class="fas fa-id-badge"></i> Certified Vendor</p>
+                        <p style="font-size: 0.6rem; font-family: monospace; color: #aaa;">ID: ${uid}</p>
                     </div>
-                    <a href="${waLink}" target="_blank" class="contact-btn">
-                        <i class="fab fa-whatsapp"></i>
-                    </a>
+                    <div class="action-group">
+                        <a href="${waLink}" target="_blank" class="contact-btn">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+                        <button class="revoke-btn" style="${isAdmin ? 'display:flex' : 'display:none'}" onclick="revokeAgentStatus('${uid}')">
+                            <i class="fas fa-user-minus"></i>
+                        </button>
+                    </div>
                 </div>
             `;
         });
     }
+
+    // --- Admin Functions ---
+
+    window.grantAgentStatus = async () => {
+        const uid = document.getElementById('newAgentUid').value.trim();
+        if(!uid) return alert("Please enter a valid UID");
+
+        try {
+            await update(ref(db, `users/${uid}`), {
+                status: 'Agent',
+                userType: 'Agent'
+            });
+            alert("User promoted to Agent successfully!");
+            document.getElementById('newAgentUid').value = "";
+        } catch (e) {
+            alert("Error: " + e.message);
+        }
+    };
+
+    window.revokeAgentStatus = async (uid) => {
+        if(!confirm("Are you sure you want to revoke agent status for this user?")) return;
+
+        try {
+            await update(ref(db, `users/${uid}`), {
+                status: 'User',
+                userType: 'User'
+            });
+            alert("Agent status revoked.");
+        } catch (e) {
+            alert("Error: " + e.message);
+        }
+    };
 
     window.filterAgents = () => {
         const query = document.getElementById('agentSearch').value.toLowerCase();
