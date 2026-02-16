@@ -187,6 +187,7 @@
             btn.disabled = true;
 
             try {
+                // 1. Verify Payment with Cloud Function
                 const response = await fetch('https://us-central1-gigantic-data.cloudfunctions.net/verifyPayment', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -196,7 +197,13 @@
                 const result = await response.json();
                 
                 if(result.success) {
-                    // --- SYNC TO TRANSACTION HISTORY ---
+                    // 2. Fetch current balance to perform math (Fix for missing credit)
+                    const snapshot = await database.ref(`users/${userId}`).once('value');
+                    const userData = snapshot.val() || {};
+                    const currentBalance = Number(userData.balance || userData.wallet || 0);
+                    const newTotal = Number((currentBalance + Number(originalAmount)).toFixed(2));
+
+                    // 3. Prepare Multi-Path Atomic Update
                     const timestamp = Date.now();
                     const txData = {
                         amount: Number(originalAmount),
@@ -209,9 +216,11 @@
                     };
 
                     const updates = {};
-                    // Log in transactions for global/personal history
+                    // Credit the actual money fields
+                    updates[`users/${userId}/balance`] = newTotal;
+                    updates[`users/${userId}/wallet`] = newTotal;
+                    // Log the history records
                     updates[`transactions/${reference}`] = txData;
-                    // Log in topupNotes for the deposit ledger
                     updates[`topupNotes/${userId}/${reference}`] = txData;
 
                     await database.ref().update(updates);
@@ -227,7 +236,8 @@
                     btn.disabled = false;
                 }
             } catch (e) {
-                console.error("Verification Timeout:", e);
+                console.error("Verification Error:", e);
+                alert("Connection problem. Your balance will sync once verified.");
                 window.location.href = "dashboard.html";
             }
         }
