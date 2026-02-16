@@ -129,20 +129,17 @@
         if (!order) {
             window.location.replace("order.html");
         } else {
-            // Static UI setup from Session
             document.getElementById('netPill').innerText = order.network;
             document.getElementById('dispPhone').innerText = order.recipient;
             document.getElementById('dispName').innerText = order.simName || "VERIFIED";
             document.getElementById('dispPlan').innerText = order.plan;
             document.getElementById('dispCost').innerText = "GH₵ " + Number(order.amount).toFixed(2);
 
-            // Auth Observer to load user context
             onAuthStateChanged(auth, user => {
                 if (user) {
-                    activeUid = order.activeUid || user.uid; // Use session UID or current auth UID
+                    activeUid = order.activeUid || user.uid; 
                     document.getElementById('userEmail').innerText = user.email;
 
-                    // Fetch LIVE Balance
                     onValue(ref(db, `users/${activeUid}`), (snapshot) => {
                         const data = snapshot.val() || {};
                         liveBalance = Number(data.balance || data.wallet || 0);
@@ -170,6 +167,8 @@
 
         window.executeOrder = async () => {
             const btn = document.getElementById('mainBtn');
+            if(btn.disabled) return; 
+
             btn.disabled = true;
             btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> PROCESSING...`;
 
@@ -217,7 +216,7 @@
 
             } catch (err) {
                 console.error("Verification Error:", err);
-                alert("Security Check Failed: Please ensure you are logged in and have sufficient funds.");
+                alert("Transaction Failed. Check your connection.");
                 btn.disabled = false;
                 btn.innerHTML = "Confirm & Activate";
             }
