@@ -20,136 +20,141 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --accent: #38bdf8; --success: #10b981; }
         body {
             font-family: 'Inter', sans-serif;
-            background: #0f172a;
-            background: radial-gradient(circle at 0% 0%, #1e293b 0%, #0f172a 100%);
+            background: radial-gradient(circle at top left, #1e293b, #0f172a);
             min-height: 100vh;
-            color: #f1f5f9;
+            color: #f8fafc;
         }
         .glass-card {
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
-        .btn-gradient {
+        .accent-gradient {
             background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
-            transition: all 0.3s ease;
         }
-        .btn-gradient:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
+            -webkit-appearance: none; margin: 0;
         }
+
         /* Premium Modal Styles */
         #statusModal {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(2, 6, 23, 0.9);
+            background: rgba(2, 6, 23, 0.85);
             backdrop-filter: blur(8px);
             z-index: 9999;
             align-items: center;
             justify-content: center;
             padding: 20px;
         }
-        .modal-content {
+        .modal-box {
             background: #1e293b;
             border: 1px solid rgba(255,255,255,0.1);
             border-radius: 32px;
-            max-width: 400px;
+            max-width: 380px;
             width: 100%;
             padding: 40px 24px;
             text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
             transform: scale(0.9);
+            opacity: 0;
             animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
-        @keyframes modalPop { to { transform: scale(1); opacity: 1; } }
-        .success-icon {
-            width: 80px; height: 80px;
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
+        @keyframes modalPop {
+            to { transform: scale(1); opacity: 1; }
+        }
+        .status-icon {
+            width: 72px; height: 72px;
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             margin: 0 auto 24px;
-            font-size: 32px;
-            animation: pulseSuccess 2s infinite;
+            font-size: 28px;
         }
-        @keyframes pulseSuccess { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); } 70% { box-shadow: 0 0 0 20px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+        .icon-success { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+        .icon-error { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+
+        .progress-bar-wrap {
+            width: 100%; height: 4px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 30px;
+        }
+        #progressBar {
+            height: 100%;
+            width: 0%;
+            transition: width 2.2s linear;
+        }
     </style>
 </head>
 <body class="flex items-center justify-center p-4">
 
     <div id="statusModal">
-        <div class="modal-content">
-            <div id="modalIcon" class="success-icon">
+        <div class="modal-box">
+            <div id="modalIcon" class="status-icon">
                 <i class="fas fa-check"></i>
             </div>
-            <h2 id="modalTitle" class="text-2xl font-black mb-2 uppercase tracking-tighter">Verified</h2>
-            <p id="modalMsg" class="text-slate-400 text-sm leading-relaxed mb-6">Wallet credited successfully.</p>
-            <div id="modalLoader" class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                <div class="bg-emerald-500 h-full w-0 transition-all duration-[2000ms]" id="progressBar"></div>
+            <h2 id="modalTitle" class="text-xl font-extrabold mb-2 uppercase tracking-tight">Verified</h2>
+            <p id="modalMsg" class="text-slate-400 text-sm leading-relaxed">Your wallet has been updated successfully.</p>
+            
+            <div class="progress-bar-wrap">
+                <div id="progressBar" class="bg-emerald-500"></div>
             </div>
         </div>
     </div>
 
     <div class="max-w-md w-full">
-        <div class="text-center mb-10">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-600/10 rounded-2xl mb-4">
-                <i class="fas fa-shield-check text-3xl text-blue-400"></i>
-            </div>
-            <h1 class="text-3xl font-black tracking-tight text-white uppercase">Gigantic Hub</h1>
-            <p class="text-slate-400 text-sm font-medium mt-1 uppercase tracking-widest opacity-60">Secure Capital Injection</p>
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent accent-gradient">
+                Gigantic Data Hub
+            </h1>
+            <p class="text-slate-400 mt-2 font-medium">Safe & Secure Capital Top-up</p>
         </div>
 
-        <div class="glass-card rounded-[32px] p-8">
+        <div class="glass-card rounded-[2.5rem] p-8">
             <div class="mb-6 flex justify-between items-center">
-                <a href="dashboard.html" class="text-slate-400 hover:text-white transition-colors text-xs font-bold uppercase tracking-widest">
-                    <i class="fas fa-arrow-left mr-2"></i> Back
+                <a href="dashboard.html" class="text-slate-400 hover:text-white transition-all text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                    <i class="fas fa-arrow-left"></i> Dashboard
                 </a>
-                <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Live Sync</span>
-                </div>
+                <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest bg-slate-900/50 px-3 py-1 rounded-full">Paystack Secure</span>
             </div>
 
-            <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Recharge Amount (GHS)</label>
-            <div class="relative mb-8">
-                <div class="absolute inset-y-0 left-5 flex items-center pointer-events-none">
-                    <span class="text-slate-400 font-black text-xl">₵</span>
-                </div>
+            <label class="block text-[11px] font-black text-slate-500 uppercase tracking-[0.15em] mb-3 ml-1">Deposit Amount (GHS)</label>
+            <div class="relative mb-6">
+                <span class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-black text-xl">₵</span>
                 <input type="number" id="amountInput" placeholder="0.00" 
-                    class="w-full bg-slate-900/40 border border-white/5 rounded-2xl py-5 pl-12 pr-6 text-2xl font-black text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-700"
+                    class="w-full bg-slate-900/40 border border-white/5 rounded-2xl py-5 pl-12 pr-6 text-2xl font-black focus:ring-2 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-700"
                     oninput="calculateTotal()">
             </div>
 
-            <div class="bg-slate-900/40 rounded-2xl p-5 mb-8 space-y-4 border border-white/5">
-                <div class="flex justify-between text-xs font-bold uppercase tracking-widest">
-                    <span class="text-slate-500">Net Credit</span>
+            <div class="bg-slate-900/30 rounded-3xl p-6 mb-8 border border-white/5 space-y-3">
+                <div class="flex justify-between text-xs font-bold">
+                    <span class="text-slate-500 uppercase tracking-wider">Net Credits</span>
                     <span class="text-emerald-400" id="creditPreview">0.00</span>
                 </div>
-                <div class="flex justify-between text-xs font-bold uppercase tracking-widest">
-                    <span class="text-slate-500">Service Fee (2.5%)</span>
+                <div class="flex justify-between text-xs font-bold">
+                    <span class="text-slate-500 uppercase tracking-wider">Fee (2.5%)</span>
                     <span class="text-rose-400" id="feePreview">0.00</span>
                 </div>
-                <div class="pt-4 border-t border-white/5 flex justify-between items-end">
-                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Total Payable</span>
+                <div class="flex justify-between items-center border-t border-white/5 pt-4 mt-2">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-[0.1em]">Total To Pay</span>
                     <span class="text-2xl font-black text-blue-400" id="totalPreview">₵ 0.00</span>
                 </div>
             </div>
 
             <button onclick="startPayment()" id="payBtn" disabled 
-                class="w-full py-5 rounded-2xl btn-gradient text-white font-black text-sm uppercase tracking-widest opacity-50 cursor-not-allowed">
+                class="w-full py-5 rounded-2xl accent-gradient text-white font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-blue-500/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-[0.98]">
                 Initialize Payment
             </button>
         </div>
 
-        <div class="mt-8 flex flex-col items-center gap-4">
-            <div class="flex items-center gap-6 opacity-40">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/2/29/Paystack_Logo.png" alt="Paystack" class="h-4">
-            </div>
-            <p class="text-[9px] text-slate-600 font-bold uppercase tracking-[0.2em]">SSL Encrypted • 256-bit Security</p>
+        <div class="mt-8 flex flex-col items-center gap-3">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/2/29/Paystack_Logo.png" alt="Paystack" class="h-4 opacity-30 grayscale hover:grayscale-0 transition-all">
+            <p class="text-[10px] text-slate-600 font-bold uppercase tracking-widest">End-to-End Encryption Enabled</p>
         </div>
     </div>
 
@@ -168,9 +173,9 @@
         const FEE_RATE = 0.025; 
         const paystackPublicKey = 'pk_live_faecdb3166144fadebd8269829343698dd43de63';
 
-        let activeUid;
         const impersonateUid = sessionStorage.getItem('impersonate_uid');
         const isImpersonating = sessionStorage.getItem('isAdminImpersonating');
+        let activeUid;
 
         auth.onAuthStateChanged(user => {
             if (user) {
@@ -193,34 +198,36 @@
 
             if (amount >= 1) { 
                 payBtn.disabled = false;
-                payBtn.classList.remove('opacity-50', 'cursor-not-allowed');
             } else {
                 payBtn.disabled = true;
-                payBtn.classList.add('opacity-50', 'cursor-not-allowed');
             }
         }
 
-        function showStatus(title, msg, type = 'success') {
+        function showStatusModal(title, message, isSuccess = true) {
             const modal = document.getElementById('statusModal');
             const icon = document.getElementById('modalIcon');
-            const bar = document.getElementById('progressBar');
+            const progress = document.getElementById('progressBar');
             
             document.getElementById('modalTitle').innerText = title;
-            document.getElementById('modalMsg').innerText = msg;
+            document.getElementById('modalMsg').innerText = message;
             
-            if(type === 'error') {
+            if (isSuccess) {
+                icon.className = "status-icon icon-success";
+                icon.innerHTML = '<i class="fas fa-check"></i>';
+                progress.className = "h-full bg-emerald-500";
+            } else {
+                icon.className = "status-icon icon-error";
                 icon.innerHTML = '<i class="fas fa-times"></i>';
-                icon.style.color = '#ef4444';
-                icon.style.background = 'rgba(239, 68, 68, 0.1)';
+                progress.className = "h-full bg-rose-500";
             }
             
             modal.style.display = 'flex';
-            setTimeout(() => { bar.style.width = '100%'; }, 100);
+            setTimeout(() => { progress.style.width = '100%'; }, 50);
         }
 
         function startPayment() {
             const user = auth.currentUser;
-            const emailToUse = user ? user.email : sessionStorage.getItem('impersonate_email') || 'admin@gigantic.com';
+            const emailToUse = user ? user.email : sessionStorage.getItem('impersonate_email') || 'admin_topup@gigantic.com';
             const amount = parseFloat(document.getElementById('amountInput').value);
             const totalToPay = amount * (1 + FEE_RATE);
 
@@ -260,7 +267,7 @@
                     const timestamp = Date.now();
                     const txData = {
                         amount: Number(originalAmount),
-                        description: "Wallet Deposit (Verified)",
+                        description: "Wallet Deposit (Paystack)",
                         type: "deposit",
                         status: "Success",
                         reference: reference,
@@ -276,16 +283,18 @@
 
                     await database.ref().update(updates);
 
-                    showStatus("Success", `GH₵ ${originalAmount} has been injected into your wallet.`);
-                    setTimeout(() => { window.location.href = "dashboard.html"; }, 2200);
+                    showStatusModal("Success", `Transaction successful! GH₵ ${originalAmount} has been credited to your wallet.`);
+
+                    setTimeout(() => { window.location.href = "dashboard.html"; }, 2400);
                 } else {
-                    showStatus("Error", result.message || "Payment verification rejected.", "error");
-                    setTimeout(() => { location.reload(); }, 3000);
+                    showStatusModal("Security Failed", result.message || "Payment verification failed. Please contact support.", false);
+                    btn.innerHTML = "Initialize Payment";
+                    btn.disabled = false;
                 }
             } catch (e) {
-                console.error(e);
-                showStatus("Error", "Connection timed out. Funds will sync automatically.", "error");
-                setTimeout(() => { window.location.href = "dashboard.html"; }, 3000);
+                console.error("Verification Error:", e);
+                showStatusModal("Timeout", "Network is slow. Your balance will update in the background. Redirecting...", false);
+                setTimeout(() => { window.location.href = "dashboard.html"; }, 2400);
             }
         }
     </script>
