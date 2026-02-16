@@ -1,16 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
     <meta charset="UTF-8">
     <title>GiganticData Admin Hub</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
             --admin-blue: #0f172a;
             --accent-blue: #3b82f6;
             --success-green: #22c55e;
             --warning-orange: #f59e0b;
+            --danger-red: #ef4444;
             --bg-gray: #f8fafc;
             --card-white: #ffffff;
         }
@@ -57,9 +65,21 @@
         .badge-user { background: #e0f2fe; color: #0369a1; }
         .badge-agent { background: #fef3c7; color: #92400e; }
 
+        .action-btn { font-size: 14px; cursor: pointer; transition: 0.2s; padding: 5px; border-radius: 5px; }
+        .btn-agent { color: var(--warning-orange); }
+        .btn-delete { color: var(--danger-red); }
+        .action-btn:hover { background: #f1f5f9; transform: scale(1.1); }
+
         #loadingOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: white; display: flex; justify-content: center; align-items: center; z-index: 9999;
+        }
+
+        .cmd-btn { 
+            background: linear-gradient(135deg, #0f172a 0%, #334155 100%); 
+            color: white; padding: 12px 24px; border-radius: 12px; font-weight: 800; 
+            font-size: 12px; text-transform: uppercase; border: none; cursor: pointer; 
+            display: flex; align-items: center; gap: 10px;
         }
     </style>
 </head>
@@ -68,30 +88,35 @@
     <div id="loadingOverlay">
         <div style="text-align:center;">
             <i class="fas fa-circle-notch fa-spin fa-2x" style="color: var(--accent-blue);"></i>
-            <p>Authenticating Master Terminal...</p>
+            <p class="mt-4 font-bold text-slate-500">Initializing Admin Protocol...</p>
         </div>
     </div>
 
     <div class="header">
         <div>
-            <h1 style="margin:0;">Admin Control Center</h1>
-            <p style="color: #64748b; margin: 5px 0 0; font-size: 14px;">Managing GiganticData Ecosystem</p>
+            <h1 style="margin:0; font-weight: 900;">Admin Control Center</h1>
+            <p style="color: #64748b; margin: 5px 0 0; font-size: 14px;">Operational Intelligence</p>
         </div>
-        <button class="refresh-btn" onclick="location.reload()" style="padding: 10px 20px; background: var(--admin-blue); color: white; border: none; border-radius: 10px; cursor: pointer;">
-            <i class="fas fa-sync-alt"></i> Refresh
-        </button>
+        <div class="flex gap-4">
+            <a href="admin_command.html" class="cmd-btn">
+                <i class="fas fa-terminal"></i> Command Center
+            </a>
+            <button onclick="location.reload()" style="padding: 10px 20px; background: white; border: 1px solid #ddd; border-radius: 10px; cursor: pointer;">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
     </div>
 
     <div class="stats-grid">
         <div class="stat-card">
             <h3>New Users (7D)</h3>
             <span class="value" id="newUsers7">0</span>
-            <span class="sub-text">Acquisition in last 7 days</span>
+            <span class="sub-text">Active acquisition</span>
         </div>
         <div class="stat-card">
             <h3>Orders Today</h3>
             <span class="value" id="ordersToday">0</span>
-            <span class="sub-text">Completed or Successful</span>
+            <span class="sub-text">Fulfillment success</span>
         </div>
         <div class="stat-card revenue-card">
             <h3>Today's Net Profit (4%)</h3>
@@ -107,25 +132,26 @@
 
     <div class="admin-section">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h3 style="margin:0;">User Management</h3>
-            <div id="totalUserCount" style="font-size: 12px; font-weight: bold; background: #eee; padding: 5px 12px; border-radius: 20px;">0 Users Total</div>
+            <h3 style="margin:0; font-weight: 800;">User Registry</h3>
+            <div id="totalUserCount" style="font-size: 11px; font-weight: 900; background: #0f172a; color: white; padding: 5px 15px; border-radius: 20px; text-transform: uppercase;">0 Users</div>
         </div>
         <div class="search-box">
-            <input type="text" id="userSearchInput" placeholder="Search by name or email...">
+            <input type="text" id="userSearchInput" placeholder="Filter by identity or email...">
         </div>
         <div style="overflow-x: auto;">
             <table>
                 <thead>
                     <tr>
-                        <th>Customer</th>
-                        <th>Email</th>
-                        <th>Ref Balance</th>
-                        <th>Main Wallet</th>
-                        <th>Status</th>
+                        <th>Identity</th>
+                        <th>Auth Email</th>
+                        <th>Ref Credit</th>
+                        <th>Wallet</th>
+                        <th>Access</th>
+                        <th style="text-align:right">Management</th>
                     </tr>
                 </thead>
                 <tbody id="userTableBody">
-                    <tr><td colspan="5" style="text-align:center;">Loading...</td></tr>
+                    <tr><td colspan="6" style="text-align:center; padding: 40px;">Syncing user data...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -134,9 +160,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // UNIFIED SECURE CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
             authDomain: "gigantic-data.firebaseapp.com",
@@ -155,7 +180,7 @@
                 document.getElementById('loadingOverlay').style.display = 'none';
                 loadAdminData();
             } else {
-                window.location.href = "admin_login.html"; 
+                window.location.href = "login.html"; 
             }
         });
 
@@ -165,7 +190,6 @@
             const startOfTodayTimestamp = today.getTime();
             const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
 
-            // 1. Process Users
             onValue(ref(db, 'users'), (snapshot) => {
                 const users = snapshot.val() || {};
                 let userList = [];
@@ -173,7 +197,7 @@
                 let totalRefDebt = 0;
                 let totalMainDebt = 0;
 
-                Object.values(users).forEach(u => {
+                Object.entries(users).forEach(([uid, u]) => {
                     const refBal = parseFloat(u.referralBonus || 0);
                     const mainBal = parseFloat(u.wallet || u.balance || 0);
                     if (u.createdAt && u.createdAt > sevenDaysAgo) newUserCount++;
@@ -181,7 +205,8 @@
                     totalMainDebt += mainBal;
 
                     userList.push({
-                        fullName: u.fullName || 'User',
+                        uid: uid,
+                        fullName: u.fullName || 'Unknown',
                         email: u.email || 'N/A',
                         refBal: refBal,
                         mainBal: mainBal,
@@ -190,14 +215,13 @@
                 });
 
                 document.getElementById('newUsers7').innerText = newUserCount;
-                document.getElementById('totalUserCount').innerText = `${userList.length} Users`;
+                document.getElementById('totalUserCount').innerText = `${userList.length} Users Total`;
                 document.getElementById('totalLiabilities').innerText = `GH₵ ${totalRefDebt.toFixed(2)}`;
                 document.getElementById('circulatingMain').innerText = `Main Wallets: GH₵ ${totalMainDebt.toFixed(2)}`;
                 renderUserTable(userList);
                 setupSearch(userList);
             });
 
-            // 2. Process Orders
             onValue(ref(db, 'orders'), (snapshot) => {
                 const orders = snapshot.val() || {};
                 let dailyCount = 0;
@@ -207,9 +231,9 @@
                     const status = (order.status || "").toUpperCase();
                     const orderTime = order.timestamp || 0;
 
-                    if (orderTime >= startOfTodayTimestamp && (status === 'SUCCESSFUL' || status === 'COMPLETED' || status === 'SUCCESS')) {
+                    if (orderTime >= startOfTodayTimestamp && (status === 'SUCCESSFUL' || status === 'COMPLETED')) {
                         dailyCount++;
-                        dailySales += parseFloat(order.amount || order.price || 0);
+                        dailySales += parseFloat(order.amount || 0);
                     }
                 });
 
@@ -224,14 +248,33 @@
             const tbody = document.getElementById('userTableBody');
             tbody.innerHTML = data.map(u => `
                 <tr>
-                    <td><b>${u.fullName}</b></td>
+                    <td><b>${u.fullName}</b><br><small style="color:#94a3b8; font-family:monospace;">${u.uid.substring(0,8)}</small></td>
                     <td>${u.email}</td>
                     <td style="color: #ff8c00; font-weight: 700;">GH₵ ${u.refBal.toFixed(2)}</td>
                     <td style="font-weight: 600;">GH₵ ${u.mainBal.toFixed(2)}</td>
                     <td><span class="badge ${u.status.toLowerCase() === 'agent' ? 'badge-agent' : 'badge-user'}">${u.status}</span></td>
+                    <td style="text-align:right">
+                        <i class="fas fa-user-shield action-btn btn-agent mr-3" title="Promote to Agent" onclick="makeAgent('${u.uid}')"></i>
+                        <i class="fas fa-trash-alt action-btn btn-delete" title="Delete User" onclick="deleteUser('${u.uid}')"></i>
+                    </td>
                 </tr>
             `).join('');
         }
+
+        window.makeAgent = (uid) => {
+            if(confirm("Change user access to AGENT?")) {
+                update(ref(db, `users/${uid}`), { 
+                    userType: 'Agent',
+                    status: 'Agent' 
+                }).then(() => alert("Access elevated to Agent."));
+            }
+        };
+
+        window.deleteUser = (uid) => {
+            if(confirm("DANGER: WIPE USER PERMANENTLY? This cannot be undone.")) {
+                remove(ref(db, `users/${uid}`)).then(() => alert("User purged from registry."));
+            }
+        };
 
         function setupSearch(data) {
             const input = document.getElementById('userSearchInput');
@@ -239,7 +282,8 @@
                 const val = input.value.toLowerCase();
                 const filtered = data.filter(u => 
                     u.fullName.toLowerCase().includes(val) || 
-                    u.email.toLowerCase().includes(val)
+                    u.email.toLowerCase().includes(val) ||
+                    u.uid.toLowerCase().includes(val)
                 );
                 renderUserTable(filtered);
             };
