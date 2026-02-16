@@ -48,9 +48,9 @@
         <div class="glass-card rounded-[32px] p-8">
             <div class="flex justify-between items-center mb-6 pb-4 border-b border-dashed border-slate-200">
                 <div>
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Live Wallet Status</p>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Available Funds</p>
                     <p class="text-xs font-bold text-emerald-500 flex items-center gap-1">
-                        <i class="fas fa-wallet"></i> <span id="dispCurrentBal">Authenticating...</span>
+                        <i class="fas fa-wallet"></i> <span id="dispCurrentBal">Fetching...</span>
                     </p>
                 </div>
                 <div id="netPill" class="network-pill">...</div>
@@ -140,11 +140,16 @@
                     activeUid = order.activeUid || user.uid; 
                     document.getElementById('userEmail').innerText = user.email;
 
+                    // CHECK BOTH BALANCE AND WALLET: User can pay if either is enough
                     onValue(ref(db, `users/${activeUid}`), (snapshot) => {
                         const data = snapshot.val() || {};
-                        liveBalance = Number(data.balance || data.wallet || 0);
+                        const bal = Number(data.balance || 0);
+                        const wal = Number(data.wallet || 0);
                         
-                        document.getElementById('dispCurrentBal').innerText = "LIVE: GH₵ " + liveBalance.toFixed(2);
+                        // Pick the higher one to validate the "Payable" status
+                        liveBalance = Math.max(bal, wal);
+                        
+                        document.getElementById('dispCurrentBal').innerText = "GH₵ " + liveBalance.toFixed(2);
                         const postBalance = (liveBalance - Number(order.amount)).toFixed(2);
                         document.getElementById('dispNewBal').innerText = "GH₵ " + postBalance;
 
@@ -170,12 +175,14 @@
             if(btn.disabled) return; 
 
             btn.disabled = true;
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> PROCESSING...`;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> DEDUCTING...`;
 
             try {
                 const orderId = "GID-" + Date.now();
                 const ts = Date.now();
                 const amount = Number(order.amount);
+                
+                // Final calculation for the Atomic Update
                 const finalBalance = Number((liveBalance - amount).toFixed(2));
 
                 const orderData = {
@@ -198,8 +205,10 @@
                 };
 
                 const updates = {};
+                // We sync BOTH nodes to the new balance to prevent future mismatches
                 updates[`users/${activeUid}/balance`] = finalBalance;
                 updates[`users/${activeUid}/wallet`] = finalBalance;
+                
                 updates[`pending_orders/${orderId}`] = orderData;
                 updates[`orders/${orderId}`] = orderData;
                 updates[`user_orders/${activeUid}/${orderId}`] = orderData;
@@ -216,7 +225,7 @@
 
             } catch (err) {
                 console.error("Verification Error:", err);
-                alert("Transaction Failed. Check your connection.");
+                alert("Transaction Failed. Ensure you have sufficient funds in your Balance.");
                 btn.disabled = false;
                 btn.innerHTML = "Confirm & Activate";
             }
