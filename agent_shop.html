@@ -11,6 +11,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Merchant Hub Pro — GiganticDataHub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { 
             --primary: #003366; 
@@ -111,7 +112,7 @@
 <div class="stats-grid">
     <div class="stat-card">
         <b id="agentWallet">₵0.00</b>
-        <span>Live Balance</span>
+        <span>Real Balance</span>
     </div>
     <div class="stat-card">
         <b id="lifetimeSales">0</b>
@@ -187,17 +188,22 @@
     function syncTerminal(user) {
         document.getElementById('authGuard').style.display = 'none';
 
-        // EXACT BALANCE LOGIC FROM DASHBOARD
+        // MASTER BALANCE SYNC (REVEALS REAL-TIME LIQUIDITY)
         onValue(ref(db, `users/${user.uid}`), snap => {
             const data = snap.val() || {};
-            const rawBalance = data.balance || data.wallet || 0; 
-            document.getElementById('agentWallet').innerText = "₵" + Number(rawBalance).toFixed(2);
+            
+            // Check both nodes to handle any legacy desync
+            const bal = Number(data.balance || 0);
+            const wal = Number(data.wallet || 0);
+            const realBalance = Math.max(bal, wal);
+            
+            document.getElementById('agentWallet').innerText = "₵" + realBalance.toFixed(2);
             
             const userStatus = data.userType || data.status || "Normal User";
             document.getElementById('userStatus').innerText = userStatus.toUpperCase();
         });
 
-        // RECENT ORDERS & PROFIT LOGIC
+        // MERCHANT SALES HISTORY
         onValue(ref(db, `user_orders/${user.uid}`), (snapshot) => {
             const container = document.getElementById('historyContainer');
             const data = snapshot.val();
