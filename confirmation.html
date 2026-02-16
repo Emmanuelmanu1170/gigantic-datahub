@@ -129,7 +129,7 @@
         const db = getDatabase(app);
 
         const order = JSON.parse(sessionStorage.getItem('pending_checkout'));
-        let liveBalance = 0;
+        let currentRealBalance = 0;
         let activeUid = "";
 
         if (!order) {
@@ -148,24 +148,27 @@
 
                     onValue(ref(db, `users/${activeUid}`), (snapshot) => {
                         const data = snapshot.val() || {};
-                        const bal = Number(data.balance || 0);
-                        const wal = Number(data.wallet || 0);
                         
-                        liveBalance = Math.max(bal, wal);
+                        // We strictly use the "balance" node for deduction math
+                        currentRealBalance = Number(data.balance || 0);
                         
-                        document.getElementById('dispCurrentBal').innerText = "GH₵ " + liveBalance.toFixed(2);
-                        const postBalance = (liveBalance - Number(order.amount)).toFixed(2);
+                        // Display logic: show the highest available just for UI confidence
+                        const displayBal = Math.max(currentRealBalance, Number(data.wallet || 0));
+                        
+                        document.getElementById('dispCurrentBal').innerText = "GH₵ " + displayBal.toFixed(2);
+                        const postBalance = (displayBal - Number(order.amount)).toFixed(2);
                         document.getElementById('dispNewBal').innerText = "GH₵ " + postBalance;
 
                         const btn = document.getElementById('mainBtn');
-                        if (liveBalance >= Number(order.amount)) {
+                        // Validation: Must have enough in the actual balance node to proceed
+                        if (currentRealBalance >= Number(order.amount)) {
                             btn.disabled = false;
                             btn.classList.remove('opacity-50', 'cursor-not-allowed');
                             btn.innerHTML = "Confirm & Activate";
                         } else {
                             btn.disabled = true;
                             btn.classList.add('opacity-50', 'cursor-not-allowed');
-                            btn.innerHTML = "INSUFFICIENT FUNDS";
+                            btn.innerHTML = "INSUFFICIENT BALANCE";
                         }
                     });
                 } else {
@@ -185,7 +188,9 @@
                 const orderId = "GID-" + Date.now();
                 const ts = Date.now();
                 const amount = Number(order.amount);
-                const finalBalance = Number((liveBalance - amount).toFixed(2));
+                
+                // Final calculation strictly for the Balance node
+                const finalBalance = Number((currentRealBalance - amount).toFixed(2));
 
                 const orderData = {
                     network: String(order.network),
@@ -207,8 +212,10 @@
                 };
 
                 const updates = {};
+                // DEDUCTION: Only targets the balance node as requested
                 updates[`users/${activeUid}/balance`] = finalBalance;
-                updates[`users/${activeUid}/wallet`] = finalBalance;
+                
+                // Bookkeeping nodes
                 updates[`pending_orders/${orderId}`] = orderData;
                 updates[`orders/${orderId}`] = orderData;
                 updates[`user_orders/${activeUid}/${orderId}`] = orderData;
@@ -225,7 +232,7 @@
 
             } catch (err) {
                 console.error("Verification Error:", err);
-                alert("Transaction Failed. Ensure you have sufficient funds in your Balance.");
+                alert("Transaction Failed. Ensure your 'Balance' node has sufficient funds.");
                 btn.disabled = false;
                 btn.innerHTML = "Confirm & Activate";
             }
