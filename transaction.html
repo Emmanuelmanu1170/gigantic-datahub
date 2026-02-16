@@ -9,99 +9,105 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finance Ledger - Gigantic Data Hub</title>
+    <title>Finance Ledger | Gigantic Data Hub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
-            --primary: #001f3f; --accent: #ff8c00; --bg: #f8fafc;
+            --primary: #0f172a; --accent: #3b82f6; --bg: #f8fafc;
             --success: #10b981; --danger: #ef4444; --card-bg: #ffffff;
         }
         [data-theme="dark"] {
-            --bg: #0b0e14; --card-bg: #161b22; --primary: #010409;
+            --bg: #020617; --card-bg: #0f172a; --primary: #1e293b;
         }
         body { background: var(--bg); color: #1e293b; font-family: 'Inter', sans-serif; transition: 0.3s; }
-        [data-theme="dark"] body { color: #c9d1d9; }
+        [data-theme="dark"] body { color: #f1f5f9; }
 
-        header { background: var(--primary); color: white; padding: 20px; position: sticky; top: 0; z-index: 100; }
+        header { background: var(--primary); color: white; padding: 20px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.05); }
         
         .auth-card {
-            background: linear-gradient(135deg, var(--primary) 0%, #003366 100%);
-            margin: 15px; padding: 15px; border-radius: 16px; color: white;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            margin: 15px; padding: 20px; border-radius: 24px; color: white;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
         }
-        .auth-label { font-size: 10px; font-weight: 800; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px; }
-        .auth-value { font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+        .auth-label { font-size: 9px; font-weight: 900; opacity: 0.5; text-transform: uppercase; letter-spacing: 1.5px; }
+        .auth-value { font-size: 11px; font-weight: 700; color: #94a3b8; }
 
         .stats-ribbon { 
             background: var(--card-bg); padding: 15px; display: flex; justify-content: space-around; 
             border-bottom: 1px solid rgba(0,0,0,0.05); position: sticky; top: 68px; z-index: 90;
+            backdrop-filter: blur(10px);
         }
 
         .container { padding: 10px 15px; max-width: 600px; margin: auto; }
         
         .tx-card { 
-            background: var(--card-bg); border-radius: 18px; padding: 14px; margin-bottom: 10px; 
-            display: flex; gap: 12px; align-items: center; border: 1px solid rgba(0,0,0,0.03);
+            background: var(--card-bg); border-radius: 20px; padding: 16px; margin-bottom: 12px; 
+            display: flex; gap: 14px; align-items: center; border: 1px solid rgba(0,0,0,0.03);
+            transition: transform 0.2s;
         }
+        .tx-card:active { transform: scale(0.98); }
 
-        .icon-box { width: 45px; height: 45px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-        .bg-deposit { background: #dcfce7; color: var(--success); }
-        .bg-purchase { background: #fee2e2; color: var(--danger); }
-        .bg-bonus { background: #e0f2fe; color: #0ea5e9; }
+        .icon-box { width: 48px; height: 48px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+        .bg-deposit { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .bg-purchase { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+        .bg-bonus { background: rgba(59, 130, 246, 0.1); color: var(--accent); }
 
         .tx-info { flex: 1; min-width: 0; }
-        .tx-info h4 { font-size: 0.85rem; font-weight: 800; margin-bottom: 2px; text-transform: uppercase; letter-spacing: -0.3px; }
-        .sub-text { font-size: 10px; color: #64748b; font-weight: 600; }
+        .tx-info h4 { font-size: 0.8rem; font-weight: 900; margin-bottom: 3px; text-transform: uppercase; color: var(--accent); }
+        .sub-text { font-size: 10px; color: #64748b; font-weight: 600; font-family: monospace; }
 
-        .date-divider { font-size: 0.7rem; font-weight: 900; color: #94a3b8; text-transform: uppercase; margin: 25px 0 12px 5px; letter-spacing: 1.5px; display: flex; align-items: center; gap: 10px; }
-        .date-divider::after { content: ""; flex: 1; height: 1px; background: rgba(0,0,0,0.05); }
+        .date-divider { font-size: 10px; font-weight: 900; color: #94a3b8; text-transform: uppercase; margin: 30px 0 15px 5px; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
+        .date-divider::after { content: ""; flex: 1; height: 1px; background: rgba(148, 163, 184, 0.1); }
     </style>
 </head>
 <body>
 
 <header class="flex justify-between items-center">
     <div class="flex items-center gap-4">
-        <a href="dashboard.html" class="text-white"><i class="fas fa-chevron-left"></i></a>
-        <h3 id="pageHeader" class="font-black text-lg uppercase tracking-tighter">Finance Ledger</h3>
+        <a href="dashboard.html" class="text-white bg-white/10 w-10 h-10 flex items-center justify-center rounded-xl"><i class="fas fa-chevron-left"></i></a>
+        <h3 id="pageHeader" class="font-black text-sm uppercase tracking-widest">Finance Ledger</h3>
     </div>
     <div class="flex gap-4">
-        <i class="fas fa-redo-alt cursor-pointer" onclick="location.reload()"></i>
+        <button onclick="location.reload()" class="bg-blue-600/20 text-blue-400 p-2 px-4 rounded-lg text-xs font-black uppercase">Sync</button>
     </div>
 </header>
 
 <div class="auth-card">
-    <div class="flex justify-between items-center mb-3">
+    <div class="flex justify-between items-center mb-5">
         <span class="auth-label">Secure Session</span>
-        <i class="fas fa-shield-alt text-emerald-400"></i>
-    </div>
-    <div class="grid grid-cols-2 gap-4">
-        <div>
-            <p class="auth-label">Email Address</p>
-            <p class="auth-value" id="authEmail">...</p>
+        <div class="flex items-center gap-2">
+            <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+            <i class="fas fa-shield-check text-emerald-500"></i>
         </div>
+    </div>
+    <div class="space-y-4">
         <div>
-            <p class="auth-label">Identity SID</p>
-            <p class="auth-value" id="authUid">...</p>
+            <p class="auth-label">Active Account</p>
+            <p class="auth-value" id="authEmail">Authenticating...</p>
+        </div>
+        <div class="pt-3 border-t border-white/5">
+            <p class="auth-label">Audit SID</p>
+            <p class="auth-value font-mono" id="authUid">Verifying identity...</p>
         </div>
     </div>
 </div>
 
 <div class="stats-ribbon">
     <div class="text-center">
-        <p class="text-[9px] font-black text-slate-400 uppercase">Cash Flow</p>
-        <h2 id="totalFlow" class="text-xl font-black text-blue-600">₵0.00</h2>
+        <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Total Volume</p>
+        <h2 id="totalFlow" class="text-xl font-black text-indigo-500">₵0.00</h2>
     </div>
     <div class="text-center">
-        <p class="text-[9px] font-black text-slate-400 uppercase">Records</p>
+        <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Sync Count</p>
         <h2 id="recordCount" class="text-xl font-black text-orange-500">0</h2>
     </div>
 </div>
 
 <div class="container">
-    <div id="loading" class="text-center py-20 text-slate-400">
-        <i class="fas fa-circle-notch fa-spin fa-2x"></i>
-        <p class="mt-4 text-xs font-bold uppercase tracking-widest">Reconciling Database...</p>
+    <div id="loading" class="text-center py-24">
+        <i class="fas fa-circle-notch fa-spin fa-2x text-blue-500"></i>
+        <p class="mt-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Reconciling Real-Time Values</p>
     </div>
     <div id="txList"></div>
 </div>
@@ -131,7 +137,7 @@ onAuthStateChanged(auth, async (user) => {
         const isAuditing = sessionStorage.getItem('isAdminImpersonating') === 'true';
         const activeUid = isAuditing ? impersonateUid : user.uid;
         
-        document.getElementById('authUid').innerText = activeUid.substring(0, 10) + "...";
+        document.getElementById('authUid').innerText = activeUid;
         await setupLedger(user, activeUid, isAuditing);
     } else {
         window.location.href = "login.html";
@@ -139,15 +145,14 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 async function setupLedger(user, activeUid, isAuditing) {
-    const isAdmin = user.email === ADMIN_EMAIL;
-    document.getElementById('pageHeader').innerText = isAuditing ? "Audit Trace" : (isAdmin ? "Global Ledger" : "Transaction History");
+    const isAdmin = user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+    document.getElementById('pageHeader').innerText = isAuditing ? "Audit Protocol" : (isAdmin ? "Global Ledger" : "Transaction Sync");
 
+    // DATA SOURCES: We check every path where real money values are stored
     const dataPaths = [
-        { path: 'transactions', type: 'purchase' },
-        { path: 'topupNotes', type: 'deposit' },
-        { path: 'allSuccessfulPayments', type: 'deposit' },
-        { path: 'processed_payments', type: 'deposit' },
-        { path: 'withdrawal_requests', type: 'bonus' }
+        { path: 'transactions', type: 'purchase' }, // Primary history
+        { path: 'topupNotes', type: 'deposit' },     // Manual & Verified topups
+        { path: 'user_orders', type: 'purchase' }    // Individual user records
     ];
 
     let combinedLogs = [];
@@ -155,36 +160,25 @@ async function setupLedger(user, activeUid, isAuditing) {
     const fetchPromises = dataPaths.map(async (source) => {
         try {
             let dbRef;
-            // Admin Global View vs User Personalized View
-            if (isAdmin && !isAuditing) {
-                dbRef = ref(db, source.path);
+            if (source.path === 'topupNotes' && !isAdmin) {
+                dbRef = ref(db, `topupNotes/${activeUid}`);
+            } else if (source.path === 'user_orders' && !isAdmin) {
+                dbRef = ref(db, `user_orders/${activeUid}`);
+            } else if (isAdmin && !isAuditing) {
+                dbRef = ref(db, source.path); // Admins see everything
             } else {
-                if (source.path === 'topupNotes') {
-                    dbRef = ref(db, `topupNotes/${activeUid}`);
-                } else {
-                    dbRef = query(ref(db, source.path), orderByChild('uid'), equalTo(activeUid));
-                }
+                dbRef = query(ref(db, source.path), orderByChild('uid'), equalTo(activeUid));
             }
 
             const snapshot = await get(dbRef);
             if (snapshot.exists()) {
                 const data = snapshot.val();
                 
-                // Process the raw data based on structure
-                if (source.path === 'topupNotes' && isAdmin && !isAuditing) {
-                    Object.entries(data).forEach(([uId, notes]) => {
-                        Object.entries(notes).forEach(([key, val]) => {
-                            combinedLogs.push(formatEntry(key, val, 'deposit', uId));
-                        });
-                    });
-                } else {
-                    Object.entries(data).forEach(([key, val]) => {
-                        combinedLogs.push(formatEntry(key, val, source.type, val.uid || activeUid));
-                    });
-                }
+                // RECURSIVE PARSER: Handle nested nodes like topupNotes/uid/txid
+                parseNode(data, source.type, activeUid, combinedLogs);
             }
         } catch (e) {
-            console.warn("Path skipped:", source.path, e.message);
+            console.warn("Sync skipped for path:", source.path);
         }
     });
 
@@ -192,39 +186,49 @@ async function setupLedger(user, activeUid, isAuditing) {
     renderLogs(combinedLogs);
 }
 
-function formatEntry(id, val, type, uid) {
-    // Ensure numeric parsing of the real value
-    const amount = parseFloat(val.amount || 0);
-    
-    return {
-        id, uid,
-        amount: amount,
-        desc: val.description || val.plan || val.network || val.method || (type === 'deposit' ? 'Wallet Deposit' : (type === 'bonus' ? 'Referral Reward' : 'Purchase')),
-        ts: val.timestamp || val.date || Date.now(),
-        ref: val.reference || val.orderId || id.substring(0, 12),
-        type, 
-        status: val.status || 'Success'
-    };
+function parseNode(data, type, activeUid, logs) {
+    Object.entries(data).forEach(([key, val]) => {
+        if (typeof val === 'object' && !val.amount && !val.timestamp) {
+            // It's a UID folder (e.g., topupNotes/uid/...), go deeper
+            parseNode(val, type, key, logs);
+        } else {
+            // It's a transaction object, extract real values
+            const amount = parseFloat(val.amount || val.price || 0);
+            
+            // IGNORE ZERO VALUES: Only show real financial movement
+            if (amount > 0) {
+                logs.push({
+                    id: key,
+                    amount: amount,
+                    desc: val.description || val.plan || val.network || (type === 'deposit' ? 'Wallet Credit' : 'Data Purchase'),
+                    ts: val.timestamp || val.date || Date.now(),
+                    ref: val.reference || val.orderId || key.substring(0, 10),
+                    type: val.type || type, 
+                    status: (val.status || 'Success').toUpperCase()
+                });
+            }
+        }
+    });
 }
 
 function renderLogs(logs) {
     const listDiv = document.getElementById('txList');
     document.getElementById('loading').style.display = 'none';
 
-    // Remove duplicates and sort by timestamp
-    const uniqueLogs = Array.from(new Map(logs.map(item => [item.id, item])).values())
+    // Remove duplicates by ID and sort by newest first
+    const sortedLogs = Array.from(new Map(logs.map(item => [item.id, item])).values())
                             .sort((a, b) => b.ts - a.ts);
 
-    if (uniqueLogs.length === 0) {
-        listDiv.innerHTML = `<div class="text-center py-20 opacity-30"><i class="fas fa-receipt fa-4x mb-4"></i><p class="font-bold">NO RECORDS FOUND</p></div>`;
+    if (sortedLogs.length === 0) {
+        listDiv.innerHTML = `<div class="text-center py-24 opacity-20"><i class="fas fa-file-invoice-dollar fa-4x mb-4"></i><p class="font-black text-xs uppercase tracking-[0.2em]">Zero Activity Logged</p></div>`;
         return;
     }
 
-    let totalVolume = 0;
     let lastDate = "";
+    let totalVolume = 0;
     listDiv.innerHTML = "";
 
-    uniqueLogs.forEach(log => {
+    sortedLogs.forEach(log => {
         totalVolume += log.amount;
         const d = new Date(log.ts);
         const dateLabel = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -234,12 +238,11 @@ function renderLogs(logs) {
             lastDate = dateLabel;
         }
 
-        const typeClass = log.type === 'deposit' ? 'bg-deposit' : (log.type === 'bonus' ? 'bg-bonus' : 'bg-purchase');
-        const iconClass = log.type === 'deposit' ? 'fa-arrow-up' : (log.type === 'bonus' ? 'fa-gift' : 'fa-arrow-down');
-        const amountColor = (log.type === 'deposit' || log.type === 'bonus') ? 'text-emerald-500' : 'text-rose-500';
-        const sign = (log.type === 'deposit' || log.type === 'bonus') ? '+' : '-';
-
-        const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const isDeposit = log.type === 'deposit' || log.type === 'topup';
+        const typeClass = isDeposit ? 'bg-deposit' : 'bg-purchase';
+        const iconClass = isDeposit ? 'fa-plus' : 'fa-minus';
+        const amountColor = isDeposit ? 'text-emerald-500' : 'text-rose-500';
+        const sign = isDeposit ? '+' : '-';
 
         listDiv.innerHTML += `
             <div class="tx-card">
@@ -248,18 +251,18 @@ function renderLogs(logs) {
                 </div>
                 <div class="tx-info">
                     <h4>${log.desc}</h4>
-                    <p class="sub-text">${time} • REF: ${log.ref.toUpperCase()}</p>
+                    <p class="sub-text">${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • ${log.ref.toUpperCase()}</p>
                 </div>
                 <div class="text-right">
                     <span class="block font-black text-sm ${amountColor}">
                         ${sign}₵${log.amount.toFixed(2)}
                     </span>
-                    <span class="text-[8px] font-black px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 uppercase">${log.status}</span>
+                    <span class="text-[8px] font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-400 uppercase border border-slate-200">${log.status}</span>
                 </div>
             </div>`;
     });
 
-    document.getElementById('recordCount').innerText = uniqueLogs.length;
+    document.getElementById('recordCount').innerText = sortedLogs.length;
     document.getElementById('totalFlow').innerText = `₵${totalVolume.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
 }
 </script>
