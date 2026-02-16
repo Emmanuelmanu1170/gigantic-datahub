@@ -187,6 +187,7 @@
             btn.disabled = true;
 
             try {
+                // 1. Server-Side verification (Anti-Hack)
                 const response = await fetch('https://us-central1-gigantic-data.cloudfunctions.net/verifyPayment', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -196,7 +197,13 @@
                 const result = await response.json();
                 
                 if(result.success) {
-                    // --- SYNC TO TRANSACTION HISTORY ---
+                    // 2. Fetch current balance to prevent overwriting
+                    const userSnap = await database.ref(`users/${userId}`).once('value');
+                    const userData = userSnap.val() || {};
+                    
+                    const currentBalance = Number(userData.balance || userData.wallet || 0);
+                    const newBalance = Number((currentBalance + Number(originalAmount)).toFixed(2));
+
                     const timestamp = Date.now();
                     const txData = {
                         amount: Number(originalAmount),
@@ -208,26 +215,29 @@
                         uid: userId
                     };
 
+                    // 3. ATOMIC UPDATE (Updates balance AND wallet AND history at once)
                     const updates = {};
-                    // Log in transactions for global/personal history
+                    updates[`users/${userId}/balance`] = newBalance;
+                    updates[`users/${userId}/wallet`] = newBalance;
                     updates[`transactions/${reference}`] = txData;
-                    // Log in topupNotes for the deposit ledger
                     updates[`topupNotes/${userId}/${reference}`] = txData;
+                    updates[`processed_payments/${reference}`] = { ...txData, verified: true };
 
                     await database.ref().update(updates);
 
                     const toast = document.getElementById('successToast');
-                    document.getElementById('creditedText').innerText = `GH₵ ${originalAmount} has been added to the wallet.`;
+                    document.getElementById('creditedText').innerText = `GH₵ ${originalAmount} has been added to your wallet.`;
                     toast.style.display = 'block';
 
                     setTimeout(() => { window.location.href = "dashboard.html"; }, 2500);
                 } else {
-                    alert("Security Check Failed: " + (result.message || "Session error."));
+                    alert("Security Check Failed: " + (result.message || "Payment could not be verified."));
                     btn.innerText = "Retry Payment";
                     btn.disabled = false;
                 }
             } catch (e) {
-                console.error("Verification Timeout:", e);
+                console.error("Verification Error:", e);
+                alert("Connection error. Your wallet will be updated automatically if payment was successful.");
                 window.location.href = "dashboard.html";
             }
         }
