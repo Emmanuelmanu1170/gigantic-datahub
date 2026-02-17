@@ -9,7 +9,7 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finance Ledger | Gigantic Data Hub</title>
+    <title>Transaction History | GiganticDataHub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -23,248 +23,199 @@
         body { background: var(--bg); color: #1e293b; font-family: 'Inter', sans-serif; transition: 0.3s; }
         [data-theme="dark"] body { color: #f1f5f9; }
 
-        header { background: var(--primary); color: white; padding: 20px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        header { background: var(--primary); color: white; padding: 20px; position: sticky; top: 0; z-index: 100; }
         
-        .auth-card {
+        .summary-card {
             background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
             margin: 15px; padding: 20px; border-radius: 24px; color: white;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
-        .auth-label { font-size: 9px; font-weight: 900; opacity: 0.5; text-transform: uppercase; letter-spacing: 1.5px; }
-        .auth-value { font-size: 11px; font-weight: 700; color: #94a3b8; }
-
-        .stats-ribbon { 
-            background: var(--card-bg); padding: 15px; display: flex; justify-content: space-around; 
-            border-bottom: 1px solid rgba(0,0,0,0.05); position: sticky; top: 68px; z-index: 90;
-            backdrop-filter: blur(10px);
-        }
+        .label { font-size: 10px; font-weight: 800; opacity: 0.5; text-transform: uppercase; letter-spacing: 1px; }
 
         .container { padding: 10px 15px; max-width: 600px; margin: auto; }
         
         .tx-card { 
             background: var(--card-bg); border-radius: 20px; padding: 16px; margin-bottom: 12px; 
             display: flex; gap: 14px; align-items: center; border: 1px solid rgba(0,0,0,0.03);
-            transition: transform 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
         }
-        .tx-card:active { transform: scale(0.98); }
 
         .icon-box { width: 48px; height: 48px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
-        .bg-deposit { background: rgba(16, 185, 129, 0.1); color: var(--success); }
-        .bg-purchase { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
-        .bg-bonus { background: rgba(59, 130, 246, 0.1); color: var(--accent); }
+        .bg-credit { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .bg-debit { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
 
         .tx-info { flex: 1; min-width: 0; }
-        .tx-info h4 { font-size: 0.8rem; font-weight: 900; margin-bottom: 3px; text-transform: uppercase; color: var(--accent); }
+        .tx-info h4 { font-size: 0.85rem; font-weight: 800; margin-bottom: 2px; text-transform: uppercase; color: var(--accent); }
         .sub-text { font-size: 10px; color: #64748b; font-weight: 600; font-family: monospace; }
 
-        .date-divider { font-size: 10px; font-weight: 900; color: #94a3b8; text-transform: uppercase; margin: 30px 0 15px 5px; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
-        .date-divider::after { content: ""; flex: 1; height: 1px; background: rgba(148, 163, 184, 0.1); }
+        .date-divider { font-size: 10px; font-weight: 900; color: #94a3b8; text-transform: uppercase; margin: 30px 0 15px 5px; display: flex; align-items: center; gap: 10px; }
+        .date-divider::after { content: ""; flex: 1; height: 1px; background: rgba(0,0,0,0.05); }
+
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: var(--card-bg); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid rgba(0,0,0,0.05); }
     </style>
 </head>
-<body>
+<body class="pb-24">
 
 <header class="flex justify-between items-center">
     <div class="flex items-center gap-4">
-        <a href="dashboard.html" class="text-white bg-white/10 w-10 h-10 flex items-center justify-center rounded-xl"><i class="fas fa-chevron-left"></i></a>
-        <h3 id="pageHeader" class="font-black text-sm uppercase tracking-widest">Finance Ledger</h3>
+        <a href="dashboard.html" class="text-white"><i class="fas fa-chevron-left"></i></a>
+        <h3 class="font-black text-sm uppercase tracking-widest">Financial Ledger</h3>
     </div>
-    <div class="flex gap-4">
-        <button onclick="location.reload()" class="bg-blue-600/20 text-blue-400 p-2 px-4 rounded-lg text-xs font-black uppercase">Sync</button>
-    </div>
+    <i class="fas fa-sync-alt cursor-pointer text-blue-400" onclick="location.reload()"></i>
 </header>
 
-<div class="auth-card">
-    <div class="flex justify-between items-center mb-5">
-        <span class="auth-label">Secure Session</span>
-        <div class="flex items-center gap-2">
-            <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-            <i class="fas fa-shield-check text-emerald-500"></i>
-        </div>
+<div class="summary-card">
+    <div class="flex justify-between items-center mb-4">
+        <span class="label">Reconciled Identity</span>
+        <i class="fas fa-fingerprint text-blue-400"></i>
     </div>
-    <div class="space-y-4">
+    <p class="text-xs font-bold text-slate-400 mb-1" id="userEmail">Loading...</p>
+    <div class="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-white/5">
         <div>
-            <p class="auth-label">Active Account</p>
-            <p class="auth-value" id="authEmail">Authenticating...</p>
+            <p class="label">Total Inflow</p>
+            <p id="totalIn" class="text-lg font-black text-emerald-400">₵0.00</p>
         </div>
-        <div class="pt-3 border-t border-white/5">
-            <p class="auth-label">Audit SID</p>
-            <p class="auth-value font-mono" id="authUid">Verifying identity...</p>
+        <div>
+            <p class="label">Total Outflow</p>
+            <p id="totalOut" class="text-lg font-black text-rose-400">₵0.00</p>
         </div>
-    </div>
-</div>
-
-<div class="stats-ribbon">
-    <div class="text-center">
-        <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Total Volume</p>
-        <h2 id="totalFlow" class="text-xl font-black text-indigo-500">₵0.00</h2>
-    </div>
-    <div class="text-center">
-        <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Sync Count</p>
-        <h2 id="recordCount" class="text-xl font-black text-orange-500">0</h2>
     </div>
 </div>
 
 <div class="container">
-    <div id="loading" class="text-center py-24">
+    <div id="loading" class="text-center py-20">
         <i class="fas fa-circle-notch fa-spin fa-2x text-blue-500"></i>
-        <p class="mt-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Reconciling Real-Time Values</p>
+        <p class="mt-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Syncing with Cloud Database...</p>
     </div>
     <div id="txList"></div>
 </div>
 
+<nav class="bottom-nav">
+    <a href="dashboard.html" class="text-slate-400 text-center text-[10px] font-bold uppercase"><i class="fas fa-house block text-xl mb-1"></i>Home</a>
+    <a href="order.html" class="text-slate-400 text-center text-[10px] font-bold uppercase"><i class="fas fa-plus-circle block text-xl mb-1"></i>New</a>
+    <a href="transaction.html" class="text-blue-500 text-center text-[10px] font-bold uppercase"><i class="fas fa-history block text-xl mb-1"></i>Ledger</a>
+</nav>
+
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getDatabase, ref, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-const firebaseConfig = {
-    apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
-    authDomain: "gigantic-data.firebaseapp.com",
-    databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
-    projectId: "gigantic-data"
-};
+    const firebaseConfig = {
+        apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
+        authDomain: "gigantic-data.firebaseapp.com",
+        databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
+        projectId: "gigantic-data"
+    };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const auth = getAuth(app);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
 
-const ADMIN_EMAIL = "alenacloft0@gmail.com";
-
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        document.getElementById('authEmail').innerText = user.email;
-        const impersonateUid = sessionStorage.getItem('impersonate_uid');
-        const isAuditing = sessionStorage.getItem('isAdminImpersonating') === 'true';
-        const activeUid = isAuditing ? impersonateUid : user.uid;
-        
-        document.getElementById('authUid').innerText = activeUid;
-        await setupLedger(user, activeUid, isAuditing);
-    } else {
-        window.location.href = "login.html";
-    }
-});
-
-async function setupLedger(user, activeUid, isAuditing) {
-    const isAdmin = user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
-    document.getElementById('pageHeader').innerText = isAuditing ? "Audit Protocol" : (isAdmin ? "Global Ledger" : "Transaction Sync");
-
-    // DATA SOURCES: We check every path where real money values are stored
-    const dataPaths = [
-        { path: 'transactions', type: 'purchase' }, // Primary history
-        { path: 'topupNotes', type: 'deposit' },     // Manual & Verified topups
-        { path: 'user_orders', type: 'purchase' }    // Individual user records
-    ];
-
-    let combinedLogs = [];
-
-    const fetchPromises = dataPaths.map(async (source) => {
-        try {
-            let dbRef;
-            if (source.path === 'topupNotes' && !isAdmin) {
-                dbRef = ref(db, `topupNotes/${activeUid}`);
-            } else if (source.path === 'user_orders' && !isAdmin) {
-                dbRef = ref(db, `user_orders/${activeUid}`);
-            } else if (isAdmin && !isAuditing) {
-                dbRef = ref(db, source.path); // Admins see everything
-            } else {
-                dbRef = query(ref(db, source.path), orderByChild('uid'), equalTo(activeUid));
-            }
-
-            const snapshot = await get(dbRef);
-            if (snapshot.exists()) {
-                const data = snapshot.val();
-                
-                // RECURSIVE PARSER: Handle nested nodes like topupNotes/uid/txid
-                parseNode(data, source.type, activeUid, combinedLogs);
-            }
-        } catch (e) {
-            console.warn("Sync skipped for path:", source.path);
-        }
-    });
-
-    await Promise.all(fetchPromises);
-    renderLogs(combinedLogs);
-}
-
-function parseNode(data, type, activeUid, logs) {
-    Object.entries(data).forEach(([key, val]) => {
-        if (typeof val === 'object' && !val.amount && !val.timestamp) {
-            // It's a UID folder (e.g., topupNotes/uid/...), go deeper
-            parseNode(val, type, key, logs);
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            document.getElementById('userEmail').innerText = user.email;
+            await loadTransactions(user.uid);
         } else {
-            // It's a transaction object, extract real values
-            const amount = parseFloat(val.amount || val.price || 0);
-            
-            // IGNORE ZERO VALUES: Only show real financial movement
-            if (amount > 0) {
-                logs.push({
-                    id: key,
-                    amount: amount,
-                    desc: val.description || val.plan || val.network || (type === 'deposit' ? 'Wallet Credit' : 'Data Purchase'),
-                    ts: val.timestamp || val.date || Date.now(),
-                    ref: val.reference || val.orderId || key.substring(0, 10),
-                    type: val.type || type, 
-                    status: (val.status || 'Success').toUpperCase()
-                });
-            }
+            window.location.replace("login.html");
         }
     });
-}
 
-function renderLogs(logs) {
-    const listDiv = document.getElementById('txList');
-    document.getElementById('loading').style.display = 'none';
+    async function loadTransactions(uid) {
+        const paths = [
+            { path: 'transactions', type: 'auto' },
+            { path: `topupNotes/${uid}`, type: 'credit' },
+            { path: `user_orders/${uid}`, type: 'debit' }
+        ];
 
-    // Remove duplicates by ID and sort by newest first
-    const sortedLogs = Array.from(new Map(logs.map(item => [item.id, item])).values())
+        let combined = [];
+
+        for (let source of paths) {
+            try {
+                let snap;
+                if (source.path === 'transactions') {
+                    // Query global transactions node filtered by UID
+                    const q = query(ref(db, source.path), orderByChild('uid'), equalTo(uid));
+                    snap = await get(q);
+                } else {
+                    snap = await get(ref(db, source.path));
+                }
+
+                if (snap.exists()) {
+                    Object.entries(snap.val()).forEach(([key, val]) => {
+                        const amount = parseFloat(val.amount || val.price || 0);
+                        if (amount > 0) {
+                            // Determine type if not explicit
+                            let finalType = source.type;
+                            if (finalType === 'auto') {
+                                finalType = (val.type === 'deposit' || val.type === 'credit') ? 'credit' : 'debit';
+                            }
+
+                            combined.push({
+                                id: key,
+                                amount,
+                                type: finalType,
+                                desc: val.description || val.plan || (finalType === 'credit' ? 'Wallet Top-up' : 'Data Purchase'),
+                                ts: val.timestamp || Date.now(),
+                                status: (val.status || 'Success').toUpperCase()
+                            });
+                        }
+                    });
+                }
+            } catch (e) { console.warn("Node sync failed:", source.path); }
+        }
+
+        renderHistory(combined);
+    }
+
+    function renderHistory(logs) {
+        const listDiv = document.getElementById('txList');
+        document.getElementById('loading').style.display = 'none';
+
+        // Sort by Newest and Remove Duplicates
+        const sorted = Array.from(new Map(logs.map(item => [item.id, item])).values())
                             .sort((a, b) => b.ts - a.ts);
 
-    if (sortedLogs.length === 0) {
-        listDiv.innerHTML = `<div class="text-center py-24 opacity-20"><i class="fas fa-file-invoice-dollar fa-4x mb-4"></i><p class="font-black text-xs uppercase tracking-[0.2em]">Zero Activity Logged</p></div>`;
-        return;
-    }
-
-    let lastDate = "";
-    let totalVolume = 0;
-    listDiv.innerHTML = "";
-
-    sortedLogs.forEach(log => {
-        totalVolume += log.amount;
-        const d = new Date(log.ts);
-        const dateLabel = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-        
-        if (dateLabel !== lastDate) {
-            listDiv.innerHTML += `<div class="date-divider">${dateLabel}</div>`;
-            lastDate = dateLabel;
+        if (sorted.length === 0) {
+            listDiv.innerHTML = `<div class="text-center py-20 opacity-30 uppercase font-black text-xs tracking-widest"><i class="fas fa-folder-open fa-3x mb-4"></i><p>No Records Found</p></div>`;
+            return;
         }
 
-        const isDeposit = log.type === 'deposit' || log.type === 'topup';
-        const typeClass = isDeposit ? 'bg-deposit' : 'bg-purchase';
-        const iconClass = isDeposit ? 'fa-plus' : 'fa-minus';
-        const amountColor = isDeposit ? 'text-emerald-500' : 'text-rose-500';
-        const sign = isDeposit ? '+' : '-';
+        let totalIn = 0, totalOut = 0, lastDate = "";
+        listDiv.innerHTML = "";
 
-        listDiv.innerHTML += `
-            <div class="tx-card">
-                <div class="icon-box ${typeClass}">
-                    <i class="fas ${iconClass}"></i>
-                </div>
-                <div class="tx-info">
-                    <h4>${log.desc}</h4>
-                    <p class="sub-text">${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • ${log.ref.toUpperCase()}</p>
-                </div>
-                <div class="text-right">
-                    <span class="block font-black text-sm ${amountColor}">
-                        ${sign}₵${log.amount.toFixed(2)}
-                    </span>
-                    <span class="text-[8px] font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-400 uppercase border border-slate-200">${log.status}</span>
-                </div>
-            </div>`;
-    });
+        sorted.forEach(log => {
+            if (log.type === 'credit') totalIn += log.amount; else totalOut += log.amount;
 
-    document.getElementById('recordCount').innerText = sortedLogs.length;
-    document.getElementById('totalFlow').innerText = `₵${totalVolume.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-}
+            const d = new Date(log.ts);
+            const dateLabel = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+            if (dateLabel !== lastDate) {
+                listDiv.innerHTML += `<div class="date-divider">${dateLabel}</div>`;
+                lastDate = dateLabel;
+            }
+
+            const isCredit = log.type === 'credit';
+            listDiv.innerHTML += `
+                <div class="tx-card">
+                    <div class="icon-box ${isCredit ? 'bg-credit' : 'bg-debit'}">
+                        <i class="fas ${isCredit ? 'fa-arrow-up' : 'fa-arrow-down'}"></i>
+                    </div>
+                    <div class="tx-info">
+                        <h4>${log.desc}</h4>
+                        <p class="sub-text">${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} • ID: ${log.id.slice(-8).toUpperCase()}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-black text-sm ${isCredit ? 'text-emerald-500' : 'text-rose-500'}">
+                            ${isCredit ? '+' : '-'}₵${log.amount.toFixed(2)}
+                        </p>
+                        <span class="text-[8px] font-black px-2 py-0.5 rounded bg-slate-100 text-slate-500 uppercase">${log.status}</span>
+                    </div>
+                </div>`;
+        });
+
+        document.getElementById('totalIn').innerText = `₵${totalIn.toFixed(2)}`;
+        document.getElementById('totalOut').innerText = `₵${totalOut.toFixed(2)}`;
+    }
 </script>
 </body>
 </html>
