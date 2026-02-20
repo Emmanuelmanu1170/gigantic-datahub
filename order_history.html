@@ -28,7 +28,6 @@
 
         body { margin: 0; font-family: -apple-system, sans-serif; background-color: var(--bg-light); color: var(--text-main); padding-bottom: 30px; }
 
-        /* Impersonation Banner for Admin Audit */
         .admin-banner { background: #6366f1; color: white; padding: 10px; text-align: center; font-size: 11px; font-weight: bold; position: sticky; top: 0; z-index: 2000; display: none; }
         .btn-exit-admin { background: white; color: #6366f1; border: none; padding: 4px 12px; border-radius: 50px; margin-left: 10px; cursor: pointer; font-weight: 800; font-size: 10px; }
 
@@ -38,13 +37,11 @@
 
         .container { padding: 15px; max-width: 500px; margin: 0 auto; }
 
-        /* Statistics Dashboard */
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 25px; margin-top: 15px; }
         .stat-box { background: var(--card-white); padding: 15px 10px; border-radius: 16px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.02); }
         .stat-box small { display: block; font-size: 10px; color: var(--text-gray); font-weight: 800; margin-bottom: 5px; text-transform: uppercase; }
         .stat-box b { font-size: 14px; color: var(--primary-blue); }
 
-        /* Individual Order Card */
         .order-card { background: var(--card-white); border-radius: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 20px; border: 1px solid rgba(0,0,0,0.05); position: relative; }
         .order-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px dashed #e2e8f0; padding-bottom: 15px; margin-bottom: 15px; }
         .network-icon { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 12px; color: white; }
@@ -55,7 +52,6 @@
         .detail-row span { font-size: 12px; color: var(--text-gray); }
         .detail-row b { font-size: 13px; color: var(--text-main); }
         
-        /* Balance Tracking Styles */
         .balance-audit { margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.02); border-radius: 10px; display: flex; justify-content: space-between; border-left: 3px solid var(--primary-blue); }
         [data-theme="dark"] .balance-audit { background: rgba(255,255,255,0.03); }
         .audit-item { display: flex; flex-direction: column; }
@@ -66,6 +62,13 @@
         .amount-paid { font-size: 18px; font-weight: 900; color: var(--primary-blue); }
         .status-pill { font-size: 10px; font-weight: 800; padding: 4px 12px; border-radius: 30px; text-transform: uppercase; }
         
+        .report-btn { 
+            margin-top: 12px; width: 100%; padding: 10px; background: #25D366; color: white; 
+            border-radius: 12px; font-size: 11px; font-weight: 800; display: flex; align-items: center; 
+            justify-content: center; gap: 8px; text-decoration: none; transition: 0.3s;
+        }
+        .report-btn:active { transform: scale(0.95); opacity: 0.8; }
+
         .status-successful, .status-completed { background: #ecfdf5; color: #047857; }
         .status-pending { background: #fffbeb; color: #b45309; }
         .status-processing { background: #eff6ff; color: #1e40af; animation: pulse 1.5s infinite; }
@@ -163,11 +166,11 @@
 
                 entries.forEach(([id, order]) => {
                     const amount = parseFloat(order.amount || 0);
+                    const formattedTime = new Date(order.timestamp || Date.now()).toLocaleString();
                     const ts = order.timestamp || Date.now();
                     const status = order.status || 'Pending';
                     const statusClass = `status-${status.toLowerCase().split(' ')[0]}`;
                     
-                    // Retrieve balance before and after from database record
                     const beforeBal = parseFloat(order.oldBalance || order.beforeBalance || 0).toFixed(2);
                     const afterBal = parseFloat(order.newBalance || order.afterBalance || 0).toFixed(2);
 
@@ -181,13 +184,27 @@
                     if(net.includes('TEL')) netClass = 'tel-bg';
                     if(net.includes('AT') || net.includes('AIR')) netClass = 'air-bg';
 
+                    // WhatsApp Report Logic
+                    const reportMsg = window.encodeURIComponent(
+                        `*REPORT ISSUE: Gigantic Data Hub*\n\n` +
+                        `*Order ID:* #${id.slice(-8)}\n` +
+                        `*Recipient:* ${order.recipient}\n` +
+                        `*Network:* ${net}\n` +
+                        `*Plan:* ${order.plan}\n` +
+                        `*Amount:* GH₵${amount.toFixed(2)}\n` +
+                        `*Time:* ${formattedTime}\n` +
+                        `*Status:* ${status}\n\n` +
+                        `Hello, I have an issue with this specific order.`
+                    );
+                    const waLink = `https://wa.me/233549055308?text=${reportMsg}`;
+
                     html += `
                         <div class="order-card">
                             <div class="order-header">
                                 <div class="network-icon ${netClass}">${net.substring(0,3)}</div>
                                 <div style="text-align:right">
                                     <div style="font-family:monospace; font-size:11px; color:var(--text-gray); font-weight:700;">#${id.slice(-8)}</div>
-                                    <div style="font-size:10px; color:var(--text-gray);">${new Date(ts).toLocaleString()}</div>
+                                    <div style="font-size:10px; color:var(--text-gray);">${formattedTime}</div>
                                 </div>
                             </div>
                             <div class="order-details">
@@ -212,6 +229,9 @@
                                 <div class="amount-paid">₵${amount.toFixed(2)}</div>
                                 <span class="status-pill ${statusClass}">${status}</span>
                             </div>
+                            <a href="${waLink}" class="report-btn">
+                                <i class="fab fa-whatsapp"></i> Report Issue
+                            </a>
                         </div>
                     `;
                 });
