@@ -93,7 +93,7 @@
                         <th>Order ID</th>
                         <th>Recipient</th>
                         <th>Plan</th>
-                        <th>Amount</th>
+                        <th>Amount Paid</th>
                         <th>Status</th>
                     </tr>
                 </thead>
@@ -144,6 +144,7 @@
         });
 
         function fetchMyPayments(uid) {
+            // FILTER: fetch records from 'processed_payments' where 'uid' matches current user
             const paymentsRef = query(ref(db, 'processed_payments'), orderByChild('uid'), equalTo(uid));
 
             onValue(paymentsRef, (snapshot) => {
@@ -169,15 +170,16 @@
                     const status = (val.status || 'unknown').toLowerCase();
                     const recipient = val.recipient || 'N/A';
                     const plan = val.plan || 'N/A';
-                    // Pulling the actual amount from the database node
-                    const amount = val.amount ? "GH₵ " + parseFloat(val.amount).toFixed(2) : "N/A";
+                    
+                    // UPDATED: Pulling specifically from 'amountPaid' node
+                    const amountPaid = val.amountPaid ? "₵ " + parseFloat(val.amountPaid).toFixed(2) : "N/A";
 
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td class="font-bold text-primary">#${id.slice(-8)}</td>
                         <td class="font-semibold">${recipient}</td>
                         <td class="text-slate-500">${plan}</td>
-                        <td class="font-black text-slate-900 dark:text-white">${amount}</td>
+                        <td class="font-black text-slate-900 dark:text-white">${amountPaid}</td>
                         <td>
                             <span class="status-pill status-${status}">${val.status || 'Processed'}</span>
                         </td>
