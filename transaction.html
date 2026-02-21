@@ -51,11 +51,12 @@
 
         #loadingState { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 0; }
         .masked-uid { font-family: 'Roboto Mono', monospace; font-size: 10px; color: #64748b; }
+        .time-stamp { font-size: 9px; color: #94a3b8; font-weight: 600; display: block; margin-top: 2px; }
     </style>
 </head>
 <body class="p-4 md:p-8 pb-24">
 
-    <div class="max-w-5xl mx-auto">
+    <div class="max-w-6xl mx-auto">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
             <div class="flex items-center gap-4">
                 <a href="dashboard.html" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-primary transition-all">
@@ -63,7 +64,7 @@
                 </a>
                 <div>
                     <h1 class="text-xl font-black uppercase tracking-tighter">Payment Records</h1>
-                    <p id="userEmailTag" class="text-[10px] text-primary font-bold uppercase tracking-widest">Loading User...</p>
+                    <p id="userEmailTag" class="text-[10px] text-primary font-bold uppercase tracking-widest">Reconciling User...</p>
                 </div>
             </div>
             <a href="dashboard.html" class="btn-nav-home text-center">
@@ -72,22 +73,23 @@
         </div>
 
         <div id="uidDisplay" class="mb-4 masked-uid text-center uppercase tracking-widest">
-            Syncing Terminal...
+            Handshaking with Server...
         </div>
 
-        <div class="glass-card p-6 mb-8 flex items-center justify-between bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-none">
+        <div class="glass-card p-6 mb-8 flex items-center justify-between bg-gradient-to-r from-indigo-600 to-blue-700 text-white border-none">
             <div>
-                <p class="text-[10px] font-black uppercase opacity-70 mb-1">Total Processed Transactions</p>
-                <h2 class="text-3xl font-black" id="txCount">0</h2>
+                <p class="text-[10px] font-black uppercase opacity-70 mb-1">Actual Value Processed</p>
+                <h2 class="text-3xl font-black" id="totalValueDisplay">₵0.00</h2>
             </div>
-            <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-xl">
-                <i class="fas fa-file-invoice-dollar"></i>
+            <div class="text-right">
+                <p class="text-[10px] font-black uppercase opacity-70 mb-1">Transaction Count</p>
+                <h2 class="text-2xl font-black" id="txCount">0</h2>
             </div>
         </div>
 
         <div class="relative mb-6">
             <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-            <input type="text" id="userSearch" onkeyup="filterPayments()" placeholder="Search by recipient or plan..." 
+            <input type="text" id="userSearch" onkeyup="filterPayments()" placeholder="Search by recipient, plan or ID..." 
                 class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 pl-12 text-sm outline-none focus:ring-2 focus:ring-primary transition-all">
         </div>
 
@@ -95,10 +97,10 @@
             <table id="userTable">
                 <thead>
                     <tr>
-                        <th>Order ID</th>
+                        <th>Order ID & Time</th>
                         <th>Recipient</th>
                         <th>Plan</th>
-                        <th>Amount Paid</th>
+                        <th>Credit Amount</th>
                         <th>Status</th>
                     </tr>
                 </thead>
@@ -107,12 +109,12 @@
 
             <div id="loadingState">
                 <i class="fas fa-circle-notch fa-spin fa-2x text-primary mb-4"></i>
-                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Syncing your private history...</p>
+                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Syncing real-time ledger...</p>
             </div>
 
             <div id="emptyState" class="hidden text-center py-20 opacity-30">
                 <i class="fas fa-receipt fa-4x mb-4"></i>
-                <p class="font-black text-xs uppercase">No transactions found for your account</p>
+                <p class="font-black text-xs uppercase">No activity found for this account</p>
             </div>
         </div>
     </div>
@@ -142,13 +144,9 @@
 
         onAuthStateChanged(auth, user => {
             if (user) {
-                // Show Email
                 document.getElementById('userEmailTag').innerText = user.email;
-                
-                // Mask first 5 characters of UID
                 const maskedUid = "*****" + user.uid.substring(5);
                 document.getElementById('uidDisplay').innerText = "Session SID: " + maskedUid;
-                
                 fetchMyPayments(user.uid);
             } else {
                 window.location.replace("login.html");
@@ -156,7 +154,6 @@
         });
 
         function fetchMyPayments(uid) {
-            // TARGET: processed_payments node
             const paymentsRef = query(ref(db, 'processed_payments'), orderByChild('uid'), equalTo(uid));
 
             onValue(paymentsRef, (snapshot) => {
@@ -171,31 +168,48 @@
                 if (!data) {
                     empty.classList.remove('hidden');
                     document.getElementById('txCount').innerText = "0";
+                    document.getElementById('totalValueDisplay').innerText = "₵0.00";
                     return;
                 }
                 empty.classList.add('hidden');
 
-                const entries = Object.entries(data).reverse(); 
+                const entries = Object.entries(data).sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+                
+                let totalRealValue = 0;
                 document.getElementById('txCount').innerText = entries.length;
 
                 entries.forEach(([id, val]) => {
-                    const status = (val.status || 'unknown').toLowerCase();
+                    const status = (val.status || 'Processed').toLowerCase();
                     const recipient = val.recipient || 'N/A';
                     const plan = val.plan || 'N/A';
-                    const amountPaid = val.amountPaid ? "₵ " + parseFloat(val.amountPaid).toFixed(2) : "N/A";
+                    
+                    // Parse Real Value
+                    const amountNum = parseFloat(val.amountPaid || val.amount || 0);
+                    totalRealValue += amountNum;
+                    const amountPaidStr = "₵ " + amountNum.toFixed(2);
+
+                    // Format Real Time
+                    const txDate = val.timestamp ? new Date(val.timestamp) : new Date();
+                    const timeStr = txDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const dateStr = txDate.toLocaleDateString();
 
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td class="font-bold text-primary">#${id.slice(-8)}</td>
+                        <td>
+                            <span class="font-bold text-primary">#${id.slice(-8)}</span>
+                            <span class="time-stamp">${dateStr} • ${timeStr}</span>
+                        </td>
                         <td class="font-semibold">${recipient}</td>
                         <td class="text-slate-500">${plan}</td>
-                        <td class="font-black text-slate-900 dark:text-white">${amountPaid}</td>
+                        <td class="font-black text-emerald-600 dark:text-emerald-400">${amountPaidStr}</td>
                         <td>
-                            <span class="status-pill status-${status}">${val.status || 'Processed'}</span>
+                            <span class="status-pill status-${status.split(' ')[0]}">${val.status || 'Successful'}</span>
                         </td>
                     `;
                     tbody.appendChild(row);
                 });
+
+                document.getElementById('totalValueDisplay').innerText = "₵ " + totalRealValue.toLocaleString(undefined, {minimumFractionDigits: 2});
             });
         }
 
