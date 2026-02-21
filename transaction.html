@@ -13,37 +13,25 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --primary: #6a5af9; --bg: #f8fafc; --card: #ffffff; --text: #1e293b; }
-        [data-theme="dark"] { --bg: #02040a; --card: #0d1117; --text: #f0f6fc; }
+        :root { --primary: #6a5af9; --bg: #02040a; --card: #0d1117; --text: #f0f6fc; }
+        [data-theme="light"] { --bg: #f8fafc; --card: #ffffff; --text: #1e293b; }
+        
         body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; transition: 0.3s; }
         
         .glass-card { 
             background: var(--card); 
             border-radius: 24px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
         th { text-transform: uppercase; font-size: 10px; font-weight: 900; color: #94a3b8; padding: 12px; text-align: left; }
-        td { background: var(--card); padding: 16px; font-size: 12px; border-top: 1px solid rgba(0,0,0,0.02); border-bottom: 1px solid rgba(0,0,0,0.02); }
-        td:first-child { border-top-left-radius: 16px; border-bottom-left-radius: 16px; border-left: 1px solid rgba(0,0,0,0.02); }
-        td:last-child { border-top-right-radius: 16px; border-bottom-right-radius: 16px; border-right: 1px solid rgba(0,0,0,0.02); }
-
-        .status-pill { padding: 4px 12px; border-radius: 20px; font-size: 9px; font-weight: 800; text-transform: uppercase; }
-        .status-successful, .status-success { background: #dcfce7; color: #166534; }
-        .status-failed { background: #fee2e2; color: #991b1b; }
-        .status-pending, .status-processing { background: #fef3c7; color: #92400e; }
-
-        .btn-nav-home {
-            background: var(--primary); color: white; padding: 12px 24px; border-radius: 16px;
-            font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;
-            box-shadow: 0 10px 20px rgba(106, 90, 249, 0.2); transition: all 0.3s ease;
-        }
-
-        #loadingState { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 0; }
+        td { background: var(--card); padding: 16px; font-size: 12px; border-top: 1px solid rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.02); }
+        
+        .status-pill { padding: 4px 12px; border-radius: 20px; font-size: 9px; font-weight: 800; text-transform: uppercase; background: #dcfce7; color: #166534; }
+        .time-stamp { font-size: 10px; color: #94a3b8; font-weight: 600; display: block; }
         .masked-uid { font-family: 'Roboto Mono', monospace; font-size: 10px; color: #64748b; }
-        .time-stamp { font-size: 9px; color: #94a3b8; font-weight: 600; display: block; margin-top: 2px; }
     </style>
 </head>
 <body class="p-4 md:p-8 pb-24">
@@ -51,62 +39,52 @@
     <div class="max-w-6xl mx-auto">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
             <div class="flex items-center gap-4">
-                <a href="dashboard.html" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-primary transition-all">
+                <a href="dashboard.html" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-800 text-slate-400 hover:text-white transition-all">
                     <i class="fas fa-chevron-left"></i>
                 </a>
                 <div>
-                    <h1 class="text-xl font-black uppercase tracking-tighter">Payment Records</h1>
-                    <p id="userEmailTag" class="text-[10px] text-primary font-bold uppercase tracking-widest">Reconciling Account...</p>
+                    <h1 class="text-xl font-black uppercase tracking-tighter">Transaction History</h1>
+                    <p id="userEmailTag" class="text-[10px] text-primary font-bold uppercase tracking-widest">Secure Session</p>
                 </div>
             </div>
-            <a href="dashboard.html" class="btn-nav-home text-center">
-                <i class="fas fa-grid-2 mr-2"></i> Go to Dashboard
-            </a>
         </div>
 
         <div id="uidDisplay" class="mb-4 masked-uid text-center uppercase tracking-widest">
-            Syncing Ledger...
+            Syncing Identity...
         </div>
 
-        <div class="glass-card p-6 mb-8 flex items-center justify-between bg-gradient-to-r from-indigo-600 to-blue-700 text-white border-none">
+        <div class="glass-card p-6 mb-8 flex items-center justify-between bg-gradient-to-r from-blue-900 to-black text-white border-none">
             <div>
-                <p class="text-[10px] font-black uppercase opacity-70 mb-1">Total Credited Ammount</p>
-                <h2 class="text-3xl font-black" id="totalValueDisplay">₵0.00</h2>
+                <p class="text-[10px] font-black uppercase opacity-70 mb-1">Cash Flow</p>
+                <h2 class="text-3xl font-black text-blue-400" id="totalFlowDisplay">₵0.00</h2>
             </div>
             <div class="text-right">
-                <p class="text-[10px] font-black uppercase opacity-70 mb-1">Total Records</p>
-                <h2 class="text-2xl font-black" id="txCount">0</h2>
+                <p class="text-[10px] font-black uppercase opacity-70 mb-1">Records</p>
+                <h2 class="text-3xl font-black text-orange-500" id="txCountDisplay">0</h2>
             </div>
-        </div>
-
-        <div class="relative mb-6">
-            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-            <input type="text" id="userSearch" onkeyup="filterPayments()" placeholder="Search transactions..." 
-                class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 pl-12 text-sm outline-none focus:ring-2 focus:ring-primary transition-all">
         </div>
 
         <div class="overflow-x-auto">
             <table id="userTable">
                 <thead>
                     <tr>
-                        <th>Order ID & Time</th>
-                        <th>Recipient</th>
-                        <th>Plan</th>
+                        <th>Transaction ID & Time</th>
                         <th>Credited Ammount</th>
+                        <th>Amount Paid</th>
                         <th>Status</th>
                     </tr>
                 </thead>
                 <tbody id="paymentBody"></tbody>
             </table>
 
-            <div id="loadingState">
-                <i class="fas fa-circle-notch fa-spin fa-2x text-primary mb-4"></i>
-                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Fetching Verified Nodes...</p>
+            <div id="loadingState" class="text-center py-20">
+                <i class="fas fa-circle-notch fa-spin fa-2x text-blue-500 mb-4"></i>
+                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Reconciling Ledger...</p>
             </div>
 
             <div id="emptyState" class="hidden text-center py-20 opacity-30">
                 <i class="fas fa-receipt fa-4x mb-4"></i>
-                <p class="font-black text-xs uppercase">No Credited History Found</p>
+                <p class="font-black text-xs uppercase">No activity found</p>
             </div>
         </div>
     </div>
@@ -131,7 +109,7 @@
             if (user) {
                 document.getElementById('userEmailTag').innerText = user.email;
                 const maskedUid = "*****" + user.uid.substring(5);
-                document.getElementById('uidDisplay').innerText = "SID: " + maskedUid;
+                document.getElementById('uidDisplay').innerText = "Identity SID: " + maskedUid;
                 fetchMyPayments(user.uid);
             } else {
                 window.location.replace("login.html");
@@ -139,7 +117,7 @@
         });
 
         function fetchMyPayments(uid) {
-            // Target the processed_payments node filtered by logged-in UID
+            // TARGET: processed_payments node filtered by UID
             const paymentsRef = query(ref(db, 'processed_payments'), orderByChild('uid'), equalTo(uid));
 
             onValue(paymentsRef, (snapshot) => {
@@ -153,60 +131,40 @@
                 const data = snapshot.val();
                 if (!data) {
                     empty.classList.remove('hidden');
-                    document.getElementById('txCount').innerText = "0";
-                    document.getElementById('totalValueDisplay').innerText = "₵0.00";
                     return;
                 }
                 empty.classList.add('hidden');
 
                 const entries = Object.entries(data).sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
                 
-                let totalRealValue = 0;
-                document.getElementById('txCount').innerText = entries.length;
+                let totalFlow = 0;
+                document.getElementById('txCountDisplay').innerText = entries.length;
 
                 entries.forEach(([id, val]) => {
-                    const rawStatus = (val.status || 'Successful').toLowerCase();
-                    const recipient = val.recipient || 'N/A';
-                    const plan = val.plan || 'N/A';
-                    
-                    // TARGETING THE SPECIFIC NODE: CreditedAmmount
-                    let amountStr = String(val.CreditedAmmount || val.amountPaid || val.amount || "0");
-                    let cleanAmount = amountStr.replace(/[^0-9.]/g, '');
-                    const amountNum = parseFloat(cleanAmount) || 0;
-                    
-                    totalRealValue += amountNum;
+                    const credited = parseFloat(val.creditedAmount || 0);
+                    const paid = parseFloat(val.amountPaid || 0);
+                    totalFlow += credited;
 
-                    // Time logic
-                    const txDate = val.timestamp ? new Date(val.timestamp) : new Date();
-                    const timeStr = txDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    const dateStr = txDate.toLocaleDateString();
+                    // Format Timestamp
+                    const date = new Date(val.timestamp);
+                    const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const dateStr = date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td>
-                            <span class="font-bold text-primary">#${id.slice(-8)}</span>
-                            <span class="time-stamp">${dateStr} • ${timeStr}</span>
+                            <span class="font-bold text-blue-400">${id}</span>
+                            <span class="time-stamp">${timeStr} • ${dateStr}</span>
                         </td>
-                        <td class="font-semibold">${recipient}</td>
-                        <td class="text-slate-500">${plan}</td>
-                        <td class="font-black text-emerald-600 dark:text-emerald-400">₵ ${amountNum.toFixed(2)}</td>
-                        <td>
-                            <span class="status-pill status-${rawStatus.split(' ')[0]}">${val.status || 'Successful'}</span>
-                        </td>
+                        <td class="font-black text-emerald-400">₵ ${credited.toFixed(2)}</td>
+                        <td class="font-black text-rose-400">-₵ ${paid.toFixed(2)}</td>
+                        <td><span class="status-pill">SUCCESS</span></td>
                     `;
                     tbody.appendChild(row);
                 });
 
-                document.getElementById('totalValueDisplay').innerText = "₵ " + totalRealValue.toLocaleString(undefined, {minimumFractionDigits: 2});
+                document.getElementById('totalFlowDisplay').innerText = "₵" + totalFlow.toFixed(2);
             });
-        }
-
-        window.filterPayments = () => {
-            const input = document.getElementById('userSearch').value.toLowerCase();
-            const rows = document.getElementById('paymentBody').getElementsByTagName('tr');
-            for (let row of rows) {
-                row.style.display = row.textContent.toLowerCase().includes(input) ? "" : "none";
-            }
         }
     </script>
 </body>
