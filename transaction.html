@@ -31,23 +31,15 @@
         td:last-child { border-top-right-radius: 16px; border-bottom-right-radius: 16px; border-right: 1px solid rgba(0,0,0,0.02); }
 
         .status-pill { padding: 4px 12px; border-radius: 20px; font-size: 9px; font-weight: 800; text-transform: uppercase; }
-        .status-successful { background: #dcfce7; color: #166534; }
+        .status-successful, .status-success { background: #dcfce7; color: #166534; }
         .status-failed { background: #fee2e2; color: #991b1b; }
-        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-pending, .status-processing { background: #fef3c7; color: #92400e; }
 
         .btn-nav-home {
-            background: var(--primary);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 16px;
-            font-weight: 800;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 10px 20px rgba(106, 90, 249, 0.2);
-            transition: all 0.3s ease;
+            background: var(--primary); color: white; padding: 12px 24px; border-radius: 16px;
+            font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;
+            box-shadow: 0 10px 20px rgba(106, 90, 249, 0.2); transition: all 0.3s ease;
         }
-        .btn-nav-home:active { transform: scale(0.95); }
 
         #loadingState { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 0; }
         .masked-uid { font-family: 'Roboto Mono', monospace; font-size: 10px; color: #64748b; }
@@ -64,7 +56,7 @@
                 </a>
                 <div>
                     <h1 class="text-xl font-black uppercase tracking-tighter">Payment Records</h1>
-                    <p id="userEmailTag" class="text-[10px] text-primary font-bold uppercase tracking-widest">Reconciling User...</p>
+                    <p id="userEmailTag" class="text-[10px] text-primary font-bold uppercase tracking-widest">Reconciling Account...</p>
                 </div>
             </div>
             <a href="dashboard.html" class="btn-nav-home text-center">
@@ -73,23 +65,23 @@
         </div>
 
         <div id="uidDisplay" class="mb-4 masked-uid text-center uppercase tracking-widest">
-            Handshaking with Server...
+            Syncing Ledger...
         </div>
 
         <div class="glass-card p-6 mb-8 flex items-center justify-between bg-gradient-to-r from-indigo-600 to-blue-700 text-white border-none">
             <div>
-                <p class="text-[10px] font-black uppercase opacity-70 mb-1">Actual Value Processed</p>
+                <p class="text-[10px] font-black uppercase opacity-70 mb-1">Total Credited Ammount</p>
                 <h2 class="text-3xl font-black" id="totalValueDisplay">₵0.00</h2>
             </div>
             <div class="text-right">
-                <p class="text-[10px] font-black uppercase opacity-70 mb-1">Transaction Count</p>
+                <p class="text-[10px] font-black uppercase opacity-70 mb-1">Total Records</p>
                 <h2 class="text-2xl font-black" id="txCount">0</h2>
             </div>
         </div>
 
         <div class="relative mb-6">
             <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-            <input type="text" id="userSearch" onkeyup="filterPayments()" placeholder="Search by recipient, plan or ID..." 
+            <input type="text" id="userSearch" onkeyup="filterPayments()" placeholder="Search transactions..." 
                 class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 pl-12 text-sm outline-none focus:ring-2 focus:ring-primary transition-all">
         </div>
 
@@ -100,7 +92,7 @@
                         <th>Order ID & Time</th>
                         <th>Recipient</th>
                         <th>Plan</th>
-                        <th>Credit Amount</th>
+                        <th>Credited Ammount</th>
                         <th>Status</th>
                     </tr>
                 </thead>
@@ -109,22 +101,15 @@
 
             <div id="loadingState">
                 <i class="fas fa-circle-notch fa-spin fa-2x text-primary mb-4"></i>
-                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Syncing real-time ledger...</p>
+                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Fetching Verified Nodes...</p>
             </div>
 
             <div id="emptyState" class="hidden text-center py-20 opacity-30">
                 <i class="fas fa-receipt fa-4x mb-4"></i>
-                <p class="font-black text-xs uppercase">No activity found for this account</p>
+                <p class="font-black text-xs uppercase">No Credited History Found</p>
             </div>
         </div>
     </div>
-
-    <nav class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-4 flex justify-around items-center z-50 md:hidden">
-        <a href="dashboard.html" class="text-slate-400"><i class="fas fa-house text-lg"></i></a>
-        <a href="order.html" class="text-slate-400"><i class="fas fa-plus-circle text-lg"></i></a>
-        <a href="user_payments.html" class="text-primary"><i class="fas fa-history text-lg"></i></a>
-        <a href="profile.html" class="text-slate-400"><i class="fas fa-user text-lg"></i></a>
-    </nav>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -146,7 +131,7 @@
             if (user) {
                 document.getElementById('userEmailTag').innerText = user.email;
                 const maskedUid = "*****" + user.uid.substring(5);
-                document.getElementById('uidDisplay').innerText = "Session SID: " + maskedUid;
+                document.getElementById('uidDisplay').innerText = "SID: " + maskedUid;
                 fetchMyPayments(user.uid);
             } else {
                 window.location.replace("login.html");
@@ -154,6 +139,7 @@
         });
 
         function fetchMyPayments(uid) {
+            // Target the processed_payments node filtered by logged-in UID
             const paymentsRef = query(ref(db, 'processed_payments'), orderByChild('uid'), equalTo(uid));
 
             onValue(paymentsRef, (snapshot) => {
@@ -179,16 +165,18 @@
                 document.getElementById('txCount').innerText = entries.length;
 
                 entries.forEach(([id, val]) => {
-                    const status = (val.status || 'Processed').toLowerCase();
+                    const rawStatus = (val.status || 'Successful').toLowerCase();
                     const recipient = val.recipient || 'N/A';
                     const plan = val.plan || 'N/A';
                     
-                    // Parse Real Value
-                    const amountNum = parseFloat(val.amountPaid || val.amount || 0);
+                    // TARGETING THE SPECIFIC NODE: CreditedAmmount
+                    let amountStr = String(val.CreditedAmmount || val.amountPaid || val.amount || "0");
+                    let cleanAmount = amountStr.replace(/[^0-9.]/g, '');
+                    const amountNum = parseFloat(cleanAmount) || 0;
+                    
                     totalRealValue += amountNum;
-                    const amountPaidStr = "₵ " + amountNum.toFixed(2);
 
-                    // Format Real Time
+                    // Time logic
                     const txDate = val.timestamp ? new Date(val.timestamp) : new Date();
                     const timeStr = txDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                     const dateStr = txDate.toLocaleDateString();
@@ -201,9 +189,9 @@
                         </td>
                         <td class="font-semibold">${recipient}</td>
                         <td class="text-slate-500">${plan}</td>
-                        <td class="font-black text-emerald-600 dark:text-emerald-400">${amountPaidStr}</td>
+                        <td class="font-black text-emerald-600 dark:text-emerald-400">₵ ${amountNum.toFixed(2)}</td>
                         <td>
-                            <span class="status-pill status-${status.split(' ')[0]}">${val.status || 'Successful'}</span>
+                            <span class="status-pill status-${rawStatus.split(' ')[0]}">${val.status || 'Successful'}</span>
                         </td>
                     `;
                     tbody.appendChild(row);
