@@ -54,7 +54,7 @@
 </head>
 <body class="p-4 md:p-8 pb-24">
 
-    <div class="max-w-4xl mx-auto">
+    <div class="max-w-5xl mx-auto">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
             <div class="flex items-center gap-4">
                 <a href="dashboard.html" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-primary transition-all">
@@ -93,6 +93,7 @@
                         <th>Order ID</th>
                         <th>Recipient</th>
                         <th>Plan</th>
+                        <th>Amount</th>
                         <th>Status</th>
                     </tr>
                 </thead>
@@ -143,7 +144,6 @@
         });
 
         function fetchMyPayments(uid) {
-            // FILTER: Only fetch records from 'processed_payments' where 'uid' matches current user
             const paymentsRef = query(ref(db, 'processed_payments'), orderByChild('uid'), equalTo(uid));
 
             onValue(paymentsRef, (snapshot) => {
@@ -162,19 +162,22 @@
                 }
                 empty.classList.add('hidden');
 
-                const entries = Object.entries(data).reverse(); // Newest first
+                const entries = Object.entries(data).reverse(); 
                 document.getElementById('txCount').innerText = entries.length;
 
                 entries.forEach(([id, val]) => {
                     const status = (val.status || 'unknown').toLowerCase();
                     const recipient = val.recipient || 'N/A';
                     const plan = val.plan || 'N/A';
+                    // Pulling the actual amount from the database node
+                    const amount = val.amount ? "GH₵ " + parseFloat(val.amount).toFixed(2) : "N/A";
 
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td class="font-bold text-primary">#${id.slice(-8)}</td>
                         <td class="font-semibold">${recipient}</td>
                         <td class="text-slate-500">${plan}</td>
+                        <td class="font-black text-slate-900 dark:text-white">${amount}</td>
                         <td>
                             <span class="status-pill status-${status}">${val.status || 'Processed'}</span>
                         </td>
