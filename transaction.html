@@ -50,6 +50,7 @@
         .btn-nav-home:active { transform: scale(0.95); }
 
         #loadingState { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 0; }
+        .masked-uid { font-family: 'Roboto Mono', monospace; font-size: 10px; color: #64748b; }
     </style>
 </head>
 <body class="p-4 md:p-8 pb-24">
@@ -62,7 +63,7 @@
                 </a>
                 <div>
                     <h1 class="text-xl font-black uppercase tracking-tighter">Payment Records</h1>
-                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Personal Processed Ledger</p>
+                    <p id="userEmailTag" class="text-[10px] text-primary font-bold uppercase tracking-widest">Loading User...</p>
                 </div>
             </div>
             <a href="dashboard.html" class="btn-nav-home text-center">
@@ -70,7 +71,7 @@
             </a>
         </div>
 
-        <div id="uidDisplay" class="mb-4 text-[10px] font-mono opacity-50 text-center uppercase tracking-widest">
+        <div id="uidDisplay" class="mb-4 masked-uid text-center uppercase tracking-widest">
             Syncing Terminal...
         </div>
 
@@ -141,8 +142,13 @@
 
         onAuthStateChanged(auth, user => {
             if (user) {
-                // DETECT UID
-                document.getElementById('uidDisplay').innerText = "Account SID: " + user.uid;
+                // Show Email
+                document.getElementById('userEmailTag').innerText = user.email;
+                
+                // Mask first 5 characters of UID
+                const maskedUid = "*****" + user.uid.substring(5);
+                document.getElementById('uidDisplay').innerText = "Session SID: " + maskedUid;
+                
                 fetchMyPayments(user.uid);
             } else {
                 window.location.replace("login.html");
@@ -150,7 +156,7 @@
         });
 
         function fetchMyPayments(uid) {
-            // DETECT LOGGED IN USER UID VIA QUERY
+            // TARGET: processed_payments node
             const paymentsRef = query(ref(db, 'processed_payments'), orderByChild('uid'), equalTo(uid));
 
             onValue(paymentsRef, (snapshot) => {
@@ -176,8 +182,6 @@
                     const status = (val.status || 'unknown').toLowerCase();
                     const recipient = val.recipient || 'N/A';
                     const plan = val.plan || 'N/A';
-                    
-                    // Pulling specifically from 'amountPaid' node
                     const amountPaid = val.amountPaid ? "₵ " + parseFloat(val.amountPaid).toFixed(2) : "N/A";
 
                     const row = document.createElement('tr');
