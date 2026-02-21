@@ -70,9 +70,13 @@
             </a>
         </div>
 
+        <div id="uidDisplay" class="mb-4 text-[10px] font-mono opacity-50 text-center uppercase tracking-widest">
+            Syncing Terminal...
+        </div>
+
         <div class="glass-card p-6 mb-8 flex items-center justify-between bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-none">
             <div>
-                <p class="text-[10px] font-black uppercase opacity-70 mb-1">My Processed Transactions</p>
+                <p class="text-[10px] font-black uppercase opacity-70 mb-1">Total Processed Transactions</p>
                 <h2 class="text-3xl font-black" id="txCount">0</h2>
             </div>
             <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-xl">
@@ -137,6 +141,8 @@
 
         onAuthStateChanged(auth, user => {
             if (user) {
+                // DETECT UID
+                document.getElementById('uidDisplay').innerText = "Account SID: " + user.uid;
                 fetchMyPayments(user.uid);
             } else {
                 window.location.replace("login.html");
@@ -144,7 +150,7 @@
         });
 
         function fetchMyPayments(uid) {
-            // FILTER: fetch records from 'processed_payments' where 'uid' matches current user
+            // DETECT LOGGED IN USER UID VIA QUERY
             const paymentsRef = query(ref(db, 'processed_payments'), orderByChild('uid'), equalTo(uid));
 
             onValue(paymentsRef, (snapshot) => {
@@ -171,7 +177,7 @@
                     const recipient = val.recipient || 'N/A';
                     const plan = val.plan || 'N/A';
                     
-                    // UPDATED: Pulling specifically from 'amountPaid' node
+                    // Pulling specifically from 'amountPaid' node
                     const amountPaid = val.amountPaid ? "₵ " + parseFloat(val.amountPaid).toFixed(2) : "N/A";
 
                     const row = document.createElement('tr');
