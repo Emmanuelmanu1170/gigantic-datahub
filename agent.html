@@ -63,6 +63,20 @@
         .agent-info { flex: 1; }
         .agent-info h3 { font-size: 1rem; color: var(--primary); margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
         .verified-badge { color: var(--verified); font-size: 0.8rem; }
+        
+        /* New Agent Badge Styling */
+        .new-badge {
+            background: linear-gradient(135deg, #f06529 0%, #ff8c00 100%);
+            color: white; font-size: 8px; font-weight: 900; padding: 2px 8px;
+            border-radius: 5px; text-transform: uppercase; letter-spacing: 0.5px;
+            animation: pulse-glow 2s infinite;
+        }
+        @keyframes pulse-glow {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { opacity: 0.8; }
+        }
+
         .agent-info p { font-size: 0.8rem; color: var(--text-gray); }
 
         .action-group { display: flex; gap: 10px; align-items: center; }
@@ -176,6 +190,9 @@
             return;
         }
 
+        const now = Date.now();
+        const fiveDaysInMs = 5 * 24 * 60 * 60 * 1000;
+
         agents.forEach(agent => {
             const name = agent.fullname || agent.fullName || "Certified Agent";
             const initial = name.charAt(0).toUpperCase();
@@ -183,6 +200,10 @@
             const phone = agent.phone || "";
             const uid = agent.id;
             
+            // Logic for New Agent Badge (Joined within last 5 days)
+            const joinedAt = agent.createdAt || agent.timestamp || 0;
+            const isNew = (now - joinedAt) < fiveDaysInMs;
+
             const message = `Hello Agent ${name}, I am a user on GiganticDataHub (Email: ${loggedInUserEmail}). I would like to purchase data.`;
             const waLink = phone ? `https://wa.me/${phone.replace(/\D/g,'')}?text=${encodeURIComponent(message)}` : `mailto:${email}`;
 
@@ -190,7 +211,11 @@
                 <div class="agent-card" data-name="${name.toLowerCase()}">
                     <div class="agent-avatar">${initial}</div>
                     <div class="agent-info">
-                        <h3>${name} <i class="fas fa-check-circle verified-badge" title="Verified Merchant"></i></h3>
+                        <h3>
+                            ${name} 
+                            <i class="fas fa-check-circle verified-badge" title="Verified Merchant"></i>
+                            ${isNew ? '<span class="new-badge">NEW</span>' : ''}
+                        </h3>
                         <p><i class="fas fa-envelope"></i> ${email}</p>
                         <p style="font-size: 0.6rem; font-family: monospace; color: #aaa;">ID: ${uid}</p>
                     </div>
@@ -216,7 +241,8 @@
         try {
             await update(ref(db, `users/${uid}`), {
                 status: 'Agent',
-                userType: 'Agent'
+                userType: 'Agent',
+                createdAt: Date.now() // Sets the timestamp for the "New" badge
             });
             alert("User promoted to Agent successfully!");
             document.getElementById('newAgentUid').value = "";
