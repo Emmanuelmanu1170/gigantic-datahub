@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us — Gigantic Data Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root { --primary: #6a5af9; --bg: #f8fafc; --card: #ffffff; --text: #1e293b; }
+        [data-theme="dark"] { --bg: #02040a; --card: #0d1117; --text: #f0f6fc; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; transition: 0.3s; }
+        
+        .contact-card { 
+            background: var(--card); 
+            border-radius: 24px; 
+            padding: 24px; 
+            border: 1px solid rgba(0,0,0,0.05); 
+            transition: all 0.3s ease;
+        }
+        .contact-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.05); }
+        
+        .form-input { 
+            width: 100%; padding: 14px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.1); 
+            background: var(--card); outline: none; transition: 0.3s;
+        }
+        .form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(106, 90, 249, 0.1); }
+        
+        .whatsapp-btn { 
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            background: #25d366; color: white; padding: 12px; border-radius: 12px;
+            font-weight: 800; font-size: 13px; text-transform: uppercase; margin-top: 15px;
+        }
+    </style>
+</head>
+<body class="pb-20">
+
+    <header class="sticky top-0 z-50 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white">
+                    <i class="fas fa-headset"></i>
+                </div>
+                <span class="font-black text-xl tracking-tighter uppercase">Gigantic<span class="text-indigo-500">Care</span></span>
+            </div>
+            <nav class="hidden md:flex items-center gap-8 font-semibold text-sm">
+                <a href="index.html">Home</a>
+                <a href="order.html">Buy Data</a>
+                <a href="blog.html">Blog</a>
+                <a href="about.html">About</a>
+                <a href="contact.html" class="text-indigo-500">Contact</a>
+            </nav>
+            <a href="login.html" class="px-6 py-2 bg-indigo-600 text-white rounded-full font-bold text-sm">Login</a>
+        </div>
+    </header>
+
+    <section class="py-16 px-4 text-center bg-slate-900 text-white">
+        <div class="max-w-3xl mx-auto">
+            <h1 class="text-4xl font-black uppercase tracking-tighter mb-4">How Can We Help?</h1>
+            <p class="opacity-70 text-sm font-medium uppercase tracking-widest">Our team is available to assist you 24/7</p>
+        </div>
+    </section>
+
+    <main class="max-w-7xl mx-auto px-4 -mt-10">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+            <div class="contact-card text-center">
+                <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 text-xl">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <h3 class="font-black text-sm uppercase mb-1">Email Support</h3>
+                <p class="text-xs opacity-60 mb-4 text-primary font-bold">giganticdatahub@gmail.com</p>
+                <a href="mailto:giganticdatahub@gmail.com" class="block bg-slate-100 dark:bg-slate-800 py-3 rounded-xl text-xs font-black uppercase">Send Email</a>
+            </div>
+
+            <div class="contact-card text-center">
+                <div class="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-xl">
+                    <i class="fab fa-whatsapp"></i>
+                </div>
+                <h3 class="font-black text-sm uppercase mb-1">International Support</h3>
+                <p class="text-xs opacity-60">+44 7418 355599</p>
+                <a href="https://wa.me/447418355599" class="whatsapp-btn">
+                    <i class="fab fa-whatsapp"></i> Chat Now
+                </a>
+            </div>
+
+            <div class="contact-card text-center">
+                <div class="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-xl">
+                    <i class="fab fa-whatsapp"></i>
+                </div>
+                <h3 class="font-black text-sm uppercase mb-1">Ghanaian Support</h3>
+                <p class="text-xs opacity-60">+233 54 905 5308</p>
+                <a href="https://wa.me/233549055308" class="whatsapp-btn">
+                    <i class="fab fa-whatsapp"></i> Chat Now
+                </a>
+            </div>
+        </div>
+
+        <div class="max-w-2xl mx-auto contact-card shadow-xl">
+            <h2 class="text-xl font-black uppercase mb-6 text-center tracking-tighter">Send Us a Message</h2>
+            <form id="contactForm" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="text" placeholder="Full Name" class="form-input" required>
+                    <input type="email" placeholder="Email Address" class="form-input" required>
+                </div>
+                <input type="text" placeholder="Subject" class="form-input" required>
+                <textarea placeholder="How can we help you today?" class="form-input h-32 resize-none" required></textarea>
+                <button type="submit" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-black uppercase text-sm shadow-lg shadow-indigo-500/30">
+                    Submit Inquiry
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <footer class="mt-20 py-10 text-center border-t border-slate-200 dark:border-slate-800">
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">&copy; 2026 Gigantic Data Hub. Registered in Ghana.</p>
+    </footer>
+
+    <script>
+        document.getElementById('contactForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Thank you! Your inquiry has been received. Our team will contact you shortly via email.');
+            this.reset();
+        });
+    </script>
+</body>
+</html>
