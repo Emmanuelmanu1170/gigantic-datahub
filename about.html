@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us | Gigantic Data Hub - Ghana's Trusted Data Partner</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root { --primary: #6a5af9; --bg: #f8fafc; --card: #ffffff; --text: #1e293b; }
+        [data-theme="dark"] { --bg: #02040a; --card: #0d1117; --text: #f0f6fc; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; transition: 0.3s; line-height: 1.6; }
+        
+        .hero-bg { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); }
+        .feature-card { background: var(--card); border-radius: 24px; padding: 30px; border: 1px solid rgba(0,0,0,0.05); transition: 0.3s; }
+        .feature-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.05); }
+        .icon-box { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <header class="sticky top-0 z-50 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white">
+                    <i class="fas fa-database"></i>
+                </div>
+                <span class="font-black text-xl tracking-tighter uppercase">Gigantic<span class="text-indigo-500">Data</span></span>
+            </div>
+            <nav class="hidden md:flex items-center gap-8 font-semibold text-sm">
+                <a href="index.html" class="hover:text-indigo-500">Home</a>
+                <a href="order.html" class="hover:text-indigo-500">Buy Data</a>
+                <a href="blog.html" class="hover:text-indigo-500">Blog</a>
+                <a href="about.html" class="text-indigo-500">About</a>
+                <a href="contact.html" class="hover:text-indigo-500">Contact</a>
+            </nav>
+            <a href="login.html" class="px-6 py-2 bg-indigo-600 text-white rounded-full font-bold text-sm shadow-lg shadow-indigo-500/30">Login</a>
+        </div>
+    </header>
+
+    <section class="hero-bg py-24 px-4 text-center text-white">
+        <div class="max-w-3xl mx-auto">
+            <h1 class="text-4xl md:text-5xl font-black mb-6 tracking-tight uppercase">About Gigantic Data Hub</h1>
+            <p class="text-lg opacity-90 font-medium">
+                Gigantic Data Hub is a trusted digital platform dedicated to providing fast, affordable, and secure mobile data bundles across Ghana. Our mission is to make internet access simple, reliable, and accessible to everyone — students, entrepreneurs, and everyday users.
+            </p>
+        </div>
+    </section>
+
+    <main class="max-w-7xl mx-auto px-4 py-20">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center mb-32">
+            <div>
+                <h2 class="text-3xl font-black uppercase mb-6 tracking-tighter">Our Mission</h2>
+                <p class="mb-6 opacity-80">At Gigantic Data Hub, we believe that internet access is a fundamental right in the digital age. Our focus is to bridge the connectivity gap in Ghana by providing a seamless interface where quality meets affordability.</p>
+                <ul class="space-y-4 font-bold text-sm uppercase tracking-wide">
+                    <li class="flex items-center gap-3"><i class="fas fa-check-circle text-indigo-500"></i> To provide affordable data bundles</li>
+                    <li class="flex items-center gap-3"><i class="fas fa-check-circle text-indigo-500"></i> To deliver data instantly to your device</li>
+                    <li class="flex items-center gap-3"><i class="fas fa-check-circle text-indigo-500"></i> To ensure 100% secure payment transactions</li>
+                    <li class="flex items-center gap-3"><i class="fas fa-check-circle text-indigo-500"></i> To empower digital growth for SMEs</li>
+                </ul>
+            </div>
+            <div class="rounded-[40px] overflow-hidden shadow-2xl">
+                <img src="https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?auto=format&fit=crop&w=800" alt="Digital Connectivity">
+            </div>
+        </div>
+
+        <h2 class="text-center text-3xl font-black uppercase mb-12 tracking-tighter">What Makes Us Different</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-32">
+            <div class="feature-card">
+                <div class="icon-box bg-blue-100 text-blue-600"><i class="fas fa-bolt"></i></div>
+                <h3 class="font-black mb-2 uppercase text-sm">Instant Delivery</h3>
+                <p class="text-xs opacity-70">No waiting. Our system processes your order the moment payment is confirmed via Mobile Money or Bank.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon-box bg-green-100 text-green-600"><i class="fas fa-shield-alt"></i></div>
+                <h3 class="font-black mb-2 uppercase text-sm">Secure Payments</h3>
+                <p class="text-xs opacity-70">We integrate with industry-leading payment gateways like Paystack to ensure your financial data is never stored.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon-box bg-purple-100 text-purple-600"><i class="fas fa-headset"></i></div>
+                <h3 class="font-black mb-2 uppercase text-sm">24/7 Support</h3>
+                <p class="text-xs opacity-70">Our dedicated support team is always available via WhatsApp and Email to resolve any queries instantly.</p>
+            </div>
+        </div>
+
+        <div class="bg-indigo-600 rounded-[40px] p-12 text-white mb-32 text-center">
+            <h2 class="text-3xl font-black uppercase mb-8 tracking-tighter">Who We Serve</h2>
+            <div class="flex flex-wrap justify-center gap-10">
+                <div class="flex flex-col items-center"><i class="fas fa-user-graduate text-3xl mb-2"></i><span class="font-bold text-xs uppercase">Students</span></div>
+                <div class="flex flex-col items-center"><i class="fas fa-briefcase text-3xl mb-2"></i><span class="font-bold text-xs uppercase">Entrepreneurs</span></div>
+                <div class="flex flex-col items-center"><i class="fas fa-laptop-house text-3xl mb-2"></i><span class="font-bold text-xs uppercase">Remote Workers</span></div>
+                <div class="flex flex-col items-center"><i class="fas fa-hashtag text-3xl mb-2"></i><span class="font-bold text-xs uppercase">Social Marketers</span></div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+            <div class="glass-card p-10 border-2 border-slate-100 dark:border-slate-800">
+                <h3 class="font-black uppercase mb-4 text-indigo-500">Founder's Message</h3>
+                <p class="italic opacity-80 mb-4">"As a digital entrepreneur, I realized how expensive it was for people to stay connected in Ghana. Gigantic Data Hub was founded with one goal: to lower the cost of the internet and help Ghanaians grow their brands online without worrying about data costs."</p>
+                <p class="font-black text-sm uppercase">— Team Gigantic</p>
+            </div>
+            <div class="space-y-6">
+                <h3 class="font-black uppercase text-xl">Transparency & Trust</h3>
+                <div class="flex items-start gap-4">
+                    <i class="fas fa-map-marker-alt text-indigo-500 mt-1"></i>
+                    <div>
+                        <h4 class="font-black text-xs uppercase">Location</h4>
+                        <p class="text-sm opacity-70">Based in Ghana, serving nationwide.</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-4">
+                    <i class="fas fa-envelope text-indigo-500 mt-1"></i>
+                    <div>
+                        <h4 class="font-black text-xs uppercase">Email Support</h4>
+                        <p class="text-sm opacity-70">support@giganticdatahub.com</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-4">
+                    <i class="fas fa-lock text-indigo-500 mt-1"></i>
+                    <div>
+                        <h4 class="font-black text-xs uppercase">No Hidden Charges</h4>
+                        <p class="text-sm opacity-70">What you see is what you pay. Transparent pricing is our core value.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-slate-100 dark:bg-slate-900 py-12 px-4 text-center border-t border-slate-200 dark:border-slate-800">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">&copy; 2026 Gigantic Data Hub. All Rights Reserved.</p>
+    </footer>
+
+</body>
+</html>
