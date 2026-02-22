@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frequently Asked Questions | Gigantic Data Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root { --primary: #6a5af9; --bg: #f8fafc; --card: #ffffff; --text: #1e293b; }
+        [data-theme="dark"] { --bg: #02040a; --card: #0d1117; --text: #f0f6fc; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; transition: 0.3s; }
+        
+        .faq-section { margin-bottom: 40px; }
+        .section-header { 
+            font-size: 0.75rem; font-weight: 900; color: var(--primary); 
+            text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        
+        .faq-item { 
+            background: var(--card); border-radius: 20px; margin-bottom: 12px; 
+            border: 1px solid rgba(0,0,0,0.05); overflow: hidden; transition: 0.3s;
+        }
+        .faq-question { 
+            width: 100%; padding: 20px 24px; text-align: left; display: flex; 
+            justify-content: space-between; align-items: center; cursor: pointer;
+            font-weight: 700; font-size: 15px; border: none; background: none; color: inherit;
+        }
+        .faq-answer { 
+            padding: 0 24px; max-height: 0; overflow: hidden; transition: 0.4s ease-out; 
+            font-size: 14px; opacity: 0.8; line-height: 1.6;
+        }
+        .faq-item.active .faq-answer { max-height: 300px; padding-bottom: 24px; }
+        .faq-item.active .chevron { transform: rotate(180deg); }
+        .chevron { transition: 0.3s; color: var(--primary); }
+    </style>
+</head>
+<body class="pb-20">
+
+    <header class="p-6 flex justify-between items-center border-b border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-black/50 backdrop-blur-md sticky top-0 z-50">
+        <a href="index.html" class="font-black text-xl tracking-tighter uppercase">Gigantic<span class="text-indigo-500">Data</span></a>
+        <nav class="hidden md:flex gap-6 font-bold text-xs uppercase tracking-widest">
+            <a href="index.html">Home</a>
+            <a href="order.html">Buy Data</a>
+            <a href="about.html">About</a>
+            <a href="faq.html" class="text-primary">FAQ</a>
+        </nav>
+        <a href="contact.html" class="bg-indigo-600 text-white px-5 py-2 rounded-full text-[10px] font-black uppercase">Support</a>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 pt-16">
+        <div class="text-center mb-16">
+            <h1 class="text-4xl font-black uppercase tracking-tighter mb-4">How Can We Help?</h1>
+            <p class="opacity-60 text-sm font-medium">Find instant answers to the most common questions about our platform.</p>
+        </div>
+
+        <div class="faq-section">
+            <div class="section-header"><i class="fas fa-box-open"></i> Orders & Delivery</div>
+            
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    How long does delivery take? <i class="fas fa-chevron-down chevron"></i>
+                </button>
+                <div class="faq-answer">
+                    Standard orders are processed within 30 minutes to 1 hour. However, during stable network conditions, over 95% of our deliveries are completed in less than 5 minutes.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    Will I receive confirmation after purchase? <i class="fas fa-chevron-down chevron"></i>
+                </button>
+                <div class="faq-answer">
+                    Yes. Customers receive confirmation via multiple channels: SMS notifications from the network, a dashboard order history update, and real-time status updates inside their account profile.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    Can I track my order? <i class="fas fa-chevron-down chevron"></i>
+                </button>
+                <div class="faq-answer">
+                    Absolutely. All registered users can track their orders inside their "Order History" section, where the status (Pending, Completed, Failed) is displayed in real-time.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    What happens if my data is not delivered? <i class="fas fa-chevron-down chevron"></i>
+                </button>
+                <div class="faq-answer">
+                    In the rare event that a delivery fails due to network or system congestion, your wallet will be automatically refunded. If you purchased as a guest, our support team will manually resolve the credit.
+                </div>
+            </div>
+        </div>
+
+        
+
+        <div class="faq-section">
+            <div class="section-header"><i class="fas fa-credit-card"></i> Payments & Refunds</div>
+            
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    What payment methods do you accept? <i class="fas fa-chevron-down chevron"></i>
+                </button>
+                <div class="faq-answer">
+                    We accept all major Ghanaian payment methods including Mobile Money (MTN, Telecel, AT), Direct Bank Transfers, and Wallet funding for instant checkout.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    Do you offer refunds? <i class="fas fa-chevron-down chevron"></i>
+                </button>
+                <div class="faq-answer">
+                    Yes. Refunds are issued in cases of system maintenance issues, failed transactions, or undelivered bundles. Your satisfaction and trust are our primary concerns.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    What if I enter the wrong phone number? <i class="fas fa-chevron-down chevron"></i>
+                </button>
+                <div class="faq-answer">
+                    Our system is designed to help you avoid errors. It automatically detects and displays the registered SIM name before confirming your order. However, customers are advised to verify details carefully before payment as completed orders to wrong numbers cannot be reversed.
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-section">
+            <div class="section-header"><i class="fas fa-shield-alt"></i> Security & Trust</div>
+            
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    Is my payment secure? <i class="fas fa-chevron-down chevron"></i>
+                </button>
+                <div class="faq-answer">
+                    Yes. All payments are securely processed through industry-trusted providers such as Paystack and verified Mobile Money gateways. We use SSL encryption to protect every transaction.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    Are you an official telecom provider? <i class="fas fa-chevron-down chevron"></i>
+                </button>
+                <div class="faq-answer">
+                    Gigantic Data Hub operates as a licensed digital reseller partner. We work through authorized telecom distribution channels to provide affordable and reliable data bundles directly to our customers.
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-section">
+            <div class="section-header"><i class="fas fa-headset"></i> Customer Support</div>
+            
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    How can I contact support? <i class="fas fa-chevron-down chevron"></i>
+                </button>
+                <div class="faq-answer">
+                    You can reach us instantly via our WhatsApp support line (+233 54 905 5308) or via email at giganticdatahub@gmail.com for technical inquiries.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    What are your support hours? <i class="fas fa-chevron-down chevron"></i>
+                </button>
+                <div class="faq-answer">
+                    Our dedicated customer support team is available from 7:00 AM to 9:00 PM (GMT) daily to ensure all your issues are resolved promptly.
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-20 p-8 rounded-3xl bg-indigo-50 dark:bg-slate-900 border border-indigo-100 dark:border-slate-800 text-center">
+            <h3 class="font-black uppercase mb-2">Still Have Questions?</h3>
+            <p class="text-sm opacity-70 mb-6">Read our <a href="privacy.html" class="text-indigo-600 font-bold underline">Privacy Policy</a> and <a href="terms.html" class="text-indigo-600 font-bold underline">Terms of Service</a> for more details.</p>
+            <a href="contact.html" class="inline-block bg-indigo-600 text-white px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-indigo-500/20">Contact Us Directly</a>
+        </div>
+    </main>
+
+    <footer class="mt-20 py-10 text-center border-t border-slate-200 dark:border-slate-800">
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">&copy; 2026 Gigantic Data Hub. Ghana. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        function toggleFaq(button) {
+            const item = button.parentElement;
+            const isActive = item.classList.contains('active');
+            
+            // Close all items
+            document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
+            
+            // If the clicked item wasn't active, open it
+            if (!isActive) {
+                item.classList.add('active');
+            }
+        }
+    </script>
+</body>
+</html>
