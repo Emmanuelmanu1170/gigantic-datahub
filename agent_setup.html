@@ -9,9 +9,25 @@
     <style>
         .glass-panel { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); }
         input:focus { box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.4); }
+        
+        /* Professional Modal Styling */
+        #customModal { display: none; }
+        .modal-overlay { background: rgba(5, 8, 22, 0.9); backdrop-filter: blur(8px); }
+        @keyframes modalBounce { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .modal-animate { animation: modalBounce 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
     </style>
 </head>
 <body class="bg-[#0a0e27] text-white min-h-screen flex items-center justify-center p-6">
+
+    <div id="customModal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+        <div class="modal-overlay absolute inset-0"></div>
+        <div class="modal-animate relative bg-[#11183d] w-full max-w-sm rounded-3xl p-8 border border-white/10 shadow-2xl text-center">
+            <div id="modalIcon" class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl"></div>
+            <h2 id="modalTitle" class="text-2xl font-black uppercase mb-2"></h2>
+            <p id="modalMsg" class="text-slate-400 text-sm mb-8 leading-relaxed"></p>
+            <button id="modalBtn" class="w-full py-4 rounded-xl font-bold uppercase transition active:scale-95"></button>
+        </div>
+    </div>
 
     <div class="max-w-md w-full bg-[#11183d] p-8 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden">
         <div id="userInfo" class="hidden mb-6 p-3 rounded-2xl glass-panel flex justify-between items-center text-[11px]">
@@ -54,7 +70,7 @@
                 <div class="flex-grow border-t border-white/5"></div>
             </div>
 
-            <button onclick="window.location.href='dashboard.html'" class="w-full bg-white/5 hover:bg-white/10 text-white border border-white/10 py-3 rounded-xl text-xs font-bold transition">
+            <button onclick="goToDashboard()" class="w-full bg-white/5 hover:bg-white/10 text-white border border-white/10 py-3 rounded-xl text-xs font-bold transition">
                 <i class="fas fa-sign-in-alt mr-2"></i> Log In to Agent Dashboard
             </button>
         </div>
@@ -62,7 +78,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, get, update, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -77,19 +93,45 @@
         const auth = getAuth(app);
 
         let userBalance = 0;
+        let currentStoreSlug = "";
 
-        // 1. Listen for Auth State and Load User Data
+        function showModal(type, title, msg, btnText, action) {
+            const modal = document.getElementById('customModal');
+            const icon = document.getElementById('modalIcon');
+            const btn = document.getElementById('modalBtn');
+            
+            modal.style.display = 'flex';
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMsg').innerText = msg;
+            btn.innerText = btnText;
+
+            if(type === 'success') {
+                icon.innerHTML = '<i class="fas fa-check-circle"></i>';
+                icon.className = "w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl bg-emerald-500/20 text-emerald-500";
+                btn.className = "w-full py-4 rounded-xl font-bold uppercase bg-emerald-500 text-white";
+            } else {
+                icon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+                icon.className = "w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl bg-rose-500/20 text-rose-500";
+                btn.className = "w-full py-4 rounded-xl font-bold uppercase bg-rose-500 text-white";
+            }
+
+            btn.onclick = () => {
+                modal.style.display = 'none';
+                if(action) action();
+            };
+        }
+
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 document.getElementById('userInfo').classList.remove('hidden');
                 document.getElementById('displayEmail').innerText = user.email;
                 
-                // Real-time Balance Listener
                 const userRef = ref(db, `users/${user.uid}`);
                 onValue(userRef, (snapshot) => {
                     const data = snapshot.val();
                     if (data) {
                         userBalance = data.balance || 0;
+                        currentStoreSlug = data.storeSettings ? data.storeSettings.storeSlug : "";
                         document.getElementById('displayBalance').innerText = `GH₵ ${Number(userBalance).toFixed(2)}`;
                     }
                 });
@@ -98,67 +140,83 @@
             }
         });
 
-        // 2. Slug logic
         document.getElementById('storeName').oninput = function() {
             const slug = this.value.toLowerCase().trim().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
             document.getElementById('slugPrev').innerText = slug;
         };
 
-        // 3. Launch Store Logic
+        window.goToDashboard = () => {
+            if(currentStoreSlug) {
+                window.location.href = `store.html?s=${currentStoreSlug}`;
+            } else {
+                window.location.href = 'dashboard.html';
+            }
+        };
+
         window.launchStore = async () => {
             const user = auth.currentUser;
             const name = document.getElementById('storeName').value.trim();
             const slug = document.getElementById('slugPrev').innerText;
             const btn = document.getElementById('launchBtn');
+            const cost = 45;
 
-            if (!user) return alert("Session expired. Please login.");
-            if (slug.length < 3) return alert("Store name must be at least 3 characters.");
+            if (!user) return showModal('error', 'Auth Failed', 'Your session has expired. Please login again.', 'Go to Login', () => window.location.href='login.html');
+            if (slug.length < 3) return showModal('error', 'Invalid Name', 'Your store name must be at least 3 characters.', 'Try Again');
 
             btn.disabled = true;
             btn.innerText = "VERIFYING ELIGIBILITY...";
 
             try {
-                // Rule Enforcement: Check Balance
-                if (userBalance < 45) {
-                    alert(`Access Denied: You need GH₵ 45.00 to launch a store. Current: GH₵ ${userBalance.toFixed(2)}`);
+                if (userBalance < cost) {
+                    showModal('error', 'Low Balance', `You need GH₵ ${cost.toFixed(2)} to launch. Your current balance is GH₵ ${userBalance.toFixed(2)}`, 'Top Up Now', () => window.location.href='toppup.html');
                     btn.disabled = false;
                     btn.innerText = "Launch My Store Now";
                     return;
                 }
 
-                // Check Slug Availability
                 const slugRef = ref(db, `slugs/${slug}`);
                 const slugCheck = await get(slugRef);
                 
                 if (slugCheck.exists()) {
-                    alert("Store Link Unavailable: This name is already taken.");
+                    showModal('error', 'Slug Taken', 'This store link is already in use. Please try a different name.', 'Change Name');
                     btn.disabled = false;
                     btn.innerText = "Launch My Store Now";
                     return;
                 }
 
-                // Prepare Data Package
-                const updates = {};
-                updates[`users/${user.uid}/userType`] = "agent"; 
-                updates[`users/${user.uid}/status`] = "agent";   
-                updates[`users/${user.uid}/agentEarnings`] = 0;
-                updates[`users/${user.uid}/storeSettings`] = {
-                    storeName: name,
-                    storeSlug: slug,
-                    welcomeMsg: "Welcome to my official data store!",
-                    contactPhone: "" // Will update from profile later
-                };
-                updates[`slugs/${slug}`] = user.uid;
+                // TRANSACTION: DEDUCT BALANCE AND SETUP STORE
+                const userRef = ref(db, `users/${user.uid}`);
+                const result = await runTransaction(userRef, (userData) => {
+                    if (userData) {
+                        if ((userData.balance || 0) < cost) return; // double check inside transaction
+                        userData.balance = (userData.balance || 0) - cost;
+                        userData.userType = "agent"; 
+                        userData.status = "agent";   
+                        userData.agentEarnings = 0;
+                        userData.storeSettings = {
+                            storeName: name,
+                            storeSlug: slug,
+                            welcomeMsg: "Welcome to my official data store!",
+                            contactPhone: userData.phone || ""
+                        };
+                    }
+                    return userData;
+                });
 
-                // Atomic Update
-                await update(ref(db), updates);
-                
-                alert("SUCCESS! Your store is now live.");
-                window.location.href = "dashboard.html";
+                if (result.committed) {
+                    // Update the global slugs map
+                    const slugMap = {};
+                    slugMap[`slugs/${slug}`] = user.uid;
+                    await update(ref(db), slugMap);
+
+                    showModal('success', 'Store Launched', `Your store is now live! GH₵ ${cost.toFixed(2)} has been deducted for setup fees.`, 'View Store', () => {
+                        window.location.href = `store.html?s=${slug}`;
+                    });
+                }
 
             } catch (error) {
                 console.error(error);
-                alert("Submission Failed: " + error.message);
+                showModal('error', 'System Error', error.message, 'Close');
                 btn.disabled = false;
                 btn.innerText = "Launch My Store Now";
             }
