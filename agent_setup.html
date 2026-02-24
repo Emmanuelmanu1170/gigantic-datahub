@@ -6,10 +6,25 @@
     <title>Launch Your Store | Gigantic Data Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .glass-panel { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); }
+        input:focus { box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.4); }
+    </style>
 </head>
 <body class="bg-[#0a0e27] text-white min-h-screen flex items-center justify-center p-6">
 
-    <div class="max-w-md w-full bg-[#11183d] p-8 rounded-3xl border border-white/10 shadow-2xl">
+    <div class="max-w-md w-full bg-[#11183d] p-8 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden">
+        <div id="userInfo" class="hidden mb-6 p-3 rounded-2xl glass-panel flex justify-between items-center text-[11px]">
+            <div class="flex flex-col">
+                <span class="text-slate-400 uppercase font-bold tracking-tighter">Account Email</span>
+                <span id="displayEmail" class="text-white">...</span>
+            </div>
+            <div class="flex flex-col text-right">
+                <span class="text-slate-400 uppercase font-bold tracking-tighter">Current Balance</span>
+                <span id="displayBalance" class="text-orange-500 font-black">GH₵ 0.00</span>
+            </div>
+        </div>
+
         <div class="text-center mb-8">
             <div class="w-16 h-16 bg-orange-500 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 shadow-lg shadow-orange-500/20">
                 <i class="fas fa-store"></i>
@@ -32,12 +47,22 @@
             <button id="launchBtn" onclick="launchStore()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-black py-4 rounded-xl uppercase tracking-tighter transition transform active:scale-95">
                 Launch My Store Now
             </button>
+
+            <div class="relative py-2 flex items-center">
+                <div class="flex-grow border-t border-white/5"></div>
+                <span class="flex-shrink mx-4 text-[10px] text-slate-500 font-bold uppercase">Already an Agent?</span>
+                <div class="flex-grow border-t border-white/5"></div>
+            </div>
+
+            <button onclick="window.location.href='dashboard.html'" class="w-full bg-white/5 hover:bg-white/10 text-white border border-white/10 py-3 rounded-xl text-xs font-bold transition">
+                <i class="fas fa-sign-in-alt mr-2"></i> Log In to Agent Dashboard
+            </button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -51,69 +76,89 @@
         const db = getDatabase(app);
         const auth = getAuth(app);
 
-        // Real-time slug preview
+        let userBalance = 0;
+
+        // 1. Listen for Auth State and Load User Data
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('userInfo').classList.remove('hidden');
+                document.getElementById('displayEmail').innerText = user.email;
+                
+                // Real-time Balance Listener
+                const userRef = ref(db, `users/${user.uid}`);
+                onValue(userRef, (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        userBalance = data.balance || 0;
+                        document.getElementById('displayBalance').innerText = `GH₵ ${Number(userBalance).toFixed(2)}`;
+                    }
+                });
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+
+        // 2. Slug logic
         document.getElementById('storeName').oninput = function() {
             const slug = this.value.toLowerCase().trim().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
             document.getElementById('slugPrev').innerText = slug;
         };
 
+        // 3. Launch Store Logic
         window.launchStore = async () => {
             const user = auth.currentUser;
             const name = document.getElementById('storeName').value.trim();
             const slug = document.getElementById('slugPrev').innerText;
             const btn = document.getElementById('launchBtn');
 
-            if (!user) return alert("Please login first");
-            if (slug.length < 3) return alert("Store name too short");
+            if (!user) return alert("Session expired. Please login.");
+            if (slug.length < 3) return alert("Store name must be at least 3 characters.");
 
             btn.disabled = true;
-            btn.innerText = "VERIFYING...";
+            btn.innerText = "VERIFYING ELIGIBILITY...";
 
             try {
-                // 1. Check User Balance (Rules require >= 45 GH₵)
-                const userSnap = await get(ref(db, `users/${user.uid}`));
-                const userData = userSnap.val();
-                const currentBalance = userData.balance || 0;
-
-                if (currentBalance < 45) {
-                    alert(`Insufficient Balance! You need at least 45 GH₵ to activate an Agent Store. Your balance: ${currentBalance} GH₵`);
+                // Rule Enforcement: Check Balance
+                if (userBalance < 45) {
+                    alert(`Access Denied: You need GH₵ 45.00 to launch a store. Current: GH₵ ${userBalance.toFixed(2)}`);
                     btn.disabled = false;
                     btn.innerText = "Launch My Store Now";
                     return;
                 }
 
-                // 2. Check if slug exists
+                // Check Slug Availability
                 const slugRef = ref(db, `slugs/${slug}`);
                 const slugCheck = await get(slugRef);
                 
                 if (slugCheck.exists()) {
-                    alert("This store name is already taken. Try another!");
+                    alert("Store Link Unavailable: This name is already taken.");
                     btn.disabled = false;
                     btn.innerText = "Launch My Store Now";
                     return;
                 }
 
-                // 3. Perform atomic update (Matches Rule casing)
+                // Prepare Data Package
                 const updates = {};
-                updates[`users/${user.uid}/userType`] = "agent"; // Lowercase to match security rules
-                updates[`users/${user.uid}/status`] = "agent";   // Lowercase to match security rules
+                updates[`users/${user.uid}/userType`] = "agent"; 
+                updates[`users/${user.uid}/status`] = "agent";   
                 updates[`users/${user.uid}/agentEarnings`] = 0;
                 updates[`users/${user.uid}/storeSettings`] = {
                     storeName: name,
                     storeSlug: slug,
                     welcomeMsg: "Welcome to my official data store!",
-                    contactPhone: userData.phone || ""
+                    contactPhone: "" // Will update from profile later
                 };
                 updates[`slugs/${slug}`] = user.uid;
 
+                // Atomic Update
                 await update(ref(db), updates);
                 
-                alert("CONGRATULATIONS! Your store is live at giganticdatahub.com/store?s=" + slug);
+                alert("SUCCESS! Your store is now live.");
                 window.location.href = "dashboard.html";
 
             } catch (error) {
                 console.error(error);
-                alert("Permission Denied: Ensure you have 45 GH₵ in your balance and are logged in.");
+                alert("Submission Failed: " + error.message);
                 btn.disabled = false;
                 btn.innerText = "Launch My Store Now";
             }
