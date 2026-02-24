@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Launch Your Store | Gigantic Data</title>
+    <title>Launch Your Store | Gigantic Data Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body class="bg-[#0a0e27] text-white min-height-screen flex items-center justify-center p-6">
+<body class="bg-[#0a0e27] text-white min-h-screen flex items-center justify-center p-6">
 
     <div class="max-w-md w-full bg-[#11183d] p-8 rounded-3xl border border-white/10 shadow-2xl">
         <div class="text-center mb-8">
@@ -26,7 +26,7 @@
 
             <div class="p-4 bg-orange-500/10 border border-orange-500/20 rounded-xl">
                 <p class="text-[10px] font-bold uppercase text-orange-500 mb-1">Your Unique Link:</p>
-                <p class="text-xs font-mono break-all text-slate-300">giganticdata.com/store/<span id="slugPrev" class="text-white font-bold">...</span></p>
+                <p class="text-xs font-mono break-all text-slate-300">giganticdatahub.com/store?s=<span id="slugPrev" class="text-white font-bold">...</span></p>
             </div>
 
             <button id="launchBtn" onclick="launchStore()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-black py-4 rounded-xl uppercase tracking-tighter transition transform active:scale-95">
@@ -59,7 +59,7 @@
 
         window.launchStore = async () => {
             const user = auth.currentUser;
-            const name = document.getElementById('storeName').value;
+            const name = document.getElementById('storeName').value.trim();
             const slug = document.getElementById('slugPrev').innerText;
             const btn = document.getElementById('launchBtn');
 
@@ -69,31 +69,54 @@
             btn.disabled = true;
             btn.innerText = "VERIFYING...";
 
-            const slugRef = ref(db, `slugs/${slug}`);
-            const check = await get(slugRef);
-            
-            if (check.exists()) {
-                alert("This store name is taken. Try another!");
+            try {
+                // 1. Check User Balance (Rules require >= 45 GH₵)
+                const userSnap = await get(ref(db, `users/${user.uid}`));
+                const userData = userSnap.val();
+                const currentBalance = userData.balance || 0;
+
+                if (currentBalance < 45) {
+                    alert(`Insufficient Balance! You need at least 45 GH₵ to activate an Agent Store. Your balance: ${currentBalance} GH₵`);
+                    btn.disabled = false;
+                    btn.innerText = "Launch My Store Now";
+                    return;
+                }
+
+                // 2. Check if slug exists
+                const slugRef = ref(db, `slugs/${slug}`);
+                const slugCheck = await get(slugRef);
+                
+                if (slugCheck.exists()) {
+                    alert("This store name is already taken. Try another!");
+                    btn.disabled = false;
+                    btn.innerText = "Launch My Store Now";
+                    return;
+                }
+
+                // 3. Perform atomic update (Matches Rule casing)
+                const updates = {};
+                updates[`users/${user.uid}/userType`] = "agent"; // Lowercase to match security rules
+                updates[`users/${user.uid}/status`] = "agent";   // Lowercase to match security rules
+                updates[`users/${user.uid}/agentEarnings`] = 0;
+                updates[`users/${user.uid}/storeSettings`] = {
+                    storeName: name,
+                    storeSlug: slug,
+                    welcomeMsg: "Welcome to my official data store!",
+                    contactPhone: userData.phone || ""
+                };
+                updates[`slugs/${slug}`] = user.uid;
+
+                await update(ref(db), updates);
+                
+                alert("CONGRATULATIONS! Your store is live at giganticdatahub.com/store?s=" + slug);
+                window.location.href = "dashboard.html";
+
+            } catch (error) {
+                console.error(error);
+                alert("Permission Denied: Ensure you have 45 GH₵ in your balance and are logged in.");
                 btn.disabled = false;
                 btn.innerText = "Launch My Store Now";
-                return;
             }
-
-            const updates = {};
-            updates[`users/${user.uid}/userType`] = "agent";
-            updates[`users/${user.uid}/agentEarnings`] = 0;
-            updates[`users/${user.uid}/storeSettings`] = {
-                storeName: name,
-                storeSlug: slug,
-                welcomeMsg: "Welcome to my official data store!",
-                contactPhone: user.phoneNumber || ""
-            };
-            updates[`slugs/${slug}`] = user.uid;
-
-            update(ref(db), updates).then(() => {
-                alert("CONGRATULATIONS! Your store is live.");
-                window.location.href = "dashboard.html";
-            }).catch(e => alert(e.message));
         };
     </script>
 </body>
