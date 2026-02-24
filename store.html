@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Store | Gigantic Data</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50">
+
+    <div id="loading" class="fixed inset-0 bg-white flex items-center justify-center z-50">
+        <p class="font-bold animate-pulse">Opening Store...</p>
+    </div>
+
+    <nav class="p-6 bg-[#003366] text-white flex justify-between items-center">
+        <h1 id="brandName" class="font-black uppercase tracking-tighter text-xl">Gigantic Store</h1>
+        <div class="bg-orange-500 px-3 py-1 rounded-full text-[10px] font-bold">OFFICIAL AGENT</div>
+    </nav>
+
+    <main class="max-w-lg mx-auto p-6">
+        <div class="bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
+            <h2 class="text-xl font-bold mb-1">Buy Cheap Data</h2>
+            <p id="welcomeMsg" class="text-slate-500 text-sm mb-6">Loading agent details...</p>
+
+            <div class="space-y-4">
+                <input type="tel" id="custPhone" placeholder="Recipient Phone Number" class="w-full p-4 bg-slate-100 rounded-xl outline-none focus:ring-2 ring-orange-500">
+                
+                <select id="planSelect" class="w-full p-4 bg-slate-100 rounded-xl outline-none">
+                    <option value="5">MTN 1GB - GH₵ 5.00</option>
+                    <option value="10">MTN 2GB - GH₵ 10.00</option>
+                    <option value="25">MTN 5GB - GH₵ 25.00</option>
+                </select>
+
+                <button onclick="payNow()" class="w-full bg-[#003366] text-white p-4 rounded-xl font-bold uppercase mt-4">Pay Securely</button>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, get, update, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = { databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com" };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // 1. Identify Agent from URL (?s=slug-name)
+        const urlParams = new URLSearchParams(window.location.search);
+        const slug = urlParams.get('s');
+        let activeAgentUid = "";
+
+        if (!slug) window.location.href = "index.html";
+
+        async function loadStore() {
+            const slugSnap = await get(ref(db, `slugs/${slug}`));
+            if (!slugSnap.exists()) return alert("Store not found!");
+            
+            activeAgentUid = slugSnap.val();
+            const userSnap = await get(ref(db, `users/${activeAgentUid}`));
+            const data = userSnap.val();
+
+            document.getElementById('brandName').innerText = data.storeSettings.storeName;
+            document.getElementById('welcomeMsg').innerText = data.storeSettings.welcomeMsg;
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        window.payNow = async () => {
+            const amount = document.getElementById('planSelect').value;
+            const phone = document.getElementById('custPhone').value;
+            
+            if (phone.length < 10) return alert("Enter valid phone");
+
+            // --- 15% PROFIT CALCULATION ---
+            const profit = Number(amount) * 0.15;
+            
+            alert(`Processing payment of GH₵ ${amount}...`);
+            
+            // On successful payment callback:
+            const agentRef = ref(db, `users/${activeAgentUid}`);
+            await runTransaction(agentRef, (userData) => {
+                if (userData) {
+                    userData.agentEarnings = (userData.agentEarnings || 0) + profit;
+                }
+                return userData;
+            });
+
+            alert("Data Sent! Agent earned GH₵ " + profit.toFixed(2));
+        };
+
+        loadStore();
+    </script>
+</body>
+</html>
