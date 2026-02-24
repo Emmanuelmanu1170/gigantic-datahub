@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Launch Your Store | Gigantic Data</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-[#0a0e27] text-white min-height-screen flex items-center justify-center p-6">
+
+    <div class="max-w-md w-full bg-[#11183d] p-8 rounded-3xl border border-white/10 shadow-2xl">
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 bg-orange-500 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 shadow-lg shadow-orange-500/20">
+                <i class="fas fa-store"></i>
+            </div>
+            <h1 class="text-2xl font-black uppercase">Agent Store Setup</h1>
+            <p class="text-slate-400 text-sm mt-2">Earn 15% profit on every data sale</p>
+        </div>
+
+        <div class="space-y-4">
+            <div>
+                <label class="block text-[10px] font-bold uppercase tracking-widest mb-2 text-orange-500">Store Name</label>
+                <input type="text" id="storeName" placeholder="e.g. Kobby Data Plug" class="w-full bg-[#0a0e27] border border-white/10 p-4 rounded-xl outline-none focus:border-orange-500 transition">
+            </div>
+
+            <div class="p-4 bg-orange-500/10 border border-orange-500/20 rounded-xl">
+                <p class="text-[10px] font-bold uppercase text-orange-500 mb-1">Your Unique Link:</p>
+                <p class="text-xs font-mono break-all text-slate-300">giganticdata.com/store/<span id="slugPrev" class="text-white font-bold">...</span></p>
+            </div>
+
+            <button id="launchBtn" onclick="launchStore()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-black py-4 rounded-xl uppercase tracking-tighter transition transform active:scale-95">
+                Launch My Store Now
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
+            authDomain: "gigantic-data.firebaseapp.com",
+            databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
+            projectId: "gigantic-data"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const auth = getAuth(app);
+
+        // Real-time slug preview
+        document.getElementById('storeName').oninput = function() {
+            const slug = this.value.toLowerCase().trim().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+            document.getElementById('slugPrev').innerText = slug;
+        };
+
+        window.launchStore = async () => {
+            const user = auth.currentUser;
+            const name = document.getElementById('storeName').value;
+            const slug = document.getElementById('slugPrev').innerText;
+            const btn = document.getElementById('launchBtn');
+
+            if (!user) return alert("Please login first");
+            if (slug.length < 3) return alert("Store name too short");
+
+            btn.disabled = true;
+            btn.innerText = "VERIFYING...";
+
+            const slugRef = ref(db, `slugs/${slug}`);
+            const check = await get(slugRef);
+            
+            if (check.exists()) {
+                alert("This store name is taken. Try another!");
+                btn.disabled = false;
+                btn.innerText = "Launch My Store Now";
+                return;
+            }
+
+            const updates = {};
+            updates[`users/${user.uid}/userType`] = "agent";
+            updates[`users/${user.uid}/agentEarnings`] = 0;
+            updates[`users/${user.uid}/storeSettings`] = {
+                storeName: name,
+                storeSlug: slug,
+                welcomeMsg: "Welcome to my official data store!",
+                contactPhone: user.phoneNumber || ""
+            };
+            updates[`slugs/${slug}`] = user.uid;
+
+            update(ref(db), updates).then(() => {
+                alert("CONGRATULATIONS! Your store is live.");
+                window.location.href = "dashboard.html";
+            }).catch(e => alert(e.message));
+        };
+    </script>
+</body>
+</html>
