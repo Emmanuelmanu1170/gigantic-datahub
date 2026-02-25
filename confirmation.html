@@ -95,12 +95,6 @@
             </button>
             <p class="text-center text-[10px] text-slate-400 mt-4 uppercase font-bold tracking-widest">Instant Activation Guaranteed</p>
         </div>
-
-        <div class="mt-6 text-center">
-            <a href="terms.html" style="padding: 10px 20px; background: #64748b; color: white; border-radius: 10px; text-decoration: none; font-size: 13px; font-weight: bold; display: inline-flex; align-items: center; gap: 8px;">
-                <i class="fas fa-file-contract"></i> Terms & Conditions
-            </a>
-        </div>
     </div>
 
     <div id="successOverlay">
@@ -116,7 +110,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, update, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, update, onValue, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = { 
             apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA", 
@@ -143,25 +137,24 @@
 
             onAuthStateChanged(auth, user => {
                 if (user) {
-                    activeUid = order.activeUid || user.uid; 
+                    activeUid = user.uid; // Set the UID immediately upon auth
                     document.getElementById('userEmail').innerText = user.email;
 
-                    onValue(ref(db, `users/${activeUid}`), (snapshot) => {
+                    // Listen to the specific UID path in real-time
+                    const balanceRef = ref(db, `users/${activeUid}`);
+                    onValue(balanceRef, (snapshot) => {
                         const data = snapshot.val() || {};
                         
-                        // We strictly use the "balance" node for deduction math
-                        currentRealBalance = Number(data.balance || 0);
+                        // Prioritize 'balance' field as per instructions
+                        currentRealBalance = parseFloat(data.balance || 0);
+                        const orderAmount = parseFloat(order.amount);
                         
-                        // Display logic: show the highest available just for UI confidence
-                        const displayBal = Math.max(currentRealBalance, Number(data.wallet || 0));
-                        
-                        document.getElementById('dispCurrentBal').innerText = "GH₵ " + displayBal.toFixed(2);
-                        const postBalance = (displayBal - Number(order.amount)).toFixed(2);
+                        document.getElementById('dispCurrentBal').innerText = "GH₵ " + currentRealBalance.toFixed(2);
+                        const postBalance = (currentRealBalance - orderAmount).toFixed(2);
                         document.getElementById('dispNewBal').innerText = "GH₵ " + postBalance;
 
                         const btn = document.getElementById('mainBtn');
-                        // Validation: Must have enough in the actual balance node to proceed
-                        if (currentRealBalance >= Number(order.amount)) {
+                        if (currentRealBalance >= orderAmount) {
                             btn.disabled = false;
                             btn.classList.remove('opacity-50', 'cursor-not-allowed');
                             btn.innerHTML = "Confirm & Activate";
@@ -178,48 +171,54 @@
         }
 
         window.executeOrder = async () => {
+            if (!activeUid) return;
             const btn = document.getElementById('mainBtn');
-            if(btn.disabled) return; 
-
             btn.disabled = true;
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> DEDUCTING...`;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> PROCESSING...`;
 
             try {
+                // Fetch fresh balance before deducting to prevent race conditions
+                const freshSnap = await get(ref(db, `users/${activeUid}`));
+                const freshData = freshSnap.val();
+                const freshBalance = parseFloat(freshData.balance || 0);
+                const orderAmount = parseFloat(order.amount);
+
+                if (freshBalance < orderAmount) {
+                    alert("Balance updated. Funds are now insufficient.");
+                    location.reload();
+                    return;
+                }
+
                 const orderId = "GID-" + Date.now();
                 const ts = Date.now();
-                const amount = Number(order.amount);
-                
-                // Final calculation strictly for the Balance node
-                const finalBalance = Number((currentRealBalance - amount).toFixed(2));
-
-                const orderData = {
-                    network: String(order.network),
-                    plan: String(order.plan),
-                    recipient: String(order.recipient),
-                    amount: amount, 
-                    uid: String(activeUid),
-                    status: "Processing",
-                    timestamp: Number(ts)
-                };
-
-                const txData = {
-                    uid: String(activeUid),
-                    amount: amount,
-                    description: `Data: ${order.network} ${order.plan} (${order.recipient})`,
-                    type: "purchase",
-                    status: "Success",
-                    timestamp: Number(ts)
-                };
+                const finalBalance = Number((freshBalance - orderAmount).toFixed(2));
 
                 const updates = {};
-                // DEDUCTION: Only targets the balance node as requested
+                // DEDUCTION
                 updates[`users/${activeUid}/balance`] = finalBalance;
                 
-                // Bookkeeping nodes
-                updates[`pending_orders/${orderId}`] = orderData;
-                updates[`orders/${orderId}`] = orderData;
-                updates[`user_orders/${activeUid}/${orderId}`] = orderData;
-                updates[`transactions/${orderId}`] = txData;
+                // DATA NODES
+                const sharedData = {
+                    network: order.network,
+                    plan: order.plan,
+                    recipient: order.recipient,
+                    amount: orderAmount,
+                    uid: activeUid,
+                    status: "Processing",
+                    timestamp: ts
+                };
+
+                updates[`pending_orders/${orderId}`] = sharedData;
+                updates[`orders/${orderId}`] = sharedData;
+                updates[`user_orders/${activeUid}/${orderId}`] = sharedData;
+                updates[`transactions/${orderId}`] = {
+                    uid: activeUid,
+                    amount: orderAmount,
+                    description: `Purchase: ${order.network} ${order.plan}`,
+                    type: "purchase",
+                    status: "Success",
+                    timestamp: ts
+                };
 
                 await update(ref(db), updates);
 
@@ -228,11 +227,11 @@
                 
                 setTimeout(() => {
                     window.location.replace("dashboard.html");
-                }, 2000);
+                }, 2500);
 
             } catch (err) {
-                console.error("Verification Error:", err);
-                alert("Transaction Failed. Ensure your 'Balance' node has sufficient funds.");
+                console.error("Deduction Error:", err);
+                alert("Database connection error. Please check your internet.");
                 btn.disabled = false;
                 btn.innerHTML = "Confirm & Activate";
             }
