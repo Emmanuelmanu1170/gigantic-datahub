@@ -139,18 +139,9 @@
             </div>
 
             <button id="payBtn" onclick="initPaystackStore()" disabled
-                class="w-full py-6 rounded-3xl accent-gradient text-white font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-indigo-500/30 active:scale-[0.98] transition-all disabled:opacity-20 disabled:grayscale">
+                class="w-full py-6 rounded-3xl accent-gradient text-white font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-indigo-500/30 active:scale-[0.98] transition-all disabled:opacity-20">
                 Pay & Receive Data
             </button>
-        </div>
-
-        <div class="mt-8 text-center space-y-4">
-            <p class="text-[9px] text-slate-600 font-bold uppercase tracking-[0.3em]">Fully Encrypted Payment Gateway</p>
-            <div class="flex justify-center gap-4 opacity-30">
-                <i class="fab fa-cc-visa text-xl"></i>
-                <i class="fab fa-cc-mastercard text-xl"></i>
-                <i class="fas fa-mobile-alt text-xl"></i>
-            </div>
         </div>
     </div>
 
@@ -186,30 +177,17 @@
             const hour = new Date().getHours();
             let greet = hour < 12 ? "Good Morning" : hour < 17 ? "Good Afternoon" : "Good Evening";
             document.getElementById('greeting').innerText = greet;
-
-            if(!storeSlug) {
-                document.getElementById('storeName').innerText = "GIGANTIC HUB";
-                return;
-            }
-
             try {
                 const slugSnap = await database.ref(`slugs/${storeSlug}`).once('value');
-                if(!slugSnap.exists()) {
-                    document.getElementById('storeName').innerText = "STORE NOT FOUND";
-                    return;
+                if(slugSnap.exists()) {
+                    agentUid = slugSnap.val();
+                    const userSnap = await database.ref(`users/${agentUid}`).once('value');
+                    const u = userSnap.val();
+                    document.getElementById('storeName').innerText = u.storeSettings.storeName;
+                    document.getElementById('welcomeMsg').innerText = `Welcome to ${u.storeSettings.storeName}! We offer instant automated data delivery.`;
+                    agentEmail = u.email;
                 }
-                
-                agentUid = slugSnap.val();
-                const userSnap = await database.ref(`users/${agentUid}`).once('value');
-                const userData = userSnap.val();
-                
-                if(userData && userData.storeSettings) {
-                    const storeDisplayName = userData.storeSettings.storeName;
-                    document.getElementById('storeName').innerText = storeDisplayName;
-                    document.getElementById('welcomeMsg').innerText = `Welcome to ${storeDisplayName}! We are dedicated to offering you amazing data deals with 100% reliability.`;
-                    agentEmail = userData.email;
-                }
-            } catch(e) { console.error("Store Init Error:", e); }
+            } catch(e) {}
         }
         initStore();
 
@@ -217,26 +195,19 @@
             selectedNet = net;
             document.querySelectorAll('button[id^="net-"]').forEach(b => b.classList.remove('border-indigo-500', 'bg-indigo-500/10'));
             document.getElementById(`net-${net}`).classList.add('border-indigo-500', 'bg-indigo-500/10');
-            
             const select = document.getElementById('dataPlan');
             select.innerHTML = '<option value="" disabled selected>-- Choose Bundle --</option>';
             agentPlans[net].forEach(p => {
                 select.innerHTML += `<option value="${p.price}" data-plan="${p.plan}">${p.plan} Bundle - ₵${p.price}</option>`;
             });
-
             document.getElementById('step2').classList.remove('step-inactive');
         };
 
         document.getElementById('phoneNumber').oninput = async function(e) {
             const num = e.target.value;
-            const box = document.getElementById('simNameBox');
-            const nameSpan = document.getElementById('displaySimName');
-            
             if(num.length === 10) {
-                box.classList.remove('hidden');
-                nameSpan.innerText = "SYNCING SIM...";
-                document.getElementById('step3').classList.remove('step-inactive');
-                
+                document.getElementById('simNameBox').classList.remove('hidden');
+                document.getElementById('displaySimName').innerText = "SYNCING SIM...";
                 const bankCode = { 'MTN': 'MTN', 'AIRTELTIGO': 'ATL', 'TELECEL': 'VOD' }[selectedNet];
                 try {
                     const k = atob("YmVhcmVyIA==") + atob("c2tfbGl2ZV8=") + atob("YmZkMjhmYmJlM2NhNDU1YmExNTQ1NWViZWQ3MTM4YjI0MDA5ZDEzNA==");
@@ -245,53 +216,43 @@
                     });
                     const res = await response.json();
                     simName = res.status ? res.data.account_name : "NAME VERIFIED";
-                    nameSpan.innerText = simName;
-                } catch (err) { simName = "SYNCED"; nameSpan.innerText = simName; }
-            } else { 
-                box.classList.add('hidden');
-                document.getElementById('step3').classList.add('step-inactive');
+                    document.getElementById('displaySimName').innerText = simName;
+                    document.getElementById('step3').classList.remove('step-inactive');
+                } catch (err) { simName = "SYNCED"; document.getElementById('displaySimName').innerText = simName; }
             }
         };
 
         function calculateFinalTotal() {
-            const select = document.getElementById('dataPlan');
-            const basePrice = parseFloat(select.value);
+            const basePrice = parseFloat(document.getElementById('dataPlan').value);
             const fee = basePrice * FEE_RATE;
-            const total = basePrice + fee;
-            finalPayAmount = total;
-
+            finalPayAmount = basePrice + fee;
             document.getElementById('summaryBasePrice').innerText = `₵ ${basePrice.toFixed(2)}`;
             document.getElementById('summaryFee').innerText = `₵ ${fee.toFixed(2)}`;
-            document.getElementById('summaryTotal').innerText = `₵ ${total.toFixed(2)}`;
+            document.getElementById('summaryTotal').innerText = `₵ ${finalPayAmount.toFixed(2)}`;
             document.getElementById('summaryCard').classList.remove('hidden');
             document.getElementById('payBtn').disabled = false;
         }
 
         function showStatusModal(title, msg, type = 'success') {
             const modal = document.getElementById('statusModal');
-            const icon = document.getElementById('modalIcon');
-            const progress = document.getElementById('progressBar');
-            
             document.getElementById('modalTitle').innerText = title;
             document.getElementById('modalMsg').innerText = msg;
-            
+            const icon = document.getElementById('modalIcon');
             if(type === 'success') {
                 icon.className = "w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl bg-emerald-500/20 text-emerald-500";
                 icon.innerHTML = '<i class="fas fa-check"></i>';
-                progress.className = "h-full bg-emerald-500 w-0 transition-all duration-[3000ms]";
             } else {
                 icon.className = "w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl bg-rose-500/20 text-rose-500";
                 icon.innerHTML = '<i class="fas fa-times"></i>';
             }
-
             modal.style.display = 'flex';
-            setTimeout(() => { progress.style.width = '100%'; }, 100);
+            setTimeout(() => { document.getElementById('progressBar').style.width = '100%'; }, 100);
         }
 
         function initPaystackStore() {
-            const phone = document.getElementById('phoneNumber').value;
             const planSelect = document.getElementById('dataPlan');
             const planName = planSelect.options[planSelect.selectedIndex].getAttribute('data-plan');
+            const phone = document.getElementById('phoneNumber').value;
 
             let handler = PaystackPop.setup({
                 key: PAYSTACK_PK,
@@ -300,54 +261,55 @@
                 currency: 'GHS',
                 ref: 'ST-' + Date.now(),
                 callback: (response) => {
-                    placeOrder(response.reference, phone, planName, planSelect.value);
+                    executeAutoOrder(response.reference, phone, planName, planSelect.value);
                 }
             });
             handler.openIframe();
         }
 
-        async function placeOrder(ref, phone, plan, baseAmount) {
-            const orderId = 'GID-' + Date.now();
-            const ts = Date.now();
-            
-            // This is the core confirmation logic: atomic multi-node update
-            const orderData = {
-                network: String(selectedNet),
-                plan: String(plan),
-                recipient: String(phone),
-                amount: Number(baseAmount),
-                paidAmount: Number(finalPayAmount),
-                uid: String(agentUid), // The store owner
-                status: "Processing",
-                simName: String(simName),
-                paymentRef: String(ref),
-                timestamp: Number(ts)
-            };
-
-            const txData = {
-                uid: String(agentUid),
-                amount: Number(finalPayAmount),
-                description: `Customer Store Order: ${selectedNet} ${plan} (${phone})`,
-                type: "store_sale",
-                status: "Success",
-                reference: String(ref),
-                timestamp: Number(ts)
-            };
-
-            const updates = {};
-            // Log to all required nodes for fulfillment and history
-            updates[`pending_orders/${orderId}`] = orderData;
-            updates[`orders/${orderId}`] = orderData;
-            updates[`user_orders/${agentUid}/${orderId}`] = orderData;
-            updates[`transactions/${orderId}`] = txData;
+        async function executeAutoOrder(reference, phone, plan, baseAmount) {
+            const btn = document.getElementById('payBtn');
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> PROVISIONING...`;
+            btn.disabled = true;
 
             try {
-                await database.ref().update(updates);
-                showStatusModal("Payment Received", `Order confirmed! Your data bundle for ${phone} is being processed.`, 'success');
-                setTimeout(() => { location.reload(); }, 4000);
-            } catch(e) {
-                console.error(e);
-                showStatusModal("System Alert", "Payment successful but order logging failed. Contact us with Ref: " + ref, 'error');
+                // 1. Trigger Backend Verification & API Fulfillment
+                const response = await fetch('https://us-central1-gigantic-data.cloudfunctions.net/verifyPayment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        reference: reference, 
+                        userId: agentUid,
+                        isStoreOrder: true,
+                        recipient: phone,
+                        network: selectedNet,
+                        plan: plan
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // 2. Log Locally for History if Backend didn't
+                    const orderId = 'ORD-' + reference;
+                    const orderData = {
+                        network: selectedNet, plan: plan, recipient: phone,
+                        amount: Number(baseAmount), status: "Completed",
+                        paymentRef: reference, timestamp: Date.now(), agentId: agentUid
+                    };
+                    
+                    const updates = {};
+                    updates[`orders/${orderId}`] = orderData;
+                    updates[`user_orders/${agentUid}/${orderId}`] = orderData;
+                    await database.ref().update(updates);
+
+                    showStatusModal("Success", "Data bundle provisioned successfully!", "success");
+                    setTimeout(() => location.reload(), 4000);
+                } else {
+                    showStatusModal("Fulfillment Pending", "Payment success, but API is busy. Order logged for manual review.", "error");
+                }
+            } catch (e) {
+                showStatusModal("System Timeout", "Verification is taking longer than usual. Please check recipient phone.", "error");
             }
         }
     </script>
