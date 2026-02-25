@@ -167,7 +167,6 @@
         const PAYSTACK_PK = 'pk_live_faecdb3166144fadebd8269829343698dd43de63';
         const FEE_RATE = 0.025;
 
-        // URL Slug Logic
         const urlParams = new URLSearchParams(window.location.search);
         const storeSlug = urlParams.get('s');
         
@@ -177,19 +176,15 @@
         let simName = "NOT VERIFIED";
         let finalPayAmount = 0;
 
-        // Pricing List
         const agentPlans = {
             MTN:[{plan:"1GB",price:4.45},{plan:"2GB",price:8.85},{plan:"3GB",price:13.25},{plan:"5GB",price:22.05},{plan:"10GB",price:42.25}],
             AIRTELTIGO:[{plan:"1GB",price:4.3},{plan:"2GB",price:8.56},{plan:"5GB",price:21.4},{plan:"10GB",price:44}],
             TELECEL:[{plan:"10GB",price:45},{plan:"20GB",price:84}]
         };
 
-        // Initialize Store Details
         async function initStore() {
             const hour = new Date().getHours();
-            let greet = "Good Morning";
-            if(hour >= 12) greet = "Good Afternoon";
-            if(hour >= 17) greet = "Good Evening";
+            let greet = hour < 12 ? "Good Morning" : hour < 17 ? "Good Afternoon" : "Good Evening";
             document.getElementById('greeting').innerText = greet;
 
             if(!storeSlug) {
@@ -198,7 +193,6 @@
             }
 
             try {
-                // Find UID via Slug
                 const slugSnap = await database.ref(`slugs/${storeSlug}`).once('value');
                 if(!slugSnap.exists()) {
                     document.getElementById('storeName').innerText = "STORE NOT FOUND";
@@ -206,8 +200,6 @@
                 }
                 
                 agentUid = slugSnap.val();
-                
-                // Load User Store Settings
                 const userSnap = await database.ref(`users/${agentUid}`).once('value');
                 const userData = userSnap.val();
                 
@@ -226,7 +218,6 @@
             document.querySelectorAll('button[id^="net-"]').forEach(b => b.classList.remove('border-indigo-500', 'bg-indigo-500/10'));
             document.getElementById(`net-${net}`).classList.add('border-indigo-500', 'bg-indigo-500/10');
             
-            // Populate Plans
             const select = document.getElementById('dataPlan');
             select.innerHTML = '<option value="" disabled selected>-- Choose Bundle --</option>';
             agentPlans[net].forEach(p => {
@@ -236,7 +227,6 @@
             document.getElementById('step2').classList.remove('step-inactive');
         };
 
-        // SIM Verification Logic
         document.getElementById('phoneNumber').oninput = async function(e) {
             const num = e.target.value;
             const box = document.getElementById('simNameBox');
@@ -256,10 +246,7 @@
                     const res = await response.json();
                     simName = res.status ? res.data.account_name : "NAME VERIFIED";
                     nameSpan.innerText = simName;
-                } catch (err) { 
-                    simName = "SYNCED";
-                    nameSpan.innerText = simName; 
-                }
+                } catch (err) { simName = "SYNCED"; nameSpan.innerText = simName; }
             } else { 
                 box.classList.add('hidden');
                 document.getElementById('step3').classList.add('step-inactive');
@@ -320,34 +307,46 @@
         }
 
         async function placeOrder(ref, phone, plan, baseAmount) {
-            const orderId = 'ORD-' + Math.random().toString(36).substr(2, 9).toUpperCase();
-            const timestamp = Date.now();
+            const orderId = 'GID-' + Date.now();
+            const ts = Date.now();
             
-            const orderObj = {
-                orderId: orderId,
-                agentId: agentUid,
-                recipient: phone,
-                network: selectedNet,
-                plan: plan,
-                amount: parseFloat(baseAmount),
-                paidAmount: finalPayAmount,
-                simName: simName,
-                status: "Pending",
-                paymentStatus: "Success",
-                paymentRef: ref,
-                timestamp: timestamp
+            // This is the core confirmation logic: atomic multi-node update
+            const orderData = {
+                network: String(selectedNet),
+                plan: String(plan),
+                recipient: String(phone),
+                amount: Number(baseAmount),
+                paidAmount: Number(finalPayAmount),
+                uid: String(agentUid), // The store owner
+                status: "Processing",
+                simName: String(simName),
+                paymentRef: String(ref),
+                timestamp: Number(ts)
+            };
+
+            const txData = {
+                uid: String(agentUid),
+                amount: Number(finalPayAmount),
+                description: `Customer Store Order: ${selectedNet} ${plan} (${phone})`,
+                type: "store_sale",
+                status: "Success",
+                reference: String(ref),
+                timestamp: Number(ts)
             };
 
             const updates = {};
-            updates[`orders/${orderId}`] = orderObj;
-            updates[`pending_orders/${orderId}`] = orderObj;
-            updates[`user_orders/${agentUid}/${orderId}`] = orderObj;
+            // Log to all required nodes for fulfillment and history
+            updates[`pending_orders/${orderId}`] = orderData;
+            updates[`orders/${orderId}`] = orderData;
+            updates[`user_orders/${agentUid}/${orderId}`] = orderData;
+            updates[`transactions/${orderId}`] = txData;
 
             try {
                 await database.ref().update(updates);
                 showStatusModal("Payment Received", `Order confirmed! Your data bundle for ${phone} is being processed.`, 'success');
                 setTimeout(() => { location.reload(); }, 4000);
             } catch(e) {
+                console.error(e);
                 showStatusModal("System Alert", "Payment successful but order logging failed. Contact us with Ref: " + ref, 'error');
             }
         }
