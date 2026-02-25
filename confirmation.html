@@ -95,6 +95,12 @@
             </button>
             <p class="text-center text-[10px] text-slate-400 mt-4 uppercase font-bold tracking-widest">Instant Activation Guaranteed</p>
         </div>
+
+        <div class="mt-6 text-center">
+            <a href="terms.html" style="padding: 10px 20px; background: #64748b; color: white; border-radius: 10px; text-decoration: none; font-size: 13px; font-weight: bold; display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fas fa-file-contract"></i> Terms & Conditions
+            </a>
+        </div>
     </div>
 
     <div id="successOverlay">
@@ -137,24 +143,25 @@
 
             onAuthStateChanged(auth, user => {
                 if (user) {
-                    activeUid = user.uid; // Set the UID immediately upon auth
+                    activeUid = user.uid; // Set the UID directly from the authenticated session
                     document.getElementById('userEmail').innerText = user.email;
 
-                    // Listen to the specific UID path in real-time
+                    // Strictly listen to the Balance node
                     const balanceRef = ref(db, `users/${activeUid}`);
                     onValue(balanceRef, (snapshot) => {
                         const data = snapshot.val() || {};
                         
-                        // Prioritize 'balance' field as per instructions
-                        currentRealBalance = parseFloat(data.balance || 0);
-                        const orderAmount = parseFloat(order.amount);
+                        // Sync with the actual balance stored in the database
+                        currentRealBalance = Number(data.balance || 0);
+                        const amountToDeduct = Number(order.amount);
                         
                         document.getElementById('dispCurrentBal').innerText = "GH₵ " + currentRealBalance.toFixed(2);
-                        const postBalance = (currentRealBalance - orderAmount).toFixed(2);
+                        const postBalance = (currentRealBalance - amountToDeduct).toFixed(2);
                         document.getElementById('dispNewBal').innerText = "GH₵ " + postBalance;
 
                         const btn = document.getElementById('mainBtn');
-                        if (currentRealBalance >= orderAmount) {
+                        // Enable button only if balance is sufficient
+                        if (currentRealBalance >= amountToDeduct) {
                             btn.disabled = false;
                             btn.classList.remove('opacity-50', 'cursor-not-allowed');
                             btn.innerHTML = "Confirm & Activate";
@@ -170,21 +177,23 @@
             });
         }
 
+        
+
         window.executeOrder = async () => {
-            if (!activeUid) return;
             const btn = document.getElementById('mainBtn');
+            if(btn.disabled) return; 
+
             btn.disabled = true;
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> PROCESSING...`;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> DEDUCTING...`;
 
             try {
-                // Fetch fresh balance before deducting to prevent race conditions
-                const freshSnap = await get(ref(db, `users/${activeUid}`));
-                const freshData = freshSnap.val();
-                const freshBalance = parseFloat(freshData.balance || 0);
-                const orderAmount = parseFloat(order.amount);
+                // Fetch fresh balance one last time before deduction
+                const freshSnap = await get(ref(db, `users/${activeUid}/balance`));
+                const freshBalance = Number(freshSnap.val() || 0);
+                const orderAmount = Number(order.amount);
 
                 if (freshBalance < orderAmount) {
-                    alert("Balance updated. Funds are now insufficient.");
+                    alert("Insufficient balance for this transaction.");
                     location.reload();
                     return;
                 }
@@ -194,30 +203,30 @@
                 const finalBalance = Number((freshBalance - orderAmount).toFixed(2));
 
                 const updates = {};
-                // DEDUCTION
+                // DEDUCTION: Update the user balance node
                 updates[`users/${activeUid}/balance`] = finalBalance;
                 
-                // DATA NODES
-                const sharedData = {
-                    network: order.network,
-                    plan: order.plan,
-                    recipient: order.recipient,
-                    amount: orderAmount,
-                    uid: activeUid,
+                // ORDER DATA
+                const sharedOrder = {
+                    network: String(order.network),
+                    plan: String(order.plan),
+                    recipient: String(order.recipient),
+                    amount: orderAmount, 
+                    uid: String(activeUid),
                     status: "Processing",
-                    timestamp: ts
+                    timestamp: Number(ts)
                 };
 
-                updates[`pending_orders/${orderId}`] = sharedData;
-                updates[`orders/${orderId}`] = sharedData;
-                updates[`user_orders/${activeUid}/${orderId}`] = sharedData;
+                updates[`pending_orders/${orderId}`] = sharedOrder;
+                updates[`orders/${orderId}`] = sharedOrder;
+                updates[`user_orders/${activeUid}/${orderId}`] = sharedOrder;
                 updates[`transactions/${orderId}`] = {
-                    uid: activeUid,
+                    uid: String(activeUid),
                     amount: orderAmount,
-                    description: `Purchase: ${order.network} ${order.plan}`,
+                    description: `Data Bundle: ${order.network} ${order.plan}`,
                     type: "purchase",
                     status: "Success",
-                    timestamp: ts
+                    timestamp: Number(ts)
                 };
 
                 await update(ref(db), updates);
@@ -227,11 +236,11 @@
                 
                 setTimeout(() => {
                     window.location.replace("dashboard.html");
-                }, 2500);
+                }, 2000);
 
             } catch (err) {
-                console.error("Deduction Error:", err);
-                alert("Database connection error. Please check your internet.");
+                console.error("Execution Error:", err);
+                alert("Failed to process transaction. Please try again.");
                 btn.disabled = false;
                 btn.innerHTML = "Confirm & Activate";
             }
