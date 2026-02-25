@@ -9,7 +9,7 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agent Store | Gigantic Data Hub</title>
+    <title>Gigantic Data Store</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -28,20 +28,20 @@
             color: #f8fafc;
         }
         .glass-card {
-            background: rgba(30, 41, 59, 0.5);
+            background: rgba(30, 41, 59, 0.4);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
         .accent-gradient {
             background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
         }
-        .step-inactive { opacity: 0.3; pointer-events: none; filter: grayscale(1); }
+        .step-inactive { opacity: 0.2; pointer-events: none; filter: grayscale(1); }
         
         #statusModal {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(2, 6, 23, 0.9);
+            background: rgba(2, 6, 23, 0.95);
             backdrop-filter: blur(12px);
             z-index: 9999;
             align-items: center; justify-content: center; padding: 20px;
@@ -57,10 +57,10 @@
         @keyframes modalPop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     </style>
 </head>
-<body class="p-4 lg:p-8">
+<body class="flex items-center justify-center p-4">
 
     <div id="statusModal">
-        <div class="modal-box">
+        <div class="modal-box shadow-2xl shadow-indigo-500/10">
             <div id="modalIcon" class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl"></div>
             <h2 id="modalTitle" class="text-xl font-extrabold mb-2 uppercase tracking-tighter"></h2>
             <p id="modalMsg" class="text-slate-400 text-sm leading-relaxed"></p>
@@ -70,115 +70,88 @@
         </div>
     </div>
 
-    <div class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        <aside class="lg:col-span-3 space-y-4">
-            <div class="glass-card rounded-[2rem] p-6 text-center">
-                <div class="w-16 h-16 accent-gradient rounded-2xl mx-auto mb-4 flex items-center justify-center text-2xl shadow-lg shadow-indigo-500/20">
-                    <i class="fas fa-bolt"></i>
-                </div>
-                <h3 class="font-black text-sm uppercase tracking-widest text-indigo-400">Agent Hub</h3>
-            </div>
+    <div class="max-w-md w-full">
+        <div class="text-center mb-10">
+            <div id="greeting" class="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400 mb-2">Good Day</div>
+            <h1 id="storeName" class="text-3xl font-extrabold text-white tracking-tight uppercase italic">Gigantic Store</h1>
+            <p class="text-slate-400 text-sm mt-3 px-4 leading-relaxed" id="welcomeMsg">
+                Welcome to our premium data portal. We are committed to providing you with the most reliable and affordable data services in Ghana.
+            </p>
+        </div>
 
-            <nav class="space-y-2">
-                <a href="#" class="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 text-sm font-bold text-white transition-all hover:bg-white/10">
-                    <i class="fas fa-shopping-cart w-5"></i> Buy Data
-                </a>
-                <a href="agent_orders.html" class="flex items-center gap-4 p-4 rounded-2xl text-slate-400 text-sm font-bold transition-all hover:text-white hover:bg-white/5">
-                    <i class="fas fa-list-ul w-5"></i> Agent Orders
-                </a>
-                <a href="transactions.html" class="flex items-center gap-4 p-4 rounded-2xl text-slate-400 text-sm font-bold transition-all hover:text-white hover:bg-white/5">
-                    <i class="fas fa-exchange-alt w-5"></i> Customer Sales
-                </a>
-                <a href="withdraw.html" class="flex items-center gap-4 p-4 rounded-2xl text-slate-400 text-sm font-bold transition-all hover:text-white hover:bg-white/5">
-                    <i class="fas fa-wallet w-5"></i> Withdraw
-                </a>
-            </nav>
-        </aside>
-
-        <main class="lg:col-span-9">
+        <div class="glass-card rounded-[3rem] p-8 shadow-2xl">
             <div class="mb-8">
-                <div id="greeting" class="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400 mb-2">Welcome</div>
-                <h1 id="storeName" class="text-3xl font-extrabold text-white tracking-tight uppercase italic">Emmanuel Data Store</h1>
-                <p class="text-slate-500 text-sm mt-1" id="welcomeMsg">Welcome to our store. We promise you the fastest data delivery in Ghana!</p>
+                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4 ml-1">1. Choose Network</label>
+                <div class="grid grid-cols-3 gap-3">
+                    <button onclick="selectNet('MTN')" id="net-MTN" class="p-4 rounded-2xl bg-slate-900/50 border border-white/5 flex flex-col items-center gap-2 hover:border-indigo-500 transition-all">
+                        <div class="w-8 h-8 bg-[#FFCC00] rounded-lg text-black font-black flex items-center justify-center text-[10px]">MTN</div>
+                        <span class="text-[9px] font-black uppercase">MTN</span>
+                    </button>
+                    <button onclick="selectNet('AIRTELTIGO')" id="net-AIRTELTIGO" class="p-4 rounded-2xl bg-slate-900/50 border border-white/5 flex flex-col items-center gap-2 hover:border-indigo-500 transition-all">
+                        <div class="w-8 h-8 bg-[#ED1C24] rounded-lg text-white font-black flex items-center justify-center text-[10px]">AT</div>
+                        <span class="text-[9px] font-black uppercase">AirtelTigo</span>
+                    </button>
+                    <button onclick="selectNet('TELECEL')" id="net-TELECEL" class="p-4 rounded-2xl bg-slate-900/50 border border-white/5 flex flex-col items-center gap-2 hover:border-indigo-500 transition-all">
+                        <div class="w-8 h-8 bg-[#E60000] rounded-lg text-white font-black flex items-center justify-center text-[10px]">TEL</div>
+                        <span class="text-[9px] font-black uppercase">Telecel</span>
+                    </button>
+                </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="glass-card rounded-[2.5rem] p-8">
-                    <div class="mb-8">
-                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">1. Select Network</label>
-                        <div class="grid grid-cols-3 gap-3">
-                            <button onclick="selectNet('MTN')" id="net-MTN" class="p-4 rounded-2xl bg-slate-900/50 border border-white/5 flex flex-col items-center gap-2 hover:border-indigo-500 transition-all">
-                                <div class="w-8 h-8 bg-[#FFCC00] rounded-lg text-black font-black flex items-center justify-center text-[10px]">MTN</div>
-                                <span class="text-[9px] font-black uppercase">MTN</span>
-                            </button>
-                            <button onclick="selectNet('AIRTELTIGO')" id="net-AIRTELTIGO" class="p-4 rounded-2xl bg-slate-900/50 border border-white/5 flex flex-col items-center gap-2 hover:border-indigo-500 transition-all">
-                                <div class="w-8 h-8 bg-[#ED1C24] rounded-lg text-white font-black flex items-center justify-center text-[10px]">AT</div>
-                                <span class="text-[9px] font-black uppercase">AirtelTigo</span>
-                            </button>
-                            <button onclick="selectNet('TELECEL')" id="net-TELECEL" class="p-4 rounded-2xl bg-slate-900/50 border border-white/5 flex flex-col items-center gap-2 hover:border-indigo-500 transition-all">
-                                <div class="w-8 h-8 bg-[#E60000] rounded-lg text-white font-black flex items-center justify-center text-[10px]">TEL</div>
-                                <span class="text-[9px] font-black uppercase">Telecel</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div id="step2" class="step-inactive mb-8">
-                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">2. Recipient Number</label>
-                        <div class="relative">
-                            <input type="tel" id="phoneNumber" maxlength="10" placeholder="024XXXXXXX" 
-                                class="w-full bg-slate-950/50 border border-white/10 rounded-2xl py-5 px-6 text-xl font-bold outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
-                            <div id="simNameBox" class="hidden mt-3 bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl flex items-center gap-3">
-                                <i class="fas fa-check-circle text-emerald-500 text-xs"></i>
-                                <span id="displaySimName" class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Searching...</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="step3" class="step-inactive">
-                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">3. Select Plan</label>
-                        <select id="dataPlan" onchange="calculateFinalTotal()" 
-                            class="w-full bg-slate-950/50 border border-white/10 rounded-2xl py-5 px-6 text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 appearance-none">
-                            <option value="" disabled selected>-- Choose Bundle --</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="space-y-6">
-                    <div id="summaryCard" class="glass-card rounded-[2.5rem] p-8 step-inactive">
-                        <h4 class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6">Order Summary</h4>
-                        
-                        <div class="space-y-4">
-                            <div class="flex justify-between text-xs font-bold">
-                                <span class="text-slate-500">Bundle Price</span>
-                                <span id="summaryBasePrice">₵ 0.00</span>
-                            </div>
-                            <div class="flex justify-between text-xs font-bold">
-                                <span class="text-slate-500">Service Fee (2.5%)</span>
-                                <span id="summaryFee">₵ 0.00</span>
-                            </div>
-                            <div class="border-t border-white/5 pt-4 mt-2 flex justify-between items-center">
-                                <span class="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Grand Total</span>
-                                <span id="summaryTotal" class="text-3xl font-black italic text-white">₵ 0.00</span>
-                            </div>
-                        </div>
-
-                        <button id="payBtn" onclick="initPaystackStore()" 
-                            class="w-full mt-8 py-5 rounded-2xl accent-gradient text-white font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-indigo-500/20 active:scale-[0.98] transition-all">
-                            Initialize Payment
-                        </button>
-                    </div>
-
-                    <div class="glass-card rounded-3xl p-6 flex items-center gap-4 border-l-4 border-indigo-500">
-                        <div class="text-indigo-500 text-xl"><i class="fas fa-shield-alt"></i></div>
-                        <div>
-                            <p class="text-[10px] font-black uppercase text-slate-400 tracking-wider">Secure Transaction</p>
-                            <p class="text-[11px] text-slate-300">All payments are encrypted by Paystack PCI-DSS systems.</p>
-                        </div>
+            <div id="step2" class="step-inactive mb-8">
+                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4 ml-1">2. Recipient Number</label>
+                <div class="relative">
+                    <input type="tel" id="phoneNumber" maxlength="10" placeholder="024XXXXXXX" 
+                        class="w-full bg-slate-950/50 border border-white/10 rounded-2xl py-5 px-6 text-xl font-bold outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-white">
+                    <div id="simNameBox" class="hidden mt-3 bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-2xl flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                        <span id="displaySimName" class="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Searching...</span>
                     </div>
                 </div>
             </div>
-        </main>
+
+            <div id="step3" class="step-inactive mb-10">
+                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4 ml-1">3. Select Data Plan</label>
+                <div class="relative">
+                    <select id="dataPlan" onchange="calculateFinalTotal()" 
+                        class="w-full bg-slate-950/50 border border-white/10 rounded-2xl py-5 px-6 text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 appearance-none text-white">
+                        <option value="" disabled selected>-- Choose Bundle --</option>
+                    </select>
+                    <div class="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div id="summaryCard" class="hidden space-y-4 mb-8 p-6 bg-indigo-500/5 rounded-[2rem] border border-indigo-500/10">
+                <div class="flex justify-between text-[10px] font-bold uppercase tracking-widest">
+                    <span class="text-slate-500">Bundle Cost</span>
+                    <span id="summaryBasePrice" class="text-white">₵ 0.00</span>
+                </div>
+                <div class="flex justify-between text-[10px] font-bold uppercase tracking-widest">
+                    <span class="text-slate-500">Service Fee (2.5%)</span>
+                    <span id="summaryFee" class="text-slate-400">₵ 0.00</span>
+                </div>
+                <div class="border-t border-white/5 pt-4 flex justify-between items-center">
+                    <span class="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em]">Total To Pay</span>
+                    <span id="summaryTotal" class="text-3xl font-black italic text-white">₵ 0.00</span>
+                </div>
+            </div>
+
+            <button id="payBtn" onclick="initPaystackStore()" disabled
+                class="w-full py-6 rounded-3xl accent-gradient text-white font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-indigo-500/30 active:scale-[0.98] transition-all disabled:opacity-20 disabled:grayscale">
+                Pay & Receive Data
+            </button>
+        </div>
+
+        <div class="mt-8 text-center space-y-4">
+            <p class="text-[9px] text-slate-600 font-bold uppercase tracking-[0.3em]">Fully Encrypted Payment Gateway</p>
+            <div class="flex justify-center gap-4 opacity-30">
+                <i class="fab fa-cc-visa text-xl"></i>
+                <i class="fab fa-cc-mastercard text-xl"></i>
+                <i class="fas fa-mobile-alt text-xl"></i>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -190,12 +163,15 @@
         };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        const auth = firebase.auth();
 
         const PAYSTACK_PK = 'pk_live_faecdb3166144fadebd8269829343698dd43de63';
         const FEE_RATE = 0.025;
 
-        let activeAgentUid = "";
+        // URL Slug Logic
+        const urlParams = new URLSearchParams(window.location.search);
+        const storeSlug = urlParams.get('s');
+        
+        let agentUid = "";
         let agentEmail = "";
         let selectedNet = "";
         let simName = "NOT VERIFIED";
@@ -208,37 +184,46 @@
             TELECEL:[{plan:"10GB",price:45},{plan:"20GB",price:84}]
         };
 
-        // Initialize Store Data
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                activeAgentUid = user.uid;
-                agentEmail = user.email;
-                loadAgentData();
-            } else {
-                window.location.replace("login.html");
-            }
-        });
-
-        function loadAgentData() {
+        // Initialize Store Details
+        async function initStore() {
             const hour = new Date().getHours();
             let greet = "Good Morning";
             if(hour >= 12) greet = "Good Afternoon";
             if(hour >= 17) greet = "Good Evening";
             document.getElementById('greeting').innerText = greet;
 
-            database.ref(`users/${activeAgentUid}`).once('value', snapshot => {
-                const data = snapshot.val();
-                if(data && data.fullName) {
-                    const firstName = data.fullName.split(' ')[0];
-                    document.getElementById('storeName').innerText = `${firstName} Data Store`;
-                    document.getElementById('welcomeMsg').innerText = `Welcome ${firstName} to your professional store. We provide quality services to all customers.`;
+            if(!storeSlug) {
+                document.getElementById('storeName').innerText = "GIGANTIC HUB";
+                return;
+            }
+
+            try {
+                // Find UID via Slug
+                const slugSnap = await database.ref(`slugs/${storeSlug}`).once('value');
+                if(!slugSnap.exists()) {
+                    document.getElementById('storeName').innerText = "STORE NOT FOUND";
+                    return;
                 }
-            });
+                
+                agentUid = slugSnap.val();
+                
+                // Load User Store Settings
+                const userSnap = await database.ref(`users/${agentUid}`).once('value');
+                const userData = userSnap.val();
+                
+                if(userData && userData.storeSettings) {
+                    const storeDisplayName = userData.storeSettings.storeName;
+                    document.getElementById('storeName').innerText = storeDisplayName;
+                    document.getElementById('welcomeMsg').innerText = `Welcome to ${storeDisplayName}! We are dedicated to offering you amazing data deals with 100% reliability.`;
+                    agentEmail = userData.email;
+                }
+            } catch(e) { console.error("Store Init Error:", e); }
         }
+        initStore();
 
         window.selectNet = (net) => {
             selectedNet = net;
-            document.querySelectorAll('.network-option').forEach(b => b.classList.remove('border-indigo-500', 'bg-indigo-500/10'));
+            document.querySelectorAll('button[id^="net-"]').forEach(b => b.classList.remove('border-indigo-500', 'bg-indigo-500/10'));
             document.getElementById(`net-${net}`).classList.add('border-indigo-500', 'bg-indigo-500/10');
             
             // Populate Plans
@@ -251,15 +236,15 @@
             document.getElementById('step2').classList.remove('step-inactive');
         };
 
-        // SIM NAME LOGIC
+        // SIM Verification Logic
         document.getElementById('phoneNumber').oninput = async function(e) {
             const num = e.target.value;
             const box = document.getElementById('simNameBox');
-            const nameSpan = document.getElementById('displayAccName');
+            const nameSpan = document.getElementById('displaySimName');
             
             if(num.length === 10) {
                 box.classList.remove('hidden');
-                nameSpan.innerText = "VERIFYING SIM...";
+                nameSpan.innerText = "SYNCING SIM...";
                 document.getElementById('step3').classList.remove('step-inactive');
                 
                 const bankCode = { 'MTN': 'MTN', 'AIRTELTIGO': 'ATL', 'TELECEL': 'VOD' }[selectedNet];
@@ -269,13 +254,16 @@
                         headers: { 'Authorization': k }
                     });
                     const res = await response.json();
-                    simName = res.status ? res.data.account_name : "NETWORK VERIFIED";
+                    simName = res.status ? res.data.account_name : "NAME VERIFIED";
                     nameSpan.innerText = simName;
                 } catch (err) { 
                     simName = "SYNCED";
                     nameSpan.innerText = simName; 
                 }
-            } else { box.classList.add('hidden'); }
+            } else { 
+                box.classList.add('hidden');
+                document.getElementById('step3').classList.add('step-inactive');
+            }
         };
 
         function calculateFinalTotal() {
@@ -288,7 +276,8 @@
             document.getElementById('summaryBasePrice').innerText = `₵ ${basePrice.toFixed(2)}`;
             document.getElementById('summaryFee').innerText = `₵ ${fee.toFixed(2)}`;
             document.getElementById('summaryTotal').innerText = `₵ ${total.toFixed(2)}`;
-            document.getElementById('summaryCard').classList.remove('step-inactive');
+            document.getElementById('summaryCard').classList.remove('hidden');
+            document.getElementById('payBtn').disabled = false;
         }
 
         function showStatusModal(title, msg, type = 'success') {
@@ -313,17 +302,16 @@
         }
 
         function initPaystackStore() {
-            const amount = finalPayAmount;
             const phone = document.getElementById('phoneNumber').value;
             const planSelect = document.getElementById('dataPlan');
             const planName = planSelect.options[planSelect.selectedIndex].getAttribute('data-plan');
 
             let handler = PaystackPop.setup({
                 key: PAYSTACK_PK,
-                email: agentEmail,
-                amount: Math.round(amount * 100),
+                email: agentEmail || 'customer@giganticdatahub.com',
+                amount: Math.round(finalPayAmount * 100),
                 currency: 'GHS',
-                ref: 'AGT-' + Date.now(),
+                ref: 'ST-' + Date.now(),
                 callback: (response) => {
                     placeOrder(response.reference, phone, planName, planSelect.value);
                 }
@@ -337,7 +325,7 @@
             
             const orderObj = {
                 orderId: orderId,
-                uid: activeAgentUid,
+                agentId: agentUid,
                 recipient: phone,
                 network: selectedNet,
                 plan: plan,
@@ -353,14 +341,14 @@
             const updates = {};
             updates[`orders/${orderId}`] = orderObj;
             updates[`pending_orders/${orderId}`] = orderObj;
-            updates[`user_orders/${activeAgentUid}/${orderId}`] = orderObj;
+            updates[`user_orders/${agentUid}/${orderId}`] = orderObj;
 
             try {
                 await database.ref().update(updates);
-                showStatusModal("Order Placed", `Payment of ₵${finalPayAmount.toFixed(2)} successful. Your data for ${phone} is being processed.`, 'success');
-                setTimeout(() => { location.reload(); }, 3500);
+                showStatusModal("Payment Received", `Order confirmed! Your data bundle for ${phone} is being processed.`, 'success');
+                setTimeout(() => { location.reload(); }, 4000);
             } catch(e) {
-                showStatusModal("Database Error", "Payment success but order failed to log. Contact support with Ref: " + ref, 'error');
+                showStatusModal("System Alert", "Payment successful but order logging failed. Contact us with Ref: " + ref, 'error');
             }
         }
     </script>
