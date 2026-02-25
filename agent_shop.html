@@ -127,9 +127,9 @@
     </div>
     <div class="profit-display" id="profitDisplay">₵0.00</div>
     <div class="toggle-group">
-        <button class="toggle-btn" onclick="setProfitMargin(0.3, this)">30%</button>
-        <button class="toggle-btn active" onclick="setProfitMargin(0.4, this)">40%</button>
-        <button class="toggle-btn" onclick="setProfitMargin(0.5, this)">50%</button>
+        <button class="toggle-btn" onclick="setProfitMargin(0.1, this)">10%</button>
+        <button class="toggle-btn active" onclick="setProfitMargin(0.15, this)">15%</button>
+        <button class="toggle-btn" onclick="setProfitMargin(0.2, this)">20%</button>
     </div>
 </div>
 
@@ -138,13 +138,13 @@
     <div class="tools-grid">
         <a href="order.html" class="tool-box"><i class="fas fa-wifi" style="color: #3b82f6;"></i><b>New Sale</b></a>
         <a href="receipt.html" class="tool-box"><i class="fas fa-receipt" style="color: #a855f7;"></i><b>Ledger</b></a>
-        <a href="agent_tools.html" class="tool-box"><i class="fas fa-id-card" style="color: #10b981;"></i><b>tools</b></a>
+        <a href="agent_tools.html" class="tool-box"><i class="fas fa-tools" style="color: #10b981;"></i><b>Store Settings</b></a>
         <div class="tool-box" onclick="shareMarketingKit()" style="cursor:pointer;"><i class="fab fa-whatsapp" style="color: #25d366;"></i><b>Share Ads</b></div>
     </div>
 </div>
 
 <div class="section">
-    <div class="section-header">Business Ledger</div>
+    <div class="section-header">Recent Business Activity</div>
     <div id="historyContainer">
         <p style="text-align: center; font-size: 11px; color: #94a3b8; padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Reconciling History...</p>
     </div>
@@ -173,7 +173,8 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    let currentMargin = 0.4;
+    // Default margin 15% (Typical for retail data)
+    let currentMargin = 0.15; 
     let todaySalesVolume = 0;
 
     onAuthStateChanged(auth, user => {
@@ -185,17 +186,18 @@
         }
     });
 
+    
+
     function syncTerminal(user) {
         document.getElementById('authGuard').style.display = 'none';
 
-        // MASTER BALANCE SYNC (REVEALS REAL-TIME LIQUIDITY)
-        onValue(ref(db, `users/${user.uid}`), snap => {
+        // REAL-TIME BALANCE TRACKER (STRICT SYNC)
+        const userRef = ref(db, `users/${user.uid}`);
+        onValue(userRef, snap => {
             const data = snap.val() || {};
             
-            // Check both nodes to handle any legacy desync
-            const bal = Number(data.balance || 0);
-            const wal = Number(data.wallet || 0);
-            const realBalance = Math.max(bal, wal);
+            // Prioritize 'balance' node for current liquidity
+            const realBalance = parseFloat(data.balance || 0);
             
             document.getElementById('agentWallet').innerText = "₵" + realBalance.toFixed(2);
             
@@ -203,12 +205,14 @@
             document.getElementById('userStatus').innerText = userStatus.toUpperCase();
         });
 
-        // MERCHANT SALES HISTORY
+        // ORDER HISTORY & PROFIT CALCULATION
         onValue(ref(db, `user_orders/${user.uid}`), (snapshot) => {
             const container = document.getElementById('historyContainer');
             const data = snapshot.val();
+            
             if (!data) {
-                container.innerHTML = `<p style="text-align:center; padding:30px; color:#94a3b8;">No records found.</p>`;
+                container.innerHTML = `<p style="text-align:center; padding:30px; color:#94a3b8;">No business activity yet.</p>`;
+                document.getElementById('lifetimeSales').innerText = "0";
                 return;
             }
 
@@ -217,9 +221,11 @@
             const startOfToday = new Date().setHours(0,0,0,0);
             const entries = Object.entries(data).sort((a,b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
 
-            entries.slice(0, 10).forEach(([id, order]) => {
+            entries.slice(0, 15).forEach(([id, order]) => {
                 const amount = parseFloat(order.amount || 0);
-                const ts = order.timestamp || Date.now();
+                const ts = order.timestamp || 0;
+                
+                // Track volume for profit calculation
                 if (ts >= startOfToday) todayCost += amount;
 
                 const network = (order.network || 'MTN').toUpperCase();
@@ -231,13 +237,13 @@
                             <div class="network-icon ${netClass}">${network.substring(0,3)}</div>
                             <div style="text-align:right">
                                 <div style="font-size:9px; color:var(--text-gray); font-family: monospace;">#${id.slice(-8)}</div>
-                                <div style="font-size:8px; color:var(--text-gray);">${new Date(ts).toLocaleTimeString()}</div>
+                                <div style="font-size:8px; color:var(--text-gray);">${ts ? new Date(ts).toLocaleTimeString() : '---'}</div>
                             </div>
                         </div>
-                        <div style="font-size:12px; font-weight:700;">${order.plan} → ${order.recipient}</div>
+                        <div style="font-size:12px; font-weight:700;">${order.plan || 'Data Plan'} → ${order.recipient || 'N/A'}</div>
                         <div style="display:flex; justify-content:space-between; margin-top:10px; align-items:center;">
                             <div style="font-weight:900; color:var(--primary);">₵${amount.toFixed(2)}</div>
-                            <span style="font-size:9px; color:var(--merchant-green); font-weight:800;">${(order.status || 'Successful').toUpperCase()}</span>
+                            <span style="font-size:9px; color:${order.status === 'Failed' ? '#ef4444' : 'var(--merchant-green)'}; font-weight:800;">${(order.status || 'Successful').toUpperCase()}</span>
                         </div>
                     </div>`;
             });
@@ -262,7 +268,7 @@
     }
 
     window.shareMarketingKit = () => {
-        const msg = `🚀 *CHEAP DATA DISPATCH* 🚀\nI'm now an official Merchant at GiganticDataHub!\nGet instant MTN, AT & Telecel data at low rates.\nDM for price list! ⚡`;
+        const msg = `🚀 *LOW COST DATA DEALS* 🚀\nI am now an active Data Merchant at GiganticDataHub!\nGet your MTN, AT, and Telecel bundles instantly.\nReliable and Fast. Send me a message now! ⚡`;
         window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
     };
 </script>
