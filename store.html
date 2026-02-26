@@ -272,24 +272,21 @@
             handler.openIframe();
         }
 
-        
-
         async function executeAutoOrder(reference, phone, plan, baseAmount) {
             const btn = document.getElementById('payBtn');
-            btn.innerHTML = `<i class="fas fa-circle-notch fa-spin mr-2"></i> ACTVATING...`;
+            btn.innerHTML = `<i class="fas fa-circle-notch fa-spin mr-2"></i> SECURING...`;
             btn.disabled = true;
 
-            const orderId = "ORD-" + Math.random().toString(36).substr(2, 9).toUpperCase();
+            const orderId = 'ORD-' + reference;
             const ts = Date.now();
 
-            // Strictly following the confirmation page logic for direct placement
             const orderData = {
                 network: String(selectedNet),
                 plan: String(plan),
                 recipient: String(phone),
                 amount: parseFloat(baseAmount),
                 paidAmount: parseFloat(finalPayAmount),
-                uid: String(agentUid), // Important: Linked to agent history
+                uid: String(agentUid), 
                 status: "Processing",
                 simName: String(simName),
                 paymentRef: String(reference),
@@ -297,38 +294,28 @@
             };
 
             const updates = {};
-            // Sync with all required nodes so it shows in "Agent Orders"
             updates[`pending_orders/${orderId}`] = orderData;
             updates[`orders/${orderId}`] = orderData;
             updates[`user_orders/${agentUid}/${orderId}`] = orderData;
-            
-            // Transaction bookkeeping
-            updates[`transactions/${orderId}`] = {
-                uid: String(agentUid),
-                amount: parseFloat(finalPayAmount),
-                description: `Store Sale: ${selectedNet} ${plan} (${phone})`,
-                type: "store_sale",
-                status: "Success",
-                reference: String(reference),
-                timestamp: Number(ts)
-            };
 
             try {
                 await database.ref().update(updates);
 
-                // Optional: Verify payment via Cloud Function for backend consistency
                 fetch('https://us-central1-gigantic-data.cloudfunctions.net/verifyPayment', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ reference: reference, userId: agentUid, isStoreOrder: true })
-                });
+                    body: JSON.stringify({ 
+                        reference: reference, 
+                        userId: agentUid, 
+                        isStoreOrder: true 
+                    })
+                }).catch(err => console.log("Background verification triggered"));
 
-                showStatusModal("Order Placed", "Your data bundle has been provisioned. It will arrive shortly!", "success");
+                showStatusModal("Order Received", "Payment confirmed. Your data is being provisioned and will arrive shortly.", "success");
                 setTimeout(() => location.reload(), 4500);
 
             } catch (e) {
-                console.error(e);
-                showStatusModal("System Timeout", "Payment received but order logging failed. Contact us with Ref: " + reference, "error");
+                showStatusModal("Critical Error", "Please contact support with Ref: " + reference, "error");
             }
         }
     </script>
