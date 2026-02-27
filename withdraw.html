@@ -35,6 +35,15 @@
         .btn-withdraw:hover { background: #5649d8; transform: translateY(-2px); }
         .btn-withdraw:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; }
 
+        /* Admin Blog Button Styling */
+        .btn-blog {
+            background: var(--deep); color: white; border: none; width: 100%; 
+            padding: 14px; border-radius: 12px; font-weight: 700; cursor: pointer; 
+            font-size: 0.9rem; margin-top: 15px; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px;
+            text-decoration: none;
+        }
+        .btn-blog:hover { background: #1a3a76; }
+
         .status-msg { margin-top: 15px; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 600; display: none; text-align: center; }
         .msg-success { background: #dcfce7; color: var(--success); }
 
@@ -89,6 +98,10 @@
     </div>
 
     <button class="btn-withdraw" id="submitBtn">PROCEED WITHDRAWAL</button>
+
+    <a href="admin_blog.html" class="btn-blog">
+        <i class="fas fa-newspaper"></i> READ ADMIN BLOG
+    </a>
 
     <div class="leaderboard">
         <div class="leader-title"><i class="fas fa-crown"></i> Top 5 Elite Referrers</div>
