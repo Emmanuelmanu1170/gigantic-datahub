@@ -51,6 +51,16 @@
 
         <div class="space-y-4">
             <div>
+                <label class="block text-[10px] font-bold uppercase tracking-widest mb-2 text-slate-400">Your Full Name</label>
+                <input type="text" id="agentFullName" placeholder="e.g. John Doe" class="w-full bg-[#0a0e27] border border-white/10 p-4 rounded-xl outline-none focus:border-orange-500 transition">
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold uppercase tracking-widest mb-2 text-slate-400">WhatsApp Number</label>
+                <input type="tel" id="whatsappNumber" placeholder="e.g. 024XXXXXXX" class="w-full bg-[#0a0e27] border border-white/10 p-4 rounded-xl outline-none focus:border-orange-500 transition">
+            </div>
+
+            <div>
                 <label class="block text-[10px] font-bold uppercase tracking-widest mb-2 text-orange-500">Store Name</label>
                 <input type="text" id="storeName" placeholder="e.g. Kobby Data Plug" class="w-full bg-[#0a0e27] border border-white/10 p-4 rounded-xl outline-none focus:border-orange-500 transition">
             </div>
@@ -70,7 +80,7 @@
                 <div class="flex-grow border-t border-white/5"></div>
             </div>
 
-            <button onclick="goTostore()" class="w-full bg-white/5 hover:bg-white/10 text-white border border-white/10 py-3 rounded-xl text-xs font-bold transition">
+            <button onclick="goToDashboard()" class="w-full bg-white/5 hover:bg-white/10 text-white border border-white/10 py-3 rounded-xl text-xs font-bold transition">
                 <i class="fas fa-sign-in-alt mr-2"></i> Log In to Agent Dashboard
             </button>
         </div>
@@ -133,6 +143,14 @@
                         userBalance = data.balance || 0;
                         currentStoreSlug = data.storeSettings ? data.storeSettings.storeSlug : "";
                         document.getElementById('displayBalance').innerText = `GH₵ ${Number(userBalance).toFixed(2)}`;
+                        
+                        // Prefill if data exists
+                        if(data.storeSettings) {
+                            document.getElementById('storeName').value = data.storeSettings.storeName || "";
+                            document.getElementById('agentFullName').value = data.fullName || "";
+                            document.getElementById('whatsappNumber').value = data.storeSettings.contactPhone || "";
+                            document.getElementById('slugPrev').innerText = data.storeSettings.storeSlug || "...";
+                        }
                     }
                 });
             } else {
@@ -146,70 +164,68 @@
         };
 
         window.goToDashboard = () => {
-            if(currentStoreSlug) {
-                window.location.href = `store.html?s=${currentStoreSlug}`;
-            } else {
-                window.location.href = 'dashboard.html';
-            }
+            window.location.href = 'dashboard.html';
         };
 
         window.launchStore = async () => {
             const user = auth.currentUser;
             const name = document.getElementById('storeName').value.trim();
+            const fullName = document.getElementById('agentFullName').value.trim();
+            const whatsapp = document.getElementById('whatsappNumber').value.trim();
             const slug = document.getElementById('slugPrev').innerText;
             const btn = document.getElementById('launchBtn');
             const cost = 45;
 
             if (!user) return showModal('error', 'Auth Failed', 'Your session has expired. Please login again.', 'Go to Login', () => window.location.href='login.html');
+            if (fullName.length < 3) return showModal('error', 'Missing Info', 'Please enter your full name.', 'Try Again');
+            if (whatsapp.length < 10) return showModal('error', 'Missing Info', 'Please enter a valid WhatsApp number.', 'Try Again');
             if (slug.length < 3) return showModal('error', 'Invalid Name', 'Your store name must be at least 3 characters.', 'Try Again');
 
             btn.disabled = true;
             btn.innerText = "VERIFYING ELIGIBILITY...";
 
             try {
-                if (userBalance < cost) {
-                    showModal('error', 'Low Balance', `You need GH₵ ${cost.toFixed(2)} to launch. Your current balance is GH₵ ${userBalance.toFixed(2)}`, 'Top Up Now', () => window.location.href='toppup.html');
-                    btn.disabled = false;
-                    btn.innerText = "Launch My Store Now";
-                    return;
+                // Check if slug is taken only if it's a NEW store (not the user's current slug)
+                if (slug !== currentStoreSlug) {
+                    const slugRef = ref(db, `slugs/${slug}`);
+                    const slugCheck = await get(slugRef);
+                    if (slugCheck.exists()) {
+                        showModal('error', 'Slug Taken', 'This store link is already in use.', 'Change Name');
+                        btn.disabled = false;
+                        btn.innerText = "Launch My Store Now";
+                        return;
+                    }
                 }
 
-                const slugRef = ref(db, `slugs/${slug}`);
-                const slugCheck = await get(slugRef);
-                
-                if (slugCheck.exists()) {
-                    showModal('error', 'Slug Taken', 'This store link is already in use. Please try a different name.', 'Change Name');
-                    btn.disabled = false;
-                    btn.innerText = "Launch My Store Now";
-                    return;
-                }
-
-                // TRANSACTION: DEDUCT BALANCE AND SETUP STORE
+                // TRANSACTION: DEDUCT BALANCE (only if new) AND SETUP STORE
                 const userRef = ref(db, `users/${user.uid}`);
                 const result = await runTransaction(userRef, (userData) => {
                     if (userData) {
-                        if ((userData.balance || 0) < cost) return; // double check inside transaction
-                        userData.balance = (userData.balance || 0) - cost;
+                        // Only charge if they aren't already an agent
+                        if (userData.userType !== "agent") {
+                            if ((userData.balance || 0) < cost) return; 
+                            userData.balance = (userData.balance || 0) - cost;
+                        }
+                        
+                        userData.fullName = fullName;
                         userData.userType = "agent"; 
                         userData.status = "agent";   
-                        userData.agentEarnings = 0;
                         userData.storeSettings = {
                             storeName: name,
                             storeSlug: slug,
                             welcomeMsg: "Welcome to my official data store!",
-                            contactPhone: userData.phone || ""
+                            contactPhone: whatsapp
                         };
                     }
                     return userData;
                 });
 
                 if (result.committed) {
-                    // Update the global slugs map
-                    const slugMap = {};
-                    slugMap[`slugs/${slug}`] = user.uid;
-                    await update(ref(db), slugMap);
+                    const updates = {};
+                    updates[`slugs/${slug}`] = user.uid;
+                    await update(ref(db), updates);
 
-                    showModal('success', 'Store Launched', `Your store is now live! GH₵ ${cost.toFixed(2)} has been deducted for setup fees.`, 'View Store', () => {
+                    showModal('success', 'Success', `Your store details have been saved!`, 'View Store', () => {
                         window.location.href = `store.html?s=${slug}`;
                     });
                 }
