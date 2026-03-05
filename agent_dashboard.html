@@ -13,7 +13,6 @@
         .accent-gradient { background: linear-gradient(135deg, #f97316 0%, #fb923c 100%); }
         .stat-glow { box-shadow: 0 0 20px rgba(249, 115, 22, 0.15); }
         
-        /* Modal Animation */
         #withdrawModal { display: none; }
         .modal-animate { animation: slideUp 0.3s ease-out; }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -34,15 +33,15 @@
     <div class="p-6 max-w-lg mx-auto space-y-6">
         
         <div class="glass-card rounded-[2.5rem] p-8 relative overflow-hidden stat-glow">
-            <div class="absolute top-0 right-0 p-6 opacity-10 text-6xl"><i class="fas fa-wallet"></i></div>
-            <label class="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500">Available Profit</label>
+            <div class="absolute top-0 right-0 p-6 opacity-10 text-6xl"><i class="fas fa-chart-line"></i></div>
+            <label class="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500">Live Profit (15%)</label>
             <div class="flex items-baseline gap-2 mt-2">
                 <span class="text-4xl font-black italic" id="profitBalance">₵0.00</span>
             </div>
             
             <div class="grid grid-cols-2 gap-4 mt-8">
-                <button onclick="openWithdrawModal()" class="accent-gradient py-4 rounded-2xl font-bold text-sm uppercase tracking-tighter shadow-lg shadow-orange-500/20 active:scale-95 transition">
-                    <i class="fas fa-arrow-up-from-bracket mr-2"></i> Withdraw
+                <button onclick="window.location.href='withdraw.html'" class="accent-gradient py-4 rounded-2xl font-bold text-sm uppercase tracking-tighter shadow-lg shadow-orange-500/20 active:scale-95 transition">
+                    <i class="fas fa-wallet mr-2"></i> Payouts
                 </button>
                 <button onclick="copyStoreLink()" class="bg-white/10 py-4 rounded-2xl font-bold text-sm uppercase tracking-tighter border border-white/10 active:scale-95 transition">
                     <i class="fas fa-share-nodes mr-2"></i> Store Link
@@ -56,8 +55,8 @@
                 <div class="text-xl font-bold" id="totalOrders">0</div>
             </div>
             <div class="glass-card p-5 rounded-3xl">
-                <div class="text-slate-500 text-[10px] font-bold uppercase mb-1">Total Earned</div>
-                <div class="text-xl font-bold text-emerald-400" id="totalEarned">₵0.00</div>
+                <div class="text-slate-500 text-[10px] font-bold uppercase mb-1">Sales Volume</div>
+                <div class="text-xl font-bold text-emerald-400" id="totalSales">₵0.00</div>
             </div>
         </div>
 
@@ -97,29 +96,11 @@
                 <i class="fas fa-chevron-right text-slate-600 group-hover:text-white transition"></i>
             </button>
         </div>
-
-    </div>
-
-    <div id="withdrawModal" class="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeWithdrawModal()"></div>
-        <div class="modal-animate relative bg-[#11183d] w-full max-w-sm rounded-t-[2.5rem] sm:rounded-[2.5rem] p-8 border border-white/10 shadow-2xl">
-            <div class="w-12 h-1 bg-white/10 rounded-full mx-auto mb-6 sm:hidden"></div>
-            <h2 class="text-xl font-black uppercase mb-2">Profit Withdrawal</h2>
-            <p class="text-slate-400 text-xs mb-6">Minimum withdrawal is ₵10.00</p>
-            
-            <div class="space-y-4">
-                <input type="number" id="withdrawAmt" placeholder="Amount ₵" class="w-full bg-[#0a0e27] border border-white/10 p-5 rounded-2xl outline-none focus:border-orange-500 text-xl font-bold">
-                <input type="tel" id="momoNumber" placeholder="Momo Number" class="w-full bg-[#0a0e27] border border-white/10 p-5 rounded-2xl outline-none focus:border-orange-500 font-bold">
-                <button onclick="processWithdrawal()" id="confirmWithdrawBtn" class="w-full accent-gradient py-5 rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-95 transition">
-                    Confirm Cashout
-                </button>
-            </div>
-        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue, get, update, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -134,98 +115,58 @@
         const auth = getAuth(app);
 
         let currentUid = "";
-        let currentProfit = 0;
         let storeSlug = "";
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUid = user.uid;
-                syncAgentData();
+                // Get basic user info (Name and Slug)
+                onValue(ref(db, `users/${currentUid}`), (snap) => {
+                    const data = snap.val();
+                    if(data) {
+                        document.getElementById('agentName').innerText = data.fullName || user.email;
+                        storeSlug = data.storeSettings?.storeSlug || "";
+                    }
+                });
+                // Calculate real-time profit from orders
+                syncProfitStats();
             } else {
                 window.location.href = "login.html";
             }
         });
 
-        function syncAgentData() {
-            const userRef = ref(db, `users/${currentUid}`);
-            onValue(userRef, (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    currentProfit = data.referralBonus || 0;
-                    storeSlug = data.storeSettings?.storeSlug || "";
-                    
-                    document.getElementById('profitBalance').innerText = `₵${currentProfit.toFixed(2)}`;
-                    document.getElementById('agentName').innerText = data.fullName || user.email;
-                    
-                    // Fetch total earned (sum of commissions in order history)
-                    fetchStats();
+        function syncProfitStats() {
+            const ordersRef = ref(db, `user_orders/${currentUid}`);
+            onValue(ordersRef, (snapshot) => {
+                const orders = snapshot.val();
+                let totalVolume = 0;
+                let orderCount = 0;
+
+                if (orders) {
+                    Object.values(orders).forEach(order => {
+                        // Only calculate for successful orders
+                        if (order.status === "Successful" || !order.status) {
+                            totalVolume += parseFloat(order.amount || 0);
+                            orderCount++;
+                        }
+                    });
                 }
+
+                // Calculate 15% Profit
+                const calculatedProfit = totalVolume * 0.15;
+
+                // Update UI
+                document.getElementById('profitBalance').innerText = `₵${calculatedProfit.toFixed(2)}`;
+                document.getElementById('totalOrders').innerText = orderCount;
+                document.getElementById('totalSales').innerText = `₵${totalVolume.toFixed(2)}`;
             });
         }
-
-        async function fetchStats() {
-            const ordersRef = ref(db, `user_orders/${currentUid}`);
-            const snap = await get(ordersRef);
-            if(snap.exists()) {
-                const orders = snap.val();
-                const total = Object.keys(orders).length;
-                let earned = 0;
-                Object.values(orders).forEach(o => earned += (o.commission || 0));
-                
-                document.getElementById('totalOrders').innerText = total;
-                document.getElementById('totalEarned').innerText = `₵${earned.toFixed(2)}`;
-            }
-        }
-
-        window.openWithdrawModal = () => document.getElementById('withdrawModal').style.display = 'flex';
-        window.closeWithdrawModal = () => document.getElementById('withdrawModal').style.display = 'none';
 
         window.copyStoreLink = () => {
             if(!storeSlug) return alert("Launch your store first!");
             const link = `https://giganticdatahub.com/store?s=${storeSlug}`;
             navigator.clipboard.writeText(link);
             alert("Store Link Copied!");
-        };
-
-        window.processWithdrawal = async () => {
-            const amt = parseFloat(document.getElementById('withdrawAmt').value);
-            const num = document.getElementById('momoNumber').value.trim();
-            const btn = document.getElementById('confirmWithdrawBtn');
-
-            if(amt < 10) return alert("Minimum withdrawal is ₵10");
-            if(amt > currentProfit) return alert("Insufficient profit balance");
-            if(num.length < 10) return alert("Enter a valid Momo number");
-
-            btn.disabled = true;
-            btn.innerText = "PROCESSING...";
-
-            try {
-                // 1. Create Withdrawal Request for Admin
-                const requestRef = ref(db, 'withdrawal_requests');
-                await push(requestRef, {
-                    uid: currentUid,
-                    email: auth.currentUser.email,
-                    amount: amt,
-                    momoNumber: num,
-                    type: "Agent Profit",
-                    status: "Pending",
-                    timestamp: Date.now()
-                });
-
-                // 2. Deduct from User Balance
-                const newBalance = currentProfit - amt;
-                await update(ref(db, `users/${currentUid}`), {
-                    referralBonus: parseFloat(newBalance.toFixed(2))
-                });
-
-                alert("Withdrawal request sent! Funds will arrive after admin approval.");
-                closeWithdrawModal();
-            } catch (e) {
-                alert("Error: " + e.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "CONFIRM CASHOUT";
-            }
         };
     </script>
 </body>
