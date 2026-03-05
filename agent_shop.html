@@ -35,7 +35,7 @@
         }
         .shop-title { font-size: 1.3rem; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 5px; }
         .user-meta { font-size: 11px; opacity: 0.8; font-weight: 600; margin-bottom: 10px; display: block; }
-        .badge-agent { background: var(--gold); color: #000; padding: 5px 15px; border-radius: 20px; font-size: 10px; font-weight: 900; display: inline-block; text-transform: uppercase; }
+        .badge-agent { background: var(--gold); color: #000; padding: 5px 15px; border-radius: 20px; font-size: 10px; font-weight: 900; display: inline-block; text-transform: uppercase; text-decoration: none; }
 
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: -40px 20px 20px; }
         .stat-card {
@@ -73,7 +73,10 @@
             border: 1px solid rgba(0,0,0,0.05); transition: 0.3s;
         }
         .tool-box i { font-size: 24px; margin-bottom: 10px; display: block; }
-        .tool-box b { font-size: 13px; }
+        .tool-box b { font-size: 13px; display: block; }
+        
+        /* Highlighted Agent Dashboard Tool Box */
+        .agent-db-box { border: 2px solid var(--gold); background: linear-gradient(to bottom right, var(--white), #fffcf0); }
 
         .order-card {
             background: var(--white); border-radius: 20px; margin-bottom: 15px;
@@ -106,7 +109,7 @@
 <div class="merchant-header">
     <div class="shop-title"><i class="fas fa-store-alt"></i> Merchant Terminal</div>
     <span class="user-meta" id="userEmail">Loading...</span>
-    <span class="badge-agent" id="userStatus">Verified Agent</span>
+    <a href="agent_dashboard.html" class="badge-agent" id="userStatus">Verified Agent</a>
 </div>
 
 <div class="stats-grid">
@@ -137,6 +140,8 @@
     <div class="section-header">Sales Operations</div>
     <div class="tools-grid">
         <a href="order.html" class="tool-box"><i class="fas fa-wifi" style="color: #3b82f6;"></i><b>New Sale</b></a>
+        <a href="agent_dashboard.html" class="tool-box agent-db-box"><i class="fas fa-chart-pie" style="color: #f59e0b;"></i><b style="color: #b45309;">Agent Dash</b></a>
+        
         <a href="receipt.html" class="tool-box"><i class="fas fa-receipt" style="color: #a855f7;"></i><b>Ledger</b></a>
         <a href="agent_tools.html" class="tool-box"><i class="fas fa-tools" style="color: #10b981;"></i><b>Store Settings</b></a>
         <div class="tool-box" onclick="shareMarketingKit()" style="cursor:pointer;"><i class="fab fa-whatsapp" style="color: #25d366;"></i><b>Share Ads</b></div>
@@ -173,7 +178,6 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    // Default margin 15% (Typical for retail data)
     let currentMargin = 0.15; 
     let todaySalesVolume = 0;
 
@@ -186,26 +190,19 @@
         }
     });
 
-    
-
     function syncTerminal(user) {
         document.getElementById('authGuard').style.display = 'none';
 
-        // REAL-TIME BALANCE TRACKER (STRICT SYNC)
         const userRef = ref(db, `users/${user.uid}`);
         onValue(userRef, snap => {
             const data = snap.val() || {};
-            
-            // Prioritize 'balance' node for current liquidity
             const realBalance = parseFloat(data.balance || 0);
-            
             document.getElementById('agentWallet').innerText = "₵" + realBalance.toFixed(2);
             
             const userStatus = data.userType || data.status || "Normal User";
             document.getElementById('userStatus').innerText = userStatus.toUpperCase();
         });
 
-        // ORDER HISTORY & PROFIT CALCULATION
         onValue(ref(db, `user_orders/${user.uid}`), (snapshot) => {
             const container = document.getElementById('historyContainer');
             const data = snapshot.val();
@@ -225,7 +222,6 @@
                 const amount = parseFloat(order.amount || 0);
                 const ts = order.timestamp || 0;
                 
-                // Track volume for profit calculation
                 if (ts >= startOfToday) todayCost += amount;
 
                 const network = (order.network || 'MTN').toUpperCase();
