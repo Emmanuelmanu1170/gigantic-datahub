@@ -12,10 +12,6 @@
         .glass-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(10px); }
         .accent-gradient { background: linear-gradient(135deg, #f97316 0%, #fb923c 100%); }
         .stat-glow { box-shadow: 0 0 20px rgba(249, 115, 22, 0.15); }
-        
-        #withdrawModal { display: none; }
-        .modal-animate { animation: slideUp 0.3s ease-out; }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 <body class="pb-24">
@@ -23,7 +19,7 @@
     <header class="p-6 flex justify-between items-center border-b border-white/5">
         <div>
             <h1 class="text-xl font-bold tracking-tight">Agent Dashboard</h1>
-            <p id="agentName" class="text-slate-400 text-xs italic">Syncing profile...</p>
+            <p id="agentName" class="text-slate-400 text-xs italic">Syncing store data...</p>
         </div>
         <div class="w-10 h-10 rounded-full bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-orange-500">
             <i class="fas fa-user-tie"></i>
@@ -33,8 +29,8 @@
     <div class="p-6 max-w-lg mx-auto space-y-6">
         
         <div class="glass-card rounded-[2.5rem] p-8 relative overflow-hidden stat-glow">
-            <div class="absolute top-0 right-0 p-6 opacity-10 text-6xl"><i class="fas fa-chart-line"></i></div>
-            <label class="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500">Live Profit (15%)</label>
+            <div class="absolute top-0 right-0 p-6 opacity-10 text-6xl"><i class="fas fa-store"></i></div>
+            <label class="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500">Store Profit (15%)</label>
             <div class="flex items-baseline gap-2 mt-2">
                 <span class="text-4xl font-black italic" id="profitBalance">₵0.00</span>
             </div>
@@ -51,11 +47,11 @@
 
         <div class="grid grid-cols-2 gap-4">
             <div class="glass-card p-5 rounded-3xl">
-                <div class="text-slate-500 text-[10px] font-bold uppercase mb-1">Total Orders</div>
+                <div class="text-slate-500 text-[10px] font-bold uppercase mb-1">Customer Orders</div>
                 <div class="text-xl font-bold" id="totalOrders">0</div>
             </div>
             <div class="glass-card p-5 rounded-3xl">
-                <div class="text-slate-500 text-[10px] font-bold uppercase mb-1">Sales Volume</div>
+                <div class="text-slate-500 text-[10px] font-bold uppercase mb-1">Store Revenue</div>
                 <div class="text-xl font-bold text-emerald-400" id="totalSales">₵0.00</div>
             </div>
         </div>
@@ -67,8 +63,8 @@
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center"><i class="fas fa-shopping-basket"></i></div>
                     <div class="text-left">
-                        <div class="font-bold text-sm">Store Orders</div>
-                        <div class="text-[10px] text-slate-500">View customer purchases</div>
+                        <div class="font-bold text-sm">View Store Sales</div>
+                        <div class="text-[10px] text-slate-500">Track customer purchases</div>
                     </div>
                 </div>
                 <i class="fas fa-chevron-right text-slate-600 group-hover:text-white transition"></i>
@@ -78,8 +74,8 @@
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center"><i class="fas fa-tools"></i></div>
                     <div class="text-left">
-                        <div class="font-bold text-sm">Store Settings</div>
-                        <div class="text-[10px] text-slate-500">Edit name & WhatsApp</div>
+                        <div class="font-bold text-sm">Store Setup</div>
+                        <div class="text-[10px] text-slate-500">Edit link & WhatsApp</div>
                     </div>
                 </div>
                 <i class="fas fa-chevron-right text-slate-600 group-hover:text-white transition"></i>
@@ -87,7 +83,7 @@
 
             <button onclick="window.location.href='dashboard.html'" class="w-full glass-card p-5 rounded-3xl flex items-center justify-between group hover:bg-white/5 transition">
                 <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center"><i class="fas fa-user"></i></div>
+                    <div class="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center"><i class="fas fa-user-circle"></i></div>
                     <div class="text-left">
                         <div class="font-bold text-sm">Personal Dashboard</div>
                         <div class="text-[10px] text-slate-500">Switch to main account</div>
@@ -100,7 +96,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -120,7 +116,6 @@
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUid = user.uid;
-                // Get basic user info (Name and Slug)
                 onValue(ref(db, `users/${currentUid}`), (snap) => {
                     const data = snap.val();
                     if(data) {
@@ -128,45 +123,48 @@
                         storeSlug = data.storeSettings?.storeSlug || "";
                     }
                 });
-                // Calculate real-time profit from orders
-                syncProfitStats();
+                syncStoreOnlyProfit();
             } else {
                 window.location.href = "login.html";
             }
         });
 
-        function syncProfitStats() {
+        function syncStoreOnlyProfit() {
+            // Reference the user's specific order history
             const ordersRef = ref(db, `user_orders/${currentUid}`);
+            
             onValue(ordersRef, (snapshot) => {
                 const orders = snapshot.val();
-                let totalVolume = 0;
-                let orderCount = 0;
+                let storeRevenue = 0;
+                let storeOrderCount = 0;
 
                 if (orders) {
                     Object.values(orders).forEach(order => {
-                        // Only calculate for successful orders
-                        if (order.status === "Successful" || !order.status) {
-                            totalVolume += parseFloat(order.amount || 0);
-                            orderCount++;
+                        // CRITICAL FILTER: 
+                        // Only count if order.isStoreOrder is true (set during checkout in agent_shop.html)
+                        // And status is Successful
+                        if (order.isStoreOrder === true && (order.status === "Successful" || !order.status)) {
+                            storeRevenue += parseFloat(order.amount || 0);
+                            storeOrderCount++;
                         }
                     });
                 }
 
-                // Calculate 15% Profit
-                const calculatedProfit = totalVolume * 0.15;
+                // Calculate 15% of Revenue from Store Customers only
+                const storeProfit = storeRevenue * 0.15;
 
                 // Update UI
-                document.getElementById('profitBalance').innerText = `₵${calculatedProfit.toFixed(2)}`;
-                document.getElementById('totalOrders').innerText = orderCount;
-                document.getElementById('totalSales').innerText = `₵${totalVolume.toFixed(2)}`;
+                document.getElementById('profitBalance').innerText = `₵${storeProfit.toFixed(2)}`;
+                document.getElementById('totalOrders').innerText = storeOrderCount;
+                document.getElementById('totalSales').innerText = `₵${storeRevenue.toFixed(2)}`;
             });
         }
 
         window.copyStoreLink = () => {
-            if(!storeSlug) return alert("Launch your store first!");
+            if(!storeSlug) return alert("Please setup your store link first!");
             const link = `https://giganticdatahub.com/store?s=${storeSlug}`;
             navigator.clipboard.writeText(link);
-            alert("Store Link Copied!");
+            alert("Customer Store Link Copied!");
         };
     </script>
 </body>
