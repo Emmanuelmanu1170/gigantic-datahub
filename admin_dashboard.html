@@ -127,7 +127,7 @@ header h1 { font-size:1.2rem; font-weight:700; letter-spacing:0.5px; }
 
 <div class="container">
   <div class="status-box">
-    <span>Admin: <strong id="adminEmail" style="color:#1e90ff">Verifying Session...</strong></span>
+    <span>Admin: <strong id="adminEmail" style="color:#1e90ff">Verifying...</strong></span>
     <span>System Status: <strong id="adminStatus" style="color:#28c76f">Online</strong></span>
   </div>
 
@@ -157,7 +157,7 @@ header h1 { font-size:1.2rem; font-weight:700; letter-spacing:0.5px; }
   <div style="display: flex; flex-wrap: wrap; gap: 20px;">
     <div style="flex: 1; min-width: 300px;">
         <div class="card">
-            <h3><i class="fas fa-clock" style="color:#ff8c00"></i> Pending Credits</h3>
+            <h3><i class="fas fa-clock" style="color:#ff8c00"></i> Recent Activity</h3>
             <div id="referralList" style="max-height: 400px; overflow-y: auto;">Syncing...</div>
         </div>
     </div>
@@ -198,7 +198,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebas
 import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 import { getDatabase, ref, get, onValue } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 
-// Obfuscated config to deter basic scraping
 const _0x1a2b = {
   k: "AIzaSyBmuippVd5uyAb51U9upNNpSvJk0lXSNg4",
   d: "gigantic-data.firebaseapp.com",
@@ -217,27 +216,29 @@ const auth = getAuth(app);
 const db = getDatabase(app);
 const ADMIN_EMAIL = "alenacloft0@gmail.com";
 
-// Set persistence BEFORE auth listener to prevent redirect loops
-setPersistence(auth, browserLocalPersistence)
-  .then(() => {
+let isAuthReady = false; // Strategy from user dashboard
+
+setPersistence(auth, browserLocalPersistence).then(() => {
     onAuthStateChanged(auth, user => {
-      if (user) {
-        if (user.email === ADMIN_EMAIL) {
-          document.getElementById("adminLink").style.display = "flex";
-          document.getElementById("adminEmail").textContent = user.email;
-          initDashboard();
+        isAuthReady = true; // Signal that Firebase has finished checking the session
+        
+        if (user) {
+            if (user.email === ADMIN_EMAIL) {
+                document.getElementById("adminLink").style.display = "flex";
+                document.getElementById("adminEmail").textContent = user.email;
+                initDashboard();
+            } else {
+                // Wrong user logged in
+                signOut(auth).then(() => location.href = "admin_login.html");
+            }
         } else {
-          signOut(auth).then(() => location.href = "admin_login.html");
+            // No user logged in - only redirect if Firebase is finished checking
+            if (isAuthReady) {
+                location.href = "admin_login.html";
+            }
         }
-      } else {
-        // If the URL contains "admin_dashboard", only then redirect to login
-        if (window.location.pathname.includes("admin_dashboard")) {
-             location.href = "admin_login.html";
-        }
-      }
     });
-  })
-  .catch((error) => console.error("Persistence Error", error));
+}).catch((error) => console.error("Persistence error:", error));
 
 function initDashboard() {
     loadSummary();
