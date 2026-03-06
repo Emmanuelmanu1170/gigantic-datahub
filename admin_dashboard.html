@@ -127,7 +127,7 @@ header h1 { font-size:1.2rem; font-weight:700; letter-spacing:0.5px; }
 
 <div class="container">
   <div class="status-box">
-    <span>Admin: <strong id="adminEmail" style="color:#1e90ff">Verifying...</strong></span>
+    <span>Admin: <strong id="adminEmail" style="color:#1e90ff">Syncing Session...</strong></span>
     <span>System Status: <strong id="adminStatus" style="color:#28c76f">Online</strong></span>
   </div>
 
@@ -157,8 +157,8 @@ header h1 { font-size:1.2rem; font-weight:700; letter-spacing:0.5px; }
   <div style="display: flex; flex-wrap: wrap; gap: 20px;">
     <div style="flex: 1; min-width: 300px;">
         <div class="card">
-            <h3><i class="fas fa-clock" style="color:#ff8c00"></i> Recent Activity</h3>
-            <div id="referralList" style="max-height: 400px; overflow-y: auto;">Syncing...</div>
+            <h3><i class="fas fa-clock" style="color:#ff8c00"></i> Platform Statistics</h3>
+            <div id="statsList" style="max-height: 400px; overflow-y: auto; font-size: 13px;">Loading data...</div>
         </div>
     </div>
 
@@ -184,13 +184,6 @@ header h1 { font-size:1.2rem; font-weight:700; letter-spacing:0.5px; }
   </div>
 </div>
 
-<div style="padding: 0 5% 40px; max-width:1300px; margin:auto;">
-    <a href="hackers.html" class="btn-security">
-        <i class="fas fa-user-shield"></i>
-        <span>Financial Guard</span>
-    </a>
-</div>
-
 <div class="footer">© 2026 Gigantic Data Hub. Admin Control Panel</div>
 
 <script type="module">
@@ -198,47 +191,57 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebas
 import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 import { getDatabase, ref, get, onValue } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 
-const _0x1a2b = {
-  k: "AIzaSyBmuippVd5uyAb51U9upNNpSvJk0lXSNg4",
-  d: "gigantic-data.firebaseapp.com",
-  u: "https://gigantic-data-default-rtdb.firebaseio.com",
-  p: "gigantic-data"
+const firebaseConfig = {
+  apiKey: "AIzaSyBmuippVd5uyAb51U9upNNpSvJk0lXSNg4",
+  authDomain: "gigantic-data.firebaseapp.com",
+  databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
+  projectId: "gigantic-data"
 };
 
-const app = initializeApp({
-  apiKey: _0x1a2b.k,
-  authDomain: _0x1a2b.d,
-  databaseURL: _0x1a2b.u,
-  projectId: _0x1a2b.p
-});
-
+const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 const ADMIN_EMAIL = "alenacloft0@gmail.com";
 
-let isAuthReady = false; // Strategy from user dashboard
+// --- REDIRECT FIX ---
+let authChecking = true;
 
 setPersistence(auth, browserLocalPersistence).then(() => {
     onAuthStateChanged(auth, user => {
-        isAuthReady = true; // Signal that Firebase has finished checking the session
-        
+        authChecking = false;
         if (user) {
             if (user.email === ADMIN_EMAIL) {
+                // SUCCESS: Save a session flag so page reloads don't flicker
+                sessionStorage.setItem('isAdmin', 'true');
                 document.getElementById("adminLink").style.display = "flex";
                 document.getElementById("adminEmail").textContent = user.email;
                 initDashboard();
             } else {
-                // Wrong user logged in
-                signOut(auth).then(() => location.href = "admin_login.html");
+                // Not the admin
+                handleLogout();
             }
         } else {
-            // No user logged in - only redirect if Firebase is finished checking
-            if (isAuthReady) {
-                location.href = "admin_login.html";
+            // No user found - check if we had a session flag
+            if (!sessionStorage.getItem('isAdmin')) {
+                window.location.replace("admin_login.html");
             }
         }
     });
-}).catch((error) => console.error("Persistence error:", error));
+});
+
+// If after 3 seconds we still don't have a user and aren't checking, force redirect
+setTimeout(() => {
+    if (!auth.currentUser && !sessionStorage.getItem('isAdmin')) {
+        window.location.replace("admin_login.html");
+    }
+}, 3000);
+
+function handleLogout() {
+    sessionStorage.removeItem('isAdmin');
+    signOut(auth).then(() => {
+        window.location.replace("admin_login.html");
+    });
+}
 
 function initDashboard() {
     loadSummary();
@@ -260,12 +263,12 @@ async function loadSummary() {
         
         const totalWallet = Object.values(users).reduce((sum, u) => sum + Number(u.balance || u.wallet || 0), 0);
         document.getElementById("totalWallet").textContent = totalWallet.toFixed(2);
+        
+        document.getElementById("statsList").innerHTML = `<p>System ready. Total of ${successOrders.length} successful transactions processed.</p>`;
     });
 }
 
-document.getElementById("logoutBtn").onclick = () => {
-    signOut(auth).then(() => location.href="admin_login.html");
-};
+document.getElementById("logoutBtn").onclick = handleLogout;
 </script>
 </body>
 </html>
