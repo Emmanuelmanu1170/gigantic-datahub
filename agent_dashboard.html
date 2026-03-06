@@ -96,7 +96,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -116,7 +116,6 @@
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUid = user.uid;
-                // Get user info
                 onValue(ref(db, `users/${currentUid}`), (snap) => {
                     const data = snap.val();
                     if(data) {
@@ -124,8 +123,6 @@
                         storeSlug = data.storeSettings?.storeSlug || "";
                     }
                 });
-                
-                // Start comprehensive profit sync
                 syncStoreOnlyProfit();
             } else {
                 window.location.href = "login.html";
@@ -133,50 +130,32 @@
         });
 
         function syncStoreOnlyProfit() {
-            // Path 1: Check user_orders/uid (If store orders are saved under agent's history)
-            const personalOrdersRef = ref(db, `user_orders/${currentUid}`);
-            
-            onValue(personalOrdersRef, (snapshot) => {
-                const orders = snapshot.val();
-                calculateAndDisplay(orders);
-            });
+            const historyRef = ref(db, `user_orders/${currentUid}`);
+            onValue(historyRef, (snapshot) => {
+                const data = snapshot.val();
+                let storeRevenue = 0;
+                let storeOrderCount = 0;
 
-            // Path 2: Fallback - Check global 'orders' filtered by this agent's ID
-            // This is useful if your system saves store orders globally
-            const globalOrdersRef = query(ref(db, 'orders'), orderByChild('agentUid'), equalTo(currentUid));
-            onValue(globalOrdersRef, (snapshot) => {
-                if (snapshot.exists()) {
-                    calculateAndDisplay(snapshot.val());
+                if (data) {
+                    Object.values(data).forEach(order => {
+                        // MATCHING FILTER: Use the exact logic from your Store Sales page
+                        // Orders must have a paymentRef or agentId to be considered "Store Sales"
+                        const isStoreOrder = order.paymentRef || order.agentId;
+                        const isSuccessful = order.status && (order.status.toLowerCase() === "successful" || order.status.toLowerCase() === "success");
+
+                        if (isStoreOrder && isSuccessful) {
+                            storeRevenue += parseFloat(order.amount || 0);
+                            storeOrderCount++;
+                        }
+                    });
                 }
+
+                // Update Dashboard stats
+                const profit = storeRevenue * 0.15;
+                document.getElementById('profitBalance').innerText = `₵${profit.toFixed(2)}`;
+                document.getElementById('totalOrders').innerText = storeOrderCount;
+                document.getElementById('totalSales').innerText = `₵${storeRevenue.toFixed(2)}`;
             });
-        }
-
-        function calculateAndDisplay(orders) {
-            let storeRevenue = 0;
-            let storeOrderCount = 0;
-
-            if (orders) {
-                Object.values(orders).forEach(order => {
-                    // FILTER LOGIC:
-                    // 1. Must be Successful
-                    // 2. Must either have isStoreOrder: true OR be placed by a customer (different from agent)
-                    const isSuccessful = order.status === "Successful" || order.status === "completed" || !order.status;
-                    const isCustomerOrder = order.isStoreOrder === true || (order.boughtBy && order.boughtBy !== currentUid);
-
-                    if (isSuccessful && isCustomerOrder) {
-                        const amount = parseFloat(order.amount || order.price || 0);
-                        storeRevenue += amount;
-                        storeOrderCount++;
-                    }
-                });
-            }
-
-            const storeProfit = storeRevenue * 0.15;
-
-            // Update UI
-            document.getElementById('profitBalance').innerText = `₵${storeProfit.toFixed(2)}`;
-            document.getElementById('totalOrders').innerText = storeOrderCount;
-            document.getElementById('totalSales').innerText = `₵${storeRevenue.toFixed(2)}`;
         }
 
         window.copyStoreLink = () => {
