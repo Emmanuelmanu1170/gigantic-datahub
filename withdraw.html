@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Withdraw Profits - GiganticDataHub</title>
+    <title>Earnings Manager - GiganticDataHub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
@@ -13,6 +13,7 @@
             --accent-orange: #f06529;
             --white: #ffffff;
             --indigo: #6366f1;
+            --slate: #94a3b8;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
@@ -27,6 +28,16 @@
 
         .container { padding: 20px; max-width: 500px; margin: 0 auto; }
 
+        /* STORE OWNER CARD */
+        .store-info {
+            background: white; border-radius: 16px; padding: 15px;
+            margin-bottom: 15px; display: flex; align-items: center; gap: 12px;
+            border: 1px solid #e2e8f0;
+        }
+        .store-icon { width: 40px; height: 40px; background: #e0e7ff; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--primary-blue); }
+        .store-details h4 { font-size: 13px; font-weight: 800; color: #0f172a; }
+        .store-details p { font-size: 11px; color: var(--slate); }
+
         .balance-card {
             background: linear-gradient(135deg, #0f172a 0%, var(--primary-blue) 100%);
             border-radius: 24px; padding: 30px; color: white;
@@ -36,11 +47,10 @@
         .balance-label { font-size: 11px; opacity: 0.7; text-transform: uppercase; letter-spacing: 2px; font-weight: 800; }
         .balance-amount { font-size: 38px; font-weight: 900; margin-top: 10px; font-style: italic; }
 
-        /* TABS */
         .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
         .tab-btn { 
             flex: 1; padding: 12px; border-radius: 12px; border: none; 
-            background: #e2e8f0; font-weight: 700; font-size: 13px; cursor: pointer; color: #64748b;
+            background: #e2e8f0; font-weight: 700; font-size: 12px; cursor: pointer; color: #64748b;
         }
         .tab-btn.active { background: var(--white); color: var(--primary-blue); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
 
@@ -48,7 +58,7 @@
         .hidden { display: none; }
 
         .input-group { margin-bottom: 18px; }
-        label { display: block; font-size: 11px; font-weight: 800; margin-bottom: 8px; color: #94a3b8; text-transform: uppercase; }
+        label { display: block; font-size: 11px; font-weight: 800; margin-bottom: 8px; color: var(--slate); text-transform: uppercase; }
         
         input, select {
             width: 100%; padding: 14px; border-radius: 14px;
@@ -58,42 +68,54 @@
 
         .btn-action {
             width: 100%; padding: 16px; border-radius: 16px; border: none;
-            color: white; font-size: 15px; font-weight: 800; text-transform: uppercase;
+            color: white; font-size: 14px; font-weight: 800; text-transform: uppercase;
             cursor: pointer; transition: 0.3s; letter-spacing: 1px;
         }
         .btn-withdraw { background: linear-gradient(135deg, #f06529 0%, #c02425 100%); }
         .btn-convert { background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); }
         
         #loader {
-            position: fixed; inset: 0; background: rgba(2, 6, 23, 0.8);
+            position: fixed; inset: 0; background: rgba(2, 6, 23, 0.85);
             display: none; align-items: center; justify-content: center; z-index: 1000; color: white;
+            flex-direction: column; gap: 15px;
         }
     </style>
 </head>
 <body>
 
-    <div id="loader"><i class="fas fa-spinner fa-spin fa-2x"></i></div>
+    <div id="loader">
+        <i class="fas fa-circle-notch fa-spin fa-3x"></i>
+        <span style="font-weight: 700; font-size: 12px; letter-spacing: 2px;">PROCESSING TRANSACTION...</span>
+    </div>
 
     <div class="header">
         <a href="dashboard.html"><i class="fas fa-chevron-left"></i></a>
-        <h1 style="font-size: 16px; font-weight: 800; text-transform: uppercase;">Earnings Manager</h1>
+        <h1 style="font-size: 15px; font-weight: 800; text-transform: uppercase;">Earnings Manager</h1>
     </div>
 
     <div class="container">
+        <div class="store-info">
+            <div class="store-icon"><i class="fas fa-store"></i></div>
+            <div class="store-details">
+                <h4 id="ownerStoreName">Loading Store...</h4>
+                <p id="ownerEmail">Syncing details...</p>
+            </div>
+        </div>
+
         <div class="balance-card">
-            <div class="balance-label">Current Profit Balance</div>
+            <div class="balance-label">Withdrawable Profit</div>
             <div class="balance-amount" id="profitDisplay">₵ 0.00</div>
         </div>
 
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('withdraw')">Withdraw to MoMo</button>
+            <button class="tab-btn active" onclick="switchTab('withdraw')">Withdraw Cash</button>
             <button class="tab-btn" onclick="switchTab('convert')">Convert to Wallet</button>
         </div>
 
         <div id="withdrawSection" class="form-section">
             <div class="input-group">
-                <label>Amount (Min ₵5.00)</label>
-                <input type="number" id="withdrawAmount" placeholder="0.00">
+                <label>Amount to Withdraw</label>
+                <input type="number" id="withdrawAmount" placeholder="0.00" step="0.01">
             </div>
             <div class="input-group">
                 <label>Network</label>
@@ -104,27 +126,25 @@
                 </select>
             </div>
             <div class="input-group">
-                <label>MoMo Number</label>
-                <input type="tel" id="walletNumber" placeholder="024XXXXXXX">
+                <label>Wallet Number</label>
+                <input type="tel" id="walletNumber" placeholder="0XXXXXXXXX">
             </div>
             <div class="input-group">
                 <label>Account Name</label>
-                <input type="text" id="accountName" placeholder="Name on ID">
+                <input type="text" id="accountName" placeholder="Full Registered Name">
             </div>
-            <button class="btn-action btn-withdraw" onclick="handleWithdraw()">Confirm Withdrawal</button>
+            <button class="btn-action btn-withdraw" onclick="handleWithdraw()">Request Withdrawal</button>
         </div>
 
         <div id="convertSection" class="form-section hidden">
-            <div style="background: #eef2ff; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
-                <p style="font-size: 12px; color: #4338ca; font-weight: 600;">
-                    <i class="fas fa-exchange-alt"></i> Funds will be moved instantly to your main purchase wallet.
-                </p>
-            </div>
             <div class="input-group">
                 <label>Amount to Convert</label>
-                <input type="number" id="convertAmount" placeholder="0.00">
+                <input type="number" id="convertAmount" placeholder="0.00" step="0.01">
             </div>
-            <button class="btn-action btn-convert" onclick="handleConvert()">Convert Instantly</button>
+            <p style="font-size: 11px; color: var(--slate); margin-bottom: 20px; text-align: center;">
+                <i class="fas fa-info-circle"></i> Funds move instantly to your main balance.
+            </p>
+            <button class="btn-action btn-convert" onclick="handleConvert()">Convert to Wallet</button>
         </div>
     </div>
 
@@ -147,53 +167,59 @@
         let currentProfit = 0;
         let currentUser = null;
 
+        // UI TAB SWITCHER
         window.switchTab = (type) => {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
-            if(type === 'withdraw') {
-                document.getElementById('withdrawSection').classList.remove('hidden');
-                document.getElementById('convertSection').classList.add('hidden');
-            } else {
-                document.getElementById('withdrawSection').classList.add('hidden');
-                document.getElementById('convertSection').classList.remove('hidden');
-            }
+            const btns = document.querySelectorAll('.tab-btn');
+            btns[0].classList.toggle('active', type === 'withdraw');
+            btns[1].classList.toggle('active', type === 'convert');
+            
+            document.getElementById('withdrawSection').classList.toggle('hidden', type !== 'withdraw');
+            document.getElementById('convertSection').classList.toggle('hidden', type !== 'convert');
         };
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
-                onValue(ref(db, `users/${user.uid}`), (snap) => {
+                const userRef = ref(db, `users/${user.uid}`);
+                
+                onValue(userRef, (snap) => {
                     const data = snap.val();
-                    // Maps to the referralBonus field used in your store order script
-                    currentProfit = data.referralBonus || data.profitBalance || 0;
+                    if(!data) return;
+
+                    // Load Balance from referralBonus
+                    currentProfit = data.referralBonus || 0;
                     document.getElementById('profitDisplay').innerText = `₵ ${Number(currentProfit).toFixed(2)}`;
+
+                    // Load Store Owner Details
+                    const storeName = (data.storeSettings && data.storeSettings.storeName) ? data.storeSettings.storeName : "Data Agent Store";
+                    document.getElementById('ownerStoreName').innerText = storeName;
+                    document.getElementById('ownerEmail').innerText = user.email;
                 });
-            } else { window.location.href = "login.html"; }
+            } else {
+                window.location.href = "login.html";
+            }
         });
 
-        // SHARED TRANSACTION LOGIC
-        async function processFinancialTask(amount, type, details = {}) {
-            if (amount < 5) return alert("Minimum amount is ₵5.00");
-            if (amount > currentProfit) return alert("Insufficient profit balance!");
+        async function executeTransaction(amount, type, meta = {}) {
+            if (!amount || amount <= 0) return alert("Please enter a valid amount");
+            if (amount > currentProfit) return alert("Insufficient profit balance");
 
             document.getElementById('loader').style.display = 'flex';
-            const userRef = ref(db, `users/${currentUser.uid}`);
+            const userPath = ref(db, `users/${currentUser.uid}`);
 
             try {
-                const result = await runTransaction(userRef, (userData) => {
-                    if (userData) {
-                        // Use referralBonus as the source
-                        const profitKey = 'referralBonus';
-                        if ((userData[profitKey] || 0) >= amount) {
-                            userData[profitKey] -= amount;
+                const result = await runTransaction(userPath, (user) => {
+                    if (user) {
+                        const bal = user.referralBonus || 0;
+                        if (bal >= amount) {
+                            user.referralBonus = parseFloat((bal - amount).toFixed(2));
                             
-                            // If converting, add to main balance
                             if (type === 'CONVERT') {
-                                userData.balance = (userData.balance || 0) + amount;
+                                user.balance = parseFloat(((user.balance || 0) + amount).toFixed(2));
                             }
-                        } else { return; }
+                        } else { return; } 
                     }
-                    return userData;
+                    return user;
                 });
 
                 if (result.committed) {
@@ -201,17 +227,25 @@
                         await push(ref(db, 'withdrawals'), {
                             uid: currentUser.uid,
                             email: currentUser.email,
-                            amount, ...details,
+                            storeName: document.getElementById('ownerStoreName').innerText,
+                            amount: amount,
+                            ...meta,
                             status: 'pending',
                             timestamp: serverTimestamp()
                         });
-                        alert("Withdrawal request submitted!");
+                        alert("Withdrawal request sent successfully!");
                     } else {
-                        alert("Successfully converted to main wallet!");
+                        alert("Funds converted to main wallet successfully!");
                     }
                 }
-            } catch (e) { alert("Error: " + e.message); }
-            document.getElementById('loader').style.display = 'none';
+            } catch (e) {
+                console.error(e);
+                alert("Transaction error. Please try again.");
+            } finally {
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('withdrawAmount').value = "";
+                document.getElementById('convertAmount').value = "";
+            }
         }
 
         window.handleWithdraw = () => {
@@ -219,13 +253,14 @@
             const method = document.getElementById('network').value;
             const number = document.getElementById('walletNumber').value;
             const name = document.getElementById('accountName').value;
-            if(!number || !name) return alert("Fill all fields");
-            processFinancialTask(amount, 'WITHDRAW', { method, accountNumber: number, accountName: name });
+            
+            if(!number || !name) return alert("Please fill in payment details");
+            executeTransaction(amount, 'WITHDRAW', { method, accountNumber: number, accountName: name });
         };
 
         window.handleConvert = () => {
             const amount = parseFloat(document.getElementById('convertAmount').value);
-            processFinancialTask(amount, 'CONVERT');
+            executeTransaction(amount, 'CONVERT');
         };
     </script>
 </body>
