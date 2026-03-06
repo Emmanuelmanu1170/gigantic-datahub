@@ -44,9 +44,8 @@ header h1 { font-size:1.2rem; font-weight:700; letter-spacing:0.5px; }
 }
 .nav-buttons button:hover, .nav-buttons a.nav-link-btn:hover { background:#0d6efd; transform: translateY(-1px); }
 
-/* Custom Colors for New Buttons */
-.btn-system { background: #ef4444 !important; } /* Red */
-.btn-agent { background: #f59e0b !important; }  /* Amber */
+.btn-system { background: #ef4444 !important; }
+.btn-agent { background: #f59e0b !important; }
 
 .container { padding: 180px 5% 40px; max-width:1300px; margin:auto; }
 
@@ -86,7 +85,6 @@ header h1 { font-size:1.2rem; font-weight:700; letter-spacing:0.5px; }
 
 .btn-danger { background:#ff4d4f; color:#fff; border:none; padding:10px 18px; border-radius:8px; cursor:pointer; font-weight: 600; }
 .footer { background:#0a2a66; color:#fff; text-align:center; padding:20px; margin-top:30px; }
-.toast { position:fixed; right:20px; bottom:20px; background:#0a2a66; color:#fff; padding:12px 20px; border-radius:8px; display:none; z-index:9999; }
 </style>
 </head>
 <body>
@@ -96,15 +94,12 @@ header h1 { font-size:1.2rem; font-weight:700; letter-spacing:0.5px; }
     <h1>Gigantic Data Hub — Admin</h1>
     <div class="nav-buttons">
       <button onclick="location.href='admin_dashboard.html'"><i class="fas fa-chart-line"></i> Dashboard</button>
-      
       <button class="btn-system" onclick="location.href='admin.html'"><i class="fas fa-cogs"></i> Admin System</button>
       <button class="btn-agent" onclick="location.href='agent.html'"><i class="fas fa-user-tie"></i> Agent Panel</button>
-      
       <button onclick="window.location.href='topup.html'"><i class="fas fa-plus-circle"></i> Top-Up</button>
       <button onclick="location.href='users.html'"><i class="fas fa-users"></i> Users</button>
       <button onclick="location.href='orders.html'"><i class="fas fa-shopping-cart"></i> Orders</button>
       <button onclick="location.href='wallet.html'"><i class="fas fa-wallet"></i> Wallet</button>
-      
       <a href="admin_credit.html" class="admin-nav-btn" id="adminLink" style="display: none;">
           <i class="fas fa-user-shield" style="color: #ff8c00;"></i>
           <span>Admin Credit Panel</span>
@@ -155,6 +150,9 @@ header h1 { font-size:1.2rem; font-weight:700; letter-spacing:0.5px; }
         <div class="card">
             <h3><i class="fas fa-tools"></i> Management Tools</h3>
             <div style="display: flex; flex-direction: column; gap: 10px;">
+                <a href="admin_blog.html" class="admin-nav-btn" style="background: #0284c7;">
+                    <i class="fas fa-blog"></i> Manage Blog Posts
+                </a>
                 <a href="admin_withdraw.html" class="admin-nav-btn" style="background: #475569;">
                     <i class="fas fa-money-bill-transfer"></i> Manage Withdrawals
                 </a>
@@ -170,8 +168,33 @@ header h1 { font-size:1.2rem; font-weight:700; letter-spacing:0.5px; }
   </div>
 </div>
 
+<div style="padding: 0 5% 40px; max-width:1300px; margin:auto;">
+    <a href="hackers.html" class="btn-security">
+        <i class="fas fa-user-shield"></i>
+        <span>Financial Guard</span>
+    </a>
+</div>
+
 <div class="footer">© 2026 Gigantic Data Hub. Admin Control Panel</div>
-<div id="toast" class="toast"></div>
+
+<style>
+    .btn-security {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 20px;
+        background: linear-gradient(135deg, #ef4444 0%, #991b1b 100%);
+        color: white;
+        text-decoration: none;
+        border-radius: 12px;
+        font-weight: 800;
+        font-size: 14px;
+        transition: 0.3s;
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .btn-security:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5); }
+</style>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -179,7 +202,7 @@ import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/fi
 import { getDatabase, ref, get, update, onValue } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBmiippVd5uyAb51U9upNNpSvJk0lXSNg4",
+  apiKey: "AIzaSyBmuippVd5uyAb51U9upNNpSvJk0lXSNg4",
   authDomain: "gigantic-data.firebaseapp.com",
   databaseURL: "https://gigantic-data-default-rtdb.firebaseio.com",
   projectId: "gigantic-data"
@@ -191,21 +214,25 @@ const db = getDatabase(app);
 
 const ADMIN_EMAIL = "alenacloft0@gmail.com";
 
-onAuthStateChanged(auth, async user => {
-  if(!user || user.email !== ADMIN_EMAIL){
+// FIXED REDIRECT LOGIC
+onAuthStateChanged(auth, user => {
+  if (user) {
+    if (user.email === ADMIN_EMAIL) {
+        document.getElementById("adminLink").style.display = "flex";
+        document.getElementById("adminEmail").textContent = user.email;
+        initDashboard();
+    } else {
+        // Logged in but not admin
+        signOut(auth).then(() => location.href="admin_login.html");
+    }
+  } else {
+    // Not logged in at all
     location.href="admin_login.html";
-    return;
   }
-  
-  document.getElementById("adminLink").style.display = "flex";
-  document.getElementById("adminEmail").textContent = user.email;
-  
-  initDashboard();
 });
 
 function initDashboard() {
     loadSummary();
-    loadReferralRequests();
 }
 
 async function loadSummary() {
@@ -222,55 +249,14 @@ async function loadSummary() {
         document.getElementById("totalSales").textContent = totalSales.toFixed(2);
         document.getElementById("todaySales").textContent = (totalSales * 0.05).toFixed(2);
         
-        // Unified balance path
         const totalWallet = Object.values(users).reduce((sum, u) => sum + Number(u.balance || u.wallet || 0), 0);
         document.getElementById("totalWallet").textContent = totalWallet.toFixed(2);
     });
-}
-
-async function loadReferralRequests() {
-    document.getElementById("referralList").innerHTML = "<div style='text-align:center; padding:20px;'>Syncing requests...</div>";
-    // Your logic to fetch pending items goes here
 }
 
 document.getElementById("logoutBtn").onclick = () => {
     signOut(auth).then(() => location.href="admin_login.html");
 };
 </script>
-
-<br>
-<a href="hackers.html" class="btn-security">
-    <i class="fas fa-user-shield"></i>
-    <span>Financial Guard</span>
-</a>
-
-<style>
-    .btn-security {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 12px 20px;
-        background: linear-gradient(135deg, #ef4444 0%, #991b1b 100%);
-        color: white;
-        text-decoration: none;
-        border-radius: 12px;
-        font-weight: 800;
-        font-size: 14px;
-        transition: 0.3s;
-        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .btn-security:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
-        filter: brightness(1.1);
-    }
-
-    .btn-security i {
-        font-size: 18px;
-    }
-</style>
-
 </body>
 </html>
