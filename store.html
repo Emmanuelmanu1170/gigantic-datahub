@@ -1,107 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script>
-        (function() {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-        })();
-    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gigantic Data Store</title>
-    
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://js.paystack.co/v1/inline.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-    
     <style>
-        body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at top left, #0f172a, #020617); min-height: 100vh; color: #f8fafc; }
-        .glass-card { background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
-        .accent-gradient { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
-        .step-inactive { opacity: 0.15; pointer-events: none; filter: grayscale(1); }
-        #statusModal { display: none; position: fixed; inset: 0; background: rgba(2, 6, 23, 0.95); backdrop-filter: blur(12px); z-index: 9999; align-items: center; justify-content: center; padding: 20px; }
-        .modal-box { background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 32px; max-width: 400px; width: 100%; padding: 40px; text-align: center; }
+        body { font-family: 'Inter', sans-serif; background: #020617; color: #f8fafc; }
+        .glass-card { background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .step-inactive { opacity: 0.15; pointer-events: none; }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
-
-    <div id="statusModal">
-        <div class="modal-box">
-            <div id="modalIcon" class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl"></div>
-            <h2 id="modalTitle" class="text-xl font-extrabold mb-2 uppercase tracking-tighter text-white"></h2>
-            <p id="modalMsg" class="text-slate-400 text-sm leading-relaxed"></p>
-            <div class="w-full h-1 bg-white/5 rounded-full overflow-hidden mt-8">
-                <div id="progressBar" class="h-full bg-indigo-500 w-0 transition-all duration-[4000ms]"></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="max-w-md w-full py-8">
+    <div class="max-w-md w-full">
         <div class="text-center mb-8">
-            <div id="greeting" class="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400 mb-2">Terminal Online</div>
-            <h1 id="storeName" class="text-4xl font-extrabold text-white tracking-tighter uppercase italic">Store Loading</h1>
-            <p class="text-slate-400 text-xs mt-3 px-6 leading-relaxed" id="welcomeMsg">Connecting to secure data server...</p>
+            <h1 id="storeName" class="text-3xl font-black italic uppercase">Loading Store...</h1>
+            <p id="greeting" class="text-indigo-400 text-[10px] uppercase tracking-widest mt-2">Connecting...</p>
         </div>
 
         <div class="glass-card rounded-[2.5rem] p-8">
-            <div class="mb-8">
-                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4 ml-1">1. Choose Network</label>
-                <div class="grid grid-cols-3 gap-3">
-                    <button onclick="selectNet('MTN')" id="net-MTN" class="p-4 rounded-2xl bg-slate-900/50 border border-white/5 flex flex-col items-center gap-2 hover:border-indigo-500 transition-all">
-                        <div class="w-8 h-8 bg-[#FFCC00] rounded-lg text-black font-black flex items-center justify-center text-[10px]">MTN</div>
-                        <span class="text-[9px] font-black uppercase">MTN</span>
-                    </button>
-                    <button onclick="selectNet('AIRTELTIGO')" id="net-AIRTELTIGO" class="p-4 rounded-2xl bg-slate-900/50 border border-white/5 flex flex-col items-center gap-2 hover:border-indigo-500 transition-all">
-                        <div class="w-8 h-8 bg-[#ED1C24] rounded-lg text-white font-black flex items-center justify-center text-[10px]">AT</div>
-                        <span class="text-[9px] font-black uppercase">AT</span>
-                    </button>
-                    <button onclick="selectNet('TELECEL')" id="net-TELECEL" class="p-4 rounded-2xl bg-slate-900/50 border border-white/5 flex flex-col items-center gap-2 hover:border-indigo-500 transition-all">
-                        <div class="w-8 h-8 bg-[#E60000] rounded-lg text-white font-black flex items-center justify-center text-[10px]">TEL</div>
-                        <span class="text-[9px] font-black uppercase">TEL</span>
-                    </button>
+            <div class="mb-6">
+                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-3">1. Network</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="selectNet('MTN')" class="bg-slate-900 p-3 rounded-xl border border-white/5 text-[10px] font-bold">MTN</button>
+                    <button onclick="selectNet('AIRTELTIGO')" class="bg-slate-900 p-3 rounded-xl border border-white/5 text-[10px] font-bold">AT</button>
+                    <button onclick="selectNet('TELECEL')" class="bg-slate-900 p-3 rounded-xl border border-white/5 text-[10px] font-bold">TEL</button>
                 </div>
             </div>
 
-            <div id="step2" class="step-inactive mb-8">
-                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4 ml-1">2. Recipient Number</label>
-                <input type="tel" id="phoneNumber" maxlength="10" placeholder="024XXXXXXX" 
-                    class="w-full bg-slate-950/50 border border-white/10 rounded-2xl py-5 px-6 text-xl font-bold outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-white">
-                <div id="simNameBox" class="hidden mt-3 bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-2xl flex items-center gap-3">
-                    <span id="displaySimName" class="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Verifying...</span>
-                </div>
+            <div id="step2" class="step-inactive mb-6">
+                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-3">2. Phone Number</label>
+                <input type="tel" id="phoneNumber" maxlength="10" placeholder="024XXXXXXX" class="w-full bg-slate-950 border border-white/10 rounded-xl p-4 text-white outline-none">
             </div>
 
-            <div id="step3" class="step-inactive mb-10">
-                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4 ml-1">3. Select Data Plan</label>
-                <select id="dataPlan" onchange="calculateFinalTotal()" 
-                    class="w-full bg-slate-950/50 border border-white/10 rounded-2xl py-5 px-6 text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 appearance-none text-white">
-                    <option value="" disabled selected>-- Choose Bundle --</option>
+            <div id="step3" class="step-inactive mb-6">
+                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-3">3. Data Plan</label>
+                <select id="dataPlan" onchange="updateTotal()" class="w-full bg-slate-950 border border-white/10 rounded-xl p-4 text-white outline-none">
+                    <option value="">Select Plan</option>
                 </select>
             </div>
 
-            <div id="summaryCard" class="hidden space-y-4 mb-8 p-6 bg-indigo-500/5 rounded-[2rem] border border-indigo-500/10">
-                <div class="flex justify-between text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                    <span>Bundle Cost</span><span id="summaryBasePrice" class="text-white">₵ 0.00</span>
-                </div>
-                <div class="flex justify-between text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                    <span>Service Fee (2.5%)</span><span id="summaryFee" class="text-rose-400">₵ 0.00</span>
-                </div>
-                <div class="border-t border-white/5 pt-4 flex justify-between items-center">
-                    <span class="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em]">Pay Total</span>
-                    <span id="summaryTotal" class="text-3xl font-black italic text-white">₵ 0.00</span>
-                </div>
+            <div id="summary" class="hidden bg-indigo-500/10 p-4 rounded-2xl border border-indigo-500/20 mb-6">
+                <div class="flex justify-between text-xs"><span>Total to Pay:</span><span id="displayTotal" class="font-bold text-lg">₵ 0.00</span></div>
             </div>
 
-            <button id="payBtn" onclick="initPaystackStore()" disabled
-                class="w-full py-6 rounded-3xl accent-gradient text-white font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-indigo-500/30 active:scale-[0.98] transition-all disabled:opacity-20">
-                Purchase Bundle
-            </button>
+            <button id="payBtn" onclick="pay()" disabled class="w-full py-5 rounded-2xl bg-indigo-600 font-bold uppercase tracking-widest disabled:opacity-20">Purchase Now</button>
         </div>
     </div>
 
@@ -113,143 +60,64 @@
             projectId: "gigantic-data"
         };
         firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        const db = firebase.database();
 
-        const PAYSTACK_PK = 'pk_live_faecdb3166144fadebd8269829343698dd43de63';
-        const FEE_RATE = 0.025;
-        const AGENT_COMMISSION_RATE = 0.15;
+        let agentUid = "";
+        let agentEmail = "";
+        let selectedNetwork = "";
+        let finalPrice = 0;
+
+        const plans = {
+            MTN: [{n:"1GB",p:5}], AIRTELTIGO: [{n:"1GB",p:5}], TELECEL: [{n:"1GB",p:5}]
+        };
 
         const urlParams = new URLSearchParams(window.location.search);
         const storeSlug = urlParams.get('s');
-        
-        let agentUid = "";
-        let agentEmail = "";
-        let selectedNet = "";
-        let finalPayAmount = 0;
-        let simName = "Store Customer";
 
-        const agentPlans = {
-            MTN:[{plan:"1GB",price:4.45},{plan:"2GB",price:8.85},{plan:"3GB",price:13.25},{plan:"5GB",price:22.05},{plan:"10GB",price:42.25}],
-            AIRTELTIGO:[{plan:"1GB",price:4.3},{plan:"2GB",price:8.56},{plan:"5GB",price:21.4},{plan:"10GB",price:44}],
-            TELECEL:[{plan:"10GB",price:45},{plan:"20GB",price:84}]
-        };
-
-        async function initStore() {
-            if(!storeSlug) { document.getElementById('storeName').innerText = "GIGANTIC HUB"; return; }
-            try {
-                const slugSnap = await database.ref(`slugs/${storeSlug}`).once('value');
-                if(slugSnap.exists()) {
-                    agentUid = slugSnap.val();
-                    const userSnap = await database.ref(`users/${agentUid}`).once('value');
-                    const u = userSnap.val();
-                    document.getElementById('storeName').innerText = u.storeSettings.storeName;
-                    agentEmail = u.email;
-                    document.getElementById('greeting').innerText = "Store Sync Active";
-                }
-            } catch(e) { console.error("Store Init Error", e); }
+        async function init() {
+            if(!storeSlug) return;
+            const snap = await db.ref(`slugs/${storeSlug}`).once('value');
+            if(snap.exists()) {
+                agentUid = snap.val();
+                const uSnap = await db.ref(`users/${agentUid}`).once('value');
+                const u = uSnap.val();
+                document.getElementById('storeName').innerText = u.storeSettings.storeName;
+                agentEmail = u.email;
+                document.getElementById('greeting').innerText = "Terminal Online";
+            }
         }
-        initStore();
+        init();
 
         window.selectNet = (net) => {
-            selectedNet = net;
-            document.querySelectorAll('button[id^="net-"]').forEach(b => b.classList.remove('border-indigo-500', 'bg-indigo-500/10'));
-            document.getElementById(`net-${net}`).classList.add('border-indigo-500', 'bg-indigo-500/10');
-            const select = document.getElementById('dataPlan');
-            select.innerHTML = '<option value="" disabled selected>-- Choose Bundle --</option>';
-            agentPlans[net].forEach(p => { select.innerHTML += `<option value="${p.price}" data-plan="${p.plan}">${p.plan} Bundle - ₵${p.price}</option>`; });
+            selectedNetwork = net;
+            const sel = document.getElementById('dataPlan');
+            sel.innerHTML = '<option>Select Plan</option>';
+            plans[net].forEach(x => sel.innerHTML += `<option value="${x.p}">${x.n} - ₵${x.p}</option>`);
             document.getElementById('step2').classList.remove('step-inactive');
+            document.getElementById('step3').classList.remove('step-inactive');
         };
 
-        document.getElementById('phoneNumber').oninput = async function(e) {
-            if(e.target.value.length === 10) {
-                document.getElementById('simNameBox').classList.remove('hidden');
-                document.getElementById('step3').classList.remove('step-inactive');
-            }
-        };
+        document.getElementById('phoneNumber').oninput = (e) => { if(e.target.value.length === 10) document.getElementById('summary').classList.remove('hidden'); };
 
-        function calculateFinalTotal() {
-            const planSelect = document.getElementById('dataPlan');
-            const basePrice = parseFloat(planSelect.value);
-            finalPayAmount = basePrice + (basePrice * FEE_RATE);
-            document.getElementById('summaryBasePrice').innerText = `₵ ${basePrice.toFixed(2)}`;
-            document.getElementById('summaryTotal').innerText = `₵ ${finalPayAmount.toFixed(2)}`;
-            document.getElementById('summaryCard').classList.remove('hidden');
+        window.updateTotal = () => {
+            finalPrice = parseFloat(document.getElementById('dataPlan').value);
+            document.getElementById('displayTotal').innerText = `₵ ${finalPrice.toFixed(2)}`;
             document.getElementById('payBtn').disabled = false;
-        }
+        };
 
-        function showStatusModal(title, msg, type = 'success') {
-            const modal = document.getElementById('statusModal');
-            document.getElementById('modalTitle').innerText = title;
-            document.getElementById('modalMsg').innerText = msg;
-            document.getElementById('modalIcon').innerHTML = type === 'success' ? '<i class="fas fa-check"></i>' : '<i class="fas fa-times"></i>';
-            modal.style.display = 'flex';
-            setTimeout(() => { document.getElementById('progressBar').style.width = '100%'; }, 50);
-        }
-
-        function initPaystackStore() {
-            const planSelect = document.getElementById('dataPlan');
-            const planName = planSelect.options[planSelect.selectedIndex].getAttribute('data-plan');
-            const phone = document.getElementById('phoneNumber').value;
-
-            let handler = PaystackPop.setup({
-                key: PAYSTACK_PK,
+        function pay() {
+            PaystackPop.setup({
+                key: 'pk_live_faecdb3166144fadebd8269829343698dd43de63',
                 email: agentEmail || 'customer@gigantic.com',
-                amount: Math.round(finalPayAmount * 100),
+                amount: finalPrice * 100,
                 currency: 'GHS',
-                ref: 'ST-' + Date.now(),
-                callback: (response) => {
-                    executeAutoOrder(response.reference, phone, planName, planSelect.value);
+                callback: (res) => {
+                    const comm = finalPrice * 0.10; // 10% commission
+                    // UPDATE THE PROFIT FIELD
+                    db.ref(`users/${agentUid}/referralBonus`).transaction(curr => (curr || 0) + comm);
+                    alert("Success! Commission added to " + agentEmail);
                 }
-            });
-            handler.openIframe();
-        }
-
-        async function executeAutoOrder(reference, phone, plan, baseAmount) {
-            const orderId = 'ORD-' + reference;
-            const commission = parseFloat(baseAmount) * AGENT_COMMISSION_RATE;
-
-            const orderData = {
-                network: selectedNet,
-                plan: plan,
-                recipient: phone,
-                amount: parseFloat(baseAmount),
-                paidAmount: finalPayAmount,
-                commission: commission,
-                uid: agentUid,
-                status: "Processing",
-                paymentRef: reference,
-                timestamp: Date.now()
-            };
-
-            try {
-                // 1. UPDATE AGENT BALANCE
-                const userRef = database.ref(`users/${agentUid}`);
-                const snap = await userRef.once('value');
-                const currentBonus = parseFloat(snap.val().referralBonus || 0);
-                
-                // 2. MULTI-PATH UPDATE (The Place Order Logic)
-                const updates = {};
-                updates[`pending_orders/${orderId}`] = orderData;
-                updates[`orders/${orderId}`] = orderData;
-                updates[`user_orders/${agentUid}/${orderId}`] = orderData;
-                updates[`users/${agentUid}/referralBonus`] = parseFloat((currentBonus + commission).toFixed(2));
-
-                await database.ref().update(updates);
-
-                // 3. TRIGGER CLOUD FUNCTION
-                fetch('https://us-central1-gigantic-data.cloudfunctions.net/verifyPayment', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ reference: reference, userId: agentUid, isStoreOrder: true })
-                });
-
-                showStatusModal("Success!", `Order placed. ₵${commission.toFixed(2)} added to your earnings.`, "success");
-                setTimeout(() => location.reload(), 5000);
-
-            } catch (e) {
-                console.error(e);
-                alert("Critical Error: Payment was successful but order failed to log. Please contact support with Ref: " + reference);
-            }
+            }).openIframe();
         }
     </script>
 </body>
