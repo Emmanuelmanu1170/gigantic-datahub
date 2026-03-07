@@ -3,132 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gigantic Admin - Command Center</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <title>Admin Panel - Withdrawal Requests</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { 
-            --primary: #4f46e5; --deep: #0f172a; --bg: #f1f5f9; 
-            --success: #10b981; --danger: #f43f5e; --orange: #f59e0b; 
-            --teal: #0d9488; --white: #ffffff; --gold: #f59e0b;
-        }
-        
-        * { margin:0; padding:0; box-sizing:border-box; font-family:"Poppins", sans-serif; }
-        body { background: var(--bg); color: var(--deep); padding-bottom: 50px; }
-        
-        header { 
-            background: var(--deep); color: #fff; padding: 20px 5%; 
-            display: flex; align-items: center; justify-content: space-between; 
-            position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        :root {
+            --primary: #4f46e5;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+            --success: #10b981;
+            --danger: #ef4444;
         }
 
-        .header-left { display:flex; align-items:center; gap:15px; }
-        .admin-badge { font-size: 0.7rem; background: var(--primary); padding: 4px 10px; border-radius: 6px; font-weight: 800; letter-spacing: 1px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: var(--text); padding: 20px; }
+        .container { max-width: 1000px; margin: auto; }
 
-        .container { padding: 25px 5%; max-width: 1200px; margin: auto; }
-        
-        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: var(--white); padding: 25px; border-radius: 20px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 20px; }
-        .stat-icon { width: 50px; height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
-        .stat-info label { display: block; font-size: 0.75rem; color: #64748b; font-weight: 700; text-transform: uppercase; }
-        .stat-info span { font-size: 1.5rem; font-weight: 800; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .stats { display: grid; grid-template-cols: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .stat-card { background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.05); }
+        .stat-card h3 { font-size: 12px; color: #94a3b8; text-transform: uppercase; margin-bottom: 5px; }
+        .stat-card p { font-size: 24px; font-weight: 800; }
 
-        .admin-card { 
-            background: var(--white); padding: 25px; border-radius: 24px; 
-            margin-bottom: 30px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;
+        .request-list { display: flex; flex-direction: column; gap: 15px; }
+        .request-card { 
+            background: var(--card); padding: 20px; border-radius: 20px; 
+            display: grid; grid-template-columns: 2fr 1.5fr 1fr 1.5fr; align-items: center;
+            border: 1px solid rgba(255,255,255,0.05); transition: 0.3s;
         }
-        .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-        .card-title { font-weight: 800; font-size: 1rem; color: var(--deep); display: flex; align-items: center; gap: 10px; }
-        
-        .adjustment-box { display: flex; flex-wrap: wrap; gap: 15px; }
-        .adjustment-box input { flex: 2; padding: 14px; border: 2px solid #e2e8f0; border-radius: 14px; outline: none; font-size: 0.9rem; transition: 0.3s; min-width: 200px; }
-        .adjustment-box input:focus { border-color: var(--primary); }
-        .adjust-btn { flex: 1; padding: 14px; border: none; border-radius: 14px; font-weight: 700; cursor: pointer; color: white; transition: 0.3s; min-width: 150px; }
+        .request-card:hover { border-color: var(--primary); }
 
-        .request-item { 
-            background: var(--white); border-radius: 20px; padding: 20px; margin-bottom: 15px; 
-            border: 1px solid #e2e8f0; transition: 0.3s; display: grid; grid-template-columns: 1fr auto; align-items: center;
+        .user-info h4 { font-size: 14px; margin-bottom: 4px; }
+        .user-info p { font-size: 11px; color: #94a3b8; }
+
+        .payment-info { font-weight: 700; color: #cbd5e1; font-size: 13px; }
+        .amount { color: var(--success); font-weight: 900; font-size: 18px; }
+
+        .actions { display: flex; gap: 10px; justify-content: flex-end; }
+        .btn { padding: 10px 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 12px; transition: 0.2s; }
+        .btn-approve { background: var(--success); color: white; }
+        .btn-reject { background: var(--danger); color: white; }
+        .btn-copy { background: #334155; color: white; margin-left: 5px; }
+        
+        .status-badge { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+        .status-pending { background: #f59e0b; color: #000; }
+
+        @media (max-width: 768px) {
+            .request-card { grid-template-columns: 1fr; gap: 15px; text-align: center; }
+            .actions { justify-content: center; }
         }
-        .req-info b { font-size: 1rem; display: block; margin-bottom: 4px; }
-        .req-info p { font-size: 0.8rem; color: #64748b; font-family: monospace; margin-bottom: 5px; }
-        
-        .uid-flow { background: #f8fafc; padding: 10px; border-radius: 10px; border: 1px solid #edf2f7; margin: 10px 0; }
-        .uid-row { display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 5px; }
-
-        .status-pill { padding: 4px 10px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; margin-top: 8px; display: inline-block; }
-        .pill-reg { background: #ccfbf1; color: var(--teal); }
-        .pill-cash { background: #ffedd5; color: var(--orange); }
-
-        .action-btns { display: flex; flex-direction: column; gap: 8px; min-width: 180px; }
-        .btn-main { padding: 10px; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .btn-appr { background: var(--success); color: white; }
-        .btn-del { background: #fff1f2; color: var(--danger); }
-
-        .leader-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; border-bottom: 1px solid #f1f5f9; }
-        .rank-badge { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; }
-        
-        .section-tag { font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin: 40px 0 20px; display: flex; align-items: center; gap: 10px; }
-        .section-tag::after { content: ""; flex: 1; height: 2px; background: #e2e8f0; }
-        
-        .copy-chip { cursor: pointer; padding: 2px 6px; background: #e0e7ff; border-radius: 4px; font-size: 0.7rem; color: var(--primary); font-weight: 700; border: 1px solid var(--primary); }
     </style>
 </head>
 <body>
 
-<header>
-    <div class="header-left">
-        <a href="admin_dashboard.html" style="color:white; font-size: 1.2rem;"><i class="fas fa-th-large"></i></a>
-        <div>
-            <h1 style="font-size:1.1rem; font-weight: 800;">Command Center</h1>
-            <span class="admin-badge">SYSTEM ADMIN</span>
-        </div>
-    </div>
-    <div id="activeUser" style="font-size: 0.75rem; opacity: 0.8;">Syncing Terminal...</div>
-</header>
-
 <div class="container">
-
-    <div class="dashboard-grid">
-        <div class="stat-card">
-            <div class="stat-icon" style="background: #e0e7ff; color: var(--primary);"><i class="fas fa-hourglass-half"></i></div>
-            <div class="stat-info"><label>Active Requests</label><span id="totalRequests">0</span></div>
+    <div class="header">
+        <div>
+            <h1>Withdrawals</h1>
+            <p style="color: #94a3b8; font-size: 13px;">Manage agent payout requests</p>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon" style="background: #dcfce7; color: var(--success);"><i class="fas fa-coins"></i></div>
-            <div class="stat-info"><label>Payout Volume</label><span id="totalVolume">₵0.00</span></div>
-        </div>
+        <button class="btn" style="background: var(--primary)" onclick="location.reload()"><i class="fas fa-sync"></i> Refresh</button>
     </div>
 
-    <div class="admin-card">
-        <div class="card-header"><div class="card-title"><i class="fas fa-bolt" style="color:var(--orange)"></i> Manual Referral Adjustment</div></div>
-        <p style="font-size: 0.7rem; color: #64748b; margin-bottom: 10px;">CREDIT will add balance and automatically increase referral count by +1.</p>
-        <div class="adjustment-box">
-            <input type="text" id="targetUid" placeholder="Referrer UID (The person earning)">
-            <input type="number" id="adjustAmt" placeholder="Amount (₵)">
-            <button class="adjust-btn" style="background: var(--primary);" onclick="quickAdjust('credit')">CREDIT & +1 REF</button>
-            <button class="adjust-btn" style="background: #f1f5f9; color: var(--danger);" onclick="quickAdjust('deduct')">DEDUCT ONLY</button>
+    <div class="stats">
+        <div class="stat-card"><h3>Pending Requests</h3><p id="statPending">0</p></div>
+        <div class="stat-card"><h3>Total Payouts</h3><p id="statTotal">₵ 0.00</p></div>
+    </div>
+
+    <div id="requestContainer" class="request-list">
+        <div style="text-align: center; padding: 50px; opacity: 0.5;">
+            <i class="fas fa-inbox fa-3x"></i>
+            <p style="margin-top:10px">Searching for requests...</p>
         </div>
     </div>
-
-    <div class="admin-card">
-        <div class="card-header"><div class="card-title"><i class="fas fa-trophy" style="color:var(--gold)"></i> Top 10 Referrers</div></div>
-        <div id="leaderboardBody"></div>
-    </div>
-
-    <div class="section-tag">Registration Bonuses (Verify UIDs)</div>
-    <div id="regQueue"></div>
-
-    <div class="section-tag">Manual Withdrawals</div>
-    <div id="cashQueue"></div>
-
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getDatabase, ref, onValue, update, get, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    // UNIFIED SECURE CONFIG
     const firebaseConfig = {
         apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
         authDomain: "gigantic-data.firebaseapp.com",
@@ -137,127 +90,78 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
     const db = getDatabase(app);
 
-    const ADMIN_EMAIL = "alenacloft0@gmail.com";
+    const requestContainer = document.getElementById('requestContainer');
 
-    onAuthStateChanged(auth, (user) => {
-        if (!user || user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) { 
-            window.location.href = "admin_login.html"; 
-            return; 
+    // Listen for Withdrawal Requests
+    onValue(ref(db, 'withdrawals'), (snapshot) => {
+        requestContainer.innerHTML = "";
+        let pendingCount = 0;
+        let totalValue = 0;
+
+        if (!snapshot.exists()) {
+            requestContainer.innerHTML = '<div style="text-align:center; padding:50px">No pending requests.</div>';
+            return;
         }
-        document.getElementById('activeUser').innerText = user.email;
 
-        // Leaderboard Sync
-        onValue(ref(db, 'users'), (snap) => {
-            const users = snap.val();
-            if (!users) return;
-            const top10 = Object.entries(users)
-                .map(([uid, val]) => ({ uid, ...val }))
-                .filter(u => u.referralCount > 0)
-                .sort((a,b) => (b.referralCount || 0) - (a.referralCount || 0))
-                .slice(0, 10);
-            
-            let html = "";
-            top10.forEach((u, i) => {
-                const isGold = i === 0;
-                html += `<div class="leader-row"><div style="display:flex; align-items:center; gap:12px;"><div class="rank-badge" style="background:${isGold?'#fef3c7':'#f1f5f9'}; color:${isGold?'#b45309':'#64748b'}">${i+1}</div><b style="font-size:0.85rem;">${u.email}</b></div><span style="font-weight:800; color:var(--primary); font-size:0.9rem;">${u.referralCount} Refs</span></div>`;
-            });
-            document.getElementById('leaderboardBody').innerHTML = html || "<p style='text-align:center; padding:10px;'>No rankings yet.</p>";
-        });
+        snapshot.forEach((child) => {
+            const data = child.val();
+            const id = child.key;
 
-        // Request Queues Sync
-        onValue(ref(db, 'withdrawal_requests'), (snap) => {
-            const data = snap.val();
-            const regQueue = document.getElementById('regQueue');
-            const cashQueue = document.getElementById('cashQueue');
-            
-            if (!data) {
-                regQueue.innerHTML = cashQueue.innerHTML = "<p style='text-align:center; padding:30px; font-size:0.8rem;'>Queue is empty.</p>";
-                document.getElementById('totalRequests').innerText = "0";
-                document.getElementById('totalVolume').innerText = "₵0.00";
-                return;
+            if (data.status === 'pending') {
+                pendingCount++;
+                totalValue += parseFloat(data.amount);
+
+                const card = document.createElement('div');
+                card.className = 'request-card';
+                card.innerHTML = `
+                    <div class="user-info">
+                        <h4>${data.store || 'Unknown Store'}</h4>
+                        <p>${data.email}</p>
+                        <span class="status-badge status-pending">Pending</span>
+                    </div>
+                    <div class="payment-info">
+                        ${data.method}<br>
+                        <span style="color:var(--primary)">${data.number}</span>
+                        <button class="btn-copy" onclick="copyNum('${data.number}')"><i class="far fa-copy"></i></button><br>
+                        <small style="font-weight:400; font-size:10px">${data.accountName || 'No Name'}</small>
+                    </div>
+                    <div class="amount">₵${parseFloat(data.amount).toFixed(2)}</div>
+                    <div class="actions">
+                        <button class="btn btn-approve" onclick="updateStatus('${id}', 'completed')">Paid</button>
+                        <button class="btn btn-reject" onclick="deleteRequest('${id}')">Delete</button>
+                    </div>
+                `;
+                requestContainer.appendChild(card);
             }
-
-            let regHtml = ""; let cashHtml = ""; let count = 0; let vol = 0;
-            Object.entries(data).sort((a,b) => (b[1].timestamp || 0) - (a[1].timestamp || 0)).forEach(([id, req]) => {
-                count++; vol += parseFloat(req.amount || 0);
-                const isReg = req.network === "Referral Bonus";
-                
-                const uidDetails = isReg ? `
-                    <div class="uid-flow">
-                        <div class="uid-row"><span>EARNER (REFERRER):</span> <b onclick="autoFill('${req.uid}')" style="cursor:pointer; color:var(--primary)">${req.uid} <i class="fas fa-mouse-pointer"></i></b></div>
-                        <div class="uid-row"><span>NEW USER (REFERRED):</span> <b>${req.momoNumber}</b></div>
-                    </div>` : `<p>UID: ${req.uid} <span class="copy-chip" onclick="copyId('${req.uid}')">COPY</span></p>`;
-
-                const template = `
-                <div class="request-item">
-                    <div class="req-info">
-                        <b>${req.email}</b>
-                        ${uidDetails}
-                        <span class="status-pill ${isReg?'pill-reg':'pill-cash'}">${req.network}</span>
-                        <div style="margin-top:10px; font-size:0.75rem;">
-                            <i class="fas fa-id-card"></i> <b>${req.accountName}</b> | <i class="fas fa-phone"></i> <b>${isReg ? 'Reg. Tracking' : req.momoNumber}</b>
-                        </div>
-                    </div>
-                    <div class="action-btns">
-                        <div style="text-align:right; font-weight:800; font-size:1.2rem; color:${isReg?'var(--teal)':'var(--orange)'}; margin-bottom:10px;">₵${parseFloat(req.amount || 0).toFixed(2)}</div>
-                        <button class="btn-main btn-appr" onclick="approveTask('${id}', '${req.uid}', ${req.amount}, ${isReg})">APPROVE & CREDIT</button>
-                        <button class="btn-main btn-del" onclick="deleteTask('${id}')">DISMISS</button>
-                    </div>
-                </div>`;
-                if(isReg) regHtml += template; else cashHtml += template;
-            });
-
-            regQueue.innerHTML = regHtml || "<p style='text-align:center;'>No pending rewards.</p>";
-            cashQueue.innerHTML = cashHtml || "<p style='text-align:center;'>No pending cashouts.</p>";
-            document.getElementById('totalRequests').innerText = count;
-            document.getElementById('totalVolume').innerText = "₵" + vol.toFixed(2);
         });
+
+        document.getElementById('statPending').innerText = pendingCount;
+        document.getElementById('statTotal').innerText = `₵ ${totalValue.toFixed(2)}`;
     });
 
-    window.copyId = (id) => { navigator.clipboard.writeText(id); alert("UID Copied!"); };
-    window.autoFill = (id) => { document.getElementById('targetUid').value = id; };
-
-    window.approveTask = async (reqId, uid, amt, isReg) => {
-        if(!confirm("Approve this credit? If Registration Bonus, Referral Count will increase by +1.")) return;
-        try {
-            const userRef = ref(db, `users/${uid}`);
-            const snap = await get(userRef);
-            if(snap.exists()) {
-                const data = snap.val();
-                const updatePayload = {
-                    referralBonus: parseFloat(((data.referralBonus||0) + amt).toFixed(2))
-                };
-                if(isReg) { updatePayload.referralCount = (data.referralCount||0) + 1; }
-                
-                await update(userRef, updatePayload);
-            }
-            await remove(ref(db, `withdrawal_requests/${reqId}`));
-            alert("Success! Balance updated.");
-        } catch(e) { alert(e); }
+    // Mark as Paid
+    window.updateStatus = (id, status) => {
+        if(confirm("Confirm payout completed? This will move it to history.")){
+            update(ref(db, `withdrawals/${id}`), { status: status })
+            .then(() => alert("Request marked as Completed"));
+        }
     };
 
-    window.deleteTask = (id) => { if(confirm("Remove this request?")) remove(ref(db, `withdrawal_requests/${id}`)); };
+    // Delete Request
+    window.deleteRequest = (id) => {
+        if(confirm("Are you sure you want to delete this request?")){
+            remove(ref(db, `withdrawals/${id}`));
+        }
+    };
 
-    window.quickAdjust = async (mode) => {
-        const uid = document.getElementById('targetUid').value.trim();
-        const amt = parseFloat(document.getElementById('adjustAmt').value);
-        if(!uid || isNaN(amt)) return alert("UID and Amount required.");
-        try {
-            const uRef = ref(db, `users/${uid}`);
-            const snap = await get(uRef);
-            if(!snap.exists()) return alert("User not found.");
-            const data = snap.val();
-            
-            const newBal = mode === 'credit' ? (data.referralBonus||0) + amt : (data.referralBonus||0) - amt;
-            const newCount = mode === 'credit' ? (data.referralCount||0) + 1 : (data.referralCount||0);
-            
-            await update(uRef, { referralBonus: parseFloat(newBal.toFixed(2)), referralCount: newCount });
-            alert(`Updated! Balance: ₵${newBal.toFixed(2)} | Total Refs: ${newCount}`);
-        } catch(e) { alert(e); }
+    // Copy Number Helper
+    window.copyNum = (num) => {
+        navigator.clipboard.writeText(num);
+        alert("Number copied: " + num);
     };
 </script>
+
 </body>
 </html>
