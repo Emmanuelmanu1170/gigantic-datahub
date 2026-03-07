@@ -103,6 +103,10 @@
             </select>
         </div>
         <div class="input-group">
+            <label>MoMo Account Name</label>
+            <input type="text" id="wName" placeholder="Full Registered Name">
+        </div>
+        <div class="input-group">
             <label>Receiver Number</label>
             <input type="tel" id="wNum" placeholder="0XXXXXXXXX">
         </div>
@@ -161,7 +165,6 @@
                 let total = 0;
                 const orders = orderSnap.val();
                 if (orders) {
-                    // Loop through orders and sum up the commissions
                     Object.values(orders).forEach(order => {
                         total += parseFloat(order.commission || 0);
                     });
@@ -179,10 +182,15 @@
         if (!amount || amount <= 0) return alert("Please enter a valid amount.");
         if (amount > calculatedProfit) return alert("Insufficient profit from orders.");
 
+        if (type === 'WITHDRAW') {
+            const name = document.getElementById('wName').value;
+            const num = document.getElementById('wNum').value;
+            if (!name || !num) return alert("Please fill in account name and number.");
+        }
+
         document.getElementById('loader').style.display = 'flex';
 
         try {
-            // A. UPDATE MAIN BALANCE IF CONVERTING
             if (type === 'CONVERT') {
                 const userRef = ref(db, `users/${currentUser.uid}`);
                 await runTransaction(userRef, (user) => {
@@ -193,7 +201,6 @@
                 });
             }
 
-            // B. SEND WITHDRAWAL TO ADMIN
             if (type === 'WITHDRAW') {
                 await push(ref(db, 'withdrawals'), {
                     uid: currentUser.uid,
@@ -201,19 +208,20 @@
                     email: currentUser.email,
                     amount: amount,
                     method: document.getElementById('wNet').value,
+                    accountName: document.getElementById('wName').value,
                     number: document.getElementById('wNum').value,
                     status: 'pending',
                     timestamp: serverTimestamp()
                 });
             }
 
-            // C. WIPE STORE ORDERS (AS REQUESTED)
-            // This resets the order-based balance to 0
             await remove(ref(db, `user_orders/${currentUser.uid}`));
             
             alert("Success! Order history has been cleared.");
             document.getElementById('wAmt').value = "";
             document.getElementById('cAmt').value = "";
+            document.getElementById('wName').value = "";
+            document.getElementById('wNum').value = "";
 
         } catch (e) {
             alert("Error: " + e.message);
