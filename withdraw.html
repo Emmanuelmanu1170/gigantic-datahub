@@ -3,63 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Earnings Manager - GiganticDataHub</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Profit Manager - Gigantic Data</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --bg: #f4f7fe; --blue: #0052cc; --white: #ffffff; }
-        * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter', sans-serif; }
-        body { background: var(--bg); color: #1e293b; padding: 20px; }
-        .container { max-width: 450px; margin: auto; }
-        .store-header { background: white; padding: 15px; border-radius: 15px; display: flex; align-items: center; gap: 12px; margin-bottom: 15px; border: 1px solid #ddd; }
-        .balance-card { background: linear-gradient(135deg, #0f172a, var(--blue)); border-radius: 20px; padding: 30px; color: white; text-align: center; margin-bottom: 20px; }
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-        .tab { flex: 1; padding: 12px; border: none; border-radius: 10px; background: #ddd; font-weight: bold; cursor: pointer; }
-        .tab.active { background: var(--blue); color: white; }
-        .box { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        :root {
+            --primary: #4f46e5;
+            --secondary: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: var(--bg); color: var(--secondary); padding: 20px; }
+        .container { max-width: 480px; margin: auto; }
+
+        /* BALANCE CARD */
+        .card-main {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            border-radius: 24px; padding: 35px; color: white; text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin-bottom: 25px;
+        }
+        .balance-label { font-size: 12px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.7; }
+        .balance-val { font-size: 42px; font-weight: 800; margin: 10px 0; }
+
+        /* TABS */
+        .tab-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab { flex: 1; padding: 14px; border: none; border-radius: 12px; background: #e2e8f0; 
+               font-weight: 700; color: #64748b; cursor: pointer; transition: 0.3s; }
+        .tab.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); }
+
+        .form-box { background: white; padding: 25px; border-radius: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
         .hidden { display: none; }
-        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #eee; border-radius: 10px; }
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; }
+
+        .input-group { margin-bottom: 15px; }
+        label { display: block; font-size: 11px; font-weight: 800; color: #94a3b8; margin-bottom: 5px; text-transform: uppercase; }
+        input, select { width: 100%; padding: 14px; border-radius: 12px; border: 2px solid #f1f5f9; font-size: 16px; outline: none; transition: 0.3s; }
+        input:focus { border-color: var(--primary); }
+
+        .btn { width: 100%; padding: 16px; border: none; border-radius: 14px; color: white; font-weight: 800; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
+        .btn-w { background: #f97316; }
+        .btn-c { background: var(--primary); }
+        .btn:active { transform: scale(0.98); }
+
+        #loader { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; color: white; flex-direction: column; }
     </style>
 </head>
 <body>
 
+<div id="loader">
+    <i class="fas fa-circle-notch fa-spin fa-3x"></i>
+    <p style="margin-top: 15px; font-weight: bold;">Processing & Clearing Orders...</p>
+</div>
+
 <div class="container">
-    <div class="store-header">
-        <i class="fas fa-store-alt" style="color:var(--blue)"></i>
-        <div>
-            <h4 id="storeNameDisp">Loading...</h4>
-            <p id="emailDisp" style="font-size:10px; color:#888"></p>
+    <div class="card-main">
+        <div class="balance-label">Store Profit Balance</div>
+        <div class="balance-val" id="profitVal">₵ 0.00</div>
+        <div style="font-size: 10px; opacity: 0.6;"><i class="fas fa-shield-alt"></i> Secure Transfer Enabled</div>
+    </div>
+
+    <div class="tab-group">
+        <button id="t1" class="tab active" onclick="toggle('w')">Withdraw</button>
+        <button id="t2" class="tab" onclick="toggle('c')">To Main Account</button>
+    </div>
+
+    <div id="wBox" class="form-box">
+        <div class="input-group">
+            <label>Amount to Cashout</label>
+            <input type="number" id="wAmt" placeholder="0.00">
         </div>
+        <div class="input-group">
+            <label>Payout Network</label>
+            <select id="wNet">
+                <option>MTN Mobile Money</option>
+                <option>Telecel Cash</option>
+                <option>AirtelTigo Money</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label>Number</label>
+            <input type="tel" id="wNum" placeholder="0XXXXXXXXX">
+        </div>
+        <button class="btn btn-w" onclick="process('WITHDRAW')">Submit to Admin</button>
+        <p style="font-size: 10px; color: #94a3b8; margin-top: 15px; text-align: center;">
+            <i class="fas fa-info-circle"></i> Note: Store order history will be cleared.
+        </p>
     </div>
 
-    <div class="balance-card">
-        <small style="opacity:0.7">WITHDRAWABLE PROFIT</small>
-        <h1 id="profitDisp" style="font-size:35px">₵ 0.00</h1>
-    </div>
-
-    <div class="tabs">
-        <button id="t1" class="tab active" onclick="show('withdraw')">Withdraw</button>
-        <button id="t2" class="tab" onclick="show('convert')">Convert</button>
-    </div>
-
-    <div id="withdrawBox" class="box">
-        <input type="number" id="wAmt" placeholder="Amount">
-        <select id="net"><option>MTN</option><option>Telecel</option><option>AirtelTigo</option></select>
-        <input type="tel" id="num" placeholder="MoMo Number">
-        <input type="text" id="name" placeholder="Account Name">
-        <button class="btn" style="background:#f06529" onclick="doWork('WITHDRAW')">Request Cashout</button>
-    </div>
-
-    <div id="convertBox" class="box hidden">
-        <input type="number" id="cAmt" placeholder="Amount to Convert">
-        <button class="btn" style="background:#6366f1" onclick="doWork('CONVERT')">Move to Main Wallet</button>
+    <div id="cBox" class="form-box hidden">
+        <div class="input-group">
+            <label>Amount to Transfer</label>
+            <input type="number" id="cAmt" placeholder="0.00">
+        </div>
+        <button class="btn btn-c" onclick="process('CONVERT')">Transfer Instantly</button>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getDatabase, ref, onValue, runTransaction, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, onValue, runTransaction, push, remove, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBmu4xukuT0Z7oD_vA9QroeO-1ZuaK8JgA",
@@ -72,46 +116,77 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
     let currentUser = null;
-    let balance = 0;
+    let profit = 0;
+
+    window.toggle = (t) => {
+        document.getElementById('wBox').classList.toggle('hidden', t === 'c');
+        document.getElementById('cBox').classList.toggle('hidden', t === 'w');
+        document.getElementById('t1').classList.toggle('active', t === 'w');
+        document.getElementById('t2').classList.toggle('active', t === 'c');
+    };
 
     onAuthStateChanged(auth, (user) => {
         if (user) {
             currentUser = user;
             onValue(ref(db, `users/${user.uid}`), (snap) => {
-                const d = snap.val();
-                // THIS MUST MATCH THE STORE PAGE FIELD
-                balance = d.referralBonus || 0;
-                document.getElementById('profitDisp').innerText = `₵ ${balance.toFixed(2)}`;
-                document.getElementById('storeNameDisp').innerText = d.storeSettings?.storeName || "Agent Store";
-                document.getElementById('emailDisp').innerText = user.email;
+                const data = snap.val();
+                profit = data.referralBonus || 0; // Syncs with store commission
+                document.getElementById('profitVal').innerText = `₵ ${profit.toFixed(2)}`;
             });
-        } else { window.location.href="login.html"; }
+        } else { window.location.href = "login.html"; }
     });
 
-    window.show = (type) => {
-        document.getElementById('withdrawBox').classList.toggle('hidden', type === 'convert');
-        document.getElementById('convertBox').classList.toggle('hidden', type === 'withdraw');
-        document.getElementById('t1').classList.toggle('active', type === 'withdraw');
-        document.getElementById('t2').classList.toggle('active', type === 'convert');
-    };
+    window.process = async (type) => {
+        const amtInput = type === 'WITHDRAW' ? 'wAmt' : 'cAmt';
+        const amount = parseFloat(document.getElementById(amtInput).value);
 
-    window.doWork = async (type) => {
-        const amt = parseFloat(type === 'WITHDRAW' ? document.getElementById('wAmt').value : document.getElementById('cAmt').value);
-        if(!amt || amt > balance) return alert("Invalid amount or insufficient funds");
+        if (!amount || amount <= 0) return alert("Enter valid amount");
+        if (amount > profit) return alert("Insufficient profit balance");
 
-        const userRef = ref(db, `users/${currentUser.uid}`);
-        const result = await runTransaction(userRef, (u) => {
-            if (u) {
-                u.referralBonus = (u.referralBonus || 0) - amt;
-                if(type === 'CONVERT') u.balance = (u.balance || 0) + amt;
+        document.getElementById('loader').style.display = 'flex';
+
+        try {
+            const userRef = ref(db, `users/${currentUser.uid}`);
+            
+            // 1. DEDUCT & TRANSFER LOGIC
+            const result = await runTransaction(userRef, (user) => {
+                if (user) {
+                    user.referralBonus = parseFloat((user.referralBonus - amount).toFixed(2));
+                    if (type === 'CONVERT') {
+                        user.balance = parseFloat(((user.balance || 0) + amount).toFixed(2));
+                    }
+                }
+                return user;
+            });
+
+            if (result.committed) {
+                // 2. SEND TO ADMIN IF WITHDRAWAL
+                if (type === 'WITHDRAW') {
+                    await push(ref(db, 'withdrawals'), {
+                        uid: currentUser.uid,
+                        email: currentUser.email,
+                        amount: amount,
+                        method: document.getElementById('wNet').value,
+                        number: document.getElementById('wNum').value,
+                        status: 'pending',
+                        timestamp: serverTimestamp()
+                    });
+                }
+
+                // 3. AUTOMATICALLY DELETE STORE ORDERS
+                // We clear the specific order history for this agent
+                await remove(ref(db, `user_orders/${currentUser.uid}`));
+                
+                alert(type === 'CONVERT' ? "Transfer successful!" : "Request sent to Admin. Orders cleared!");
             }
-            return u;
-        });
-
-        if(result.committed && type === 'WITHDRAW') {
-            await push(ref(db, 'withdrawals'), { uid: currentUser.uid, amount: amt, status: 'pending', timestamp: serverTimestamp() });
+        } catch (e) {
+            console.error(e);
+            alert("Error processing transaction");
+        } finally {
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('wAmt').value = "";
+            document.getElementById('cAmt').value = "";
         }
-        alert("Success!");
     };
 </script>
 </body>
